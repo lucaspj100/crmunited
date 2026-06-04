@@ -14,16 +14,200 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      leads: {
+        Row: {
+          company: string | null
+          created_at: string
+          id: string
+          interview_date: string | null
+          interview_notes: string | null
+          interview_time: string | null
+          linkedin_url: string | null
+          lost_reason: Database["public"]["Enums"]["lost_reason"] | null
+          lost_type: Database["public"]["Enums"]["lost_type"] | null
+          name: string
+          observation: string | null
+          owner_id: string
+          phone: string | null
+          rescue_date: string | null
+          status: Database["public"]["Enums"]["lead_status"]
+          updated_at: string
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string
+          id?: string
+          interview_date?: string | null
+          interview_notes?: string | null
+          interview_time?: string | null
+          linkedin_url?: string | null
+          lost_reason?: Database["public"]["Enums"]["lost_reason"] | null
+          lost_type?: Database["public"]["Enums"]["lost_type"] | null
+          name: string
+          observation?: string | null
+          owner_id: string
+          phone?: string | null
+          rescue_date?: string | null
+          status?: Database["public"]["Enums"]["lead_status"]
+          updated_at?: string
+        }
+        Update: {
+          company?: string | null
+          created_at?: string
+          id?: string
+          interview_date?: string | null
+          interview_notes?: string | null
+          interview_time?: string | null
+          linkedin_url?: string | null
+          lost_reason?: Database["public"]["Enums"]["lost_reason"] | null
+          lost_type?: Database["public"]["Enums"]["lost_type"] | null
+          name?: string
+          observation?: string | null
+          owner_id?: string
+          phone?: string | null
+          rescue_date?: string | null
+          status?: Database["public"]["Enums"]["lead_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      tasks: {
+        Row: {
+          created_at: string
+          due_date: string
+          due_time: string | null
+          id: string
+          is_rescue: boolean
+          lead_id: string
+          observation: string | null
+          owner_id: string
+          rescue_reason: Database["public"]["Enums"]["lost_reason"] | null
+          status: Database["public"]["Enums"]["task_status"]
+          type: Database["public"]["Enums"]["task_type"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          due_date: string
+          due_time?: string | null
+          id?: string
+          is_rescue?: boolean
+          lead_id: string
+          observation?: string | null
+          owner_id: string
+          rescue_reason?: Database["public"]["Enums"]["lost_reason"] | null
+          status?: Database["public"]["Enums"]["task_status"]
+          type?: Database["public"]["Enums"]["task_type"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          due_date?: string
+          due_time?: string | null
+          id?: string
+          is_rescue?: boolean
+          lead_id?: string
+          observation?: string | null
+          owner_id?: string
+          rescue_reason?: Database["public"]["Enums"]["lost_reason"] | null
+          status?: Database["public"]["Enums"]["task_status"]
+          type?: Database["public"]["Enums"]["task_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "franqueado" | "vendedor"
+      lead_status:
+        | "interessado"
+        | "entrevista_marcada"
+        | "entrevista_realizada"
+        | "matricula"
+        | "perdido"
+      lost_reason:
+        | "sem_resposta"
+        | "sem_interesse"
+        | "sem_dinheiro"
+        | "achou_caro"
+        | "sem_tempo"
+        | "vai_deixar_depois"
+        | "nao_compareceu"
+        | "sem_perfil"
+        | "fechou_concorrente"
+        | "nao_chamar"
+        | "outro"
+      lost_type: "definitivo" | "com_resgate"
+      task_status: "pendente" | "concluida" | "remarcada" | "cancelada"
+      task_type:
+        | "enviar_mensagem"
+        | "fazer_ligacao"
+        | "confirmar_entrevista"
+        | "reagendar_entrevista"
+        | "followup_pos"
+        | "cobrar_decisao"
+        | "encerramento"
+        | "resgate"
+        | "outro"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +334,41 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "franqueado", "vendedor"],
+      lead_status: [
+        "interessado",
+        "entrevista_marcada",
+        "entrevista_realizada",
+        "matricula",
+        "perdido",
+      ],
+      lost_reason: [
+        "sem_resposta",
+        "sem_interesse",
+        "sem_dinheiro",
+        "achou_caro",
+        "sem_tempo",
+        "vai_deixar_depois",
+        "nao_compareceu",
+        "sem_perfil",
+        "fechou_concorrente",
+        "nao_chamar",
+        "outro",
+      ],
+      lost_type: ["definitivo", "com_resgate"],
+      task_status: ["pendente", "concluida", "remarcada", "cancelada"],
+      task_type: [
+        "enviar_mensagem",
+        "fazer_ligacao",
+        "confirmar_entrevista",
+        "reagendar_entrevista",
+        "followup_pos",
+        "cobrar_decisao",
+        "encerramento",
+        "resgate",
+        "outro",
+      ],
+    },
   },
 } as const
