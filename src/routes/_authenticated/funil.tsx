@@ -42,7 +42,7 @@ function FunilPage() {
     if (lead.status === newStatus) return;
     if (newStatus === "entrevista_marcada") { setInterviewLead(lead); return; }
     if (newStatus === "perdido") { setLostLead(lead); return; }
-    const { error } = await supabase.from("leads").update({ status: newStatus }).eq("id", lead.id);
+    const { error } = await supabase.from("leads").update({ status: newStatus as any }).eq("id", lead.id);
     if (error) toast.error(error.message);
     else { toast.success("Lead movido"); qc.invalidateQueries(); }
   };
@@ -190,12 +190,12 @@ function LostDialog({ lead, onClose, onSaved }: { lead: Lead | null; onClose: ()
       }
     }
     const { error } = await supabase.from("leads").update({
-      status: "perdido", lost_reason: reason, lost_type: lostType, rescue_date: rescueDate,
+      status: "perdido", lost_reason: reason as any, lost_type: lostType, rescue_date: rescueDate,
     }).eq("id", lead.id);
     if (!error && rescueDate) {
       await supabase.from("tasks").insert({
         lead_id: lead.id, owner_id: lead.owner_id, type: "resgate",
-        due_date: rescueDate, status: "pendente", is_rescue: true, rescue_reason: reason,
+        due_date: rescueDate, status: "pendente", is_rescue: true, rescue_reason: reason as any,
         observation: `Resgate — motivo anterior: ${LOST_REASONS.find((r) => r.value === reason)?.label}`,
       });
     }

@@ -47,7 +47,7 @@ function TarefasPage() {
   const [completing, setCompleting] = useState<{ task: Task; lead: Lead } | null>(null);
 
   const setStatus = async (task: Task, status: string) => {
-    const { error } = await supabase.from("tasks").update({ status }).eq("id", task.id);
+    const { error } = await supabase.from("tasks").update({ status: status as any }).eq("id", task.id);
     if (error) toast.error(error.message);
     else { toast.success("Atualizado"); qc.invalidateQueries(); }
   };
