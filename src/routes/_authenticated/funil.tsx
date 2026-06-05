@@ -120,6 +120,7 @@ function FunilPage() {
 
       <InterviewDialog lead={interviewLead} onClose={() => setInterviewLead(null)} onSaved={() => qc.invalidateQueries()} />
       <LostDialog lead={lostLead} onClose={() => setLostLead(null)} onSaved={() => qc.invalidateQueries()} />
+      <LeadDetailsDialog leadId={detailsId} onClose={() => setDetailsId(null)} />
     </div>
   );
 }
