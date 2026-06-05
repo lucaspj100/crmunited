@@ -1,7 +1,8 @@
 import { createFileRoute, Outlet, useNavigate, useLocation, Link } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { LayoutDashboard, Users, Kanban, ListChecks, RotateCw, BarChart3, LogOut } from "lucide-react";
+import { useBrand } from "@/lib/brand";
+import { LayoutDashboard, Users, Kanban, ListChecks, RotateCw, BarChart3, LogOut, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -10,7 +11,7 @@ export const Route = createFileRoute("/_authenticated")({
   component: AuthedLayout,
 });
 
-const NAV = [
+const BASE_NAV = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/leads", label: "Leads", icon: Users },
   { to: "/funil", label: "Funil", icon: Kanban },
@@ -20,9 +21,14 @@ const NAV = [
 ] as const;
 
 function AuthedLayout() {
-  const { session, loading, signOut, user } = useAuth();
+  const { session, loading, signOut, user, roles } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { data: brand } = useBrand();
+  const isAdmin = roles.includes("admin");
+  const NAV = isAdmin
+    ? [...BASE_NAV, { to: "/configuracoes", label: "Configurações", icon: Settings } as const]
+    : BASE_NAV;
 
   useEffect(() => {
     if (!loading && !session) navigate({ to: "/auth", replace: true });
@@ -32,14 +38,23 @@ function AuthedLayout() {
     return <div className="flex min-h-screen items-center justify-center bg-background"><div className="text-muted-foreground">Carregando…</div></div>;
   }
 
+  const brandName = brand?.brand_name ?? "Comercial";
+  const brandSubtitle = brand?.brand_subtitle ?? "Franquia";
+
   return (
     <div className="flex min-h-screen bg-background">
       <aside className="hidden w-60 flex-col bg-sidebar text-sidebar-foreground md:flex">
         <div className="flex items-center gap-3 px-5 py-5 border-b border-sidebar-border">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground font-bold">C</div>
-          <div>
-            <div className="text-sm font-semibold">Comercial</div>
-            <div className="text-xs text-sidebar-foreground/60">Franquia</div>
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground font-bold overflow-hidden">
+            {brand?.logo_url ? (
+              <img src={brand.logo_url} alt="" className="h-full w-full object-cover" />
+            ) : (
+              brandName.charAt(0).toUpperCase()
+            )}
+          </div>
+          <div className="min-w-0">
+            <div className="text-sm font-semibold truncate">{brandName}</div>
+            {brandSubtitle && <div className="text-xs text-sidebar-foreground/60 truncate">{brandSubtitle}</div>}
           </div>
         </div>
         <nav className="flex-1 space-y-1 p-3">
@@ -71,7 +86,7 @@ function AuthedLayout() {
       </aside>
       <div className="flex flex-1 flex-col">
         <header className="flex items-center justify-between border-b bg-card px-5 py-3 md:hidden">
-          <div className="font-semibold">Comercial</div>
+          <div className="font-semibold">{brandName}</div>
           <Button size="sm" variant="ghost" onClick={() => signOut()}><LogOut className="h-4 w-4" /></Button>
         </header>
         <nav className="flex gap-1 overflow-x-auto border-b bg-card px-2 py-2 md:hidden">

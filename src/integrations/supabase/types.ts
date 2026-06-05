@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          brand_name: string
+          brand_subtitle: string
+          id: boolean
+          logo_path: string | null
+          updated_at: string
+        }
+        Insert: {
+          brand_name?: string
+          brand_subtitle?: string
+          id?: boolean
+          logo_path?: string | null
+          updated_at?: string
+        }
+        Update: {
+          brand_name?: string
+          brand_subtitle?: string
+          id?: boolean
+          logo_path?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
           company: string | null
