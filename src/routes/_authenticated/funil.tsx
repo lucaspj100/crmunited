@@ -14,6 +14,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { LEAD_STATUSES, LOST_REASONS, RESCUE_OPTIONS, waLink } from "@/lib/constants";
 import { Kanban, MessageCircle, Linkedin } from "lucide-react";
 import { NewLeadDialog } from "@/components/NewLeadDialog";
+import { LeadDetailsDialog } from "@/components/LeadDetailsDialog";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/funil")({ component: FunilPage });
