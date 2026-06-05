@@ -86,7 +86,7 @@ function AuthedLayout() {
       </aside>
       <div className="flex flex-1 flex-col">
         <header className="flex items-center justify-between border-b bg-card px-5 py-3 md:hidden">
-          <div className="font-semibold">Comercial</div>
+          <div className="font-semibold">{brandName}</div>
           <Button size="sm" variant="ghost" onClick={() => signOut()}><LogOut className="h-4 w-4" /></Button>
         </header>
         <nav className="flex gap-1 overflow-x-auto border-b bg-card px-2 py-2 md:hidden">
