@@ -85,11 +85,12 @@ function FunilPage() {
                     draggable
                     onDragStart={() => setDraggingId(l.id)}
                     onDragEnd={() => setDraggingId(null)}
-                    className="cursor-grab p-3 active:cursor-grabbing hover:border-primary transition-colors"
+                    onClick={() => setDetailsId(l.id)}
+                    className="cursor-pointer p-3 active:cursor-grabbing hover:border-primary transition-colors"
                   >
                     <div className="font-medium text-sm">{l.name}</div>
                     {l.company && <div className="text-xs text-muted-foreground">{l.company}</div>}
-                    <div className="mt-2 flex gap-1">
+                    <div className="mt-2 flex gap-1" onClick={(e) => e.stopPropagation()}>
                       {l.phone && (
                         <Button asChild size="icon" variant="ghost" className="h-7 w-7">
                           <a href={waLink(l.phone)} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}><MessageCircle className="h-3.5 w-3.5" /></a>
@@ -101,7 +102,7 @@ function FunilPage() {
                         </Button>
                       )}
                       <Select onValueChange={(v) => moveLead(l, v)}>
-                        <SelectTrigger className="h-7 ml-auto w-[110px] text-xs"><SelectValue placeholder="Mover" /></SelectTrigger>
+                        <SelectTrigger className="h-7 ml-auto w-[110px] text-xs" onClick={(e) => e.stopPropagation()}><SelectValue placeholder="Mover" /></SelectTrigger>
                         <SelectContent>
                           {LEAD_STATUSES.filter((s) => s.value !== l.status).map((s) => (
                             <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
