@@ -92,6 +92,17 @@ export function LeadDetailsDialog({
     onClose();
   };
 
+  const onDelete = async () => {
+    if (!lead) return;
+    setDeleting(true);
+    const { error } = await supabase.from("leads").delete().eq("id", lead.id);
+    setDeleting(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Lead excluído");
+    qc.invalidateQueries();
+    onClose();
+  };
+
   const statusLabel = LEAD_STATUSES.find((s) => s.value === lead?.status)?.label ?? lead?.status;
   const lostReasonLabel = LOST_REASONS.find((r) => r.value === lead?.lost_reason)?.label;
 
