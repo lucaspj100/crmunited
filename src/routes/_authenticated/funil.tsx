@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { LEAD_STATUSES, LOST_REASONS, RESCUE_OPTIONS, waLink } from "@/lib/constants";
-import { Kanban, MessageCircle, Linkedin } from "lucide-react";
+import { Kanban, MessageCircle, Linkedin, User } from "lucide-react";
 import { NewLeadDialog } from "@/components/NewLeadDialog";
 import { LeadDetailsDialog } from "@/components/LeadDetailsDialog";
 import { toast } from "sonner";
@@ -23,13 +23,16 @@ type Lead = {
   id: string; name: string; phone: string | null; company: string | null;
   linkedin_url: string | null; status: string; owner_id: string;
 };
+type Profile = { id: string; full_name: string | null; email: string | null };
 
 function FunilPage() {
   const qc = useQueryClient();
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [interviewLead, setInterviewLead] = useState<Lead | null>(null);
   const [lostLead, setLostLead] = useState<Lead | null>(null);
+  const [matriculaLead, setMatriculaLead] = useState<Lead | null>(null);
   const [detailsId, setDetailsId] = useState<string | null>(null);
+  const [vendorFilter, setVendorFilter] = useState<string>("all");
 
   const { data: leads = [] } = useQuery({
     queryKey: ["leads-funil"],
@@ -40,10 +43,33 @@ function FunilPage() {
     },
   });
 
+  const { data: profiles = [] } = useQuery({
+    queryKey: ["profiles-funil"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("profiles").select("id, full_name, email");
+      if (error) throw error;
+      return data as Profile[];
+    },
+  });
+
+  const profileById = useMemo(() => {
+    const m = new Map<string, Profile>();
+    profiles.forEach((p) => m.set(p.id, p));
+    return m;
+  }, [profiles]);
+
+  const vendorOptions = useMemo(() => {
+    const ids = new Set(leads.map((l) => l.owner_id));
+    return Array.from(ids).map((id) => ({ id, name: profileById.get(id)?.full_name || profileById.get(id)?.email || "Vendedor" }));
+  }, [leads, profileById]);
+
+  const filteredLeads = vendorFilter === "all" ? leads : leads.filter((l) => l.owner_id === vendorFilter);
+
   const moveLead = async (lead: Lead, newStatus: string) => {
     if (lead.status === newStatus) return;
     if (newStatus === "entrevista_marcada") { setInterviewLead(lead); return; }
     if (newStatus === "perdido") { setLostLead(lead); return; }
+    if (newStatus === "matricula") { setMatriculaLead(lead); return; }
     const { error } = await supabase.from("leads").update({ status: newStatus as any }).eq("id", lead.id);
     if (error) toast.error(error.message);
     else { toast.success("Lead movido"); qc.invalidateQueries(); }
@@ -56,12 +82,23 @@ function FunilPage() {
           <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2"><Kanban className="h-6 w-6 text-primary" />Funil Comercial</h1>
           <p className="text-sm text-muted-foreground">Arraste os leads entre as etapas</p>
         </div>
-        <NewLeadDialog />
+        <div className="flex items-center gap-2">
+          <Select value={vendorFilter} onValueChange={setVendorFilter}>
+            <SelectTrigger className="w-[200px]"><SelectValue placeholder="Vendedor" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os vendedores</SelectItem>
+              {vendorOptions.map((v) => (
+                <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <NewLeadDialog />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3 lg:grid-cols-5">
         {LEAD_STATUSES.map((col) => {
-          const items = leads.filter((l) => l.status === col.value);
+          const items = filteredLeads.filter((l) => l.status === col.value);
           return (
             <div
               key={col.value}
@@ -79,39 +116,46 @@ function FunilPage() {
                 <Badge variant="secondary">{items.length}</Badge>
               </div>
               <div className="flex-1 space-y-2 overflow-y-auto p-2 min-h-[300px] max-h-[70vh]">
-                {items.map((l) => (
-                  <Card
-                    key={l.id}
-                    draggable
-                    onDragStart={() => setDraggingId(l.id)}
-                    onDragEnd={() => setDraggingId(null)}
-                    onClick={() => setDetailsId(l.id)}
-                    className="cursor-pointer p-3 active:cursor-grabbing hover:border-primary transition-colors"
-                  >
-                    <div className="font-medium text-sm">{l.name}</div>
-                    {l.company && <div className="text-xs text-muted-foreground">{l.company}</div>}
-                    <div className="mt-2 flex gap-1" onClick={(e) => e.stopPropagation()}>
-                      {l.phone && (
-                        <Button asChild size="icon" variant="ghost" className="h-7 w-7">
-                          <a href={waLink(l.phone)} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}><MessageCircle className="h-3.5 w-3.5" /></a>
-                        </Button>
-                      )}
-                      {l.linkedin_url && (
-                        <Button asChild size="icon" variant="ghost" className="h-7 w-7">
-                          <a href={l.linkedin_url} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}><Linkedin className="h-3.5 w-3.5" /></a>
-                        </Button>
-                      )}
-                      <Select onValueChange={(v) => moveLead(l, v)}>
-                        <SelectTrigger className="h-7 ml-auto w-[110px] text-xs" onClick={(e) => e.stopPropagation()}><SelectValue placeholder="Mover" /></SelectTrigger>
-                        <SelectContent>
-                          {LEAD_STATUSES.filter((s) => s.value !== l.status).map((s) => (
-                            <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </Card>
-                ))}
+                {items.map((l) => {
+                  const owner = profileById.get(l.owner_id);
+                  const ownerName = owner?.full_name || owner?.email || "—";
+                  return (
+                    <Card
+                      key={l.id}
+                      draggable
+                      onDragStart={() => setDraggingId(l.id)}
+                      onDragEnd={() => setDraggingId(null)}
+                      onClick={() => setDetailsId(l.id)}
+                      className="cursor-pointer p-3 active:cursor-grabbing hover:border-primary transition-colors"
+                    >
+                      <div className="font-medium text-sm">{l.name}</div>
+                      {l.company && <div className="text-xs text-muted-foreground">{l.company}</div>}
+                      <div className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground">
+                        <User className="h-3 w-3" /><span className="truncate">{ownerName}</span>
+                      </div>
+                      <div className="mt-2 flex gap-1" onClick={(e) => e.stopPropagation()}>
+                        {l.phone && (
+                          <Button asChild size="icon" variant="ghost" className="h-7 w-7">
+                            <a href={waLink(l.phone)} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}><MessageCircle className="h-3.5 w-3.5" /></a>
+                          </Button>
+                        )}
+                        {l.linkedin_url && (
+                          <Button asChild size="icon" variant="ghost" className="h-7 w-7">
+                            <a href={l.linkedin_url} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}><Linkedin className="h-3.5 w-3.5" /></a>
+                          </Button>
+                        )}
+                        <Select onValueChange={(v) => moveLead(l, v)}>
+                          <SelectTrigger className="h-7 ml-auto w-[110px] text-xs" onClick={(e) => e.stopPropagation()}><SelectValue placeholder="Mover" /></SelectTrigger>
+                          <SelectContent>
+                            {LEAD_STATUSES.filter((s) => s.value !== l.status).map((s) => (
+                              <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </Card>
+                  );
+                })}
               </div>
             </div>
           );
@@ -120,6 +164,7 @@ function FunilPage() {
 
       <InterviewDialog lead={interviewLead} onClose={() => setInterviewLead(null)} onSaved={() => qc.invalidateQueries()} />
       <LostDialog lead={lostLead} onClose={() => setLostLead(null)} onSaved={() => qc.invalidateQueries()} />
+      <MatriculaDialog lead={matriculaLead} onClose={() => setMatriculaLead(null)} onSaved={() => qc.invalidateQueries()} />
       <LeadDetailsDialog leadId={detailsId} onClose={() => setDetailsId(null)} />
     </div>
   );
@@ -169,11 +214,30 @@ function InterviewDialog({ lead, onClose, onSaved }: { lead: Lead | null; onClos
   );
 }
 
+const FOLLOWUP_OPTIONS = [
+  { value: "none", label: "Não criar follow-up" },
+  { value: "7", label: "Em 7 dias" },
+  { value: "15", label: "Em 15 dias" },
+  { value: "30", label: "Em 30 dias" },
+  { value: "60", label: "Em 60 dias" },
+  { value: "90", label: "Em 90 dias" },
+  { value: "custom", label: "Data personalizada" },
+];
+
+function computeFollowupDate(opt: string, customDate: string): string | null {
+  if (opt === "none") return null;
+  if (opt === "custom") return customDate || null;
+  const d = new Date(); d.setDate(d.getDate() + Number(opt));
+  return d.toISOString().slice(0, 10);
+}
+
 function LostDialog({ lead, onClose, onSaved }: { lead: Lead | null; onClose: () => void; onSaved: () => void }) {
   const [reason, setReason] = useState<string>("");
   const [type, setType] = useState<string>("definitivo");
   const [rescue, setRescue] = useState<string>("none");
   const [customDate, setCustomDate] = useState<string>("");
+  const [followup, setFollowup] = useState<string>("none");
+  const [followupDate, setFollowupDate] = useState<string>("");
   const [saving, setSaving] = useState(false);
   if (!lead) return null;
 
@@ -203,6 +267,13 @@ function LostDialog({ lead, onClose, onSaved }: { lead: Lead | null; onClose: ()
         observation: `Resgate — motivo anterior: ${LOST_REASONS.find((r) => r.value === reason)?.label}`,
       });
     }
+    const fDate = computeFollowupDate(followup, followupDate);
+    if (!error && fDate) {
+      await supabase.from("tasks").insert({
+        lead_id: lead.id, owner_id: lead.owner_id, type: "enviar_mensagem",
+        due_date: fDate, status: "pendente", observation: "Follow-up pós-perda",
+      });
+    }
     // cancel pending tasks (except rescue)
     await supabase.from("tasks").update({ status: "cancelada" })
       .eq("lead_id", lead.id).eq("status", "pendente").eq("is_rescue", false);
@@ -214,7 +285,7 @@ function LostDialog({ lead, onClose, onSaved }: { lead: Lead | null; onClose: ()
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>Marcar como perdido — {lead.name}</DialogTitle></DialogHeader>
         <form onSubmit={onSubmit} className="space-y-4">
           <div>
@@ -239,7 +310,82 @@ function LostDialog({ lead, onClose, onSaved }: { lead: Lead | null; onClose: ()
             </div>
           )}
           {reason === "nao_chamar" && <p className="text-xs text-amber-700 bg-amber-500/10 p-2 rounded">Este motivo não gera tarefa de resgate.</p>}
+
+          <div>
+            <Label>Criar follow-up nas suas tarefas?</Label>
+            <Select value={followup} onValueChange={setFollowup}>
+              <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+              <SelectContent>{FOLLOWUP_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
+            </Select>
+            {followup === "custom" && <Input type="date" className="mt-2" value={followupDate} onChange={(e) => setFollowupDate(e.target.value)} />}
+          </div>
+
           <DialogFooter><Button type="button" variant="ghost" onClick={onClose}>Cancelar</Button><Button disabled={saving} variant="destructive">{saving ? "Salvando…" : "Confirmar perda"}</Button></DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function MatriculaDialog({ lead, onClose, onSaved }: { lead: Lead | null; onClose: () => void; onSaved: () => void }) {
+  const [enrollment, setEnrollment] = useState("");
+  const [monthly, setMonthly] = useState("");
+  const [material, setMaterial] = useState("");
+  const [followup, setFollowup] = useState<string>("none");
+  const [followupDate, setFollowupDate] = useState<string>("");
+  const [saving, setSaving] = useState(false);
+  if (!lead) return null;
+
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const ev = enrollment ? Number(enrollment.replace(",", ".")) : null;
+    const mv = monthly ? Number(monthly.replace(",", ".")) : null;
+    const mt = material ? Number(material.replace(",", ".")) : null;
+    if (ev === null || isNaN(ev) || mv === null || isNaN(mv) || mt === null || isNaN(mt)) {
+      toast.error("Informe os três valores"); return;
+    }
+    setSaving(true);
+    const { error } = await supabase.from("leads").update({
+      status: "matricula",
+      enrollment_value: ev,
+      monthly_fee: mv,
+      material_value: mt,
+    } as any).eq("id", lead.id);
+
+    const fDate = computeFollowupDate(followup, followupDate);
+    if (!error && fDate) {
+      await supabase.from("tasks").insert({
+        lead_id: lead.id, owner_id: lead.owner_id, type: "followup_pos",
+        due_date: fDate, status: "pendente", observation: "Follow-up pós-matrícula",
+      });
+    }
+    await supabase.from("tasks").update({ status: "concluida" })
+      .eq("lead_id", lead.id).eq("status", "pendente").eq("is_rescue", false);
+
+    setSaving(false);
+    if (error) toast.error(error.message);
+    else { toast.success("Matrícula registrada"); onSaved(); onClose(); }
+  };
+
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader><DialogTitle>Registrar matrícula — {lead.name}</DialogTitle></DialogHeader>
+        <form onSubmit={onSubmit} className="space-y-3">
+          <div><Label>Valor da matrícula (R$) *</Label><Input inputMode="decimal" value={enrollment} onChange={(e) => setEnrollment(e.target.value)} placeholder="0,00" required /></div>
+          <div><Label>Valor da mensalidade (R$) *</Label><Input inputMode="decimal" value={monthly} onChange={(e) => setMonthly(e.target.value)} placeholder="0,00" required /></div>
+          <div><Label>Valor do material (R$) *</Label><Input inputMode="decimal" value={material} onChange={(e) => setMaterial(e.target.value)} placeholder="0,00" required /></div>
+
+          <div>
+            <Label>Criar follow-up nas suas tarefas?</Label>
+            <Select value={followup} onValueChange={setFollowup}>
+              <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+              <SelectContent>{FOLLOWUP_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
+            </Select>
+            {followup === "custom" && <Input type="date" className="mt-2" value={followupDate} onChange={(e) => setFollowupDate(e.target.value)} />}
+          </div>
+
+          <DialogFooter><Button type="button" variant="ghost" onClick={onClose}>Cancelar</Button><Button disabled={saving}>{saving ? "Salvando…" : "Confirmar matrícula"}</Button></DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
