@@ -18,12 +18,16 @@ type LeadDetails = {
   linkedin_url: string | null;
   observation: string | null;
   status: string;
+  owner_id: string;
   interview_date?: string | null;
   interview_time?: string | null;
   interview_notes?: string | null;
   lost_reason?: string | null;
   lost_type?: string | null;
   rescue_date?: string | null;
+  enrollment_value?: number | null;
+  monthly_fee?: number | null;
+  material_value?: number | null;
 };
 
 export function LeadDetailsDialog({
