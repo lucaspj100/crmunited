@@ -106,6 +106,10 @@ export function LeadDetailsDialog({
           <p className="text-sm text-muted-foreground py-6">Carregando…</p>
         ) : (
           <form onSubmit={onSubmit} className="space-y-3">
+            <div className="rounded-md border p-2 bg-muted/40 text-xs">
+              <span className="text-muted-foreground">Vendedor responsável: </span>
+              <span className="font-medium">{ownerName || "—"}</span>
+            </div>
             <div><Label>Nome *</Label><Input value={name} onChange={(e) => setName(e.target.value)} required maxLength={200} /></div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div><Label>WhatsApp / Telefone</Label><Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(11) 99999-9999" /></div>
@@ -113,6 +117,15 @@ export function LeadDetailsDialog({
             </div>
             <div><Label>LinkedIn</Label><Input value={linkedin} onChange={(e) => setLinkedin(e.target.value)} type="url" placeholder="https://linkedin.com/in/…" /></div>
             <div><Label>Observação</Label><Textarea value={observation} onChange={(e) => setObservation(e.target.value)} rows={3} /></div>
+
+            {lead.status === "matricula" && (lead.enrollment_value != null || lead.monthly_fee != null || lead.material_value != null) && (
+              <div className="rounded-md border p-3 space-y-1 bg-muted/30">
+                <div className="text-xs font-semibold text-muted-foreground uppercase">Matrícula</div>
+                {lead.enrollment_value != null && <div className="text-sm">Matrícula: R$ {Number(lead.enrollment_value).toFixed(2)}</div>}
+                {lead.monthly_fee != null && <div className="text-sm">Mensalidade: R$ {Number(lead.monthly_fee).toFixed(2)}</div>}
+                {lead.material_value != null && <div className="text-sm">Material: R$ {Number(lead.material_value).toFixed(2)}</div>}
+              </div>
+            )}
 
             {(lead.interview_date || lead.interview_time || lead.interview_notes) && (
               <div className="rounded-md border p-3 space-y-1 bg-muted/30">
