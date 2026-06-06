@@ -51,9 +51,9 @@ export function LeadDetailsDialog({
   const [observation, setObservation] = useState("");
 
   useEffect(() => {
-    if (!leadId) { setLead(null); return; }
+    if (!leadId) { setLead(null); setOwnerName(""); return; }
     setLoading(true);
-    supabase.from("leads").select("*").eq("id", leadId).single().then(({ data, error }) => {
+    supabase.from("leads").select("*").eq("id", leadId).single().then(async ({ data, error }) => {
       setLoading(false);
       if (error || !data) { toast.error(error?.message || "Lead não encontrado"); onClose(); return; }
       const l = data as LeadDetails;
@@ -63,6 +63,10 @@ export function LeadDetailsDialog({
       setCompany(l.company || "");
       setLinkedin(l.linkedin_url || "");
       setObservation(l.observation || "");
+      if (l.owner_id) {
+        const { data: p } = await supabase.from("profiles").select("full_name, email").eq("id", l.owner_id).maybeSingle();
+        setOwnerName(p?.full_name || p?.email || "—");
+      }
     });
   }, [leadId]);
 
