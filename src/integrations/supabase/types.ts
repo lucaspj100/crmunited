@@ -42,6 +42,7 @@ export type Database = {
         Row: {
           company: string | null
           created_at: string
+          enrollment_value: number | null
           id: string
           interview_date: string | null
           interview_notes: string | null
@@ -49,6 +50,8 @@ export type Database = {
           linkedin_url: string | null
           lost_reason: Database["public"]["Enums"]["lost_reason"] | null
           lost_type: Database["public"]["Enums"]["lost_type"] | null
+          material_value: number | null
+          monthly_fee: number | null
           name: string
           observation: string | null
           owner_id: string
@@ -60,6 +63,7 @@ export type Database = {
         Insert: {
           company?: string | null
           created_at?: string
+          enrollment_value?: number | null
           id?: string
           interview_date?: string | null
           interview_notes?: string | null
@@ -67,6 +71,8 @@ export type Database = {
           linkedin_url?: string | null
           lost_reason?: Database["public"]["Enums"]["lost_reason"] | null
           lost_type?: Database["public"]["Enums"]["lost_type"] | null
+          material_value?: number | null
+          monthly_fee?: number | null
           name: string
           observation?: string | null
           owner_id: string
@@ -78,6 +84,7 @@ export type Database = {
         Update: {
           company?: string | null
           created_at?: string
+          enrollment_value?: number | null
           id?: string
           interview_date?: string | null
           interview_notes?: string | null
@@ -85,6 +92,8 @@ export type Database = {
           linkedin_url?: string | null
           lost_reason?: Database["public"]["Enums"]["lost_reason"] | null
           lost_type?: Database["public"]["Enums"]["lost_type"] | null
+          material_value?: number | null
+          monthly_fee?: number | null
           name?: string
           observation?: string | null
           owner_id?: string
