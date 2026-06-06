@@ -39,7 +39,9 @@ export function LeadDetailsDialog({
 }) {
   const qc = useQueryClient();
   const [lead, setLead] = useState<LeadDetails | null>(null);
+  const [ownerName, setOwnerName] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [saving, setSaving] = useState(false);
 
   // editable fields (mesmos do cadastro)
