@@ -158,9 +158,30 @@ export function LeadDetailsDialog({
               </div>
             )}
 
-            <DialogFooter>
-              <Button type="button" variant="ghost" onClick={onClose}>Cancelar</Button>
-              <Button type="submit" disabled={saving}>{saving ? "Salvando…" : "Salvar alterações"}</Button>
+            <DialogFooter className="gap-2 sm:justify-between">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button type="button" variant="destructive" disabled={deleting}>
+                    <Trash2 className="h-4 w-4 mr-1" />{deleting ? "Excluindo…" : "Excluir"}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Excluir lead?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Esta ação não pode ser desfeita. O lead e suas tarefas relacionadas podem ser perdidos.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={onDelete}>Excluir</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              <div className="flex gap-2">
+                <Button type="button" variant="ghost" onClick={onClose}>Cancelar</Button>
+                <Button type="submit" disabled={saving}>{saving ? "Salvando…" : "Salvar alterações"}</Button>
+              </div>
             </DialogFooter>
           </form>
         )}
