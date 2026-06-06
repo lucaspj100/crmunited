@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -42,6 +44,7 @@ export function LeadDetailsDialog({
   const [ownerName, setOwnerName] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // editable fields (mesmos do cadastro)
   const [name, setName] = useState("");
@@ -85,6 +88,17 @@ export function LeadDetailsDialog({
     setSaving(false);
     if (error) { toast.error(error.message); return; }
     toast.success("Lead atualizado");
+    qc.invalidateQueries();
+    onClose();
+  };
+
+  const onDelete = async () => {
+    if (!lead) return;
+    setDeleting(true);
+    const { error } = await supabase.from("leads").delete().eq("id", lead.id);
+    setDeleting(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Lead excluído");
     qc.invalidateQueries();
     onClose();
   };
@@ -144,9 +158,30 @@ export function LeadDetailsDialog({
               </div>
             )}
 
-            <DialogFooter>
-              <Button type="button" variant="ghost" onClick={onClose}>Cancelar</Button>
-              <Button type="submit" disabled={saving}>{saving ? "Salvando…" : "Salvar alterações"}</Button>
+            <DialogFooter className="gap-2 sm:justify-between">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button type="button" variant="destructive" disabled={deleting}>
+                    <Trash2 className="h-4 w-4 mr-1" />{deleting ? "Excluindo…" : "Excluir"}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Excluir lead?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Esta ação não pode ser desfeita. O lead e suas tarefas relacionadas podem ser perdidos.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={onDelete}>Excluir</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              <div className="flex gap-2">
+                <Button type="button" variant="ghost" onClick={onClose}>Cancelar</Button>
+                <Button type="submit" disabled={saving}>{saving ? "Salvando…" : "Salvar alterações"}</Button>
+              </div>
             </DialogFooter>
           </form>
         )}
