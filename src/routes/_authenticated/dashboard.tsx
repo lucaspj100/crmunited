@@ -1,66 +1,74 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
-import { LayoutDashboard, Users, CalendarCheck, GraduationCap, TrendingDown, ListChecks, AlertTriangle, RotateCw } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { LayoutDashboard, Users, CalendarCheck, GraduationCap, TrendingDown, ListChecks, AlertTriangle, RotateCw, Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({ component: Dashboard });
 
 async function fetchDashboard() {
   const today = new Date().toISOString().slice(0, 10);
-  const [leadsR, tasksR, leadsTasksR] = await Promise.all([
+  const [leadsR, tasksR, pendingTasksR] = await Promise.all([
     supabase.from("leads").select("id,status").limit(5000),
-    supabase.from("tasks").select("id,due_date,status,is_rescue").limit(5000),
-    supabase.from("leads").select("id,status").in("status", ["interessado", "entrevista_marcada", "entrevista_realizada"]).limit(5000),
+    supabase.from("tasks").select("id,due_date,status,is_rescue,lead_id,type").limit(5000),
+    supabase.from("tasks").select("lead_id").eq("status", "pendente").gte("due_date", today).limit(5000),
   ]);
   const leads = (leadsR.data ?? []) as { id: string; status: string }[];
-  const tasks = (tasksR.data ?? []) as { id: string; due_date: string; status: string; is_rescue: boolean }[];
-  const activeLeads = (leadsTasksR.data ?? []) as { id: string; status: string }[];
-
-  // leads without future task
-  const futureTaskLeadIds = new Set(
-    tasks.filter((t) => t.status === "pendente" && t.due_date >= today).map((t) => (t as any).lead_id),
-  );
-  // We don't have lead_id in tasks select above — fetch ids
-  const { data: pendingTasks } = await supabase
-    .from("tasks").select("lead_id").eq("status", "pendente").gte("due_date", today).limit(5000);
-  const pendingLeadIds = new Set(((pendingTasks ?? []) as { lead_id: string }[]).map((t) => t.lead_id));
-  const leadsNoTask = activeLeads.filter((l) => !pendingLeadIds.has(l.id)).length;
+  const tasks = (tasksR.data ?? []) as { id: string; due_date: string; status: string; is_rescue: boolean; lead_id: string; type: string }[];
+  const pendingLeadIds = new Set(((pendingTasksR.data ?? []) as { lead_id: string }[]).map((t) => t.lead_id));
 
   const count = (s: string) => leads.filter((l) => l.status === s).length;
+  const novos = count("novo");
   const interessados = count("interessado");
   const entMarc = count("entrevista_marcada");
   const entReal = count("entrevista_realizada");
   const matric = count("matricula");
   const perdidos = count("perdido");
-  const totalFunnel = interessados + entMarc + entReal + matric + perdidos;
+
+  const activeLeads = leads.filter((l) => ["novo", "interessado", "entrevista_marcada", "entrevista_realizada"].includes(l.status));
+  const leadsNoTask = activeLeads.filter((l) => !pendingLeadIds.has(l.id)).length;
+
+  // Novos sem primeiro contato (lead status='novo' sem tarefa pendente do tipo primeiro_contato)
+  const leadIdsComPrimeiroContato = new Set(
+    tasks.filter((t) => t.type === "primeiro_contato" && t.status === "pendente").map((t) => t.lead_id),
+  );
+  const novosSemContato = leads.filter((l) => l.status === "novo" && !leadIdsComPrimeiroContato.has(l.id)).length;
+
+  // Entrevistas marcadas para hoje (tarefas confirmar_entrevista hoje, ou status do lead entrevista_marcada e tarefa due_date hoje)
+  const entrevistasHoje = tasks.filter((t) => t.type === "confirmar_entrevista" && t.due_date === today && t.status === "pendente").length;
 
   const tasksToday = tasks.filter((t) => t.due_date === today && t.status === "pendente").length;
   const tasksLate = tasks.filter((t) => t.due_date < today && t.status === "pendente").length;
   const tasksDoneToday = tasks.filter((t) => t.due_date === today && t.status === "concluida").length;
   const rescuesPending = tasks.filter((t) => t.is_rescue && t.status === "pendente").length;
+  const rescuesToday = tasks.filter((t) => t.is_rescue && t.status === "pendente" && t.due_date <= today).length;
 
   const pct = (a: number, b: number) => (b > 0 ? Math.round((a / b) * 100) : 0);
+  const totalFunnel = novos + interessados + entMarc + entReal + matric + perdidos;
 
   return {
-    totalFunnel, interessados, entMarc, entReal, matric, perdidos,
+    totalFunnel, novos, interessados, entMarc, entReal, matric, perdidos,
+    convNovoInteressado: pct(interessados + entMarc + entReal + matric, novos + interessados + entMarc + entReal + matric + perdidos),
     convInteressadoEntrevista: pct(entMarc + entReal + matric, interessados + entMarc + entReal + matric + perdidos),
     convEntrevistaRealizada: pct(entReal + matric, entMarc + entReal + matric),
     convMatricula: pct(matric, entReal + matric),
-    tasksToday, tasksLate, tasksDoneToday, leadsNoTask, rescuesPending,
+    tasksToday, tasksLate, tasksDoneToday, leadsNoTask, rescuesPending, rescuesToday,
+    novosSemContato, entrevistasHoje,
   };
 }
 
-function Stat({ icon: Icon, label, value, sub, tone = "default" }: { icon: any; label: string; value: number | string; sub?: string; tone?: "default" | "danger" | "warning" | "success" | "primary" }) {
+function Stat({ icon: Icon, label, value, sub, tone = "default", to }: { icon: any; label: string; value: number | string; sub?: string; tone?: "default" | "danger" | "warning" | "success" | "primary" | "info"; to?: string }) {
   const tones: Record<string, string> = {
     default: "bg-card",
     danger: "bg-rose-500/10 border-rose-500/30",
     warning: "bg-amber-500/10 border-amber-500/30",
     success: "bg-emerald-500/10 border-emerald-500/30",
     primary: "bg-primary/5 border-primary/30",
+    info: "bg-slate-500/10 border-slate-500/30",
   };
-  return (
-    <Card className={`p-4 ${tones[tone]}`}>
+  const inner = (
+    <Card className={`p-4 ${tones[tone]} ${to ? "hover:shadow-md transition-shadow cursor-pointer" : ""}`}>
       <div className="flex items-center gap-3">
         <div className="rounded-lg bg-background/60 p-2"><Icon className="h-5 w-5 text-primary" /></div>
         <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
@@ -69,11 +77,30 @@ function Stat({ icon: Icon, label, value, sub, tone = "default" }: { icon: any; 
       {sub && <div className="text-xs text-muted-foreground mt-1">{sub}</div>}
     </Card>
   );
+  return to ? <Link to={to as any}>{inner}</Link> : inner;
+}
+
+function AlertItem({ count, label, tone, to }: { count: number; label: string; tone: "danger" | "warning" | "info"; to?: string }) {
+  if (count === 0) return null;
+  const tones = {
+    danger: "bg-rose-500/10 border-rose-500/30 text-rose-700",
+    warning: "bg-amber-500/10 border-amber-500/30 text-amber-800",
+    info: "bg-blue-500/10 border-blue-500/30 text-blue-700",
+  };
+  const content = (
+    <div className={`flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm ${tones[tone]}`}>
+      <span>{label}</span>
+      <Badge variant="outline">{count}</Badge>
+    </div>
+  );
+  return to ? <Link to={to as any}>{content}</Link> : content;
 }
 
 function Dashboard() {
   const { data, isLoading } = useQuery({ queryKey: ["dashboard"], queryFn: fetchDashboard });
   if (isLoading || !data) return <div className="text-muted-foreground">Carregando…</div>;
+
+  const anyAlert = data.novosSemContato + data.tasksLate + data.entrevistasHoje + data.leadsNoTask + data.rescuesToday > 0;
 
   return (
     <div className="space-y-6">
@@ -82,9 +109,23 @@ function Dashboard() {
         <p className="text-sm text-muted-foreground">Visão geral da operação</p>
       </div>
 
+      {anyAlert && (
+        <Card className="p-4">
+          <div className="flex items-center gap-2 text-sm font-semibold mb-3"><Sparkles className="h-4 w-4 text-primary" />Alertas importantes</div>
+          <div className="space-y-2">
+            <AlertItem count={data.tasksLate} label="Tarefas atrasadas" tone="danger" to="/tarefas" />
+            <AlertItem count={data.novosSemContato} label="Leads novos sem primeiro contato" tone="warning" to="/tarefas" />
+            <AlertItem count={data.entrevistasHoje} label="Entrevistas marcadas para hoje" tone="info" to="/tarefas" />
+            <AlertItem count={data.leadsNoTask} label="Leads sem próxima ação" tone="warning" to="/tarefas" />
+            <AlertItem count={data.rescuesToday} label="Resgates para hoje" tone="info" to="/resgates" />
+          </div>
+        </Card>
+      )}
+
       <div>
         <div className="text-sm font-medium text-muted-foreground mb-2">Funil</div>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-6">
+          <Stat icon={Sparkles} label="Novos" value={data.novos} tone="info" />
           <Stat icon={Users} label="Interessados" value={data.interessados} tone="primary" />
           <Stat icon={CalendarCheck} label="Entrev. marcadas" value={data.entMarc} />
           <Stat icon={CalendarCheck} label="Entrev. realizadas" value={data.entReal} />
@@ -95,21 +136,22 @@ function Dashboard() {
 
       <div>
         <div className="text-sm font-medium text-muted-foreground mb-2">Taxas de conversão</div>
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <Stat icon={TrendingDown} label="Novo → Interessado" value={`${data.convNovoInteressado}%`} />
           <Stat icon={TrendingDown} label="Interessado → Entrevista" value={`${data.convInteressadoEntrevista}%`} />
-          <Stat icon={TrendingDown} label="Entrev. marcada → realizada" value={`${data.convEntrevistaRealizada}%`} />
-          <Stat icon={TrendingDown} label="Entrev. realizada → matrícula" value={`${data.convMatricula}%`} />
+          <Stat icon={TrendingDown} label="Marcada → Realizada" value={`${data.convEntrevistaRealizada}%`} />
+          <Stat icon={TrendingDown} label="Realizada → Matrícula" value={`${data.convMatricula}%`} />
         </div>
       </div>
 
       <div>
         <div className="text-sm font-medium text-muted-foreground mb-2">Operação diária</div>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-          <Stat icon={ListChecks} label="Tarefas hoje" value={data.tasksToday} tone="primary" />
-          <Stat icon={AlertTriangle} label="Tarefas atrasadas" value={data.tasksLate} tone="danger" />
+          <Stat icon={ListChecks} label="Tarefas hoje" value={data.tasksToday} tone="primary" to="/tarefas" />
+          <Stat icon={AlertTriangle} label="Tarefas atrasadas" value={data.tasksLate} tone="danger" to="/tarefas" />
           <Stat icon={ListChecks} label="Concluídas hoje" value={data.tasksDoneToday} tone="success" />
-          <Stat icon={AlertTriangle} label="Leads sem tarefa" value={data.leadsNoTask} tone="warning" />
-          <Stat icon={RotateCw} label="Resgates pendentes" value={data.rescuesPending} />
+          <Stat icon={AlertTriangle} label="Leads sem tarefa" value={data.leadsNoTask} tone="warning" to="/tarefas" />
+          <Stat icon={RotateCw} label="Resgates pendentes" value={data.rescuesPending} to="/resgates" />
         </div>
       </div>
     </div>
