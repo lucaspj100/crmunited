@@ -15,6 +15,7 @@ import { LEAD_STATUSES, LOST_REASONS, RESCUE_OPTIONS, waLink } from "@/lib/const
 import { Kanban, MessageCircle, Linkedin, User } from "lucide-react";
 import { NewLeadDialog } from "@/components/NewLeadDialog";
 import { LeadDetailsDialog } from "@/components/LeadDetailsDialog";
+import { ensureTaskForStatus } from "@/lib/task-automation";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/funil")({ component: FunilPage });
@@ -71,8 +72,10 @@ function FunilPage() {
     if (newStatus === "perdido") { setLostLead(lead); return; }
     if (newStatus === "matricula") { setMatriculaLead(lead); return; }
     const { error } = await supabase.from("leads").update({ status: newStatus as any }).eq("id", lead.id);
-    if (error) toast.error(error.message);
-    else { toast.success("Lead movido"); qc.invalidateQueries(); }
+    if (error) { toast.error(error.message); return; }
+    await ensureTaskForStatus({ leadId: lead.id, ownerId: lead.owner_id, status: newStatus });
+    toast.success("Lead movido");
+    qc.invalidateQueries();
   };
 
   return (

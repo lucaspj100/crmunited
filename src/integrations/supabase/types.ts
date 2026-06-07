@@ -56,7 +56,10 @@ export type Database = {
           observation: string | null
           owner_id: string
           phone: string | null
+          phone_invalid: boolean
+          phone_normalized: string | null
           rescue_date: string | null
+          source: string | null
           status: Database["public"]["Enums"]["lead_status"]
           updated_at: string
         }
@@ -77,7 +80,10 @@ export type Database = {
           observation?: string | null
           owner_id: string
           phone?: string | null
+          phone_invalid?: boolean
+          phone_normalized?: string | null
           rescue_date?: string | null
+          source?: string | null
           status?: Database["public"]["Enums"]["lead_status"]
           updated_at?: string
         }
@@ -98,7 +104,10 @@ export type Database = {
           observation?: string | null
           owner_id?: string
           phone?: string | null
+          phone_invalid?: boolean
+          phone_normalized?: string | null
           rescue_date?: string | null
+          source?: string | null
           status?: Database["public"]["Enums"]["lead_status"]
           updated_at?: string
         }
@@ -212,6 +221,7 @@ export type Database = {
     Enums: {
       app_role: "admin" | "franqueado" | "vendedor"
       lead_status:
+        | "novo"
         | "interessado"
         | "entrevista_marcada"
         | "entrevista_realizada"
@@ -241,6 +251,8 @@ export type Database = {
         | "encerramento"
         | "resgate"
         | "outro"
+        | "primeiro_contato"
+        | "ligar"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -370,6 +382,7 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "franqueado", "vendedor"],
       lead_status: [
+        "novo",
         "interessado",
         "entrevista_marcada",
         "entrevista_realizada",
@@ -401,6 +414,8 @@ export const Constants = {
         "encerramento",
         "resgate",
         "outro",
+        "primeiro_contato",
+        "ligar",
       ],
     },
   },
