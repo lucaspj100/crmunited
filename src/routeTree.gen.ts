@@ -16,6 +16,7 @@ import { Route as AuthenticatedTarefasRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedResgatesRouteImport } from './routes/_authenticated/resgates'
 import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authenticated/relatorios'
 import { Route as AuthenticatedLeadsRouteImport } from './routes/_authenticated/leads'
+import { Route as AuthenticatedImportarRouteImport } from './routes/_authenticated/importar'
 import { Route as AuthenticatedFunilRouteImport } from './routes/_authenticated/funil'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
@@ -54,6 +55,11 @@ const AuthenticatedLeadsRoute = AuthenticatedLeadsRouteImport.update({
   path: '/leads',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedImportarRoute = AuthenticatedImportarRouteImport.update({
+  id: '/importar',
+  path: '/importar',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedFunilRoute = AuthenticatedFunilRouteImport.update({
   id: '/funil',
   path: '/funil',
@@ -77,6 +83,7 @@ export interface FileRoutesByFullPath {
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/funil': typeof AuthenticatedFunilRoute
+  '/importar': typeof AuthenticatedImportarRoute
   '/leads': typeof AuthenticatedLeadsRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
   '/resgates': typeof AuthenticatedResgatesRoute
@@ -88,6 +95,7 @@ export interface FileRoutesByTo {
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/funil': typeof AuthenticatedFunilRoute
+  '/importar': typeof AuthenticatedImportarRoute
   '/leads': typeof AuthenticatedLeadsRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
   '/resgates': typeof AuthenticatedResgatesRoute
@@ -101,6 +109,7 @@ export interface FileRoutesById {
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/funil': typeof AuthenticatedFunilRoute
+  '/_authenticated/importar': typeof AuthenticatedImportarRoute
   '/_authenticated/leads': typeof AuthenticatedLeadsRoute
   '/_authenticated/relatorios': typeof AuthenticatedRelatoriosRoute
   '/_authenticated/resgates': typeof AuthenticatedResgatesRoute
@@ -114,6 +123,7 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/dashboard'
     | '/funil'
+    | '/importar'
     | '/leads'
     | '/relatorios'
     | '/resgates'
@@ -125,6 +135,7 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/dashboard'
     | '/funil'
+    | '/importar'
     | '/leads'
     | '/relatorios'
     | '/resgates'
@@ -137,6 +148,7 @@ export interface FileRouteTypes {
     | '/_authenticated/configuracoes'
     | '/_authenticated/dashboard'
     | '/_authenticated/funil'
+    | '/_authenticated/importar'
     | '/_authenticated/leads'
     | '/_authenticated/relatorios'
     | '/_authenticated/resgates'
@@ -200,6 +212,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLeadsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/importar': {
+      id: '/_authenticated/importar'
+      path: '/importar'
+      fullPath: '/importar'
+      preLoaderRoute: typeof AuthenticatedImportarRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/funil': {
       id: '/_authenticated/funil'
       path: '/funil'
@@ -228,6 +247,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedFunilRoute: typeof AuthenticatedFunilRoute
+  AuthenticatedImportarRoute: typeof AuthenticatedImportarRoute
   AuthenticatedLeadsRoute: typeof AuthenticatedLeadsRoute
   AuthenticatedRelatoriosRoute: typeof AuthenticatedRelatoriosRoute
   AuthenticatedResgatesRoute: typeof AuthenticatedResgatesRoute
@@ -238,6 +258,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedFunilRoute: AuthenticatedFunilRoute,
+  AuthenticatedImportarRoute: AuthenticatedImportarRoute,
   AuthenticatedLeadsRoute: AuthenticatedLeadsRoute,
   AuthenticatedRelatoriosRoute: AuthenticatedRelatoriosRoute,
   AuthenticatedResgatesRoute: AuthenticatedResgatesRoute,
