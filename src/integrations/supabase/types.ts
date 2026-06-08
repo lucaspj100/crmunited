@@ -38,6 +38,78 @@ export type Database = {
         }
         Relationships: []
       }
+      google_oauth_tokens: {
+        Row: {
+          access_token: string
+          created_at: string
+          expires_at: string
+          google_email: string | null
+          refresh_token: string
+          scope: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token: string
+          created_at?: string
+          expires_at: string
+          google_email?: string | null
+          refresh_token: string
+          scope?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string
+          created_at?: string
+          expires_at?: string
+          google_email?: string | null
+          refresh_token?: string
+          scope?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      lead_history: {
+        Row: {
+          changed_by: string | null
+          conflict: boolean
+          created_at: string
+          field: string
+          id: string
+          lead_id: string
+          new_value: string | null
+          old_value: string | null
+          owner_id: string
+          source: string
+        }
+        Insert: {
+          changed_by?: string | null
+          conflict?: boolean
+          created_at?: string
+          field: string
+          id?: string
+          lead_id: string
+          new_value?: string | null
+          old_value?: string | null
+          owner_id: string
+          source?: string
+        }
+        Update: {
+          changed_by?: string | null
+          conflict?: boolean
+          created_at?: string
+          field?: string
+          id?: string
+          lead_id?: string
+          new_value?: string | null
+          old_value?: string | null
+          owner_id?: string
+          source?: string
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
           company: string | null
@@ -47,21 +119,26 @@ export type Database = {
           interview_date: string | null
           interview_notes: string | null
           interview_time: string | null
+          last_contact_at: string | null
+          last_source: string
           linkedin_url: string | null
           lost_reason: Database["public"]["Enums"]["lost_reason"] | null
           lost_type: Database["public"]["Enums"]["lost_type"] | null
           material_value: number | null
           monthly_fee: number | null
           name: string
+          next_followup_at: string | null
           observation: string | null
           owner_id: string
           phone: string | null
           phone_invalid: boolean
           phone_normalized: string | null
           rescue_date: string | null
+          sheets_row: number | null
           source: string | null
           status: Database["public"]["Enums"]["lead_status"]
           updated_at: string
+          updated_by: string | null
         }
         Insert: {
           company?: string | null
@@ -71,21 +148,26 @@ export type Database = {
           interview_date?: string | null
           interview_notes?: string | null
           interview_time?: string | null
+          last_contact_at?: string | null
+          last_source?: string
           linkedin_url?: string | null
           lost_reason?: Database["public"]["Enums"]["lost_reason"] | null
           lost_type?: Database["public"]["Enums"]["lost_type"] | null
           material_value?: number | null
           monthly_fee?: number | null
           name: string
+          next_followup_at?: string | null
           observation?: string | null
           owner_id: string
           phone?: string | null
           phone_invalid?: boolean
           phone_normalized?: string | null
           rescue_date?: string | null
+          sheets_row?: number | null
           source?: string | null
           status?: Database["public"]["Enums"]["lead_status"]
           updated_at?: string
+          updated_by?: string | null
         }
         Update: {
           company?: string | null
@@ -95,21 +177,26 @@ export type Database = {
           interview_date?: string | null
           interview_notes?: string | null
           interview_time?: string | null
+          last_contact_at?: string | null
+          last_source?: string
           linkedin_url?: string | null
           lost_reason?: Database["public"]["Enums"]["lost_reason"] | null
           lost_type?: Database["public"]["Enums"]["lost_type"] | null
           material_value?: number | null
           monthly_fee?: number | null
           name?: string
+          next_followup_at?: string | null
           observation?: string | null
           owner_id?: string
           phone?: string | null
           phone_invalid?: boolean
           phone_normalized?: string | null
           rescue_date?: string | null
+          sheets_row?: number | null
           source?: string | null
           status?: Database["public"]["Enums"]["lead_status"]
           updated_at?: string
+          updated_by?: string | null
         }
         Relationships: []
       }
@@ -131,6 +218,84 @@ export type Database = {
           email?: string | null
           full_name?: string
           id?: string
+        }
+        Relationships: []
+      }
+      sheet_integrations: {
+        Row: {
+          created_at: string
+          last_error: string | null
+          last_sync_at: string | null
+          last_sync_status: string | null
+          sheet_title: string | null
+          spreadsheet_id: string
+          spreadsheet_url: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          last_error?: string | null
+          last_sync_at?: string | null
+          last_sync_status?: string | null
+          sheet_title?: string | null
+          spreadsheet_id: string
+          spreadsheet_url: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          last_error?: string | null
+          last_sync_at?: string | null
+          last_sync_status?: string | null
+          sheet_title?: string | null
+          spreadsheet_id?: string
+          spreadsheet_url?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      sync_queue: {
+        Row: {
+          attempts: number
+          created_at: string
+          direction: string
+          id: string
+          last_error: string | null
+          lead_id: string | null
+          op: string
+          owner_id: string
+          payload: Json | null
+          processed_at: string | null
+          status: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          direction: string
+          id?: string
+          last_error?: string | null
+          lead_id?: string | null
+          op: string
+          owner_id: string
+          payload?: Json | null
+          processed_at?: string | null
+          status?: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          direction?: string
+          id?: string
+          last_error?: string | null
+          lead_id?: string | null
+          op?: string
+          owner_id?: string
+          payload?: Json | null
+          processed_at?: string | null
+          status?: string
         }
         Relationships: []
       }
