@@ -1,94 +1,79 @@
-Plano de evolução do CRM mantendo layout simples e rápido. Divido em 7 blocos. Posso entregar todos numa sequência, ou priorizar — me diga se quiser ajustar a ordem.
+# Integração CRM ↔ Google Sheets (por vendedor)
 
-## 1. Schema (migração única)
+Funcionalidade grande. Antes de codar, preciso confirmar algumas decisões — algumas mudam bastante o esforço e o custo da entrega.
 
-Alterações no banco:
-- Enum `lead_status`: adicionar valor `novo` (primeira etapa).
-- Tabela `leads`: novos campos
-  - `source` (text, nullable) — origem do lead
-  - `phone_normalized` (text, nullable, indexado) — telefone só dígitos no padrão `55DDDNUMERO`
-  - `phone_invalid` (boolean, default false) — marcado quando telefone tem menos dígitos que o mínimo
-- Backfill: gerar `phone_normalized` para leads existentes a partir de `phone` e default `status='novo'` apenas em novos cadastros (não migra status atuais).
-- Default de `leads.status` muda para `'novo'`.
-- Índice único parcial: `UNIQUE (owner_id, phone_normalized) WHERE phone_normalized IS NOT NULL` para impedir duplicidade por vendedor. (Posso trocar por unicidade global se preferir — me avise.)
-- Enum `task_type`: adicionar `primeiro_contato` e `ligar`.
+## Visão geral do que vai ser construído
 
-## 2. Constantes e utilitários
+- Cada vendedor conecta **sua própria conta Google** e tem **1 planilha individual** (criada pelo CRM ou vinculada por URL).
+- Sincronização **bidirecional**: CRM ↔ Sheets, identificada por `lead_id`.
+- Admin vê tudo: leads de todos vendedores, planilhas conectadas, duplicidades entre vendedores, histórico, forçar sync.
+- Status/etapa na planilha via **dropdown** com as opções do CRM (data validation), e validação no servidor — texto livre é rejeitado.
+- Histórico de alterações por lead, com origem (CRM/Sheets) e detecção de conflito (vence o `updated_at` mais recente).
 
-- `src/lib/constants.ts`:
-  - Adicionar `novo` no `LEAD_STATUSES` no topo.
-  - Cor própria (cinza/azul claro).
-  - Atualizar `LOST_REASONS.suggestRescueDays` conforme regra solicitada (não compareceu=7, sem dinheiro=60, sem tempo=30, sem interesse=90, outro=manual).
-- Novo `src/lib/phone.ts`:
-  - `normalizePhone(raw)` → remove tudo que não é dígito, garante prefixo `55`, valida tamanho (mín 12, máx 13 dígitos), retorna `{ normalized, valid }`.
-  - Usado em cadastro manual, importação e busca de duplicidade.
+## Decisões técnicas (importantes)
 
-## 3. Cadastro de lead (NewLeadDialog)
+### A. OAuth por vendedor (não é o connector Google atual)
+O connector Google Sheets que a Lovable oferece autentica **a conta do dono do workspace** — serve para a planilha do admin, não para cada vendedor ter a sua. Preciso implementar **OAuth próprio por usuário**:
 
-- Adicionar select de Status (default `Novo`).
-- Adicionar campo "Origem do lead" (texto livre).
-- Antes do insert: normalizar telefone, consultar duplicidade via `phone_normalized`. Se existir, mostrar toast: *"Esse telefone já está cadastrado no lead [nome], vendedor [nome]."* e abortar.
-- Salvar `phone` (original) e `phone_normalized`.
-- Tarefa inicial criada conforme status (ver bloco 5).
+- Criar credenciais OAuth no Google Cloud Console (você precisa fazer isso e me passar `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET` como secrets).
+- Scopes: `spreadsheets`, `drive.file` (acesso só às planilhas criadas/abertas pelo app).
+- Tabela `google_oauth_tokens` (access_token, refresh_token, expiry) por vendedor — só backend (server fns) acessa.
+- Tela "Minha Integração Google Sheets" com botão **Conectar conta Google** que abre o consent screen do Google.
 
-## 4. Importação CSV/Excel
+### B. Sincronização: como acontece na prática
 
-- Nova rota `/_authenticated/importar` (admin/franqueado/vendedor).
-- Botão "Importar planilha" na página de Leads.
-- Usa `xlsx` (npm) para ler `.csv`, `.xlsx`, `.xls`.
-- Mapeamento flexível de colunas: tenta detectar por header (nome, telefone, empresa, origem, vendedor, observações, status, linkedin); UI permite o usuário ajustar mapeamento se ambíguo.
-- Tela de revisão (após parse, antes de gravar):
-  - Total na planilha, Novos válidos, Duplicados (já existem no CRM ou repetidos na própria planilha), Telefone inválido, Sem vendedor, Precisam revisão.
-  - Tabela linha-a-linha com badge da categoria.
-  - Botão "Importar apenas os válidos novos".
-- Vendedor é resolvido por nome/email no `profiles`; se não encontrar, marca "Sem vendedor responsável" (e o admin pode escolher um padrão).
-- Status padrão `novo` quando não vier na planilha.
+**CRM → Sheets (push)**: toda mudança em `leads` (insert/update) dispara um job que escreve na planilha do vendedor dono. Vou usar um **trigger no Postgres** que enfileira em `sync_queue`, e um cron `pg_cron` chamando `/api/public/sync/run` a cada 1 min (auth por anon key). Em telas onde o vendedor clicou "Sincronizar agora", chamamos a server fn diretamente.
 
-## 5. Tarefas automáticas por etapa
+**Sheets → CRM (pull)**: polling a cada 2-5 min via mesmo cron. Para cada planilha conectada, lê a aba, compara com o CRM por `lead_id`, e aplica mudanças em campos editáveis. **Não é tempo real** — webhooks do Sheets não existem nessa granularidade. Se você quiser quase-tempo-real, pode reduzir o intervalo para 1 min (cota Google: 300 req/min/projeto — suficiente).
 
-Quando um lead muda de status (cadastro ou movimentação no funil), criar tarefa correspondente vinculada ao vendedor:
-- `novo` → `primeiro_contato` (hoje)
-- `interessado` → `enviar_mensagem` (hoje)
-- `entrevista_marcada` → `confirmar_entrevista` (data da entrevista — já existe)
-- `entrevista_realizada` → `followup_pos` (D+1)
-- `perdido` → tarefa `resgate` na data sugerida (já existe via LostDialog)
+### C. Estrutura da planilha
+- Aba `Leads` com as 17 colunas listadas no escopo.
+- **Linha 1** congelada com headers.
+- Colunas protegidas (lead_id, telefone normalizado, datas, criador, etc.) com **proteção de range** via API.
+- Coluna `Status` e `Etapa` com **data validation** apontando para uma aba escondida `_opcoes` que é regenerada quando o admin mexe nos status do funil.
 
-A criação só ocorre se não houver tarefa pendente do mesmo tipo para o lead, para evitar duplicação.
+### D. Identidade e conflitos
+- `lead_id` é a chave. Em insert pelo Sheets sem lead_id, o sistema gera um, escreve de volta na linha, e cria o lead.
+- Conflito: comparamos `updated_at` do CRM com `updated_at_sheets` (armazenado em coluna oculta da planilha). Vence o mais recente; o perdedor vira entrada no histórico com tag "conflito".
 
-Funil ganha nova coluna "Novo" no início; lógica de movimentação inalterada.
+### E. Banco — novas tabelas
 
-## 6. Aba Tarefas
+```text
+google_oauth_tokens  (user_id PK, access_token, refresh_token, expires_at, email, scope)
+sheet_integrations   (user_id PK, spreadsheet_id, sheet_url, last_sync_at, last_sync_status, last_error)
+sync_queue           (id, lead_id, owner_id, direction, payload, status, attempts, created_at)
+lead_history         (id, lead_id, field, old_value, new_value, changed_by, source, conflict, created_at)
+```
 
-- `TASK_TYPES` ganha `primeiro_contato` e `ligar`.
-- Cards de tarefa já mostram nome, empresa, status, tipo, data, horário, WhatsApp, LinkedIn, concluir, reagendar, cancelar. Adicionar nome do vendedor responsável.
-- Botão "Excluir" (admin e dono).
-- Filtro por vendedor (admin/franqueado).
+Mais colunas em `leads`: `last_contact_at`, `next_followup_at`, `updated_by`, `last_source` (crm|sheets).
 
-## 7. Resgates, Dashboard, Relatórios
+Tudo com RLS: vendedor só vê o seu; admin vê tudo via `has_role(uid,'admin')`.
 
-**Resgates** (`/resgates`):
-- Seções: Atrasados, Hoje, Esta semana, Este mês, 30/60/90 dias.
-- Cada card: nome, empresa, telefone, vendedor, data prevista, motivo anterior, observação, status anterior, WhatsApp.
-- Botão "Resgatar" abre dialog para escolher etapa de retorno (Novo, Interessado, Entrevista marcada).
-- "Reagendar" abre date picker.
-- "Descartar" mantém perdido e remove da fila.
+### F. UI nova / alterada
 
-**Dashboard**:
-- Adiciona card "Novos" no funil.
-- Seção "Alertas importantes" no topo destacando: leads novos sem primeiro contato, tarefas atrasadas, entrevistas marcadas para hoje, leads sem próxima ação, resgates pendentes.
+- `/_authenticated/integracao-sheets` — vendedor: conectar conta, criar/vincular planilha, status, sync agora, desconectar.
+- `/_authenticated/admin/integracoes` — admin: tabela com todos os vendedores, planilhas, último sync, erros, botões.
+- `/_authenticated/admin/leads-geral` — admin: visão consolidada de todos os leads (filtros: vendedor, status, etapa, datas, origem, duplicados, sem movimentação).
+- `LeadDetailsDialog` ganha aba **Histórico**.
+- Visão admin lista possíveis duplicidades entre vendedores (mesmo `phone_normalized`, owners diferentes).
+- Mensagens/toasts já previstas no escopo.
 
-**Relatórios**:
-- Adiciona blocos: Leads por origem, Tarefas concluídas por vendedor, Tarefas atrasadas por vendedor, Resgates pendentes, Resgates realizados, Conversão por etapa do funil.
-- Filtros: vendedor, status, empresa, origem, período, motivo de perda.
+### G. Onde fica o código de sync
+Tudo em `createServerFn` (TanStack Start), nada em Edge Functions:
+- `src/lib/sheets/oauth.functions.ts` — initiate/callback/refresh.
+- `src/lib/sheets/integration.functions.ts` — create/link/disconnect.
+- `src/lib/sheets/sync.functions.ts` — push, pull, sync-now, force-sync-all.
+- Rota pública `src/routes/api/public/sync/run.ts` chamada pelo cron.
 
-## Notas técnicas
+## O que **preciso de você antes de implementar**
 
-- Tudo em queries do cliente (sem novos serverFn), mantendo simplicidade. RLS atual já cobre por owner/admin/franqueado.
-- `xlsx` adiciona ~400KB ao bundle apenas na rota de importação (lazy import).
-- Sem mudanças em auth, branding, ou layout do sidebar.
+1. **Credenciais OAuth Google** (Client ID e Secret). Posso te mandar passo a passo de como criar no console.cloud.google.com, e você cola aqui como secret — é o único caminho para "cada vendedor conecta a própria conta".
+2. **Intervalo de sync Sheets→CRM**: 1 min, 2 min ou 5 min? (mais frequente = mais "tempo real", consome mais cota Google).
+3. **Quando o admin alterar status do funil** (ex.: renomear "Interessado"), o que fazer com leads que estão nesse status na planilha?
+   - (a) Reescrever automaticamente nas planilhas para o novo nome
+   - (b) Bloquear edição até admin confirmar
+4. **Lead criado direto no Sheets pelo vendedor** (linha nova sem lead_id) — permitir? Se sim, qual status default (sugiro `novo`)?
 
-## Pergunta antes de implementar
+Se confirmar isso, parto pra implementação na ordem: schema → OAuth → criar/vincular planilha → push CRM→Sheets → pull Sheets→CRM → telas admin → histórico/conflitos → cron.
 
-**Unicidade de telefone**: global em todo o CRM, ou apenas por vendedor (mesmo número pode existir em vendedores diferentes)?
-
-Se ok com tudo acima, confirmo e implemento na sequência.
+Posso também entregar em **fases** (ex.: Fase 1 = OAuth + criar planilha + export one-way CRM→Sheets; Fase 2 = pull bidirecional; Fase 3 = histórico/admin) se quiser ver valor antes. Me diz se prefere assim.
