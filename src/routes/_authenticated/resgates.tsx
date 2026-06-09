@@ -18,14 +18,15 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/_authenticated/resgates")({ component: ResgatesPage });
 
 type Task = { id: string; lead_id: string; due_date: string; status: string; rescue_reason: string | null; observation: string | null; owner_id: string };
-type Lead = { id: string; name: string; phone: string | null; company: string | null; linkedin_url: string | null; owner_id: string; status: string; observation: string | null };
+type Lead = { id: string; name: string; phone: string | null; company: string | null; linkedin_url: string | null; owner_id: string; status: string; observation: string | null; lost_reason: string | null; lost_at: string | null; rescued_at: string | null; in_rescue: boolean };
 type Profile = { id: string; full_name: string | null; email: string | null };
 
 async function fetchResgates() {
-  const [tasksR, leadsR, profR] = await Promise.all([
+  const [tasksR, leadsR, profR, rescueLeadsR] = await Promise.all([
     supabase.from("tasks").select("*").eq("is_rescue", true).eq("status", "pendente").order("due_date").limit(2000),
-    supabase.from("leads").select("id,name,phone,company,linkedin_url,owner_id,status,observation").limit(2000),
+    supabase.from("leads").select("id,name,phone,company,linkedin_url,owner_id,status,observation,lost_reason,lost_at,rescued_at,in_rescue").limit(2000),
     supabase.from("profiles").select("id, full_name, email").limit(2000),
+    supabase.from("leads").select("*").eq("in_rescue", true).limit(2000),
   ]);
   const today = new Date().toISOString().slice(0, 10);
   const addDays = (n: number) => { const d = new Date(); d.setDate(d.getDate() + n); return d.toISOString().slice(0,10); };
@@ -35,6 +36,7 @@ async function fetchResgates() {
   const tasks = (tasksR.data ?? []) as Task[];
   return {
     byLead, byProfile,
+    emRescate: ((rescueLeadsR.data ?? []) as any[]) as Lead[],
     late: tasks.filter((t) => t.due_date < today),
     today: tasks.filter((t) => t.due_date === today),
     week: tasks.filter((t) => t.due_date > today && t.due_date <= w7),
