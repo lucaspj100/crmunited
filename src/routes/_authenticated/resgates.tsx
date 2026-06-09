@@ -120,12 +120,72 @@ function ResgatesPage() {
     </div>
   );
 
+  const moveBackToPerdidos = async (leadId: string) => {
+    const { error } = await supabase.from("leads").update({ in_rescue: false, rescued_at: null, rescued_by: null } as any).eq("id", leadId);
+    if (error) toast.error(error.message); else { toast.success("Voltou para Perdidos"); qc.invalidateQueries(); }
+  };
+  const moveBackToFunnel = async (leadId: string) => {
+    const { error } = await supabase.from("leads").update({ status: "interessado", lost_reason: null, lost_type: null, rescue_date: null } as any).eq("id", leadId);
+    if (error) toast.error(error.message); else { toast.success("Lead voltou ao funil"); qc.invalidateQueries(); }
+  };
+
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2"><RotateCw className="h-6 w-6 text-primary" />Resgates Futuros</h1>
-        <p className="text-sm text-muted-foreground">Leads perdidos que devem ser retomados</p>
+        <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2"><RotateCw className="h-6 w-6 text-primary" />Resgates</h1>
+        <p className="text-sm text-muted-foreground">Leads em esteira de reativação e resgates agendados</p>
       </div>
+
+      <div>
+        <div className="mb-2 text-sm font-semibold text-muted-foreground">Em Resgate <Badge variant="secondary">{data.emRescate.length}</Badge></div>
+        <div className="space-y-2">
+          {data.emRescate.length === 0
+            ? <Card className="p-4 text-sm text-muted-foreground">Nenhum lead em resgate. Mova leads pela aba Perdidos.</Card>
+            : data.emRescate.map((l) => {
+                const owner = data.byProfile.get(l.owner_id);
+                const days = l.lost_at ? Math.floor((Date.now() - new Date(l.lost_at).getTime()) / 86400000) : null;
+                return (
+                  <Card key={l.id} className="p-4 border-l-4 border-l-amber-500 bg-amber-500/5">
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-semibold">{l.name}</span>
+                          {l.lost_reason && <Badge variant="outline">Motivo: {labelFor(LOST_REASONS, l.lost_reason)}</Badge>}
+                          {days !== null && <Badge variant="secondary">Perdido há {days}d</Badge>}
+                          {l.rescued_at && <Badge className="bg-amber-500/20 text-amber-700">Em resgate desde {new Date(l.rescued_at).toLocaleDateString("pt-BR")}</Badge>}
+                        </div>
+                        <div className="mt-1 text-sm text-muted-foreground">
+                          {l.company && <>{l.company} · </>}{l.phone}
+                        </div>
+                        <div className="mt-1 text-xs text-muted-foreground flex items-center gap-1">
+                          <User className="h-3 w-3" />{owner?.full_name || owner?.email || "—"}
+                        </div>
+                        {l.observation && <p className="mt-1 text-xs italic text-muted-foreground line-clamp-2">{l.observation}</p>}
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {l.phone && (
+                          <>
+                            <Button asChild size="sm" variant="outline"><a href={waLink(l.phone)} target="_blank" rel="noreferrer"><MessageCircle className="h-4 w-4" /></a></Button>
+                            <Button size="sm" variant="outline" title="Copiar telefone" onClick={() => copyToClipboard(rawPhoneDigits(l.phone), "Telefone copiado")}><Phone className="h-4 w-4" /></Button>
+                          </>
+                        )}
+                        <Button size="sm" variant="outline" title="Copiar mensagem de reativação" onClick={() => copyToClipboard(waRescueMessage(l.name), "Mensagem de resgate copiada")}>
+                          <Copy className="h-4 w-4 mr-1" />Msg
+                        </Button>
+                        <Button size="sm" onClick={() => moveBackToFunnel(l.id)} title="Voltar ao funil">
+                          <Check className="h-4 w-4 mr-1" />Voltar ao funil
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => moveBackToPerdidos(l.id)} title="Tirar do resgate">
+                          <ArrowLeft className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                );
+              })}
+        </div>
+      </div>
+
       <Section title="Resgates atrasados" items={data.late} tone="danger" />
       <Section title="Resgates de hoje" items={data.today} tone="today" />
       <Section title="Esta semana" items={data.week} />
