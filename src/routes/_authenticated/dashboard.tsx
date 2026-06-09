@@ -151,12 +151,23 @@ function Dashboard() {
 
       <div>
         <div className="text-sm font-medium text-muted-foreground mb-2">Operação diária</div>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-6">
+          <Stat icon={CalendarCheck} label="Entrevistas hoje" value={data.entrevistasHoje} tone="info" to="/tarefas" />
           <Stat icon={ListChecks} label="Tarefas hoje" value={data.tasksToday} tone="primary" to="/tarefas" />
           <Stat icon={AlertTriangle} label="Tarefas atrasadas" value={data.tasksLate} tone="danger" to="/tarefas" />
           <Stat icon={ListChecks} label="Concluídas hoje" value={data.tasksDoneToday} tone="success" />
           <Stat icon={AlertTriangle} label="Leads sem tarefa" value={data.leadsNoTask} tone="warning" to="/tarefas" />
           <Stat icon={RotateCw} label="Resgates pendentes" value={data.rescuesPending} to="/resgates" />
+        </div>
+      </div>
+
+      <div>
+        <div className="text-sm font-medium text-muted-foreground mb-2">Esteira de Resgate</div>
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <Stat icon={RotateCw} label="Leads em Resgate" value={data.emRescate} tone="warning" to="/resgates" />
+          <Stat icon={RotateCw} label="Entraram hoje" value={data.rescatesHoje} />
+          <Stat icon={RotateCw} label="Reativados (7d)" value={data.reativados7d} tone="success" />
+          <Stat icon={TrendingDown} label="Perdidos no funil" value={data.perdidos} tone="danger" to="/perdidos" />
         </div>
       </div>
     </div>
