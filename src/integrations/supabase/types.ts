@@ -116,12 +116,14 @@ export type Database = {
           created_at: string
           enrollment_value: number | null
           id: string
+          in_rescue: boolean
           interview_date: string | null
           interview_notes: string | null
           interview_time: string | null
           last_contact_at: string | null
           last_source: string
           linkedin_url: string | null
+          lost_at: string | null
           lost_reason: Database["public"]["Enums"]["lost_reason"] | null
           lost_type: Database["public"]["Enums"]["lost_type"] | null
           material_value: number | null
@@ -134,6 +136,8 @@ export type Database = {
           phone_invalid: boolean
           phone_normalized: string | null
           rescue_date: string | null
+          rescued_at: string | null
+          rescued_by: string | null
           sheets_row: number | null
           source: string | null
           status: Database["public"]["Enums"]["lead_status"]
@@ -145,12 +149,14 @@ export type Database = {
           created_at?: string
           enrollment_value?: number | null
           id?: string
+          in_rescue?: boolean
           interview_date?: string | null
           interview_notes?: string | null
           interview_time?: string | null
           last_contact_at?: string | null
           last_source?: string
           linkedin_url?: string | null
+          lost_at?: string | null
           lost_reason?: Database["public"]["Enums"]["lost_reason"] | null
           lost_type?: Database["public"]["Enums"]["lost_type"] | null
           material_value?: number | null
@@ -163,6 +169,8 @@ export type Database = {
           phone_invalid?: boolean
           phone_normalized?: string | null
           rescue_date?: string | null
+          rescued_at?: string | null
+          rescued_by?: string | null
           sheets_row?: number | null
           source?: string | null
           status?: Database["public"]["Enums"]["lead_status"]
@@ -174,12 +182,14 @@ export type Database = {
           created_at?: string
           enrollment_value?: number | null
           id?: string
+          in_rescue?: boolean
           interview_date?: string | null
           interview_notes?: string | null
           interview_time?: string | null
           last_contact_at?: string | null
           last_source?: string
           linkedin_url?: string | null
+          lost_at?: string | null
           lost_reason?: Database["public"]["Enums"]["lost_reason"] | null
           lost_type?: Database["public"]["Enums"]["lost_type"] | null
           material_value?: number | null
@@ -192,6 +202,8 @@ export type Database = {
           phone_invalid?: boolean
           phone_normalized?: string | null
           rescue_date?: string | null
+          rescued_at?: string | null
+          rescued_by?: string | null
           sheets_row?: number | null
           source?: string | null
           status?: Database["public"]["Enums"]["lead_status"]
