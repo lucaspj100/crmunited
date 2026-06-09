@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedTarefasRouteImport } from './routes/_authenticated/tarefas'
 import { Route as AuthenticatedResgatesRouteImport } from './routes/_authenticated/resgates'
 import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authenticated/relatorios'
+import { Route as AuthenticatedPerdidosRouteImport } from './routes/_authenticated/perdidos'
 import { Route as AuthenticatedLeadsRouteImport } from './routes/_authenticated/leads'
 import { Route as AuthenticatedImportarRouteImport } from './routes/_authenticated/importar'
 import { Route as AuthenticatedFunilRouteImport } from './routes/_authenticated/funil'
@@ -48,6 +49,11 @@ const AuthenticatedResgatesRoute = AuthenticatedResgatesRouteImport.update({
 const AuthenticatedRelatoriosRoute = AuthenticatedRelatoriosRouteImport.update({
   id: '/relatorios',
   path: '/relatorios',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPerdidosRoute = AuthenticatedPerdidosRouteImport.update({
+  id: '/perdidos',
+  path: '/perdidos',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedLeadsRoute = AuthenticatedLeadsRouteImport.update({
@@ -85,6 +91,7 @@ export interface FileRoutesByFullPath {
   '/funil': typeof AuthenticatedFunilRoute
   '/importar': typeof AuthenticatedImportarRoute
   '/leads': typeof AuthenticatedLeadsRoute
+  '/perdidos': typeof AuthenticatedPerdidosRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
   '/resgates': typeof AuthenticatedResgatesRoute
   '/tarefas': typeof AuthenticatedTarefasRoute
@@ -97,6 +104,7 @@ export interface FileRoutesByTo {
   '/funil': typeof AuthenticatedFunilRoute
   '/importar': typeof AuthenticatedImportarRoute
   '/leads': typeof AuthenticatedLeadsRoute
+  '/perdidos': typeof AuthenticatedPerdidosRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
   '/resgates': typeof AuthenticatedResgatesRoute
   '/tarefas': typeof AuthenticatedTarefasRoute
@@ -111,6 +119,7 @@ export interface FileRoutesById {
   '/_authenticated/funil': typeof AuthenticatedFunilRoute
   '/_authenticated/importar': typeof AuthenticatedImportarRoute
   '/_authenticated/leads': typeof AuthenticatedLeadsRoute
+  '/_authenticated/perdidos': typeof AuthenticatedPerdidosRoute
   '/_authenticated/relatorios': typeof AuthenticatedRelatoriosRoute
   '/_authenticated/resgates': typeof AuthenticatedResgatesRoute
   '/_authenticated/tarefas': typeof AuthenticatedTarefasRoute
@@ -125,6 +134,7 @@ export interface FileRouteTypes {
     | '/funil'
     | '/importar'
     | '/leads'
+    | '/perdidos'
     | '/relatorios'
     | '/resgates'
     | '/tarefas'
@@ -137,6 +147,7 @@ export interface FileRouteTypes {
     | '/funil'
     | '/importar'
     | '/leads'
+    | '/perdidos'
     | '/relatorios'
     | '/resgates'
     | '/tarefas'
@@ -150,6 +161,7 @@ export interface FileRouteTypes {
     | '/_authenticated/funil'
     | '/_authenticated/importar'
     | '/_authenticated/leads'
+    | '/_authenticated/perdidos'
     | '/_authenticated/relatorios'
     | '/_authenticated/resgates'
     | '/_authenticated/tarefas'
@@ -205,6 +217,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRelatoriosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/perdidos': {
+      id: '/_authenticated/perdidos'
+      path: '/perdidos'
+      fullPath: '/perdidos'
+      preLoaderRoute: typeof AuthenticatedPerdidosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/leads': {
       id: '/_authenticated/leads'
       path: '/leads'
@@ -249,6 +268,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFunilRoute: typeof AuthenticatedFunilRoute
   AuthenticatedImportarRoute: typeof AuthenticatedImportarRoute
   AuthenticatedLeadsRoute: typeof AuthenticatedLeadsRoute
+  AuthenticatedPerdidosRoute: typeof AuthenticatedPerdidosRoute
   AuthenticatedRelatoriosRoute: typeof AuthenticatedRelatoriosRoute
   AuthenticatedResgatesRoute: typeof AuthenticatedResgatesRoute
   AuthenticatedTarefasRoute: typeof AuthenticatedTarefasRoute
@@ -260,6 +280,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedFunilRoute: AuthenticatedFunilRoute,
   AuthenticatedImportarRoute: AuthenticatedImportarRoute,
   AuthenticatedLeadsRoute: AuthenticatedLeadsRoute,
+  AuthenticatedPerdidosRoute: AuthenticatedPerdidosRoute,
   AuthenticatedRelatoriosRoute: AuthenticatedRelatoriosRoute,
   AuthenticatedResgatesRoute: AuthenticatedResgatesRoute,
   AuthenticatedTarefasRoute: AuthenticatedTarefasRoute,
@@ -276,3 +297,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
