@@ -9,9 +9,12 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { LEAD_STATUSES, TASK_TYPES, labelFor, statusColor, waLink } from "@/lib/constants";
-import { ListChecks, MessageCircle, Linkedin, Check, Calendar, X, AlertCircle, AlertTriangle, User, Trash2 } from "lucide-react";
+import { copyToClipboard, waFollowupMessage, waConfirmInterviewMessage, leadSummary, rawPhoneDigits } from "@/lib/messages";
+import { LeadDetailsDialog } from "@/components/LeadDetailsDialog";
+import { ListChecks, MessageCircle, Check, Calendar, X, User, Copy, Phone, FileText, Eye, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/tarefas")({ component: TarefasPage });
@@ -20,69 +23,76 @@ type Task = {
   id: string; lead_id: string; type: string; due_date: string; due_time: string | null;
   observation: string | null; status: string; owner_id: string; is_rescue: boolean;
 };
-type Lead = { id: string; name: string; phone: string | null; company: string | null; linkedin_url: string | null; status: string; owner_id: string };
+type Lead = { id: string; name: string; phone: string | null; company: string | null; linkedin_url: string | null; status: string; owner_id: string; interview_date: string | null; interview_time: string | null };
 type Profile = { id: string; full_name: string | null; email: string | null };
 
 async function fetchTarefas() {
-  const today = new Date().toISOString().slice(0, 10);
   const [tasksR, leadsR, profilesR] = await Promise.all([
-    supabase.from("tasks").select("*").order("due_date").limit(2000),
-    supabase.from("leads").select("*").limit(2000),
+    supabase.from("tasks").select("*").order("due_date").limit(3000),
+    supabase.from("leads").select("id,name,phone,company,linkedin_url,status,owner_id,interview_date,interview_time").limit(3000),
     supabase.from("profiles").select("id, full_name, email").limit(2000),
   ]);
-  const tasks = (tasksR.data ?? []) as Task[];
-  const leads = (leadsR.data ?? []) as Lead[];
-  const profiles = (profilesR.data ?? []) as Profile[];
-  const byLead = new Map(leads.map((l) => [l.id, l]));
-  const byProfile = new Map(profiles.map((p) => [p.id, p]));
-  const pendingTasks = tasks.filter((t) => t.status === "pendente");
-  const late = pendingTasks.filter((t) => t.due_date < today);
-  const todayT = pendingTasks.filter((t) => t.due_date === today);
-  const future = pendingTasks.filter((t) => t.due_date > today);
-  const pendingLeadIds = new Set(pendingTasks.map((t) => t.lead_id));
-  const leadsNoTask = leads.filter((l) =>
-    ["novo", "interessado", "entrevista_marcada", "entrevista_realizada"].includes(l.status) && !pendingLeadIds.has(l.id),
-  );
-  return { byLead, byProfile, late, todayT, future, leadsNoTask, today };
+  return {
+    tasks: (tasksR.data ?? []) as Task[],
+    leads: (leadsR.data ?? []) as Lead[],
+    profiles: (profilesR.data ?? []) as Profile[],
+  };
 }
 
 function TarefasPage() {
   const qc = useQueryClient();
   const { data, isLoading } = useQuery({ queryKey: ["tarefas"], queryFn: fetchTarefas });
   const [completing, setCompleting] = useState<{ task: Task; lead: Lead } | null>(null);
-  const [vendorFilter, setVendorFilter] = useState<string>("all");
+  const [detailsId, setDetailsId] = useState<string | null>(null);
+  const [vendor, setVendor] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [tab, setTab] = useState<string>("hoje");
+
+  const today = new Date().toISOString().slice(0, 10);
+
+  const byLead = useMemo(() => new Map((data?.leads ?? []).map((l) => [l.id, l])), [data]);
+  const byProfile = useMemo(() => new Map((data?.profiles ?? []).map((p) => [p.id, p])), [data]);
+
+  const vendorOptions = useMemo(() => {
+    const ids = new Set((data?.tasks ?? []).map((t) => t.owner_id));
+    return Array.from(ids).map((id) => ({ id, name: byProfile.get(id)?.full_name || byProfile.get(id)?.email || "Vendedor" }));
+  }, [data, byProfile]);
+
+  const allTasks = data?.tasks ?? [];
+  const matchVendor = (t: Task) => vendor === "all" || t.owner_id === vendor;
+  const matchType = (t: Task) => typeFilter === "all" || t.type === typeFilter;
+  const baseFilter = (t: Task) => matchVendor(t) && matchType(t);
+
+  const pendentes = allTasks.filter((t) => t.status === "pendente").filter(baseFilter);
+  const hoje = pendentes.filter((t) => t.due_date === today);
+  const atrasadas = pendentes.filter((t) => t.due_date < today);
+  const futuras = pendentes.filter((t) => t.due_date > today);
+  const concluidas = allTasks.filter((t) => t.status === "concluida").filter(baseFilter).slice(0, 100);
 
   const setStatus = async (task: Task, status: string) => {
     const { error } = await supabase.from("tasks").update({ status: status as any }).eq("id", task.id);
-    if (error) toast.error(error.message);
-    else { toast.success("Atualizado"); qc.invalidateQueries(); }
+    if (error) toast.error(error.message); else { toast.success("Atualizado"); qc.invalidateQueries(); }
   };
-
   const deleteTask = async (task: Task) => {
     const { error } = await supabase.from("tasks").delete().eq("id", task.id);
-    if (error) toast.error(error.message);
-    else { toast.success("Tarefa excluída"); qc.invalidateQueries(); }
+    if (error) toast.error(error.message); else { toast.success("Tarefa excluída"); qc.invalidateQueries(); }
   };
-
-  const vendorOptions = useMemo(() => {
-    if (!data) return [];
-    const ids = new Set<string>();
-    [...data.late, ...data.todayT, ...data.future].forEach((t) => ids.add(t.owner_id));
-    return Array.from(ids).map((id) => ({ id, name: data.byProfile.get(id)?.full_name || data.byProfile.get(id)?.email || "Vendedor" }));
-  }, [data]);
 
   if (isLoading || !data) return <div className="text-muted-foreground">Carregando…</div>;
 
-  const filterTask = (t: Task) => vendorFilter === "all" || t.owner_id === vendorFilter;
-
-  const Row = ({ task, tone }: { task: Task; tone?: "danger" | "today" | "future" }) => {
-    const lead = data.byLead.get(task.lead_id);
+  const Row = ({ task, tone }: { task: Task; tone?: "danger" | "today" | "future" | "done" }) => {
+    const lead = byLead.get(task.lead_id);
     if (!lead) return null;
-    const owner = data.byProfile.get(task.owner_id);
+    const owner = byProfile.get(task.owner_id);
     const ownerName = owner?.full_name || owner?.email || "—";
     const bg = tone === "danger" ? "border-l-4 border-l-rose-500 bg-rose-500/5"
             : tone === "today" ? "border-l-4 border-l-primary bg-primary/5"
+            : tone === "done" ? "border-l-4 border-l-emerald-500 bg-emerald-500/5 opacity-80"
             : "border-l-4 border-l-muted";
+    const msg = task.type === "confirmar_entrevista"
+      ? waConfirmInterviewMessage(lead.name, lead.interview_date, lead.interview_time)
+      : waFollowupMessage(lead.name);
+
     return (
       <Card className={`p-4 ${bg}`}>
         <div className="flex flex-wrap items-start justify-between gap-3">
@@ -93,19 +103,44 @@ function TarefasPage() {
               <Badge variant="secondary">{labelFor(TASK_TYPES, task.type)}</Badge>
               {task.is_rescue && <Badge className="bg-amber-500/20 text-amber-700 border-amber-500/30">Resgate</Badge>}
             </div>
-            <div className="mt-1 text-sm text-muted-foreground">
-              {lead.company && <span>{lead.company} · </span>}
-              <span>{new Date(task.due_date + "T00:00:00").toLocaleDateString("pt-BR")}{task.due_time ? ` às ${task.due_time.slice(0,5)}` : ""}</span>
+            <div className="mt-1 text-sm text-muted-foreground flex flex-wrap items-center gap-x-2">
+              {lead.company && <span>{lead.company}</span>}
+              {lead.phone && <span className="font-mono">{lead.phone}</span>}
+              <span>· {new Date(task.due_date + "T00:00:00").toLocaleDateString("pt-BR")}{task.due_time ? ` às ${task.due_time.slice(0, 5)}` : ""}</span>
             </div>
             <div className="mt-1 text-xs text-muted-foreground flex items-center gap-1"><User className="h-3 w-3" />{ownerName}</div>
             {task.observation && <p className="mt-1 text-sm">{task.observation}</p>}
           </div>
           <div className="flex flex-wrap gap-1">
-            {lead.phone && <Button asChild size="sm" variant="outline"><a href={waLink(lead.phone)} target="_blank" rel="noreferrer"><MessageCircle className="h-4 w-4" /></a></Button>}
-            {lead.linkedin_url && <Button asChild size="sm" variant="outline"><a href={lead.linkedin_url} target="_blank" rel="noreferrer"><Linkedin className="h-4 w-4" /></a></Button>}
-            <Button size="sm" onClick={() => setCompleting({ task, lead })}><Check className="h-4 w-4 mr-1" />Concluir</Button>
-            <Button size="sm" variant="ghost" onClick={() => setStatus(task, "remarcada")} title="Reagendar"><Calendar className="h-4 w-4" /></Button>
-            <Button size="sm" variant="ghost" onClick={() => setStatus(task, "cancelada")} title="Cancelar"><X className="h-4 w-4" /></Button>
+            {lead.phone && (
+              <>
+                <Button asChild size="sm" variant="outline" title="Abrir WhatsApp">
+                  <a href={waLink(lead.phone)} target="_blank" rel="noreferrer"><MessageCircle className="h-4 w-4" /></a>
+                </Button>
+                <Button size="sm" variant="outline" title="Copiar telefone" onClick={() => copyToClipboard(rawPhoneDigits(lead.phone), "Telefone copiado")}>
+                  <Phone className="h-4 w-4" />
+                </Button>
+              </>
+            )}
+            <Button size="sm" variant="outline" title="Copiar nome" onClick={() => copyToClipboard(lead.name, "Nome copiado")}>
+              <Copy className="h-4 w-4" />
+            </Button>
+            <Button size="sm" variant="outline" title="Copiar mensagem de follow-up" onClick={() => copyToClipboard(msg, "Mensagem copiada")}>
+              <Copy className="h-4 w-4 mr-1" />Msg
+            </Button>
+            <Button size="sm" variant="outline" title="Copiar resumo do lead" onClick={() => copyToClipboard(leadSummary(lead), "Resumo copiado")}>
+              <FileText className="h-4 w-4" />
+            </Button>
+            <Button size="sm" variant="ghost" title="Ver detalhes" onClick={() => setDetailsId(lead.id)}>
+              <Eye className="h-4 w-4" />
+            </Button>
+            {tone !== "done" && (
+              <>
+                <Button size="sm" onClick={() => setCompleting({ task, lead })}><Check className="h-4 w-4 mr-1" />Concluir</Button>
+                <Button size="sm" variant="ghost" onClick={() => setStatus(task, "remarcada")} title="Reagendar"><Calendar className="h-4 w-4" /></Button>
+                <Button size="sm" variant="ghost" onClick={() => setStatus(task, "cancelada")} title="Cancelar"><X className="h-4 w-4" /></Button>
+              </>
+            )}
             <Button size="sm" variant="ghost" onClick={() => deleteTask(task)} title="Excluir"><Trash2 className="h-4 w-4 text-rose-500" /></Button>
           </div>
         </div>
@@ -113,69 +148,53 @@ function TarefasPage() {
     );
   };
 
-  const Section = ({ title, icon: Icon, items, tone }: { title: string; icon: any; items: Task[]; tone?: "danger" | "today" | "future" }) => {
-    const filtered = items.filter(filterTask);
-    return (
-      <div>
-        <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-muted-foreground"><Icon className="h-4 w-4" />{title} <Badge variant="secondary">{filtered.length}</Badge></div>
-        <div className="space-y-2">{filtered.length === 0 ? <Card className="p-4 text-sm text-muted-foreground">Nada por aqui.</Card> : filtered.slice(0, 60).map((t) => <Row key={t.id} task={t} tone={tone} />)}</div>
-      </div>
-    );
-  };
+  const List = ({ items, tone, emptyMsg }: { items: Task[]; tone?: "danger" | "today" | "future" | "done"; emptyMsg: string }) =>
+    items.length === 0
+      ? <Card className="p-6 text-center text-sm text-muted-foreground">{emptyMsg}</Card>
+      : <div className="space-y-2">{items.slice(0, 200).map((t) => <Row key={t.id} task={t} tone={tone} />)}</div>;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2"><ListChecks className="h-6 w-6 text-primary" />Tarefas do Dia</h1>
+          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2"><ListChecks className="h-6 w-6 text-primary" />Tarefas</h1>
           <p className="text-sm text-muted-foreground">{new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })}</p>
         </div>
-        <Select value={vendorFilter} onValueChange={setVendorFilter}>
-          <SelectTrigger className="w-[200px]"><SelectValue placeholder="Vendedor" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos os vendedores</SelectItem>
-            {vendorOptions.map((v) => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <Section title="Tarefas atrasadas" icon={AlertCircle} items={data.late} tone="danger" />
-      <Section title="Tarefas de hoje" icon={ListChecks} items={data.todayT} tone="today" />
-      <Section title="Próximas tarefas" icon={Calendar} items={data.future} tone="future" />
-
-      <div>
-        <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-muted-foreground"><AlertTriangle className="h-4 w-4" />Leads sem próxima tarefa <Badge variant="secondary">{data.leadsNoTask.filter((l) => vendorFilter === "all" || l.owner_id === vendorFilter).length}</Badge></div>
-        <div className="space-y-2">
-          {data.leadsNoTask.filter((l) => vendorFilter === "all" || l.owner_id === vendorFilter).map((l) => (
-            <Card key={l.id} className="p-4 border-l-4 border-l-amber-500 bg-amber-500/5">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div>
-                  <div className="font-semibold flex items-center gap-2">{l.name} <Badge variant="outline" className={statusColor(l.status)}>{labelFor(LEAD_STATUSES, l.status)}</Badge></div>
-                  {l.company && <div className="text-sm text-muted-foreground">{l.company}</div>}
-                </div>
-                <div className="flex gap-2">
-                  {l.phone && <Button asChild size="sm" variant="outline"><a href={waLink(l.phone)} target="_blank" rel="noreferrer"><MessageCircle className="h-4 w-4" /></a></Button>}
-                  <Button size="sm" onClick={() => quickCreateTask(l, qc)}>Agendar follow-up</Button>
-                </div>
-              </div>
-            </Card>
-          ))}
+        <div className="flex gap-2">
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <SelectTrigger className="w-[170px]"><SelectValue placeholder="Tipo" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os tipos</SelectItem>
+              {TASK_TYPES.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={vendor} onValueChange={setVendor}>
+            <SelectTrigger className="w-[180px]"><SelectValue placeholder="Vendedor" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os vendedores</SelectItem>
+              {vendorOptions.map((v) => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
+      <Tabs value={tab} onValueChange={setTab}>
+        <TabsList className="w-full justify-start overflow-x-auto">
+          <TabsTrigger value="hoje">Hoje <Badge variant="secondary" className="ml-2">{hoje.length}</Badge></TabsTrigger>
+          <TabsTrigger value="atrasadas">Atrasadas <Badge variant="secondary" className="ml-2">{atrasadas.length}</Badge></TabsTrigger>
+          <TabsTrigger value="futuras">Futuras <Badge variant="secondary" className="ml-2">{futuras.length}</Badge></TabsTrigger>
+          <TabsTrigger value="concluidas">Concluídas <Badge variant="secondary" className="ml-2">{concluidas.length}</Badge></TabsTrigger>
+        </TabsList>
+        <TabsContent value="hoje" className="mt-3"><List items={hoje} tone="today" emptyMsg="Nenhuma tarefa para hoje." /></TabsContent>
+        <TabsContent value="atrasadas" className="mt-3"><List items={atrasadas} tone="danger" emptyMsg="Sem tarefas atrasadas." /></TabsContent>
+        <TabsContent value="futuras" className="mt-3"><List items={futuras} tone="future" emptyMsg="Sem tarefas futuras." /></TabsContent>
+        <TabsContent value="concluidas" className="mt-3"><List items={concluidas} tone="done" emptyMsg="Nenhuma tarefa concluída." /></TabsContent>
+      </Tabs>
+
       {completing && <CompleteTaskDialog task={completing.task} lead={completing.lead} onClose={() => setCompleting(null)} onDone={() => { setCompleting(null); qc.invalidateQueries(); }} />}
+      <LeadDetailsDialog leadId={detailsId} onClose={() => setDetailsId(null)} />
     </div>
   );
-}
-
-async function quickCreateTask(lead: Lead, qc: any) {
-  const d = new Date(); d.setDate(d.getDate() + 1);
-  const { error } = await supabase.from("tasks").insert({
-    lead_id: lead.id, owner_id: lead.owner_id, type: "enviar_mensagem",
-    due_date: d.toISOString().slice(0, 10), status: "pendente", observation: "Follow-up",
-  });
-  if (error) toast.error(error.message);
-  else { toast.success("Tarefa criada para amanhã"); qc.invalidateQueries(); }
 }
 
 function CompleteTaskDialog({ task, lead, onClose, onDone }: { task: Task; lead: Lead; onClose: () => void; onDone: () => void }) {

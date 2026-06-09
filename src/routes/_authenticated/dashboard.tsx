@@ -9,12 +9,14 @@ export const Route = createFileRoute("/_authenticated/dashboard")({ component: D
 
 async function fetchDashboard() {
   const today = new Date().toISOString().slice(0, 10);
+  const last7 = new Date(); last7.setDate(last7.getDate() - 7);
+  const last7Iso = last7.toISOString();
   const [leadsR, tasksR, pendingTasksR] = await Promise.all([
-    supabase.from("leads").select("id,status").limit(5000),
+    supabase.from("leads").select("id,status,in_rescue,rescued_at").limit(5000),
     supabase.from("tasks").select("id,due_date,status,is_rescue,lead_id,type").limit(5000),
     supabase.from("tasks").select("lead_id").eq("status", "pendente").gte("due_date", today).limit(5000),
   ]);
-  const leads = (leadsR.data ?? []) as { id: string; status: string }[];
+  const leads = (leadsR.data ?? []) as { id: string; status: string; in_rescue: boolean; rescued_at: string | null }[];
   const tasks = (tasksR.data ?? []) as { id: string; due_date: string; status: string; is_rescue: boolean; lead_id: string; type: string }[];
   const pendingLeadIds = new Set(((pendingTasksR.data ?? []) as { lead_id: string }[]).map((t) => t.lead_id));
 
@@ -29,13 +31,11 @@ async function fetchDashboard() {
   const activeLeads = leads.filter((l) => ["novo", "interessado", "entrevista_marcada", "entrevista_realizada"].includes(l.status));
   const leadsNoTask = activeLeads.filter((l) => !pendingLeadIds.has(l.id)).length;
 
-  // Novos sem primeiro contato (lead status='novo' sem tarefa pendente do tipo primeiro_contato)
   const leadIdsComPrimeiroContato = new Set(
     tasks.filter((t) => t.type === "primeiro_contato" && t.status === "pendente").map((t) => t.lead_id),
   );
   const novosSemContato = leads.filter((l) => l.status === "novo" && !leadIdsComPrimeiroContato.has(l.id)).length;
 
-  // Entrevistas marcadas para hoje (tarefas confirmar_entrevista hoje, ou status do lead entrevista_marcada e tarefa due_date hoje)
   const entrevistasHoje = tasks.filter((t) => t.type === "confirmar_entrevista" && t.due_date === today && t.status === "pendente").length;
 
   const tasksToday = tasks.filter((t) => t.due_date === today && t.status === "pendente").length;
@@ -43,6 +43,11 @@ async function fetchDashboard() {
   const tasksDoneToday = tasks.filter((t) => t.due_date === today && t.status === "concluida").length;
   const rescuesPending = tasks.filter((t) => t.is_rescue && t.status === "pendente").length;
   const rescuesToday = tasks.filter((t) => t.is_rescue && t.status === "pendente" && t.due_date <= today).length;
+
+  // Indicadores de Resgate (esteira em_rescue)
+  const emRescate = leads.filter((l) => l.in_rescue).length;
+  const rescatesHoje = leads.filter((l) => l.in_rescue && l.rescued_at && l.rescued_at.slice(0, 10) === today).length;
+  const reativados7d = leads.filter((l) => l.in_rescue && l.rescued_at && l.rescued_at >= last7Iso).length;
 
   const pct = (a: number, b: number) => (b > 0 ? Math.round((a / b) * 100) : 0);
   const totalFunnel = novos + interessados + entMarc + entReal + matric + perdidos;
@@ -54,7 +59,7 @@ async function fetchDashboard() {
     convEntrevistaRealizada: pct(entReal + matric, entMarc + entReal + matric),
     convMatricula: pct(matric, entReal + matric),
     tasksToday, tasksLate, tasksDoneToday, leadsNoTask, rescuesPending, rescuesToday,
-    novosSemContato, entrevistasHoje,
+    novosSemContato, entrevistasHoje, emRescate, rescatesHoje, reativados7d,
   };
 }
 
@@ -146,12 +151,23 @@ function Dashboard() {
 
       <div>
         <div className="text-sm font-medium text-muted-foreground mb-2">Operação diária</div>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-6">
+          <Stat icon={CalendarCheck} label="Entrevistas hoje" value={data.entrevistasHoje} tone="info" to="/tarefas" />
           <Stat icon={ListChecks} label="Tarefas hoje" value={data.tasksToday} tone="primary" to="/tarefas" />
           <Stat icon={AlertTriangle} label="Tarefas atrasadas" value={data.tasksLate} tone="danger" to="/tarefas" />
           <Stat icon={ListChecks} label="Concluídas hoje" value={data.tasksDoneToday} tone="success" />
           <Stat icon={AlertTriangle} label="Leads sem tarefa" value={data.leadsNoTask} tone="warning" to="/tarefas" />
           <Stat icon={RotateCw} label="Resgates pendentes" value={data.rescuesPending} to="/resgates" />
+        </div>
+      </div>
+
+      <div>
+        <div className="text-sm font-medium text-muted-foreground mb-2">Esteira de Resgate</div>
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <Stat icon={RotateCw} label="Leads em Resgate" value={data.emRescate} tone="warning" to="/resgates" />
+          <Stat icon={RotateCw} label="Entraram hoje" value={data.rescatesHoje} />
+          <Stat icon={RotateCw} label="Reativados (7d)" value={data.reativados7d} tone="success" />
+          <Stat icon={TrendingDown} label="Perdidos no funil" value={data.perdidos} tone="danger" to="/perdidos" />
         </div>
       </div>
     </div>
