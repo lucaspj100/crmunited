@@ -102,7 +102,7 @@ function PerdidosPage() {
     qc.invalidateQueries();
   };
 
-  const exportCsv = () => {
+  const buildRows = () => {
     const headers = ["Nome", "Telefone", "Empresa", "Vendedor", "Motivo", "Data perdido", "Dias perdido", "Observação", "Último contato", "Status"];
     const rows = filtered.map((l) => {
       const owner = byProf.get(l.owner_id);
@@ -120,6 +120,11 @@ function PerdidosPage() {
         l.status,
       ];
     });
+    return { headers, rows };
+  };
+
+  const exportCsv = () => {
+    const { headers, rows } = buildRows();
     const csv = [headers, ...rows]
       .map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))
       .join("\n");
@@ -130,6 +135,11 @@ function PerdidosPage() {
     a.download = `perdidos-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const exportXlsx = () => {
+    const { headers, rows } = buildRows();
+    exportRowsToXlsx(rows, headers, `perdidos-${new Date().toISOString().slice(0, 10)}.xlsx`, "Perdidos");
   };
 
   if (isLoading || !data) return <div className="text-muted-foreground">Carregando…</div>;
