@@ -166,6 +166,24 @@ function FunilPage() {
         })}
       </div>
 
+      <div className="flex flex-wrap justify-end gap-2">
+        <Button
+          variant="outline"
+          onClick={() => {
+            const novos = filteredLeads.filter((l) => l.status === "novo");
+            const headers = ["Nome", "Empresa", "Telefone", "LinkedIn", "Vendedor"];
+            const rows = novos.map((l) => {
+              const owner = profileById.get(l.owner_id);
+              return [l.name, l.company ?? "", l.phone ?? "", l.linkedin_url ?? "", owner?.full_name || owner?.email || ""];
+            });
+            if (rows.length === 0) { toast.info("Nenhum lead novo para exportar"); return; }
+            exportRowsToXlsx(rows, headers, `novos-${new Date().toISOString().slice(0, 10)}.xlsx`, "Novos");
+          }}
+        >
+          <FileSpreadsheet className="h-4 w-4 mr-1" />Exportar Novos (XLSX)
+        </Button>
+      </div>
+
       <InterviewDialog lead={interviewLead} onClose={() => setInterviewLead(null)} onSaved={() => qc.invalidateQueries()} />
       <LostDialog lead={lostLead} onClose={() => setLostLead(null)} onSaved={() => qc.invalidateQueries()} />
       <MatriculaDialog lead={matriculaLead} onClose={() => setMatriculaLead(null)} onSaved={() => qc.invalidateQueries()} />
