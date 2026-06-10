@@ -153,6 +153,7 @@ function PerdidosPage() {
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={exportCsv}><Download className="h-4 w-4 mr-1" />Exportar CSV</Button>
+          <Button variant="outline" onClick={exportXlsx}><FileSpreadsheet className="h-4 w-4 mr-1" />Exportar XLSX</Button>
           <Button disabled={selected.size === 0} onClick={() => moveToRescue(Array.from(selected))}>
             <RotateCw className="h-4 w-4 mr-1" />Mover selecionados ({selected.size})
           </Button>
