@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth-context";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { LayoutDashboard, Users, CalendarCheck, GraduationCap, TrendingDown, ListChecks, AlertTriangle, RotateCw, Sparkles } from "lucide-react";
+import { LayoutDashboard, Users, CalendarCheck, GraduationCap, TrendingDown, ListChecks, AlertTriangle, RotateCw, Sparkles, Clock } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({ component: Dashboard });
 
