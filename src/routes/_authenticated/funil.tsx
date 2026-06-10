@@ -86,7 +86,7 @@ function FunilPage() {
           <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2"><Kanban className="h-6 w-6 text-primary" />Funil Comercial</h1>
           <p className="text-sm text-muted-foreground">Arraste os leads entre as etapas</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Select value={vendorFilter} onValueChange={setVendorFilter}>
             <SelectTrigger className="w-[200px]"><SelectValue placeholder="Vendedor" /></SelectTrigger>
             <SelectContent>
@@ -96,6 +96,21 @@ function FunilPage() {
               ))}
             </SelectContent>
           </Select>
+          <Button
+            variant="outline"
+            onClick={() => {
+              const novos = filteredLeads.filter((l) => l.status === "novo");
+              const headers = ["Nome", "Empresa", "Telefone", "LinkedIn", "Vendedor"];
+              const rows = novos.map((l) => {
+                const owner = profileById.get(l.owner_id);
+                return [l.name, l.company ?? "", l.phone ?? "", l.linkedin_url ?? "", owner?.full_name || owner?.email || ""];
+              });
+              if (rows.length === 0) { toast.info("Nenhum lead novo para exportar"); return; }
+              exportRowsToXlsx(rows, headers, `novos-${new Date().toISOString().slice(0, 10)}.xlsx`, "Novos");
+            }}
+          >
+            <FileSpreadsheet className="h-4 w-4 mr-1" />Exportar Novos (XLSX)
+          </Button>
           <NewLeadDialog />
         </div>
       </div>
@@ -164,24 +179,6 @@ function FunilPage() {
             </div>
           );
         })}
-      </div>
-
-      <div className="flex flex-wrap justify-end gap-2">
-        <Button
-          variant="outline"
-          onClick={() => {
-            const novos = filteredLeads.filter((l) => l.status === "novo");
-            const headers = ["Nome", "Empresa", "Telefone", "LinkedIn", "Vendedor"];
-            const rows = novos.map((l) => {
-              const owner = profileById.get(l.owner_id);
-              return [l.name, l.company ?? "", l.phone ?? "", l.linkedin_url ?? "", owner?.full_name || owner?.email || ""];
-            });
-            if (rows.length === 0) { toast.info("Nenhum lead novo para exportar"); return; }
-            exportRowsToXlsx(rows, headers, `novos-${new Date().toISOString().slice(0, 10)}.xlsx`, "Novos");
-          }}
-        >
-          <FileSpreadsheet className="h-4 w-4 mr-1" />Exportar Novos (XLSX)
-        </Button>
       </div>
 
       <InterviewDialog lead={interviewLead} onClose={() => setInterviewLead(null)} onSaved={() => qc.invalidateQueries()} />
