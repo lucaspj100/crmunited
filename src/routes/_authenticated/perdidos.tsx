@@ -10,8 +10,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LOST_REASONS, labelFor, waLink } from "@/lib/constants";
 import { copyToClipboard, waRescueMessage, leadSummary, rawPhoneDigits } from "@/lib/messages";
-import { TrendingDown, MessageCircle, Copy, RotateCw, Download, User } from "lucide-react";
+import { TrendingDown, MessageCircle, Copy, RotateCw, Download, FileSpreadsheet, User } from "lucide-react";
 import { toast } from "sonner";
+import { exportRowsToXlsx } from "@/lib/xlsx-export";
 
 export const Route = createFileRoute("/_authenticated/perdidos")({ component: PerdidosPage });
 
