@@ -103,7 +103,40 @@ function AlertItem({ count, label, tone, to }: { count: number; label: string; t
 }
 
 function Dashboard() {
+  const { roles } = useAuth();
+  const isAdmin = roles.includes("admin") || roles.includes("franqueado");
   const { data, isLoading } = useQuery({ queryKey: ["dashboard"], queryFn: fetchDashboard });
+  const { data: interviews } = useQuery({
+    queryKey: ["dashboard-interviews-today"],
+    queryFn: async () => {
+      const today = new Date().toISOString().slice(0, 10);
+      const { data: tasks } = await supabase
+        .from("tasks")
+        .select("id, lead_id, owner_id, due_time, status")
+        .eq("type", "confirmar_entrevista")
+        .eq("due_date", today)
+        .eq("status", "pendente")
+        .limit(500);
+      const t = (tasks ?? []) as { id: string; lead_id: string; owner_id: string; due_time: string | null; status: string }[];
+      if (t.length === 0) return [];
+      const leadIds = Array.from(new Set(t.map((x) => x.lead_id)));
+      const ownerIds = Array.from(new Set(t.map((x) => x.owner_id)));
+      const [leadsR, profR] = await Promise.all([
+        supabase.from("leads").select("id, name").in("id", leadIds),
+        supabase.from("profiles").select("id, full_name, email").in("id", ownerIds),
+      ]);
+      const leadMap = new Map(((leadsR.data ?? []) as any[]).map((l) => [l.id, l.name as string]));
+      const profMap = new Map(((profR.data ?? []) as any[]).map((p) => [p.id, (p.full_name || p.email || "Vendedor") as string]));
+      return t
+        .map((x) => ({
+          id: x.id,
+          time: x.due_time ? x.due_time.slice(0, 5) : "—",
+          leadName: leadMap.get(x.lead_id) ?? "Lead",
+          ownerName: profMap.get(x.owner_id) ?? "Vendedor",
+        }))
+        .sort((a, b) => a.time.localeCompare(b.time));
+    },
+  });
   if (isLoading || !data) return <div className="text-muted-foreground">Carregando…</div>;
 
   const anyAlert = data.novosSemContato + data.tasksLate + data.entrevistasHoje + data.leadsNoTask + data.rescuesToday > 0;
@@ -114,6 +147,28 @@ function Dashboard() {
         <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2"><LayoutDashboard className="h-6 w-6 text-primary" />Dashboard Comercial</h1>
         <p className="text-sm text-muted-foreground">Visão geral da operação</p>
       </div>
+
+      <Card className="p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2 text-sm font-semibold"><Clock className="h-4 w-4 text-primary" />Entrevistas de hoje {isAdmin ? "(time)" : "(suas)"}</div>
+          <Link to="/tarefas" className="text-xs text-primary hover:underline">Ver tarefas →</Link>
+        </div>
+        {!interviews || interviews.length === 0 ? (
+          <div className="text-sm text-muted-foreground">Nenhuma entrevista marcada para hoje.</div>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {interviews.map((it) => (
+              <Link key={it.id} to="/tarefas" className="group">
+                <div className="rounded-lg border bg-primary/5 px-3 py-2 hover:border-primary transition-colors">
+                  <div className="text-xl font-bold tabular-nums leading-none">{it.time}</div>
+                  <div className="text-xs text-muted-foreground mt-1 max-w-[180px] truncate">{it.leadName}</div>
+                  {isAdmin && <div className="text-[10px] text-muted-foreground/80 truncate">{it.ownerName}</div>}
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </Card>
 
       {anyAlert && (
         <Card className="p-4">
