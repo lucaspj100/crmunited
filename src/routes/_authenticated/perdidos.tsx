@@ -10,8 +10,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LOST_REASONS, labelFor, waLink } from "@/lib/constants";
 import { copyToClipboard, waRescueMessage, leadSummary, rawPhoneDigits } from "@/lib/messages";
-import { TrendingDown, MessageCircle, Copy, RotateCw, Download, User } from "lucide-react";
+import { TrendingDown, MessageCircle, Copy, RotateCw, Download, FileSpreadsheet, User } from "lucide-react";
 import { toast } from "sonner";
+import { exportRowsToXlsx } from "@/lib/xlsx-export";
 
 export const Route = createFileRoute("/_authenticated/perdidos")({ component: PerdidosPage });
 
@@ -101,7 +102,7 @@ function PerdidosPage() {
     qc.invalidateQueries();
   };
 
-  const exportCsv = () => {
+  const buildRows = () => {
     const headers = ["Nome", "Telefone", "Empresa", "Vendedor", "Motivo", "Data perdido", "Dias perdido", "Observação", "Último contato", "Status"];
     const rows = filtered.map((l) => {
       const owner = byProf.get(l.owner_id);
@@ -119,6 +120,11 @@ function PerdidosPage() {
         l.status,
       ];
     });
+    return { headers, rows };
+  };
+
+  const exportCsv = () => {
+    const { headers, rows } = buildRows();
     const csv = [headers, ...rows]
       .map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))
       .join("\n");
@@ -129,6 +135,11 @@ function PerdidosPage() {
     a.download = `perdidos-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const exportXlsx = () => {
+    const { headers, rows } = buildRows();
+    exportRowsToXlsx(rows, headers, `perdidos-${new Date().toISOString().slice(0, 10)}.xlsx`, "Perdidos");
   };
 
   if (isLoading || !data) return <div className="text-muted-foreground">Carregando…</div>;
@@ -142,6 +153,7 @@ function PerdidosPage() {
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={exportCsv}><Download className="h-4 w-4 mr-1" />Exportar CSV</Button>
+          <Button variant="outline" onClick={exportXlsx}><FileSpreadsheet className="h-4 w-4 mr-1" />Exportar XLSX</Button>
           <Button disabled={selected.size === 0} onClick={() => moveToRescue(Array.from(selected))}>
             <RotateCw className="h-4 w-4 mr-1" />Mover selecionados ({selected.size})
           </Button>

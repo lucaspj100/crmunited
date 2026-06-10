@@ -12,7 +12,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { LEAD_STATUSES, LOST_REASONS, RESCUE_OPTIONS, waLink } from "@/lib/constants";
-import { Kanban, MessageCircle, Linkedin, User } from "lucide-react";
+import { Kanban, MessageCircle, Linkedin, User, FileSpreadsheet } from "lucide-react";
+import { exportRowsToXlsx } from "@/lib/xlsx-export";
 import { NewLeadDialog } from "@/components/NewLeadDialog";
 import { LeadDetailsDialog } from "@/components/LeadDetailsDialog";
 import { ensureTaskForStatus } from "@/lib/task-automation";
@@ -163,6 +164,24 @@ function FunilPage() {
             </div>
           );
         })}
+      </div>
+
+      <div className="flex flex-wrap justify-end gap-2">
+        <Button
+          variant="outline"
+          onClick={() => {
+            const novos = filteredLeads.filter((l) => l.status === "novo");
+            const headers = ["Nome", "Empresa", "Telefone", "LinkedIn", "Vendedor"];
+            const rows = novos.map((l) => {
+              const owner = profileById.get(l.owner_id);
+              return [l.name, l.company ?? "", l.phone ?? "", l.linkedin_url ?? "", owner?.full_name || owner?.email || ""];
+            });
+            if (rows.length === 0) { toast.info("Nenhum lead novo para exportar"); return; }
+            exportRowsToXlsx(rows, headers, `novos-${new Date().toISOString().slice(0, 10)}.xlsx`, "Novos");
+          }}
+        >
+          <FileSpreadsheet className="h-4 w-4 mr-1" />Exportar Novos (XLSX)
+        </Button>
       </div>
 
       <InterviewDialog lead={interviewLead} onClose={() => setInterviewLead(null)} onSaved={() => qc.invalidateQueries()} />
