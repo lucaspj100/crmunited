@@ -156,7 +156,7 @@ function Dashboard() {
           <div className="flex flex-wrap gap-2">
             {interviews.map((it) => (
               <Link key={it.id} to="/tarefas" className="group">
-                <div className="rounded-lg border bg-primary/5 px-3 py-2 hover:border-primary transition-colors">
+                <div className={`rounded-lg border px-3 py-2 hover:border-primary transition-colors ${it.done ? "bg-emerald-500/10 border-emerald-500/30" : "bg-primary/5"}`}>
                   <div className="text-xl font-bold tabular-nums leading-none">{it.time}</div>
                   <div className="text-xs text-muted-foreground mt-1 max-w-[180px] truncate">{it.leadName}</div>
                   {isAdmin && <div className="text-[10px] text-muted-foreground/80 truncate">{it.ownerName}</div>}
