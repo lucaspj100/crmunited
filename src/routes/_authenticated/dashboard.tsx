@@ -110,29 +110,26 @@ function Dashboard() {
     queryKey: ["dashboard-interviews-today"],
     queryFn: async () => {
       const today = new Date().toISOString().slice(0, 10);
-      const { data: tasks } = await supabase
-        .from("tasks")
-        .select("id, lead_id, owner_id, due_time, status")
-        .eq("type", "confirmar_entrevista")
-        .eq("due_date", today)
-        .eq("status", "pendente")
+      const { data: leads } = await supabase
+        .from("leads")
+        .select("id, name, owner_id, interview_time, interview_date, status")
+        .eq("interview_date", today)
+        .in("status", ["entrevista_marcada", "entrevista_realizada"])
         .limit(500);
-      const t = (tasks ?? []) as { id: string; lead_id: string; owner_id: string; due_time: string | null; status: string }[];
-      if (t.length === 0) return [];
-      const leadIds = Array.from(new Set(t.map((x) => x.lead_id)));
-      const ownerIds = Array.from(new Set(t.map((x) => x.owner_id)));
-      const [leadsR, profR] = await Promise.all([
-        supabase.from("leads").select("id, name").in("id", leadIds),
-        supabase.from("profiles").select("id, full_name, email").in("id", ownerIds),
-      ]);
-      const leadMap = new Map(((leadsR.data ?? []) as any[]).map((l) => [l.id, l.name as string]));
+      const l = (leads ?? []) as { id: string; name: string; owner_id: string | null; interview_time: string | null; status: string }[];
+      if (l.length === 0) return [];
+      const ownerIds = Array.from(new Set(l.map((x) => x.owner_id).filter(Boolean) as string[]));
+      const profR = ownerIds.length
+        ? await supabase.from("profiles").select("id, full_name, email").in("id", ownerIds)
+        : { data: [] as any[] };
       const profMap = new Map(((profR.data ?? []) as any[]).map((p) => [p.id, (p.full_name || p.email || "Vendedor") as string]));
-      return t
+      return l
         .map((x) => ({
           id: x.id,
-          time: x.due_time ? x.due_time.slice(0, 5) : "—",
-          leadName: leadMap.get(x.lead_id) ?? "Lead",
-          ownerName: profMap.get(x.owner_id) ?? "Vendedor",
+          time: x.interview_time ? x.interview_time.slice(0, 5) : "—",
+          leadName: x.name ?? "Lead",
+          ownerName: x.owner_id ? (profMap.get(x.owner_id) ?? "Vendedor") : "Vendedor",
+          done: x.status === "entrevista_realizada",
         }))
         .sort((a, b) => a.time.localeCompare(b.time));
     },
@@ -159,7 +156,7 @@ function Dashboard() {
           <div className="flex flex-wrap gap-2">
             {interviews.map((it) => (
               <Link key={it.id} to="/tarefas" className="group">
-                <div className="rounded-lg border bg-primary/5 px-3 py-2 hover:border-primary transition-colors">
+                <div className={`rounded-lg border px-3 py-2 hover:border-primary transition-colors ${it.done ? "bg-emerald-500/10 border-emerald-500/30" : "bg-primary/5"}`}>
                   <div className="text-xl font-bold tabular-nums leading-none">{it.time}</div>
                   <div className="text-xs text-muted-foreground mt-1 max-w-[180px] truncate">{it.leadName}</div>
                   {isAdmin && <div className="text-[10px] text-muted-foreground/80 truncate">{it.ownerName}</div>}
