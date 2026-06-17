@@ -57,6 +57,28 @@ function FunilPage() {
     },
   });
 
+  const { data: nextTasks = [] } = useQuery({
+    queryKey: ["funil-next-tasks"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tasks")
+        .select("lead_id, type, due_date, due_time")
+        .eq("status", "pendente")
+        .order("due_date", { ascending: true })
+        .order("due_time", { ascending: true, nullsFirst: true });
+      if (error) throw error;
+      return data as { lead_id: string; type: string; due_date: string; due_time: string | null }[];
+    },
+  });
+
+  const nextByLead = useMemo(() => {
+    const m = new Map<string, { type: string; due_date: string; due_time: string | null }>();
+    for (const t of nextTasks) if (!m.has(t.lead_id)) m.set(t.lead_id, t);
+    return m;
+  }, [nextTasks]);
+
+  const todayStr = new Date().toISOString().slice(0, 10);
+
   const profileById = useMemo(() => {
     const m = new Map<string, Profile>();
     profiles.forEach((p) => m.set(p.id, p));
