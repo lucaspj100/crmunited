@@ -37,6 +37,10 @@ function FunilPage() {
   const [matriculaLead, setMatriculaLead] = useState<Lead | null>(null);
   const [detailsId, setDetailsId] = useState<string | null>(null);
   const [vendorFilter, setVendorFilter] = useState<string>("all");
+  const [quickTaskLead, setQuickTaskLead] = useState<Lead | null>(null);
+  const [matriculaLead, setMatriculaLead] = useState<Lead | null>(null);
+  const [detailsId, setDetailsId] = useState<string | null>(null);
+  const [vendorFilter, setVendorFilter] = useState<string>("all");
 
   const { data: leads = [] } = useQuery({
     queryKey: ["leads-funil"],
