@@ -12,11 +12,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { LEAD_STATUSES, LOST_REASONS, RESCUE_OPTIONS, waLink } from "@/lib/constants";
-import { Kanban, MessageCircle, Linkedin, User, FileSpreadsheet } from "lucide-react";
+import { Kanban, MessageCircle, Linkedin, User, FileSpreadsheet, CalendarClock, CalendarPlus, AlertCircle } from "lucide-react";
 import { exportRowsToXlsx } from "@/lib/xlsx-export";
 import { NewLeadDialog } from "@/components/NewLeadDialog";
 import { LeadDetailsDialog } from "@/components/LeadDetailsDialog";
+import { QuickTaskDialog } from "@/components/QuickTaskDialog";
 import { ensureTaskForStatus } from "@/lib/task-automation";
+import { labelFor, TASK_TYPES } from "@/lib/constants";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/funil")({ component: FunilPage });
