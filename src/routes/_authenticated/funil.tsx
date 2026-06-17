@@ -12,11 +12,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { LEAD_STATUSES, LOST_REASONS, RESCUE_OPTIONS, waLink } from "@/lib/constants";
-import { Kanban, MessageCircle, Linkedin, User, FileSpreadsheet } from "lucide-react";
+import { Kanban, MessageCircle, Linkedin, User, FileSpreadsheet, CalendarClock, CalendarPlus, AlertCircle } from "lucide-react";
 import { exportRowsToXlsx } from "@/lib/xlsx-export";
 import { NewLeadDialog } from "@/components/NewLeadDialog";
 import { LeadDetailsDialog } from "@/components/LeadDetailsDialog";
+import { QuickTaskDialog } from "@/components/QuickTaskDialog";
 import { ensureTaskForStatus } from "@/lib/task-automation";
+import { labelFor, TASK_TYPES } from "@/lib/constants";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/funil")({ component: FunilPage });
@@ -35,6 +37,7 @@ function FunilPage() {
   const [matriculaLead, setMatriculaLead] = useState<Lead | null>(null);
   const [detailsId, setDetailsId] = useState<string | null>(null);
   const [vendorFilter, setVendorFilter] = useState<string>("all");
+  const [quickTaskLead, setQuickTaskLead] = useState<Lead | null>(null);
 
   const { data: leads = [] } = useQuery({
     queryKey: ["leads-funil"],
@@ -53,6 +56,28 @@ function FunilPage() {
       return data as Profile[];
     },
   });
+
+  const { data: nextTasks = [] } = useQuery({
+    queryKey: ["funil-next-tasks"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tasks")
+        .select("lead_id, type, due_date, due_time")
+        .eq("status", "pendente")
+        .order("due_date", { ascending: true })
+        .order("due_time", { ascending: true, nullsFirst: true });
+      if (error) throw error;
+      return data as { lead_id: string; type: string; due_date: string; due_time: string | null }[];
+    },
+  });
+
+  const nextByLead = useMemo(() => {
+    const m = new Map<string, { type: string; due_date: string; due_time: string | null }>();
+    for (const t of nextTasks) if (!m.has(t.lead_id)) m.set(t.lead_id, t);
+    return m;
+  }, [nextTasks]);
+
+  const todayStr = new Date().toISOString().slice(0, 10);
 
   const profileById = useMemo(() => {
     const m = new Map<string, Profile>();
@@ -138,6 +163,9 @@ function FunilPage() {
                 {items.map((l) => {
                   const owner = profileById.get(l.owner_id);
                   const ownerName = owner?.full_name || owner?.email || "—";
+                  const next = nextByLead.get(l.id);
+                  const isOverdue = next ? next.due_date < todayStr : false;
+                  const noActivity = !next;
                   return (
                     <Card
                       key={l.id}
@@ -145,13 +173,38 @@ function FunilPage() {
                       onDragStart={() => setDraggingId(l.id)}
                       onDragEnd={() => setDraggingId(null)}
                       onClick={() => setDetailsId(l.id)}
-                      className="cursor-pointer p-3 active:cursor-grabbing hover:border-primary transition-colors"
+                      className={`cursor-pointer p-3 active:cursor-grabbing hover:border-primary transition-colors ${noActivity ? "border-amber-500/50" : isOverdue ? "border-rose-500/50" : ""}`}
                     >
                       <div className="font-medium text-sm">{l.name}</div>
                       {l.company && <div className="text-xs text-muted-foreground">{l.company}</div>}
                       <div className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground">
                         <User className="h-3 w-3" /><span className="truncate">{ownerName}</span>
                       </div>
+
+                      <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+                        {next ? (
+                          <button
+                            type="button"
+                            onClick={() => setDetailsId(l.id)}
+                            className={`w-full flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] border transition-colors ${isOverdue ? "bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-300 hover:bg-rose-500/20" : "bg-primary/5 border-primary/20 hover:bg-primary/10"}`}
+                            title="Ver próxima atividade"
+                          >
+                            {isOverdue ? <AlertCircle className="h-3 w-3 shrink-0" /> : <CalendarClock className="h-3 w-3 shrink-0" />}
+                            <span className="truncate">{labelFor(TASK_TYPES, next.type)} • {next.due_date.split("-").reverse().slice(0,2).join("/")}{next.due_time ? ` ${next.due_time.slice(0,5)}` : ""}</span>
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setQuickTaskLead(l)}
+                            className="w-full flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] border border-dashed border-amber-500/40 bg-amber-500/5 text-amber-700 dark:text-amber-300 hover:bg-amber-500/15"
+                            title="Sem atividade — agendar"
+                          >
+                            <CalendarPlus className="h-3 w-3 shrink-0" />
+                            <span className="truncate">Sem atividade — agendar</span>
+                          </button>
+                        )}
+                      </div>
+
                       <div className="mt-2 flex gap-1" onClick={(e) => e.stopPropagation()}>
                         {l.phone && (
                           <Button asChild size="icon" variant="ghost" className="h-7 w-7">
@@ -163,8 +216,11 @@ function FunilPage() {
                             <a href={l.linkedin_url} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}><Linkedin className="h-3.5 w-3.5" /></a>
                           </Button>
                         )}
+                        <Button size="icon" variant="ghost" className="h-7 w-7" title="Agendar atividade" onClick={(e) => { e.stopPropagation(); setQuickTaskLead(l); }}>
+                          <CalendarPlus className="h-3.5 w-3.5" />
+                        </Button>
                         <Select onValueChange={(v) => moveLead(l, v)}>
-                          <SelectTrigger className="h-7 ml-auto w-[110px] text-xs" onClick={(e) => e.stopPropagation()}><SelectValue placeholder="Mover" /></SelectTrigger>
+                          <SelectTrigger className="h-7 ml-auto w-[100px] text-xs" onClick={(e) => e.stopPropagation()}><SelectValue placeholder="Mover" /></SelectTrigger>
                           <SelectContent>
                             {LEAD_STATUSES.filter((s) => s.value !== l.status).map((s) => (
                               <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
@@ -185,6 +241,15 @@ function FunilPage() {
       <LostDialog lead={lostLead} onClose={() => setLostLead(null)} onSaved={() => qc.invalidateQueries()} />
       <MatriculaDialog lead={matriculaLead} onClose={() => setMatriculaLead(null)} onSaved={() => qc.invalidateQueries()} />
       <LeadDetailsDialog leadId={detailsId} onClose={() => setDetailsId(null)} />
+      {quickTaskLead && (
+        <QuickTaskDialog
+          leadId={quickTaskLead.id}
+          ownerId={quickTaskLead.owner_id}
+          leadName={quickTaskLead.name}
+          onClose={() => setQuickTaskLead(null)}
+          onSaved={() => qc.invalidateQueries()}
+        />
+      )}
     </div>
   );
 }
