@@ -241,6 +241,15 @@ function FunilPage() {
       <LostDialog lead={lostLead} onClose={() => setLostLead(null)} onSaved={() => qc.invalidateQueries()} />
       <MatriculaDialog lead={matriculaLead} onClose={() => setMatriculaLead(null)} onSaved={() => qc.invalidateQueries()} />
       <LeadDetailsDialog leadId={detailsId} onClose={() => setDetailsId(null)} />
+      {quickTaskLead && (
+        <QuickTaskDialog
+          leadId={quickTaskLead.id}
+          ownerId={quickTaskLead.owner_id}
+          leadName={quickTaskLead.name}
+          onClose={() => setQuickTaskLead(null)}
+          onSaved={() => qc.invalidateQueries()}
+        />
+      )}
     </div>
   );
 }
