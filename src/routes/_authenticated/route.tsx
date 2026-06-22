@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, useNavigate, useLocation, Link } from "@tansta
 import { useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useBrand } from "@/lib/brand";
-import { LayoutDashboard, Users, Kanban, ListChecks, RotateCw, BarChart3, LogOut, Settings, Upload, TrendingDown, Zap } from "lucide-react";
+import { LayoutDashboard, Users, Kanban, ListChecks, RotateCw, BarChart3, LogOut, Settings, Upload, TrendingDown, Zap, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -30,7 +30,11 @@ function AuthedLayout() {
   const { data: brand } = useBrand();
   const isAdmin = roles.includes("admin");
   const NAV = isAdmin
-    ? [...BASE_NAV, { to: "/configuracoes", label: "Configurações", icon: Settings } as const]
+    ? [
+        ...BASE_NAV,
+        { to: "/painel-adm", label: "Painel ADM", icon: Trophy } as const,
+        { to: "/configuracoes", label: "Configurações", icon: Settings } as const,
+      ]
     : BASE_NAV;
 
   useEffect(() => {
