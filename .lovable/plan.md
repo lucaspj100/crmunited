@@ -1,79 +1,139 @@
-# Integração CRM ↔ Google Sheets (por vendedor)
+## Visão geral
 
-Funcionalidade grande. Antes de codar, preciso confirmar algumas decisões — algumas mudam bastante o esforço e o custo da entrega.
+Evoluir o CRM United para uma operação B2C de alto volume com foco em **velocidade para o vendedor** e **controle para o ADM**, sem remover nada do que já existe. A entrega será feita em fases, na ordem que você definiu, para que cada bloco já entre em produção e gere valor antes do próximo.
 
-## Visão geral do que vai ser construído
+Abaixo está o plano completo. Antes de começar, gostaria de confirmar um ponto importante (ver "Pontos a confirmar" no final) — assim eu começo a Fase 1 já alinhado.
 
-- Cada vendedor conecta **sua própria conta Google** e tem **1 planilha individual** (criada pelo CRM ou vinculada por URL).
-- Sincronização **bidirecional**: CRM ↔ Sheets, identificada por `lead_id`.
-- Admin vê tudo: leads de todos vendedores, planilhas conectadas, duplicidades entre vendedores, histórico, forçar sync.
-- Status/etapa na planilha via **dropdown** com as opções do CRM (data validation), e validação no servidor — texto livre é rejeitado.
-- Histórico de alterações por lead, com origem (CRM/Sheets) e detecção de conflito (vence o `updated_at` mais recente).
+---
 
-## Decisões técnicas (importantes)
+## Fase 1 — Fila de Trabalho do Vendedor + Conclusão Rápida (prioridade máxima)
 
-### A. OAuth por vendedor (não é o connector Google atual)
-O connector Google Sheets que a Lovable oferece autentica **a conta do dono do workspace** — serve para a planilha do admin, não para cada vendedor ter a sua. Preciso implementar **OAuth próprio por usuário**:
+**Nova aba "Fila de Trabalho"** (mantendo a aba Tarefas atual intacta).
 
-- Criar credenciais OAuth no Google Cloud Console (você precisa fazer isso e me passar `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET` como secrets).
-- Scopes: `spreadsheets`, `drive.file` (acesso só às planilhas criadas/abertas pelo app).
-- Tabela `google_oauth_tokens` (access_token, refresh_token, expiry) por vendedor — só backend (server fns) acessa.
-- Tela "Minha Integração Google Sheets" com botão **Conectar conta Google** que abre o consent screen do Google.
+- Botão grande **"Trabalhar próximo lead"** no topo.
+- Fila ordenada automaticamente:
+  1. Entrevistas de hoje
+  2. Tarefas atrasadas
+  3. Leads novos sem primeiro contato
+  4. Leads sem próxima ação
+  5. Follow-ups do dia
+  6. Resgates do dia
+  7. Tarefas futuras próximas
+- Vendedor vê só a sua fila; ADM pode filtrar por vendedor.
 
-### B. Sincronização: como acontece na prática
+**Card/Modal "Próximo Lead"** com:
+- Dados do lead (nome, telefone, empresa, status, responsável)
+- Próxima tarefa + data/hora
+- Observação + última observação
+- Se entrevista: data/hora da entrevista
+- Se resgate: motivo da perda anterior
 
-**CRM → Sheets (push)**: toda mudança em `leads` (insert/update) dispara um job que escreve na planilha do vendedor dono. Vou usar um **trigger no Postgres** que enfileira em `sync_queue`, e um cron `pg_cron` chamando `/api/public/sync/run` a cada 1 min (auth por anon key). Em telas onde o vendedor clicou "Sincronizar agora", chamamos a server fn diretamente.
+**Botões rápidos no card:**
+- Abrir WhatsApp · Copiar telefone · Copiar nome · Copiar mensagem pronta (escolhida automaticamente pelo tipo da tarefa/status) · Ver detalhes · Concluir tarefa · Reagendar · Cancelar
 
-**Sheets → CRM (pull)**: polling a cada 2-5 min via mesmo cron. Para cada planilha conectada, lê a aba, compara com o CRM por `lead_id`, e aplica mudanças em campos editáveis. **Não é tempo real** — webhooks do Sheets não existem nessa granularidade. Se você quiser quase-tempo-real, pode reduzir o intervalo para 1 min (cota Google: 300 req/min/projeto — suficiente).
+**Conclusão rápida** (modal curto com a opção padrão já selecionada):
+- ✅ **Concluir e criar próximo follow-up** (padrão — regras automáticas por tipo de tarefa: primeiro contato → +1 dia, enviar mensagem → +3 dias, pós-entrevista → +3 dias, resgate → +7 dias)
+- Concluir sem próxima tarefa
+- Concluir e marcar entrevista (abre form curto: data + hora + obs)
+- Concluir e marcar matrícula (abre form: valor matrícula + mensalidade + material)
+- Concluir e marcar como perdido (reaproveita fluxo existente)
+- Reagendar (só pede nova data)
 
-### C. Estrutura da planilha
-- Aba `Leads` com as 17 colunas listadas no escopo.
-- **Linha 1** congelada com headers.
-- Colunas protegidas (lead_id, telefone normalizado, datas, criador, etc.) com **proteção de range** via API.
-- Coluna `Status` e `Etapa` com **data validation** apontando para uma aba escondida `_opcoes` que é regenerada quando o admin mexe nos status do funil.
+Nenhum campo de "respondeu/atendeu/objeção" será obrigatório.
 
-### D. Identidade e conflitos
-- `lead_id` é a chave. Em insert pelo Sheets sem lead_id, o sistema gera um, escreve de volta na linha, e cria o lead.
-- Conflito: comparamos `updated_at` do CRM com `updated_at_sheets` (armazenado em coluna oculta da planilha). Vence o mais recente; o perdedor vira entrada no histórico com tag "conflito".
+---
 
-### E. Banco — novas tabelas
+## Fase 2 — Biblioteca de mensagens prontas expandida
 
-```text
-google_oauth_tokens  (user_id PK, access_token, refresh_token, expires_at, email, scope)
-sheet_integrations   (user_id PK, spreadsheet_id, sheet_url, last_sync_at, last_sync_status, last_error)
-sync_queue           (id, lead_id, owner_id, direction, payload, status, attempts, created_at)
-lead_history         (id, lead_id, field, old_value, new_value, changed_by, source, conflict, created_at)
-```
+Adicionar em `src/lib/messages.ts`:
+- primeiro contato, follow-up curto, segundo contato, confirmação de entrevista, reagendamento, não compareceu, pós-entrevista, última tentativa, resgate 30d, resgate 90d, pedido de indicação.
 
-Mais colunas em `leads`: `last_contact_at`, `next_followup_at`, `updated_by`, `last_source` (crm|sheets).
+Todas usam primeiro nome automaticamente. Botão "Copiar mensagem" escolhe a mais adequada pelo tipo da tarefa/status, com opção de trocar manualmente via dropdown.
 
-Tudo com RLS: vendedor só vê o seu; admin vê tudo via `has_role(uid,'admin')`.
+---
 
-### F. UI nova / alterada
+## Fase 3 — Melhorias no Funil
 
-- `/_authenticated/integracao-sheets` — vendedor: conectar conta, criar/vincular planilha, status, sync agora, desconectar.
-- `/_authenticated/admin/integracoes` — admin: tabela com todos os vendedores, planilhas, último sync, erros, botões.
-- `/_authenticated/admin/leads-geral` — admin: visão consolidada de todos os leads (filtros: vendedor, status, etapa, datas, origem, duplicados, sem movimentação).
-- `LeadDetailsDialog` ganha aba **Histórico**.
-- Visão admin lista possíveis duplicidades entre vendedores (mesmo `phone_normalized`, owners diferentes).
-- Mensagens/toasts já previstas no escopo.
+No card do lead no funil, adicionar:
+- "Criado há X dias" · "X dias na etapa" · "Último contato há X dias"
+- Próxima ação (já existe) + badge "atrasado" / "sem próxima ação"
+- **Badge de temperatura**: 🔥 quente / 🌤️ morno / ❄️ frio (regras conforme você descreveu)
+- Filtro por temperatura no topo do funil
 
-### G. Onde fica o código de sync
-Tudo em `createServerFn` (TanStack Start), nada em Edge Functions:
-- `src/lib/sheets/oauth.functions.ts` — initiate/callback/refresh.
-- `src/lib/sheets/integration.functions.ts` — create/link/disconnect.
-- `src/lib/sheets/sync.functions.ts` — push, pull, sync-now, force-sync-all.
-- Rota pública `src/routes/api/public/sync/run.ts` chamada pelo cron.
+---
 
-## O que **preciso de você antes de implementar**
+## Fase 4 — Painel ADM por vendedor + Alertas
 
-1. **Credenciais OAuth Google** (Client ID e Secret). Posso te mandar passo a passo de como criar no console.cloud.google.com, e você cola aqui como secret — é o único caminho para "cada vendedor conecta a própria conta".
-2. **Intervalo de sync Sheets→CRM**: 1 min, 2 min ou 5 min? (mais frequente = mais "tempo real", consome mais cota Google).
-3. **Quando o admin alterar status do funil** (ex.: renomear "Interessado"), o que fazer com leads que estão nesse status na planilha?
-   - (a) Reescrever automaticamente nas planilhas para o novo nome
-   - (b) Bloquear edição até admin confirmar
-4. **Lead criado direto no Sheets pelo vendedor** (linha nova sem lead_id) — permitir? Se sim, qual status default (sugiro `novo`)?
+**Nova seção no dashboard ADM**: tabela/ranking por vendedor com todas as métricas pedidas (leads novos hoje/semana, tarefas hoje/concluídas/atrasadas, sem próxima ação, entrevistas marcadas/realizadas/no-show, matrículas mês, perdidos mês, taxa comparecimento, taxa matrícula, resgates).
 
-Se confirmar isso, parto pra implementação na ordem: schema → OAuth → criar/vincular planilha → push CRM→Sheets → pull Sheets→CRM → telas admin → histórico/conflitos → cron.
+Filtros: hoje, semana, mês, período personalizado, vendedor.
 
-Posso também entregar em **fases** (ex.: Fase 1 = OAuth + criar planilha + export one-way CRM→Sheets; Fase 2 = pull bidirecional; Fase 3 = histórico/admin) se quiser ver valor antes. Me diz se prefere assim.
+**Alertas clicáveis** logo abaixo (ex: "João tem 12 tarefas atrasadas" → abre Tarefas filtradas).
+
+---
+
+## Fase 5 — Agenda Comercial
+
+Nova aba "Agenda" com entrevistas separadas por: hoje, amanhã, semana, não confirmadas, realizadas, no-shows, reagendamentos pendentes.
+
+Cada card de entrevista: confirmar presença, marcar realizada, no-show, reagendar, virou matrícula, marcar perdido, abrir WhatsApp, copiar mensagem de confirmação.
+
+---
+
+## Fase 6 — Histórico de atividades (timeline)
+
+Nova tabela `lead_events` (id, lead_id, user_id, event_type, description, metadata jsonb, created_at) com RLS espelhando `leads`.
+
+Helper `logLeadEvent()` chamado automaticamente em: criar/editar lead, mudança de status, criar/concluir tarefa, abrir WhatsApp, copiar mensagem, marcar entrevista/confirmação/realização/no-show, registrar matrícula, perder, mover resgate, etc.
+
+Timeline aparece no `LeadDetailsDialog` em ordem cronológica.
+
+---
+
+## Fase 7 — Metas e Ranking
+
+Nova tabela `sales_goals` (vendedor, métrica, período, valor).
+
+- ADM define metas via Configurações.
+- Dashboard mostra progresso ("João 8/10 tarefas hoje").
+- Ranking por período: tarefas concluídas, entrevistas marcadas/realizadas, matrículas, resgates.
+
+---
+
+## Fase 8 — Distribuição automática na importação
+
+Na aba Importar, antes de confirmar, escolher:
+- Igualmente entre vendedores selecionados
+- Por peso (% por vendedor)
+- Usar vendedor da planilha
+- Vendedor padrão
+
+Mostrar prévia ("João: 100, Maria: 60, Pedro: 40") e manter validação de duplicidade.
+
+---
+
+## Fase 9 — Segurança/Permissões e Performance
+
+- Esconder botão "Excluir lead" para não-ADM em `LeadDetailsDialog`.
+- Revisar RLS: vendedor só vê o que é seu; ADM/franqueado tudo.
+- Configurações/Metas/Ranking completo só para ADM.
+- Performance: filtros server-side por owner/status/data, paginação em listas grandes (leads, perdidos, resgates), invalidações de React Query mais granulares.
+
+---
+
+## Detalhes técnicos (resumo)
+
+- Stack atual mantida: TanStack Start + React Query + Supabase.
+- Novas rotas: `/_authenticated/fila`, `/_authenticated/agenda` (Fase 5).
+- Novas tabelas via migration: `lead_events`, `sales_goals` (com GRANTs + RLS por owner_id e `has_role('admin')`).
+- Lógica de "próximo follow-up automático" centralizada em `src/lib/task-automation.ts` (já existe — vou expandir).
+- Temperatura do lead calculada client-side a partir dos campos já existentes (status, due_date, last_contact_at) — sem nova coluna.
+- Tudo respeitando o gate `_authenticated` já gerenciado.
+
+---
+
+## Pontos a confirmar antes de começar
+
+1. **Posso começar pela Fase 1 (Fila + Conclusão rápida) e te entregar para validar antes de seguir para a Fase 2?** Recomendo fortemente fatiar assim — cada fase é grande e quero garantir que a UX da Fila esteja do seu jeito antes de espalhar a lógica nas outras telas.
+
+2. **Onde colocar a Fila?** Posso (a) criar uma aba nova "Fila de Trabalho" no menu, ou (b) transformar a aba "Tarefas" atual na Fila e mover a visão antiga para uma sub-aba. Minha sugestão é **(a)** — aba nova — para não mexer no que já funciona.
