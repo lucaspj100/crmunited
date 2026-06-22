@@ -19,6 +19,7 @@ import { Route as AuthenticatedPerdidosRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedLeadsRouteImport } from './routes/_authenticated/leads'
 import { Route as AuthenticatedImportarRouteImport } from './routes/_authenticated/importar'
 import { Route as AuthenticatedFunilRouteImport } from './routes/_authenticated/funil'
+import { Route as AuthenticatedFilaRouteImport } from './routes/_authenticated/fila'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
 
@@ -71,6 +72,11 @@ const AuthenticatedFunilRoute = AuthenticatedFunilRouteImport.update({
   path: '/funil',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedFilaRoute = AuthenticatedFilaRouteImport.update({
+  id: '/fila',
+  path: '/fila',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/fila': typeof AuthenticatedFilaRoute
   '/funil': typeof AuthenticatedFunilRoute
   '/importar': typeof AuthenticatedImportarRoute
   '/leads': typeof AuthenticatedLeadsRoute
@@ -101,6 +108,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/fila': typeof AuthenticatedFilaRoute
   '/funil': typeof AuthenticatedFunilRoute
   '/importar': typeof AuthenticatedImportarRoute
   '/leads': typeof AuthenticatedLeadsRoute
@@ -116,6 +124,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/fila': typeof AuthenticatedFilaRoute
   '/_authenticated/funil': typeof AuthenticatedFunilRoute
   '/_authenticated/importar': typeof AuthenticatedImportarRoute
   '/_authenticated/leads': typeof AuthenticatedLeadsRoute
@@ -131,6 +140,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/configuracoes'
     | '/dashboard'
+    | '/fila'
     | '/funil'
     | '/importar'
     | '/leads'
@@ -144,6 +154,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/configuracoes'
     | '/dashboard'
+    | '/fila'
     | '/funil'
     | '/importar'
     | '/leads'
@@ -158,6 +169,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/configuracoes'
     | '/_authenticated/dashboard'
+    | '/_authenticated/fila'
     | '/_authenticated/funil'
     | '/_authenticated/importar'
     | '/_authenticated/leads'
@@ -245,6 +257,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFunilRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/fila': {
+      id: '/_authenticated/fila'
+      path: '/fila'
+      fullPath: '/fila'
+      preLoaderRoute: typeof AuthenticatedFilaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -265,6 +284,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedFilaRoute: typeof AuthenticatedFilaRoute
   AuthenticatedFunilRoute: typeof AuthenticatedFunilRoute
   AuthenticatedImportarRoute: typeof AuthenticatedImportarRoute
   AuthenticatedLeadsRoute: typeof AuthenticatedLeadsRoute
@@ -277,6 +297,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedFilaRoute: AuthenticatedFilaRoute,
   AuthenticatedFunilRoute: AuthenticatedFunilRoute,
   AuthenticatedImportarRoute: AuthenticatedImportarRoute,
   AuthenticatedLeadsRoute: AuthenticatedLeadsRoute,
