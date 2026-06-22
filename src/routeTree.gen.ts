@@ -16,6 +16,7 @@ import { Route as AuthenticatedTarefasRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedResgatesRouteImport } from './routes/_authenticated/resgates'
 import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authenticated/relatorios'
 import { Route as AuthenticatedPerdidosRouteImport } from './routes/_authenticated/perdidos'
+import { Route as AuthenticatedPainelAdmRouteImport } from './routes/_authenticated/painel-adm'
 import { Route as AuthenticatedLeadsRouteImport } from './routes/_authenticated/leads'
 import { Route as AuthenticatedImportarRouteImport } from './routes/_authenticated/importar'
 import { Route as AuthenticatedFunilRouteImport } from './routes/_authenticated/funil'
@@ -55,6 +56,11 @@ const AuthenticatedRelatoriosRoute = AuthenticatedRelatoriosRouteImport.update({
 const AuthenticatedPerdidosRoute = AuthenticatedPerdidosRouteImport.update({
   id: '/perdidos',
   path: '/perdidos',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPainelAdmRoute = AuthenticatedPainelAdmRouteImport.update({
+  id: '/painel-adm',
+  path: '/painel-adm',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedLeadsRoute = AuthenticatedLeadsRouteImport.update({
@@ -98,6 +104,7 @@ export interface FileRoutesByFullPath {
   '/funil': typeof AuthenticatedFunilRoute
   '/importar': typeof AuthenticatedImportarRoute
   '/leads': typeof AuthenticatedLeadsRoute
+  '/painel-adm': typeof AuthenticatedPainelAdmRoute
   '/perdidos': typeof AuthenticatedPerdidosRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
   '/resgates': typeof AuthenticatedResgatesRoute
@@ -112,6 +119,7 @@ export interface FileRoutesByTo {
   '/funil': typeof AuthenticatedFunilRoute
   '/importar': typeof AuthenticatedImportarRoute
   '/leads': typeof AuthenticatedLeadsRoute
+  '/painel-adm': typeof AuthenticatedPainelAdmRoute
   '/perdidos': typeof AuthenticatedPerdidosRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
   '/resgates': typeof AuthenticatedResgatesRoute
@@ -128,6 +136,7 @@ export interface FileRoutesById {
   '/_authenticated/funil': typeof AuthenticatedFunilRoute
   '/_authenticated/importar': typeof AuthenticatedImportarRoute
   '/_authenticated/leads': typeof AuthenticatedLeadsRoute
+  '/_authenticated/painel-adm': typeof AuthenticatedPainelAdmRoute
   '/_authenticated/perdidos': typeof AuthenticatedPerdidosRoute
   '/_authenticated/relatorios': typeof AuthenticatedRelatoriosRoute
   '/_authenticated/resgates': typeof AuthenticatedResgatesRoute
@@ -144,6 +153,7 @@ export interface FileRouteTypes {
     | '/funil'
     | '/importar'
     | '/leads'
+    | '/painel-adm'
     | '/perdidos'
     | '/relatorios'
     | '/resgates'
@@ -158,6 +168,7 @@ export interface FileRouteTypes {
     | '/funil'
     | '/importar'
     | '/leads'
+    | '/painel-adm'
     | '/perdidos'
     | '/relatorios'
     | '/resgates'
@@ -173,6 +184,7 @@ export interface FileRouteTypes {
     | '/_authenticated/funil'
     | '/_authenticated/importar'
     | '/_authenticated/leads'
+    | '/_authenticated/painel-adm'
     | '/_authenticated/perdidos'
     | '/_authenticated/relatorios'
     | '/_authenticated/resgates'
@@ -236,6 +248,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPerdidosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/painel-adm': {
+      id: '/_authenticated/painel-adm'
+      path: '/painel-adm'
+      fullPath: '/painel-adm'
+      preLoaderRoute: typeof AuthenticatedPainelAdmRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/leads': {
       id: '/_authenticated/leads'
       path: '/leads'
@@ -288,6 +307,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFunilRoute: typeof AuthenticatedFunilRoute
   AuthenticatedImportarRoute: typeof AuthenticatedImportarRoute
   AuthenticatedLeadsRoute: typeof AuthenticatedLeadsRoute
+  AuthenticatedPainelAdmRoute: typeof AuthenticatedPainelAdmRoute
   AuthenticatedPerdidosRoute: typeof AuthenticatedPerdidosRoute
   AuthenticatedRelatoriosRoute: typeof AuthenticatedRelatoriosRoute
   AuthenticatedResgatesRoute: typeof AuthenticatedResgatesRoute
@@ -301,6 +321,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedFunilRoute: AuthenticatedFunilRoute,
   AuthenticatedImportarRoute: AuthenticatedImportarRoute,
   AuthenticatedLeadsRoute: AuthenticatedLeadsRoute,
+  AuthenticatedPainelAdmRoute: AuthenticatedPainelAdmRoute,
   AuthenticatedPerdidosRoute: AuthenticatedPerdidosRoute,
   AuthenticatedRelatoriosRoute: AuthenticatedRelatoriosRoute,
   AuthenticatedResgatesRoute: AuthenticatedResgatesRoute,
