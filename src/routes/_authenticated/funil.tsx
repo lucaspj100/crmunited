@@ -12,7 +12,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { LEAD_STATUSES, LOST_REASONS, RESCUE_OPTIONS, waLink } from "@/lib/constants";
-import { Kanban, MessageCircle, Linkedin, User, FileSpreadsheet, CalendarClock, CalendarPlus, AlertCircle } from "lucide-react";
+import { Kanban, MessageCircle, Linkedin, User, FileSpreadsheet, CalendarClock, CalendarPlus, AlertCircle, Clock } from "lucide-react";
+import { leadTemperature, TEMPERATURE_META, daysAgoLabel } from "@/lib/lead-temperature";
 import { exportRowsToXlsx } from "@/lib/xlsx-export";
 import { NewLeadDialog } from "@/components/NewLeadDialog";
 import { LeadDetailsDialog } from "@/components/LeadDetailsDialog";
@@ -26,6 +27,8 @@ export const Route = createFileRoute("/_authenticated/funil")({ component: Funil
 type Lead = {
   id: string; name: string; phone: string | null; company: string | null;
   linkedin_url: string | null; status: string; owner_id: string;
+  created_at: string; updated_at: string; last_contact_at: string | null;
+  interview_date: string | null; interview_time: string | null;
 };
 type Profile = { id: string; full_name: string | null; email: string | null };
 
@@ -37,6 +40,7 @@ function FunilPage() {
   const [matriculaLead, setMatriculaLead] = useState<Lead | null>(null);
   const [detailsId, setDetailsId] = useState<string | null>(null);
   const [vendorFilter, setVendorFilter] = useState<string>("all");
+  const [tempFilter, setTempFilter] = useState<string>("all");
   const [quickTaskLead, setQuickTaskLead] = useState<Lead | null>(null);
 
   const { data: leads = [] } = useQuery({
@@ -90,7 +94,14 @@ function FunilPage() {
     return Array.from(ids).map((id) => ({ id, name: profileById.get(id)?.full_name || profileById.get(id)?.email || "Vendedor" }));
   }, [leads, profileById]);
 
-  const filteredLeads = vendorFilter === "all" ? leads : leads.filter((l) => l.owner_id === vendorFilter);
+  const baseFiltered = vendorFilter === "all" ? leads : leads.filter((l) => l.owner_id === vendorFilter);
+  const filteredLeads = tempFilter === "all"
+    ? baseFiltered
+    : baseFiltered.filter((l) => leadTemperature({
+        status: l.status, last_contact_at: l.last_contact_at,
+        interview_date: l.interview_date, updated_at: l.updated_at,
+        next: nextByLead.get(l.id) ?? null,
+      }) === tempFilter);
 
   const moveLead = async (lead: Lead, newStatus: string) => {
     if (lead.status === newStatus) return;
@@ -119,6 +130,15 @@ function FunilPage() {
               {vendorOptions.map((v) => (
                 <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>
               ))}
+            </SelectContent>
+          </Select>
+          <Select value={tempFilter} onValueChange={setTempFilter}>
+            <SelectTrigger className="w-[160px]"><SelectValue placeholder="Temperatura" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas temperaturas</SelectItem>
+              <SelectItem value="quente">🔥 Quente</SelectItem>
+              <SelectItem value="morno">🌤️ Morno</SelectItem>
+              <SelectItem value="frio">❄️ Frio</SelectItem>
             </SelectContent>
           </Select>
           <Button
@@ -166,6 +186,15 @@ function FunilPage() {
                   const next = nextByLead.get(l.id);
                   const isOverdue = next ? next.due_date < todayStr : false;
                   const noActivity = !next;
+                  const temp = leadTemperature({
+                    status: l.status, last_contact_at: l.last_contact_at,
+                    interview_date: l.interview_date, updated_at: l.updated_at,
+                    next: next ?? null,
+                  });
+                  const tempMeta = TEMPERATURE_META[temp];
+                  const ageLabel = daysAgoLabel(l.created_at);
+                  const stageLabel = daysAgoLabel(l.updated_at);
+                  const lastLabel = daysAgoLabel(l.last_contact_at);
                   return (
                     <Card
                       key={l.id}
@@ -175,10 +204,22 @@ function FunilPage() {
                       onClick={() => setDetailsId(l.id)}
                       className={`cursor-pointer p-3 active:cursor-grabbing hover:border-primary transition-colors ${noActivity ? "border-amber-500/50" : isOverdue ? "border-rose-500/50" : ""}`}
                     >
-                      <div className="font-medium text-sm">{l.name}</div>
-                      {l.company && <div className="text-xs text-muted-foreground">{l.company}</div>}
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="font-medium text-sm truncate">{l.name}</div>
+                          {l.company && <div className="text-xs text-muted-foreground truncate">{l.company}</div>}
+                        </div>
+                        <span title={tempMeta.label} className={`shrink-0 inline-flex items-center justify-center h-5 px-1.5 rounded-full border text-[10px] ${tempMeta.color}`}>
+                          {tempMeta.emoji}
+                        </span>
+                      </div>
                       <div className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground">
                         <User className="h-3 w-3" /><span className="truncate">{ownerName}</span>
+                      </div>
+                      <div className="mt-1 flex flex-wrap gap-x-2 gap-y-0.5 text-[10px] text-muted-foreground">
+                        {ageLabel && <span title="Criado">criado: {ageLabel}</span>}
+                        {stageLabel && <span title="Tempo na etapa atual">etapa: {stageLabel}</span>}
+                        {lastLabel && <span title="Último contato"><Clock className="h-2.5 w-2.5 inline mr-0.5" />{lastLabel}</span>}
                       </div>
 
                       <div className="mt-2" onClick={(e) => e.stopPropagation()}>
