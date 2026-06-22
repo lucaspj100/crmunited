@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, useNavigate, useLocation, Link } from "@tansta
 import { useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useBrand } from "@/lib/brand";
-import { LayoutDashboard, Users, Kanban, ListChecks, RotateCw, BarChart3, LogOut, Settings, Upload, TrendingDown } from "lucide-react";
+import { LayoutDashboard, Users, Kanban, ListChecks, RotateCw, BarChart3, LogOut, Settings, Upload, TrendingDown, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -13,6 +13,7 @@ export const Route = createFileRoute("/_authenticated")({
 
 const BASE_NAV = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/fila", label: "Fila de Trabalho", icon: Zap },
   { to: "/leads", label: "Leads", icon: Users },
   { to: "/funil", label: "Funil", icon: Kanban },
   { to: "/tarefas", label: "Tarefas do Dia", icon: ListChecks },
