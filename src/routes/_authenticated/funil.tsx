@@ -186,6 +186,15 @@ function FunilPage() {
                   const next = nextByLead.get(l.id);
                   const isOverdue = next ? next.due_date < todayStr : false;
                   const noActivity = !next;
+                  const temp = leadTemperature({
+                    status: l.status, last_contact_at: l.last_contact_at,
+                    interview_date: l.interview_date, updated_at: l.updated_at,
+                    next: next ?? null,
+                  });
+                  const tempMeta = TEMPERATURE_META[temp];
+                  const ageLabel = daysAgoLabel(l.created_at);
+                  const stageLabel = daysAgoLabel(l.updated_at);
+                  const lastLabel = daysAgoLabel(l.last_contact_at);
                   return (
                     <Card
                       key={l.id}
@@ -195,10 +204,22 @@ function FunilPage() {
                       onClick={() => setDetailsId(l.id)}
                       className={`cursor-pointer p-3 active:cursor-grabbing hover:border-primary transition-colors ${noActivity ? "border-amber-500/50" : isOverdue ? "border-rose-500/50" : ""}`}
                     >
-                      <div className="font-medium text-sm">{l.name}</div>
-                      {l.company && <div className="text-xs text-muted-foreground">{l.company}</div>}
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="font-medium text-sm truncate">{l.name}</div>
+                          {l.company && <div className="text-xs text-muted-foreground truncate">{l.company}</div>}
+                        </div>
+                        <span title={tempMeta.label} className={`shrink-0 inline-flex items-center justify-center h-5 px-1.5 rounded-full border text-[10px] ${tempMeta.color}`}>
+                          {tempMeta.emoji}
+                        </span>
+                      </div>
                       <div className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground">
                         <User className="h-3 w-3" /><span className="truncate">{ownerName}</span>
+                      </div>
+                      <div className="mt-1 flex flex-wrap gap-x-2 gap-y-0.5 text-[10px] text-muted-foreground">
+                        {ageLabel && <span title="Criado">criado: {ageLabel}</span>}
+                        {stageLabel && <span title="Tempo na etapa atual">etapa: {stageLabel}</span>}
+                        {lastLabel && <span title="Último contato"><Clock className="h-2.5 w-2.5 inline mr-0.5" />{lastLabel}</span>}
                       </div>
 
                       <div className="mt-2" onClick={(e) => e.stopPropagation()}>
