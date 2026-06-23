@@ -117,6 +117,7 @@ export type Database = {
           enrollment_value: number | null
           id: string
           in_rescue: boolean
+          interview_confirmed_at: string | null
           interview_date: string | null
           interview_notes: string | null
           interview_time: string | null
@@ -150,6 +151,7 @@ export type Database = {
           enrollment_value?: number | null
           id?: string
           in_rescue?: boolean
+          interview_confirmed_at?: string | null
           interview_date?: string | null
           interview_notes?: string | null
           interview_time?: string | null
@@ -183,6 +185,7 @@ export type Database = {
           enrollment_value?: number | null
           id?: string
           in_rescue?: boolean
+          interview_confirmed_at?: string | null
           interview_date?: string | null
           interview_notes?: string | null
           interview_time?: string | null
