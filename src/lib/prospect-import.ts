@@ -18,48 +18,105 @@ export type ParsedRow = {
   reason?: string;
 };
 
-const HEADER_MAP: Record<string, keyof Omit<ParsedRow, "index" | "telefone_normalizado" | "ddd" | "valid" | "reason">> = {
+export type ParsedFile = {
+  headers: string[];
+  rows: RawRow[];
+  detectedPhoneHeader: string | null;
+};
+
+const PHONE_HEADERS = ["telefone", "celular", "whatsapp", "numero", "número", "contato", "fone", "phone"];
+const FIELD_MAP: Record<string, "nome" | "empresa" | "cargo" | "origem" | "observacao"> = {
   nome: "nome", name: "nome", contato: "nome", contact: "nome",
-  telefone: "telefone_original", phone: "telefone_original", celular: "telefone_original", whatsapp: "telefone_original", fone: "telefone_original",
   empresa: "empresa", company: "empresa", organizacao: "empresa",
   cargo: "cargo", role: "cargo", funcao: "cargo", title: "cargo",
   origem: "origem", source: "origem", canal: "origem",
   observacao: "observacao", obs: "observacao", notes: "observacao", note: "observacao", comentario: "observacao",
 };
 
-function normHeader(h: string): string {
-  return h.toString().trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+export function normHeader(h: string): string {
+  return String(h ?? "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
-export async function parseProspectFile(file: File): Promise<RawRow[]> {
+/** Converte qualquer valor de célula (incluindo números do Excel) para string segura,
+ * sem notação científica e sem ".0" sobrando. */
+export function cellToString(v: unknown): string {
+  if (v == null) return "";
+  if (typeof v === "number") {
+    if (!Number.isFinite(v)) return "";
+    // evita notação científica para números grandes (telefones)
+    let s = v.toFixed(0);
+    // se o original tinha casa decimal, garante que perdemos
+    if (Math.floor(v) !== v) s = String(Math.round(v));
+    return s;
+  }
+  if (typeof v === "boolean") return v ? "true" : "";
+  let s = String(v).trim();
+  // remove .0 / .00 finais
+  s = s.replace(/\.0+$/, "");
+  // remove notação científica residual ex.: "4.19999e+10"
+  if (/^-?\d+(\.\d+)?e[+-]?\d+$/i.test(s)) {
+    const n = Number(s);
+    if (Number.isFinite(n)) s = Math.round(n).toString();
+  }
+  return s;
+}
+
+export async function parseProspectFile(file: File): Promise<ParsedFile> {
   const buf = await file.arrayBuffer();
   const wb = XLSX.read(buf, { type: "array" });
   const sheet = wb.Sheets[wb.SheetNames[0]];
-  return XLSX.utils.sheet_to_json<RawRow>(sheet, { defval: null });
+  // raw:false faz o xlsx retornar valores já formatados como string quando possível
+  const rows = XLSX.utils.sheet_to_json<RawRow>(sheet, { defval: null, raw: false });
+  const headerSet = new Set<string>();
+  rows.forEach((r) => Object.keys(r).forEach((k) => headerSet.add(k)));
+  const headers = Array.from(headerSet);
+  const detectedPhoneHeader = headers.find((h) => PHONE_HEADERS.includes(normHeader(h))) ?? null;
+  return { headers, rows, detectedPhoneHeader };
 }
 
-export function mapRows(rows: RawRow[]): ParsedRow[] {
+export function mapRows(rows: RawRow[], phoneHeader: string | null): ParsedRow[] {
   const out: ParsedRow[] = [];
   rows.forEach((row, i) => {
     const parsed: ParsedRow = {
-      index: i + 2, // linha real considerando header
+      index: i + 2,
       nome: null, telefone_original: "", telefone_normalizado: null, ddd: null,
       empresa: null, cargo: null, origem: null, observacao: null, valid: false,
     };
+
+    // demais colunas
     for (const [k, v] of Object.entries(row)) {
       const key = normHeader(k);
-      const dest = HEADER_MAP[key];
+      const dest = FIELD_MAP[key];
       if (!dest) continue;
-      const val = v == null ? null : String(v).trim();
+      const val = cellToString(v).trim();
       (parsed as any)[dest] = val || null;
     }
-    parsed.telefone_original = parsed.telefone_original ? String(parsed.telefone_original) : "";
-    if (!parsed.telefone_original) {
+
+    if (!phoneHeader) {
+      parsed.reason = "Coluna de telefone não encontrada";
+      out.push(parsed);
+      return;
+    }
+
+    const rawPhone = cellToString(row[phoneHeader]).trim();
+    parsed.telefone_original = rawPhone;
+    if (!rawPhone) {
       parsed.reason = "Telefone vazio";
       out.push(parsed);
       return;
     }
-    const { normalized, ddd, valid } = normalizeProspectPhone(parsed.telefone_original);
+    const digits = rawPhone.replace(/\D/g, "");
+    if (digits.length < 10) {
+      parsed.reason = "Telefone com poucos dígitos";
+      out.push(parsed);
+      return;
+    }
+    if (digits.length > 13) {
+      parsed.reason = "Telefone com dígitos demais";
+      out.push(parsed);
+      return;
+    }
+    const { normalized, ddd, valid } = normalizeProspectPhone(rawPhone);
     parsed.telefone_normalizado = normalized;
     parsed.ddd = ddd;
     parsed.valid = valid;
@@ -107,12 +164,11 @@ export async function importProspects(parsed: ParsedRow[], mode: DistributionMod
     report.errors.push({ line: p.index, reason: p.reason || "Inválido" });
   });
 
-  // dedupe dentro do próprio lote
   const seen = new Set<string>();
   const dedupedLocal = valid.filter((p) => {
     if (seen.has(p.telefone_normalizado!)) {
       report.duplicatesInProspects++;
-      report.errors.push({ line: p.index, reason: "Duplicado dentro da planilha" });
+      report.errors.push({ line: p.index, reason: "Telefone duplicado na planilha" });
       return false;
     }
     seen.add(p.telefone_normalizado!);
@@ -122,8 +178,6 @@ export async function importProspects(parsed: ParsedRow[], mode: DistributionMod
   if (dedupedLocal.length === 0) return report;
 
   const phones = dedupedLocal.map((p) => p.telefone_normalizado!);
-
-  // chunk para evitar limite de URL
   const chunk = <T,>(arr: T[], n: number) => Array.from({ length: Math.ceil(arr.length / n) }, (_, i) => arr.slice(i * n, i * n + n));
 
   const existingProspects = new Set<string>();
@@ -147,12 +201,12 @@ export async function importProspects(parsed: ParsedRow[], mode: DistributionMod
   const toInsert = dedupedLocal.filter((p) => {
     if (existingProspects.has(p.telefone_normalizado!)) {
       report.duplicatesInProspects++;
-      report.errors.push({ line: p.index, reason: "Já existe na base de prospecção" });
+      report.errors.push({ line: p.index, reason: "Telefone já existe na Base de Prospecção" });
       return false;
     }
     if (existingLeads.has(p.telefone_normalizado!)) {
       report.duplicatesInLeads++;
-      report.errors.push({ line: p.index, reason: "Já é lead no CRM" });
+      report.errors.push({ line: p.index, reason: "Telefone já existe no CRM" });
       return false;
     }
     return true;
