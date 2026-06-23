@@ -184,12 +184,13 @@ export function ImportPanel({ sellers }: { sellers: Seller[] }) {
                     <th className="p-2 text-left">Empresa</th>
                     <th className="p-2 text-left">Cargo</th>
                     <th className="p-2 text-left">Origem</th>
+                    <th className="p-2 text-left">Observação</th>
                     <th className="p-2 text-left">Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {parsed.slice(0, 10).map((p) => (
-                    <tr key={p.index} className="border-t">
+                    <tr key={p.index} className="border-t align-top">
                       <td className="p-2 text-muted-foreground">{p.index}</td>
                       <td className="p-2">{p.nome ?? "—"}</td>
                       <td className="p-2 font-mono text-xs">{p.telefone_original || "—"}</td>
@@ -197,6 +198,7 @@ export function ImportPanel({ sellers }: { sellers: Seller[] }) {
                       <td className="p-2">{p.empresa ?? "—"}</td>
                       <td className="p-2">{p.cargo ?? "—"}</td>
                       <td className="p-2">{p.origem ?? "—"}</td>
+                      <td className="p-2 max-w-[16rem] truncate" title={p.observacao ?? ""}>{p.observacao ?? "—"}</td>
                       <td className="p-2">
                         {p.valid
                           ? <Badge variant="secondary" className="bg-green-100 text-green-700">válido</Badge>
