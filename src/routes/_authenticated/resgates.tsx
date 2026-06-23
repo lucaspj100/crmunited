@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { LEAD_STATUSES, LOST_REASONS, labelFor, waLink } from "@/lib/constants";
 import { copyToClipboard, waRescueMessage, rawPhoneDigits } from "@/lib/messages";
 import { ensureTaskForStatus } from "@/lib/task-automation";
+import { logLeadEvent } from "@/lib/lead-events";
 import { RotateCw, MessageCircle, Linkedin, Check, Calendar, X, User, Copy, Phone, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
