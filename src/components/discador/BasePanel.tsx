@@ -177,6 +177,8 @@ export function BasePanel({ sellers }: { sellers: Seller[] }) {
               <tr>
                 <th className="p-2 w-8"><Checkbox checked={allSelected} onCheckedChange={toggleAll} /></th>
                 <th className="p-2">Nome</th>
+                <th className="p-2">Empresa</th>
+                <th className="p-2">Cargo</th>
                 <th className="p-2">Telefone</th>
                 <th className="p-2">DDD</th>
                 <th className="p-2">Vendedor</th>
@@ -189,7 +191,9 @@ export function BasePanel({ sellers }: { sellers: Seller[] }) {
               {rows?.map((r) => (
                 <tr key={r.id} className="border-t">
                   <td className="p-2"><Checkbox checked={selected.has(r.id)} onCheckedChange={() => toggleOne(r.id)} /></td>
-                  <td className="p-2">{r.nome || <span className="text-muted-foreground">—</span>}</td>
+                  <td className="p-2">{r.nome || <span className="text-muted-foreground italic">sem nome</span>}</td>
+                  <td className="p-2">{r.empresa || <span className="text-muted-foreground">—</span>}</td>
+                  <td className="p-2">{r.cargo || <span className="text-muted-foreground">—</span>}</td>
                   <td className="p-2 font-mono">+{r.telefone_normalizado}</td>
                   <td className="p-2">{r.ddd}</td>
                   <td className="p-2">{sellerById.get(r.vendedor_responsavel_id ?? "")?.full_name || sellerById.get(r.vendedor_responsavel_id ?? "")?.email || <span className="text-muted-foreground">—</span>}</td>
