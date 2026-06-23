@@ -43,7 +43,10 @@ export function QuickTaskDialog({
     });
     setSaving(false);
     if (error) toast.error(error.message);
-    else { toast.success("Atividade agendada"); onSaved(); onClose(); }
+    else {
+      await logLeadEvent({ leadId, type: "task_created", description: `${type} em ${date}${time ? " às " + time : ""}`, metadata: { type, date, time, obs } });
+      toast.success("Atividade agendada"); onSaved(); onClose();
+    }
   };
 
   return (
