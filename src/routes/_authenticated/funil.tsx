@@ -411,7 +411,10 @@ function LostDialog({ lead, onClose, onSaved }: { lead: Lead | null; onClose: ()
 
     setSaving(false);
     if (error) toast.error(error.message);
-    else { toast.success("Lead marcado como perdido"); onSaved(); onClose(); }
+    else {
+      await logLeadEvent({ leadId: lead.id, type: "lost", description: `Motivo: ${reason}${rescueDate ? ` · Resgate em ${rescueDate}` : ""}`, metadata: { reason, lostType, rescueDate } });
+      toast.success("Lead marcado como perdido"); onSaved(); onClose();
+    }
   };
 
   return (
