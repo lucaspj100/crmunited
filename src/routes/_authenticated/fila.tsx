@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { LEAD_STATUSES, LOST_REASONS, labelFor, statusColor, waLink } from "@/lib/constants";
 import { MESSAGE_LIBRARY, buildMessage, pickPresetKey, copyToClipboard, leadSummary, rawPhoneDigits } from "@/lib/messages";
+import { logLeadEvent } from "@/lib/lead-events";
 import { LeadDetailsDialog } from "@/components/LeadDetailsDialog";
 import { Zap, MessageCircle, Copy, Phone, Eye, Check, Calendar as CalendarIcon, FileText, ChevronRight, User, AlertTriangle, Flame, Snowflake, Sun } from "lucide-react";
 import { toast } from "sonner";
