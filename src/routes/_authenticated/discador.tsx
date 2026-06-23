@@ -43,7 +43,7 @@ function DiscadorPage() {
           <TabsList className="inline-flex w-max whitespace-nowrap">
             <TabsTrigger value="trabalhar">Trabalhar</TabsTrigger>
             {isAdmin && <TabsTrigger value="base">Base</TabsTrigger>}
-            {isAdmin && <TabsTrigger value="importar">Importar</TabsTrigger>}
+            <TabsTrigger value="importar">Importar</TabsTrigger>
             {isAdmin && <TabsTrigger value="painel">Painel</TabsTrigger>}
             {isAdmin && <TabsTrigger value="config">Configurações</TabsTrigger>}
           </TabsList>
