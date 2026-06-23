@@ -13,6 +13,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { LEAD_STATUSES } from "@/lib/constants";
 import { normalizePhone } from "@/lib/phone";
 import { ensureTaskForStatus } from "@/lib/task-automation";
+import { logLeadEvent } from "@/lib/lead-events";
 
 export function NewLeadDialog({ trigger }: { trigger?: ReactNode }) {
   const { user } = useAuth();
