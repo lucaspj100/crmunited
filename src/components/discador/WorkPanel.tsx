@@ -184,12 +184,16 @@ export function WorkPanel() {
                 <div><span className="text-muted-foreground">Observação:</span> {contact.observacao || "—"}</div>
               </div>
 
-              <div className="rounded-md border bg-primary/5 px-3 py-2 text-sm">
-                <span className="text-muted-foreground">Número que será discado:</span>{" "}
-                <span className="font-mono font-semibold">{dialNumber || "—"}</span>
-                <span className="ml-2 text-xs text-muted-foreground">
-                  (DDD origem {settings.ddd_origem} · operadora {settings.codigo_operadora_interurbano})
-                </span>
+              <div className="rounded-md border bg-primary/5 px-3 py-2 text-sm space-y-1">
+                <div>
+                  <span className="text-muted-foreground">Número que será discado:</span>{" "}
+                  <span className="font-mono font-semibold">{dialNumber || "—"}</span>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  DDD de origem usado: <strong>{settings.ddd_origem}</strong>
+                  {" · "}Prefixo de interurbano usado: <strong>{settings.prefixo_interurbano}</strong>
+                  {dddDestino && <> · DDD destino: <strong>{dddDestino}</strong></>}
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
