@@ -13,6 +13,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { LEAD_STATUSES, TASK_TYPES, labelFor, statusColor, waLink } from "@/lib/constants";
 import { copyToClipboard, waFollowupMessage, waConfirmInterviewMessage, leadSummary, rawPhoneDigits } from "@/lib/messages";
+import { logLeadEvent } from "@/lib/lead-events";
 import { LeadDetailsDialog } from "@/components/LeadDetailsDialog";
 import { ListChecks, MessageCircle, Check, Calendar, X, User, Copy, Phone, FileText, Eye, Trash2 } from "lucide-react";
 import { toast } from "sonner";
