@@ -282,6 +282,7 @@ export type Database = {
           ddd_origem_vendedor: string | null
           id: string
           observacao: string | null
+          prefixo_interurbano: string | null
           prospect_contact_id: string
           resultado: string | null
           telefone_normalizado: string | null
@@ -296,6 +297,7 @@ export type Database = {
           ddd_origem_vendedor?: string | null
           id?: string
           observacao?: string | null
+          prefixo_interurbano?: string | null
           prospect_contact_id: string
           resultado?: string | null
           telefone_normalizado?: string | null
@@ -310,6 +312,7 @@ export type Database = {
           ddd_origem_vendedor?: string | null
           id?: string
           observacao?: string | null
+          prefixo_interurbano?: string | null
           prospect_contact_id?: string
           resultado?: string | null
           telefone_normalizado?: string | null
@@ -429,6 +432,7 @@ export type Database = {
           codigo_operadora_interurbano: string
           created_at: string
           ddd_origem: string
+          prefixo_interurbano: string
           updated_at: string
           user_id: string
         }
@@ -436,6 +440,7 @@ export type Database = {
           codigo_operadora_interurbano?: string
           created_at?: string
           ddd_origem?: string
+          prefixo_interurbano?: string
           updated_at?: string
           user_id: string
         }
@@ -443,6 +448,7 @@ export type Database = {
           codigo_operadora_interurbano?: string
           created_at?: string
           ddd_origem?: string
+          prefixo_interurbano?: string
           updated_at?: string
           user_id?: string
         }
