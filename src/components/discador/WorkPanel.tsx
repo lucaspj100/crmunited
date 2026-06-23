@@ -124,7 +124,7 @@ export function WorkPanel() {
   };
 
   return (
-    <div className="grid gap-4 lg:grid-cols-3 pb-[140px] sm:pb-4">
+    <div className="grid gap-4 lg:grid-cols-3 pb-[140px] sm:pb-4 max-w-full overflow-x-hidden">
       <div className="lg:col-span-2 space-y-4">
         {/* Mobile: compact stats line */}
         <div className="sm:hidden text-xs text-muted-foreground flex flex-wrap gap-x-2 gap-y-1">
