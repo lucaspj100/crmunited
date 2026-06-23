@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { LEAD_STATUSES, LOST_REASONS } from "@/lib/constants";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { LeadTimeline } from "@/components/LeadTimeline";
+import { logLeadEvent } from "@/lib/lead-events";
 
 type LeadDetails = {
   id: string;
