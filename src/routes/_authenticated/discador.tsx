@@ -1,0 +1,58 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useAuth } from "@/lib/auth-context";
+import { supabase } from "@/integrations/supabase/client";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { WorkPanel } from "@/components/discador/WorkPanel";
+import { BasePanel } from "@/components/discador/BasePanel";
+import { ImportPanel } from "@/components/discador/ImportPanel";
+import { DashboardPanel } from "@/components/discador/DashboardPanel";
+import { ConfigPanel } from "@/components/discador/ConfigPanel";
+
+export const Route = createFileRoute("/_authenticated/discador")({
+  component: DiscadorPage,
+});
+
+function DiscadorPage() {
+  const { roles } = useAuth();
+  const isAdmin = roles.includes("admin") || roles.includes("franqueado");
+  const [tab, setTab] = useState("trabalhar");
+
+  const { data: sellers = [] } = useQuery({
+    enabled: isAdmin,
+    queryKey: ["discador_sellers"],
+    queryFn: async () => {
+      const { data: ur } = await supabase.from("user_roles").select("user_id").eq("role", "vendedor");
+      const ids = (ur ?? []).map((r) => r.user_id);
+      if (ids.length === 0) return [] as { id: string; full_name: string | null; email: string }[];
+      const { data: profs } = await supabase.from("profiles").select("id, full_name, email").in("id", ids);
+      return (profs ?? []) as { id: string; full_name: string | null; email: string }[];
+    },
+  });
+
+  return (
+    <div className="space-y-4">
+      <header>
+        <h1 className="text-2xl font-bold">Discador de Prospecção</h1>
+        <p className="text-sm text-muted-foreground">Trabalhe listas frias e envie só os interessados para o CRM.</p>
+      </header>
+
+      <Tabs value={tab} onValueChange={setTab}>
+        <TabsList className="flex flex-wrap">
+          <TabsTrigger value="trabalhar">Trabalhar</TabsTrigger>
+          {isAdmin && <TabsTrigger value="base">Base</TabsTrigger>}
+          {isAdmin && <TabsTrigger value="importar">Importar</TabsTrigger>}
+          {isAdmin && <TabsTrigger value="painel">Painel</TabsTrigger>}
+          {isAdmin && <TabsTrigger value="config">Configurações</TabsTrigger>}
+        </TabsList>
+
+        <TabsContent value="trabalhar" className="mt-4"><WorkPanel /></TabsContent>
+        {isAdmin && <TabsContent value="base" className="mt-4"><BasePanel sellers={sellers} /></TabsContent>}
+        {isAdmin && <TabsContent value="importar" className="mt-4"><ImportPanel sellers={sellers} /></TabsContent>}
+        {isAdmin && <TabsContent value="painel" className="mt-4"><DashboardPanel sellers={sellers} /></TabsContent>}
+        {isAdmin && <TabsContent value="config" className="mt-4"><ConfigPanel /></TabsContent>}
+      </Tabs>
+    </div>
+  );
+}

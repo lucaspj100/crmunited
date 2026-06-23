@@ -274,6 +274,144 @@ export type Database = {
         }
         Relationships: []
       }
+      prospect_attempts: {
+        Row: {
+          created_at: string
+          id: string
+          observacao: string | null
+          prospect_contact_id: string
+          resultado: string | null
+          telefone_normalizado: string | null
+          tipo_acao: string
+          vendedor_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          observacao?: string | null
+          prospect_contact_id: string
+          resultado?: string | null
+          telefone_normalizado?: string | null
+          tipo_acao: string
+          vendedor_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          observacao?: string | null
+          prospect_contact_id?: string
+          resultado?: string | null
+          telefone_normalizado?: string | null
+          tipo_acao?: string
+          vendedor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prospect_attempts_prospect_contact_id_fkey"
+            columns: ["prospect_contact_id"]
+            isOneToOne: false
+            referencedRelation: "prospect_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prospect_attempts_vendedor_id_fkey"
+            columns: ["vendedor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prospect_contacts: {
+        Row: {
+          assigned_at: string | null
+          cargo: string | null
+          convertido_em_lead: boolean
+          created_at: string
+          created_by: string | null
+          ddd: string | null
+          empresa: string | null
+          id: string
+          lead_id: string | null
+          nao_chamar: boolean
+          nome: string | null
+          observacao: string | null
+          origem: string | null
+          proxima_tentativa: string | null
+          quantidade_tentativas: number
+          status_prospeccao: string
+          telefone_invalido: boolean
+          telefone_normalizado: string
+          telefone_original: string | null
+          ultima_tentativa: string | null
+          updated_at: string
+          vendedor_responsavel_id: string | null
+        }
+        Insert: {
+          assigned_at?: string | null
+          cargo?: string | null
+          convertido_em_lead?: boolean
+          created_at?: string
+          created_by?: string | null
+          ddd?: string | null
+          empresa?: string | null
+          id?: string
+          lead_id?: string | null
+          nao_chamar?: boolean
+          nome?: string | null
+          observacao?: string | null
+          origem?: string | null
+          proxima_tentativa?: string | null
+          quantidade_tentativas?: number
+          status_prospeccao?: string
+          telefone_invalido?: boolean
+          telefone_normalizado: string
+          telefone_original?: string | null
+          ultima_tentativa?: string | null
+          updated_at?: string
+          vendedor_responsavel_id?: string | null
+        }
+        Update: {
+          assigned_at?: string | null
+          cargo?: string | null
+          convertido_em_lead?: boolean
+          created_at?: string
+          created_by?: string | null
+          ddd?: string | null
+          empresa?: string | null
+          id?: string
+          lead_id?: string | null
+          nao_chamar?: boolean
+          nome?: string | null
+          observacao?: string | null
+          origem?: string | null
+          proxima_tentativa?: string | null
+          quantidade_tentativas?: number
+          status_prospeccao?: string
+          telefone_invalido?: boolean
+          telefone_normalizado?: string
+          telefone_original?: string | null
+          ultima_tentativa?: string | null
+          updated_at?: string
+          vendedor_responsavel_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prospect_contacts_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prospect_contacts_vendedor_responsavel_id_fkey"
+            columns: ["vendedor_responsavel_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sheet_integrations: {
         Row: {
           created_at: string
