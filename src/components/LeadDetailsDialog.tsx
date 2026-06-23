@@ -89,6 +89,7 @@ export function LeadDetailsDialog({
     }).eq("id", lead.id);
     setSaving(false);
     if (error) { toast.error(error.message); return; }
+    await logLeadEvent({ leadId: lead.id, type: "lead_updated", description: "Dados do lead atualizados" });
     toast.success("Lead atualizado");
     qc.invalidateQueries();
     onClose();
