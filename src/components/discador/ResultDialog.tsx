@@ -30,7 +30,7 @@ export function ResultDialog({ open, onOpenChange, contactId, vendedorId, telefo
     if (result === "Ligar depois" && !proxima) { toast.error("Informe data/hora da próxima tentativa"); return; }
     setSaving(true);
     const patch = applyResultToFields(result, result === "Ligar depois" ? new Date(proxima).toISOString() : null);
-    const { error: e1 } = await supabase.from("prospect_contacts").update(patch).eq("id", contactId);
+    const { error: e1 } = await supabase.from("prospect_contacts").update(patch as never).eq("id", contactId);
     if (e1) { setSaving(false); toast.error(e1.message); return; }
     await supabase.from("prospect_attempts").insert({
       prospect_contact_id: contactId,
