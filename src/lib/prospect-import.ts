@@ -169,8 +169,12 @@ export type ImportReport = {
   duplicatesInProspects: number;
   duplicatesInLeads: number;
   invalid: number;
+  missingNome: number;
+  missingEmpresa: number;
+  missingCargo: number;
   errors: { line: number; reason: string }[];
 };
+
 
 export type DistributionMode =
   | { kind: "none" }
