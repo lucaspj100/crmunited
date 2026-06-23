@@ -43,6 +43,7 @@ export function ImportPanel({ sellers }: { sellers: Seller[] }) {
   const [singleId, setSingleId] = useState<string>("");
   const [selectedSellers, setSelectedSellers] = useState<Set<string>>(new Set());
   const [updateExisting, setUpdateExisting] = useState(false);
+  const [overwrite, setOverwrite] = useState(false);
   const [importing, setImporting] = useState(false);
   const [report, setReport] = useState<ImportReport | null>(null);
 
