@@ -1,0 +1,2 @@
+ALTER TABLE public.prospect_dialer_settings DROP CONSTRAINT IF EXISTS prefixo_interurbano_3_digits;
+ALTER TABLE public.prospect_dialer_settings ADD CONSTRAINT prefixo_interurbano_valido CHECK (prefixo_interurbano ~ '^0[0-9]{0,4}$');
