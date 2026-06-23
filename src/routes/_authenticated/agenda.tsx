@@ -349,7 +349,7 @@ function InterviewCard({
       <div className="flex flex-wrap gap-2 pt-1">
         {phoneDigits && (
           <Button size="sm" variant="outline" asChild>
-            <a href={waLink(phoneDigits, "")} target="_blank" rel="noreferrer"><MessageCircle className="h-4 w-4 mr-1" />WhatsApp</a>
+            <a href={waLink(lead.phone)} target="_blank" rel="noreferrer"><MessageCircle className="h-4 w-4 mr-1" />WhatsApp</a>
           </Button>
         )}
         <Button size="sm" variant="outline" onClick={onCopyConfirm}><Copy className="h-4 w-4 mr-1" />Confirmação</Button>
