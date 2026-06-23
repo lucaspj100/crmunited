@@ -88,7 +88,7 @@ export function WorkPanel() {
       telefone_normalizado: contact.telefone_normalizado,
       telefone_para_discagem: dialNumber,
       ddd_origem_vendedor: settings.ddd_origem,
-      codigo_operadora_interurbano: settings.codigo_operadora_interurbano,
+      prefixo_interurbano: settings.prefixo_interurbano,
       ddd_destino_contato: dddDestino,
     });
     window.location.href = `tel:${dialNumber}`;
