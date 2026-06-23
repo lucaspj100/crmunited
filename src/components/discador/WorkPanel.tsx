@@ -183,7 +183,10 @@ export function WorkPanel() {
                 </Button>
               </div>
 
-              <div>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" onClick={() => setEditOpen(true)}>
+                  <Pencil className="h-4 w-4 mr-2" />Editar contato
+                </Button>
                 <Button variant="ghost" onClick={loadNext} disabled={loading}>
                   <SkipForward className="h-4 w-4 mr-2" />Pular para próximo
                 </Button>
