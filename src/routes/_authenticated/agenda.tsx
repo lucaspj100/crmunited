@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { waLink, labelFor, statusColor, LOST_REASONS } from "@/lib/constants";
+import { waLink, labelFor, statusColor, LOST_REASONS, LEAD_STATUSES } from "@/lib/constants";
 import { buildMessage, pickPresetKey, copyToClipboard, rawPhoneDigits, MESSAGE_LIBRARY } from "@/lib/messages";
 import { LeadDetailsDialog } from "@/components/LeadDetailsDialog";
 import {
