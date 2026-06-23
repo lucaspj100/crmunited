@@ -498,7 +498,10 @@ function MatriculaDialog({ lead, onClose, onSaved }: { lead: Lead | null; onClos
 
     setSaving(false);
     if (error) toast.error(error.message);
-    else { toast.success("Matrícula registrada"); onSaved(); onClose(); }
+    else {
+      await logLeadEvent({ leadId: lead.id, type: "enrolled", description: `Matrícula R$ ${ev} · Mensalidade R$ ${mv} · Material R$ ${mt}`, metadata: { ev, mv, mt } });
+      toast.success("Matrícula registrada"); onSaved(); onClose();
+    }
   };
 
   return (
