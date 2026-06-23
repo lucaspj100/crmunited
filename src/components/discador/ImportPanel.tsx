@@ -286,7 +286,7 @@ export function ImportPanel({ sellers }: { sellers: Seller[] }) {
             )}
             <Button onClick={importar} disabled={importing} size="lg">
               <Upload className="h-4 w-4 mr-2" />
-              {importing ? "Importando…" : updateExisting ? `Importar / atualizar ${valid} contatos` : `Importar ${valid} contatos`}
+              {importing ? "Importando…" : updateExisting ? `Confirmar importação / atualização (${valid})` : `Confirmar importação (${valid})`}
             </Button>
           </CardContent>
         </Card>
