@@ -43,6 +43,7 @@ export function ImportPanel({ sellers }: { sellers: Seller[] }) {
   const [singleId, setSingleId] = useState<string>("");
   const [selectedSellers, setSelectedSellers] = useState<Set<string>>(new Set());
   const [updateExisting, setUpdateExisting] = useState(false);
+  const [overwrite, setOverwrite] = useState(false);
   const [importing, setImporting] = useState(false);
   const [report, setReport] = useState<ImportReport | null>(null);
 
@@ -79,7 +80,7 @@ export function ImportPanel({ sellers }: { sellers: Seller[] }) {
     if (mode === "single" && !singleId) { toast.error("Escolha um vendedor"); return; }
     if (mode === "round_robin" && selectedSellers.size === 0) { toast.error("Selecione vendedores"); return; }
     setImporting(true);
-    const r = await importProspects(parsed, distribution, user.id, { updateExisting });
+    const r = await importProspects(parsed, distribution, user.id, { updateExisting, overwrite });
     setImporting(false);
     setReport(r);
     qc.invalidateQueries({ queryKey: ["prospect_contacts_admin"] });
@@ -118,16 +119,26 @@ export function ImportPanel({ sellers }: { sellers: Seller[] }) {
 
           {file && (
             <div className="space-y-3">
-              <div className="rounded-md border bg-muted/30 p-3 text-sm space-y-1">
+              <div className="rounded-md border bg-muted/30 p-3 text-sm space-y-2">
                 <div>Total de linhas lidas: <strong>{file.rows.length}</strong></div>
-                <div>Colunas detectadas: <strong>{file.headers.join(", ") || "—"}</strong></div>
+                <div>
+                  <div className="text-xs uppercase text-muted-foreground mb-1">Colunas encontradas na planilha</div>
+                  <div className="flex flex-wrap gap-1">
+                    {file.headers.length > 0
+                      ? file.headers.map((h) => <Badge key={h} variant="outline">{h}</Badge>)
+                      : <span className="text-muted-foreground">—</span>}
+                  </div>
+                </div>
                 {parsed && (
                   <div>Válidas: <strong className="text-green-600">{valid}</strong> · Inválidas: <strong className="text-red-600">{invalid}</strong></div>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label className="text-base">Confirme o mapeamento das colunas</Label>
+                <Label className="text-base">Mapear colunas da planilha</Label>
+                <p className="text-xs text-muted-foreground">
+                  Para cada campo do sistema, escolha qual coluna da planilha corresponde. Telefone é obrigatório, os demais são opcionais.
+                </p>
                 <div className="grid gap-3 sm:grid-cols-2">
                   {FIELDS.map((f) => (
                     <div key={f.key}>
@@ -176,12 +187,13 @@ export function ImportPanel({ sellers }: { sellers: Seller[] }) {
                     <th className="p-2 text-left">Empresa</th>
                     <th className="p-2 text-left">Cargo</th>
                     <th className="p-2 text-left">Origem</th>
+                    <th className="p-2 text-left">Observação</th>
                     <th className="p-2 text-left">Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {parsed.slice(0, 10).map((p) => (
-                    <tr key={p.index} className="border-t">
+                    <tr key={p.index} className="border-t align-top">
                       <td className="p-2 text-muted-foreground">{p.index}</td>
                       <td className="p-2">{p.nome ?? "—"}</td>
                       <td className="p-2 font-mono text-xs">{p.telefone_original || "—"}</td>
@@ -189,6 +201,7 @@ export function ImportPanel({ sellers }: { sellers: Seller[] }) {
                       <td className="p-2">{p.empresa ?? "—"}</td>
                       <td className="p-2">{p.cargo ?? "—"}</td>
                       <td className="p-2">{p.origem ?? "—"}</td>
+                      <td className="p-2 max-w-[16rem] truncate" title={p.observacao ?? ""}>{p.observacao ?? "—"}</td>
                       <td className="p-2">
                         {p.valid
                           ? <Badge variant="secondary" className="bg-green-100 text-green-700">válido</Badge>
@@ -221,6 +234,20 @@ export function ImportPanel({ sellers }: { sellers: Seller[] }) {
                 </span>
               </span>
             </label>
+
+            {updateExisting && (
+              <label className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm">
+                <Checkbox checked={overwrite} onCheckedChange={(v) => setOverwrite(v === true)} />
+                <span>
+                  <strong>Sobrescrever dados existentes</strong>
+                  <br />
+                  <span className="text-muted-foreground text-xs">
+                    Substituir nome, empresa, cargo, origem e observação pelos valores da nova planilha,
+                    mesmo quando o contato já tiver esses campos preenchidos. Status, vendedor, tentativas e histórico continuam preservados.
+                  </span>
+                </span>
+              </label>
+            )}
 
             <div>
               <Label>Modo de distribuição (somente para novos contatos)</Label>
@@ -259,7 +286,7 @@ export function ImportPanel({ sellers }: { sellers: Seller[] }) {
             )}
             <Button onClick={importar} disabled={importing} size="lg">
               <Upload className="h-4 w-4 mr-2" />
-              {importing ? "Importando…" : updateExisting ? `Importar / atualizar ${valid} contatos` : `Importar ${valid} contatos`}
+              {importing ? "Importando…" : updateExisting ? `Confirmar importação / atualização (${valid})` : `Confirmar importação (${valid})`}
             </Button>
           </CardContent>
         </Card>
@@ -270,12 +297,16 @@ export function ImportPanel({ sellers }: { sellers: Seller[] }) {
           <CardHeader><CardTitle>Relatório da importação</CardTitle></CardHeader>
           <CardContent className="space-y-2 text-sm">
             <div>Total de linhas lidas: <strong>{report.totalRows}</strong></div>
-            <div>Contatos válidos: <strong className="text-green-600">{report.totalRows - report.invalid}</strong></div>
-            <div>Contatos inválidos: <strong className="text-red-600">{report.invalid}</strong></div>
-            <div>Duplicados (já na prospecção): <strong>{report.duplicatesInProspects}</strong></div>
-            <div>Duplicados (já no CRM): <strong>{report.duplicatesInLeads}</strong></div>
-            <div>Importados com sucesso: <strong className="text-green-600">{report.imported}</strong></div>
-            <div>Atualizados: <strong className="text-blue-600">{report.updated}</strong></div>
+            <div>Novos contatos importados: <strong className="text-green-600">{report.imported}</strong></div>
+            <div>Contatos existentes atualizados: <strong className="text-blue-600">{report.updated}</strong></div>
+            <div>Duplicados ignorados (já na prospecção): <strong>{report.duplicatesInProspects}</strong></div>
+            <div>Duplicados ignorados (já no CRM): <strong>{report.duplicatesInLeads}</strong></div>
+            <div>Telefones inválidos: <strong className="text-red-600">{report.invalid}</strong></div>
+            <hr className="my-2" />
+            <div className="text-xs uppercase text-muted-foreground">Diagnóstico dos contatos válidos</div>
+            <div>Sem nome: <strong>{report.missingNome}</strong></div>
+            <div>Sem empresa: <strong>{report.missingEmpresa}</strong></div>
+            <div>Sem cargo: <strong>{report.missingCargo}</strong></div>
             {report.errors.length > 0 && (
               <details className="mt-2">
                 <summary className="cursor-pointer text-muted-foreground">Ver detalhes ({report.errors.length})</summary>

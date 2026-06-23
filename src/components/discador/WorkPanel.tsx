@@ -5,13 +5,14 @@ import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Phone, MessageCircle, ListChecks, UserPlus, SkipForward, Inbox } from "lucide-react";
+import { Phone, MessageCircle, ListChecks, UserPlus, SkipForward, Inbox, Pencil } from "lucide-react";
 import { fetchNextProspect, type ProspectContact } from "@/lib/prospect-queue";
 import { statusBadgeClass, getWhatsappTemplate } from "@/lib/prospect-status";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ResultDialog } from "./ResultDialog";
 import { ConvertLeadDialog } from "./ConvertLeadDialog";
+import { EditContactDialog } from "./EditContactDialog";
 import { AttemptHistory } from "./AttemptHistory";
 import { toast } from "sonner";
 
@@ -22,6 +23,7 @@ export function WorkPanel() {
   const [loading, setLoading] = useState(false);
   const [resultOpen, setResultOpen] = useState(false);
   const [convertOpen, setConvertOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [lastAction, setLastAction] = useState<"ligacao" | "whatsapp" | undefined>();
 
   const loadNext = async () => {
@@ -181,7 +183,10 @@ export function WorkPanel() {
                 </Button>
               </div>
 
-              <div>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" onClick={() => setEditOpen(true)}>
+                  <Pencil className="h-4 w-4 mr-2" />Editar contato
+                </Button>
                 <Button variant="ghost" onClick={loadNext} disabled={loading}>
                   <SkipForward className="h-4 w-4 mr-2" />Pular para próximo
                 </Button>
@@ -218,6 +223,14 @@ export function WorkPanel() {
           contact={contact}
           vendedorId={user.id}
           onConverted={() => { qc.invalidateQueries({ queryKey: ["prospect_counts"] }); void loadNext(); }}
+        />
+      )}
+      {contact && (
+        <EditContactDialog
+          open={editOpen}
+          onOpenChange={setEditOpen}
+          contact={contact}
+          onSaved={(updated) => { setContact(updated); qc.invalidateQueries({ queryKey: ["prospect_contacts_admin"] }); }}
         />
       )}
     </div>

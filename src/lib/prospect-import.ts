@@ -169,8 +169,12 @@ export type ImportReport = {
   duplicatesInProspects: number;
   duplicatesInLeads: number;
   invalid: number;
+  missingNome: number;
+  missingEmpresa: number;
+  missingCargo: number;
   errors: { line: number; reason: string }[];
 };
+
 
 export type DistributionMode =
   | { kind: "none" }
@@ -189,7 +193,7 @@ export async function importProspects(
   parsed: ParsedRow[],
   mode: DistributionMode,
   createdBy: string,
-  options: { updateExisting?: boolean } = {},
+  options: { updateExisting?: boolean; overwrite?: boolean } = {},
 ): Promise<ImportReport> {
   const report: ImportReport = {
     totalRows: parsed.length,
@@ -198,6 +202,9 @@ export async function importProspects(
     duplicatesInProspects: 0,
     duplicatesInLeads: 0,
     invalid: 0,
+    missingNome: 0,
+    missingEmpresa: 0,
+    missingCargo: 0,
     errors: [],
   };
 
@@ -291,27 +298,34 @@ export async function importProspects(
     else report.imported += count ?? rows.length;
   }
 
-  // UPDATE existentes (somente campos vazios; status só se vazio)
+  // UPDATE existentes
+  // - overwrite=false: preenche apenas campos vazios
+  // - overwrite=true: substitui pelos novos valores (quando vierem na planilha)
+  // status_prospeccao / vendedor_responsavel_id / quantidade_tentativas / histórico nunca são alterados aqui
   for (const { row, existing } of toUpdate) {
     const patch: {
-      nome?: string;
-      empresa?: string;
-      cargo?: string;
-      origem?: string;
-      observacao?: string;
-      status_prospeccao?: string;
+      nome?: string; empresa?: string; cargo?: string; origem?: string; observacao?: string;
     } = {};
-    if (!existing.nome && row.nome) patch.nome = row.nome;
-    if (!existing.empresa && row.empresa) patch.empresa = row.empresa;
-    if (!existing.cargo && row.cargo) patch.cargo = row.cargo;
-    if (!existing.origem && row.origem) patch.origem = row.origem;
-    if (!existing.observacao && row.observacao) patch.observacao = row.observacao;
-    if (!existing.status_prospeccao && row.telefone_normalizado) patch.status_prospeccao = "Aguardando ligação";
+    const apply = (field: "nome" | "empresa" | "cargo" | "origem" | "observacao") => {
+      const newVal = row[field];
+      const oldVal = (existing as any)[field] as string | null;
+      if (!newVal) return;
+      if (options.overwrite || !oldVal) patch[field] = newVal;
+    };
+    apply("nome"); apply("empresa"); apply("cargo"); apply("origem"); apply("observacao");
     if (Object.keys(patch).length === 0) continue;
     const { error } = await supabase.from("prospect_contacts").update(patch).eq("id", existing.id);
     if (error) report.errors.push({ line: row.index, reason: `Falha ao atualizar: ${error.message}` });
     else report.updated++;
   }
 
+  // Diagnóstico: contatos que ficaram sem dados-chave
+  for (const p of dedupedLocal) {
+    if (!p.nome) report.missingNome++;
+    if (!p.empresa) report.missingEmpresa++;
+    if (!p.cargo) report.missingCargo++;
+  }
+
   return report;
 }
+
