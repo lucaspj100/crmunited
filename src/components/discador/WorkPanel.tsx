@@ -59,7 +59,7 @@ export function WorkPanel() {
     queryFn: async () => {
       const { data } = await supabase
         .from("prospect_dialer_settings")
-        .select("ddd_origem, codigo_operadora_interurbano")
+        .select("ddd_origem, prefixo_interurbano")
         .eq("user_id", user!.id)
         .maybeSingle();
       return (data as DialerSettings | null) ?? DEFAULT_DIALER_SETTINGS;
