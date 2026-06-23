@@ -15,6 +15,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { waLink, labelFor, statusColor, LOST_REASONS, LEAD_STATUSES } from "@/lib/constants";
 import { buildMessage, pickPresetKey, copyToClipboard, rawPhoneDigits, MESSAGE_LIBRARY } from "@/lib/messages";
 import { LeadDetailsDialog } from "@/components/LeadDetailsDialog";
+import { logLeadEvent } from "@/lib/lead-events";
 import {
   Calendar as CalendarIcon, Check, X, RotateCw, GraduationCap, MessageCircle,
   Phone, Eye, Copy, AlertTriangle, CheckCircle2, Clock, Users,
