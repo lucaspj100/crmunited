@@ -230,36 +230,33 @@ export async function importProspects(
   const phones = dedupedLocal.map((p) => p.telefone_normalizado!);
   const chunk = <T,>(arr: T[], n: number) => Array.from({ length: Math.ceil(arr.length / n) }, (_, i) => arr.slice(i * n, i * n + n));
 
-  const existingProspects = new Map<string, { id: string; nome: string | null; empresa: string | null; cargo: string | null; origem: string | null; observacao: string | null; status_prospeccao: string | null }>();
+  type Existing = { id: string; nome: string | null; empresa: string | null; cargo: string | null; origem: string | null; observacao: string | null; status_prospeccao: string | null; vendedor_responsavel_id: string | null };
+  const existingProspects = new Map<string, Existing>();
   for (const c of chunk(phones, 300)) {
-    const { data } = await supabase
-      .from("prospect_contacts")
-      .select("id, telefone_normalizado, nome, empresa, cargo, origem, observacao, status_prospeccao")
-      .in("telefone_normalizado", c);
+    const { data } = await supabase.rpc("prospect_phones_lookup", { _phones: c });
     (data ?? []).forEach((r: any) => existingProspects.set(r.telefone_normalizado, r));
   }
 
   const existingLeads = new Set<string>();
   for (const c of chunk(phones, 300)) {
-    const { data } = await supabase
-      .from("leads")
-      .select("phone_normalized")
-      .in("phone_normalized", c);
-    (data ?? []).forEach((r) => r.phone_normalized && existingLeads.add(r.phone_normalized));
+    const { data } = await supabase.rpc("lead_phones_lookup", { _phones: c });
+    (data ?? []).forEach((r: any) => r.phone_normalized && existingLeads.add(r.phone_normalized));
   }
 
   // separa novos x existentes
   const toInsert: ParsedRow[] = [];
-  const toUpdate: { row: ParsedRow; existing: NonNullable<ReturnType<typeof existingProspects.get>> }[] = [];
+  const toUpdate: { row: ParsedRow; existing: Existing }[] = [];
 
   for (const p of dedupedLocal) {
     const ex = existingProspects.get(p.telefone_normalizado!);
     if (ex) {
-      if (options.updateExisting) {
+      // Vendedor comum só pode atualizar contatos atribuídos a si mesmo
+      const canUpdate = options.isAdmin || ex.vendedor_responsavel_id === createdBy;
+      if (options.updateExisting && canUpdate) {
         toUpdate.push({ row: p, existing: ex });
       } else {
         report.duplicatesInProspects++;
-        report.errors.push({ line: p.index, reason: "Telefone já existe na Base de Prospecção" });
+        report.errors.push({ line: p.index, reason: ex.vendedor_responsavel_id && ex.vendedor_responsavel_id !== createdBy && !options.isAdmin ? "Telefone já pertence a outro vendedor" : "Telefone já existe na Base de Prospecção" });
       }
       continue;
     }
