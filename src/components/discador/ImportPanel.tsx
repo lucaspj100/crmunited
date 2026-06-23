@@ -249,39 +249,47 @@ export function ImportPanel({ sellers, isAdmin = false }: { sellers: Seller[]; i
               </label>
             )}
 
-            <div>
-              <Label>Modo de distribuição (somente para novos contatos)</Label>
-              <Select value={mode} onValueChange={(v) => setMode(v as any)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Importar sem responsável (distribuir depois)</SelectItem>
-                  <SelectItem value="single">Atribuir todos a um vendedor</SelectItem>
-                  <SelectItem value="round_robin">Distribuir automaticamente (rodízio)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            {mode === "single" && (
-              <div>
-                <Label>Vendedor</Label>
-                <Select value={singleId} onValueChange={setSingleId}>
-                  <SelectTrigger><SelectValue placeholder="Selecione…" /></SelectTrigger>
-                  <SelectContent>
-                    {sellers.map((s) => <SelectItem key={s.id} value={s.id}>{s.full_name || s.email}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-            {mode === "round_robin" && (
-              <div className="space-y-2">
-                <Label>Vendedores ativos</Label>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                  {sellers.map((s) => (
-                    <label key={s.id} className="flex items-center gap-2 rounded-md border p-2 text-sm">
-                      <Checkbox checked={selectedSellers.has(s.id)} onCheckedChange={() => toggleSeller(s.id)} />
-                      <span className="truncate">{s.full_name || s.email}</span>
-                    </label>
-                  ))}
+            {isAdmin ? (
+              <>
+                <div>
+                  <Label>Modo de distribuição (somente para novos contatos)</Label>
+                  <Select value={mode} onValueChange={(v) => setMode(v as any)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Importar sem responsável (distribuir depois)</SelectItem>
+                      <SelectItem value="single">Atribuir todos a um vendedor</SelectItem>
+                      <SelectItem value="round_robin">Distribuir automaticamente (rodízio)</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
+                {mode === "single" && (
+                  <div>
+                    <Label>Vendedor</Label>
+                    <Select value={singleId} onValueChange={setSingleId}>
+                      <SelectTrigger><SelectValue placeholder="Selecione…" /></SelectTrigger>
+                      <SelectContent>
+                        {sellers.map((s) => <SelectItem key={s.id} value={s.id}>{s.full_name || s.email}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                {mode === "round_robin" && (
+                  <div className="space-y-2">
+                    <Label>Vendedores ativos</Label>
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                      {sellers.map((s) => (
+                        <label key={s.id} className="flex items-center gap-2 rounded-md border p-2 text-sm">
+                          <Checkbox checked={selectedSellers.has(s.id)} onCheckedChange={() => toggleSeller(s.id)} />
+                          <span className="truncate">{s.full_name || s.email}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="rounded-md border bg-muted/30 p-3 text-sm text-muted-foreground">
+                Os contatos importados serão atribuídos automaticamente a você. Telefones já cadastrados por outros vendedores ou no CRM serão ignorados.
               </div>
             )}
             <Button onClick={importar} disabled={importing} size="lg">
