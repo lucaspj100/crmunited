@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { LEAD_STATUSES, LOST_REASONS } from "@/lib/constants";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { LeadTimeline } from "@/components/LeadTimeline";
+import { logLeadEvent } from "@/lib/lead-events";
 
 type LeadDetails = {
   id: string;
@@ -87,6 +89,7 @@ export function LeadDetailsDialog({
     }).eq("id", lead.id);
     setSaving(false);
     if (error) { toast.error(error.message); return; }
+    await logLeadEvent({ leadId: lead.id, type: "lead_updated", description: "Dados do lead atualizados" });
     toast.success("Lead atualizado");
     qc.invalidateQueries();
     onClose();
@@ -157,6 +160,13 @@ export function LeadDetailsDialog({
                 {lead.rescue_date && <div className="text-sm">Resgate em: {lead.rescue_date}</div>}
               </div>
             )}
+
+            <div className="rounded-md border p-3 bg-muted/20">
+              <div className="text-xs font-semibold text-muted-foreground uppercase mb-2">Histórico de atividades</div>
+              <LeadTimeline leadId={lead.id} />
+            </div>
+
+
 
             <DialogFooter className="gap-2 sm:justify-between">
               <AlertDialog>

@@ -13,6 +13,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { LEAD_STATUSES, TASK_TYPES, labelFor, statusColor, waLink } from "@/lib/constants";
 import { copyToClipboard, waFollowupMessage, waConfirmInterviewMessage, leadSummary, rawPhoneDigits } from "@/lib/messages";
+import { logLeadEvent } from "@/lib/lead-events";
 import { LeadDetailsDialog } from "@/components/LeadDetailsDialog";
 import { ListChecks, MessageCircle, Check, Calendar, X, User, Copy, Phone, FileText, Eye, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -205,21 +206,26 @@ function CompleteTaskDialog({ task, lead, onClose, onDone }: { task: Task; lead:
   const onSubmit = async () => {
     setSaving(true);
     await supabase.from("tasks").update({ status: "concluida" }).eq("id", task.id);
+    await logLeadEvent({ leadId: lead.id, type: "task_done", description: `Tarefa "${task.type}" concluída` });
 
     if (next === "none") { /* nothing */ }
     else if (next === "matricula") {
       await supabase.from("leads").update({ status: "matricula" }).eq("id", lead.id);
+      await logLeadEvent({ leadId: lead.id, type: "enrolled" });
     } else if (next === "entrevista") {
       await supabase.from("leads").update({ status: "entrevista_marcada" }).eq("id", lead.id);
+      await logLeadEvent({ leadId: lead.id, type: "status_change", description: "→ entrevista_marcada" });
     } else if (next === "perdido") {
       toast.info("Vá ao funil para detalhar a perda.");
       await supabase.from("leads").update({ status: "perdido", lost_reason: "outro", lost_type: "definitivo" }).eq("id", lead.id);
+      await logLeadEvent({ leadId: lead.id, type: "lost" });
     } else if (next === "custom") {
       if (!customDate) { toast.error("Escolha a data"); setSaving(false); return; }
       await supabase.from("tasks").insert({
         lead_id: lead.id, owner_id: lead.owner_id, type: "enviar_mensagem",
         due_date: customDate, status: "pendente", observation: "Follow-up",
       });
+      await logLeadEvent({ leadId: lead.id, type: "task_created", description: `Follow-up em ${customDate}` });
     } else {
       const days = next === "d1" ? 1 : next === "d3" ? 3 : 7;
       const d = new Date(); d.setDate(d.getDate() + days);
@@ -227,6 +233,7 @@ function CompleteTaskDialog({ task, lead, onClose, onDone }: { task: Task; lead:
         lead_id: lead.id, owner_id: lead.owner_id, type: "enviar_mensagem",
         due_date: d.toISOString().slice(0, 10), status: "pendente", observation: "Follow-up",
       });
+      await logLeadEvent({ leadId: lead.id, type: "task_created", description: `Follow-up em ${days} dia(s)` });
     }
     setSaving(false);
     toast.success("Tarefa concluída");

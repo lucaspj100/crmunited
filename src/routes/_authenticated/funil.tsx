@@ -19,6 +19,7 @@ import { NewLeadDialog } from "@/components/NewLeadDialog";
 import { LeadDetailsDialog } from "@/components/LeadDetailsDialog";
 import { QuickTaskDialog } from "@/components/QuickTaskDialog";
 import { ensureTaskForStatus } from "@/lib/task-automation";
+import { logLeadEvent } from "@/lib/lead-events";
 import { labelFor, TASK_TYPES } from "@/lib/constants";
 import { toast } from "sonner";
 
@@ -111,9 +112,11 @@ function FunilPage() {
     const { error } = await supabase.from("leads").update({ status: newStatus as any }).eq("id", lead.id);
     if (error) { toast.error(error.message); return; }
     await ensureTaskForStatus({ leadId: lead.id, ownerId: lead.owner_id, status: newStatus });
+    await logLeadEvent({ leadId: lead.id, type: "status_change", description: `${lead.status} → ${newStatus}`, metadata: { from: lead.status, to: newStatus } });
     toast.success("Lead movido");
     qc.invalidateQueries();
   };
+
 
   return (
     <div className="space-y-4">
@@ -320,7 +323,10 @@ function InterviewDialog({ lead, onClose, onSaved }: { lead: Lead | null; onClos
     }
     setSaving(false);
     if (error) toast.error(error.message);
-    else { toast.success("Entrevista marcada"); onSaved(); onClose(); }
+    else {
+      await logLeadEvent({ leadId: lead.id, type: "interview_scheduled", description: `Entrevista marcada para ${date}${time ? " às " + time : ""}` });
+      toast.success("Entrevista marcada"); onSaved(); onClose();
+    }
   };
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
@@ -405,7 +411,10 @@ function LostDialog({ lead, onClose, onSaved }: { lead: Lead | null; onClose: ()
 
     setSaving(false);
     if (error) toast.error(error.message);
-    else { toast.success("Lead marcado como perdido"); onSaved(); onClose(); }
+    else {
+      await logLeadEvent({ leadId: lead.id, type: "lost", description: `Motivo: ${reason}${rescueDate ? ` · Resgate em ${rescueDate}` : ""}`, metadata: { reason, lostType, rescueDate } });
+      toast.success("Lead marcado como perdido"); onSaved(); onClose();
+    }
   };
 
   return (
@@ -489,7 +498,10 @@ function MatriculaDialog({ lead, onClose, onSaved }: { lead: Lead | null; onClos
 
     setSaving(false);
     if (error) toast.error(error.message);
-    else { toast.success("Matrícula registrada"); onSaved(); onClose(); }
+    else {
+      await logLeadEvent({ leadId: lead.id, type: "enrolled", description: `Matrícula R$ ${ev} · Mensalidade R$ ${mv} · Material R$ ${mt}`, metadata: { ev, mv, mt } });
+      toast.success("Matrícula registrada"); onSaved(); onClose();
+    }
   };
 
   return (
