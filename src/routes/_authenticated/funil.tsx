@@ -19,6 +19,7 @@ import { NewLeadDialog } from "@/components/NewLeadDialog";
 import { LeadDetailsDialog } from "@/components/LeadDetailsDialog";
 import { QuickTaskDialog } from "@/components/QuickTaskDialog";
 import { ensureTaskForStatus } from "@/lib/task-automation";
+import { logLeadEvent } from "@/lib/lead-events";
 import { labelFor, TASK_TYPES } from "@/lib/constants";
 import { toast } from "sonner";
 
