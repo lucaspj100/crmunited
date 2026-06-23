@@ -293,7 +293,14 @@ export async function importProspects(
 
   // UPDATE existentes (somente campos vazios; status só se vazio)
   for (const { row, existing } of toUpdate) {
-    const patch: Record<string, unknown> = {};
+    const patch: {
+      nome?: string;
+      empresa?: string;
+      cargo?: string;
+      origem?: string;
+      observacao?: string;
+      status_prospeccao?: string;
+    } = {};
     if (!existing.nome && row.nome) patch.nome = row.nome;
     if (!existing.empresa && row.empresa) patch.empresa = row.empresa;
     if (!existing.cargo && row.cargo) patch.cargo = row.cargo;
