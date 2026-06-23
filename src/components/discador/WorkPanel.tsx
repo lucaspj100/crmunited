@@ -23,6 +23,7 @@ export function WorkPanel() {
   const [loading, setLoading] = useState(false);
   const [resultOpen, setResultOpen] = useState(false);
   const [convertOpen, setConvertOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [lastAction, setLastAction] = useState<"ligacao" | "whatsapp" | undefined>();
 
   const loadNext = async () => {
