@@ -13,6 +13,11 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { exportRowsToXlsx } from "@/lib/xlsx-export";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Trash2 } from "lucide-react";
 
 type Seller = { id: string; full_name: string | null; email: string };
 
@@ -98,6 +103,34 @@ export function BasePanel({ sellers }: { sellers: Seller[] }) {
     qc.invalidateQueries({ queryKey: ["prospect_contacts_admin"] });
   };
 
+  const deleteSelected = async () => {
+    if (selected.size === 0) return;
+    const ids = Array.from(selected);
+    const { error, count } = await supabase
+      .from("prospect_contacts")
+      .delete({ count: "exact" })
+      .in("id", ids);
+    if (error) { toast.error(`Falha ao apagar: ${error.message}`); return; }
+    toast.success(`${count ?? ids.length} contato(s) apagados`);
+    setSelected(new Set());
+    qc.invalidateQueries({ queryKey: ["prospect_contacts_admin"] });
+    qc.invalidateQueries({ queryKey: ["prospect_queue"] });
+  };
+
+  const deleteAllFiltered = async () => {
+    if (!rows || rows.length === 0) return;
+    const ids = rows.map((r) => r.id);
+    const { error, count } = await supabase
+      .from("prospect_contacts")
+      .delete({ count: "exact" })
+      .in("id", ids);
+    if (error) { toast.error(`Falha ao apagar: ${error.message}`); return; }
+    toast.success(`${count ?? ids.length} contato(s) apagados`);
+    setSelected(new Set());
+    qc.invalidateQueries({ queryKey: ["prospect_contacts_admin"] });
+    qc.invalidateQueries({ queryKey: ["prospect_queue"] });
+  };
+
   const exportar = () => {
     if (!rows) return;
     exportRowsToXlsx(
@@ -162,14 +195,53 @@ export function BasePanel({ sellers }: { sellers: Seller[] }) {
             <Button size="sm" onClick={() => bulkSeller && redistribute(bulkSeller)} disabled={!bulkSeller}>Atribuir</Button>
             <Button size="sm" variant="outline" onClick={() => redistribute(null)}>Tirar responsável</Button>
             <Button size="sm" variant="destructive" onClick={bulkNaoChamar}>Marcar Não chamar</Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button size="sm" variant="destructive"><Trash2 className="mr-1 h-4 w-4" />Apagar selecionados</Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Apagar {selected.size} contato(s)?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Esta ação remove os contatos da base de prospecção e o histórico de tentativas relacionado. Leads já convertidos no CRM não são afetados. Não pode ser desfeita.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction onClick={deleteSelected}>Apagar</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
             <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>Limpar</Button>
           </div>
         )}
 
-        <div className="flex justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm text-muted-foreground">{isLoading ? "Carregando…" : `${rows?.length ?? 0} contatos (máx. 500)`}</p>
-          <Button variant="outline" size="sm" onClick={exportar} disabled={!rows?.length}>Exportar XLSX</Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={exportar} disabled={!rows?.length}>Exportar XLSX</Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm" disabled={!rows?.length}>
+                  <Trash2 className="mr-1 h-4 w-4" />Apagar resultados ({rows?.length ?? 0})
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Apagar todos os {rows?.length ?? 0} contatos filtrados?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Vai apagar todos os contatos visíveis na tabela atual (respeita os filtros selecionados). O histórico de tentativas é removido junto. Leads já convertidos no CRM não são afetados. Não pode ser desfeita.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction onClick={deleteAllFiltered}>Apagar tudo</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </div>
+
 
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
