@@ -202,7 +202,7 @@ function AgendaPage() {
     setEnrol(null); refresh();
   }
   async function doLost(l: Lead, reason: string) {
-    const { error } = await supabase.from("leads").update({ status: "perdido", lost_reason: reason || null }).eq("id", l.id);
+    const { error } = await supabase.from("leads").update({ status: "perdido", lost_reason: (reason || null) as any }).eq("id", l.id);
     if (error) { toast.error("Erro"); return; }
     toast.success("Lead marcado como perdido");
     setLost(null); refresh();
