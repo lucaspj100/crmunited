@@ -19,8 +19,13 @@ import {
   type FieldKey,
 } from "@/lib/prospect-import";
 import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
-import { Upload, FileSpreadsheet, AlertTriangle } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Upload, FileSpreadsheet, AlertTriangle, Trash2 } from "lucide-react";
 
 type Seller = { id: string; full_name: string | null; email: string };
 
