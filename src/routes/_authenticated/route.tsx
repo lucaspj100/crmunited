@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, useNavigate, useLocation, Link } from "@tansta
 import { useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useBrand } from "@/lib/brand";
-import { LayoutDashboard, Users, Kanban, ListChecks, RotateCw, BarChart3, LogOut, Settings, Upload, TrendingDown, Zap, Trophy } from "lucide-react";
+import { LayoutDashboard, Users, Kanban, ListChecks, RotateCw, BarChart3, LogOut, Settings, Upload, TrendingDown, Zap, Trophy, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +17,7 @@ const BASE_NAV = [
   { to: "/leads", label: "Leads", icon: Users },
   { to: "/funil", label: "Funil", icon: Kanban },
   { to: "/tarefas", label: "Tarefas do Dia", icon: ListChecks },
+  { to: "/agenda", label: "Agenda", icon: Calendar },
   { to: "/perdidos", label: "Perdidos", icon: TrendingDown },
   { to: "/resgates", label: "Resgates", icon: RotateCw },
   { to: "/importar", label: "Importar", icon: Upload },
