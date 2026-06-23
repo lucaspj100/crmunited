@@ -59,6 +59,7 @@ function ResgatesPage() {
     await supabase.from("tasks").update({ status: "concluida" }).eq("id", task.id);
     await supabase.from("leads").update({ status: newStatus as any, lost_reason: null, lost_type: null, rescue_date: null }).eq("id", task.lead_id);
     await ensureTaskForStatus({ leadId: lead.id, ownerId: lead.owner_id, status: newStatus });
+    await logLeadEvent({ leadId: lead.id, type: "rescue_activated", description: `Resgate ativado → ${newStatus}` });
     toast.success("Lead resgatado");
     qc.invalidateQueries();
     setResgateTask(null);
@@ -67,6 +68,7 @@ function ResgatesPage() {
   const onReagendar = async (task: Task, newDate: string) => {
     await supabase.from("tasks").update({ due_date: newDate }).eq("id", task.id);
     await supabase.from("leads").update({ rescue_date: newDate }).eq("id", task.lead_id);
+    await logLeadEvent({ leadId: task.lead_id, type: "task_rescheduled", description: `Resgate reagendado para ${newDate}` });
     toast.success("Resgate reagendado");
     qc.invalidateQueries();
     setReagendarTask(null);
@@ -75,9 +77,11 @@ function ResgatesPage() {
   const onDescartar = async (t: Task) => {
     await supabase.from("tasks").update({ status: "cancelada" }).eq("id", t.id);
     await supabase.from("leads").update({ lost_type: "definitivo", rescue_date: null }).eq("id", t.lead_id);
+    await logLeadEvent({ leadId: t.lead_id, type: "lost", description: "Resgate descartado · perdido definitivo" });
     toast.success("Marcado como perdido definitivo");
     qc.invalidateQueries();
   };
+
 
   if (isLoading || !data) return <div className="text-muted-foreground">Carregando…</div>;
 
