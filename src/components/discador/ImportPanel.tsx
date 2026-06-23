@@ -337,3 +337,71 @@ export function ImportPanel({ sellers, isAdmin = false }: { sellers: Seller[]; i
     </div>
   );
 }
+
+function ClearMyContactsCard({ userId }: { userId: string }) {
+  const qc = useQueryClient();
+  const [busy, setBusy] = useState(false);
+  const { data: count = 0, refetch } = useQuery({
+    queryKey: ["my_prospect_count", userId],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("prospect_contacts")
+        .select("id", { count: "exact", head: true })
+        .eq("vendedor_responsavel_id", userId);
+      return count ?? 0;
+    },
+  });
+
+  const clearAll = async (keepConverted: boolean) => {
+    setBusy(true);
+    try {
+      let q = supabase
+        .from("prospect_contacts")
+        .delete({ count: "exact" })
+        .eq("vendedor_responsavel_id", userId);
+      if (keepConverted) q = q.eq("convertido_em_lead", false);
+      const { error, count } = await q;
+      if (error) { toast.error(`Falha ao apagar: ${error.message}`); return; }
+      toast.success(`${count ?? 0} contato(s) apagados`);
+      await refetch();
+      qc.invalidateQueries({ queryKey: ["prospect_queue"] });
+      qc.invalidateQueries({ queryKey: ["prospect_contacts_admin"] });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2"><Trash2 className="h-5 w-5" />Limpar meus contatos importados</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <p className="text-sm text-muted-foreground">
+          Você tem <strong>{count}</strong> contato(s) atribuído(s) a você no Discador. Apagar remove os contatos e o histórico de tentativas. Leads já convertidos no CRM <strong>não</strong> são afetados.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" size="sm" disabled={busy || count === 0}>
+                <Trash2 className="mr-1 h-4 w-4" />Apagar meus contatos ({count})
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Apagar todos os seus {count} contatos?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Mantém os já convertidos em lead. Remove o restante junto com o histórico de tentativas. Não pode ser desfeita.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={() => clearAll(true)}>Apagar</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
