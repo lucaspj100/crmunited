@@ -294,12 +294,16 @@ export function ImportPanel({ sellers }: { sellers: Seller[] }) {
           <CardHeader><CardTitle>Relatório da importação</CardTitle></CardHeader>
           <CardContent className="space-y-2 text-sm">
             <div>Total de linhas lidas: <strong>{report.totalRows}</strong></div>
-            <div>Contatos válidos: <strong className="text-green-600">{report.totalRows - report.invalid}</strong></div>
-            <div>Contatos inválidos: <strong className="text-red-600">{report.invalid}</strong></div>
-            <div>Duplicados (já na prospecção): <strong>{report.duplicatesInProspects}</strong></div>
-            <div>Duplicados (já no CRM): <strong>{report.duplicatesInLeads}</strong></div>
-            <div>Importados com sucesso: <strong className="text-green-600">{report.imported}</strong></div>
-            <div>Atualizados: <strong className="text-blue-600">{report.updated}</strong></div>
+            <div>Novos contatos importados: <strong className="text-green-600">{report.imported}</strong></div>
+            <div>Contatos existentes atualizados: <strong className="text-blue-600">{report.updated}</strong></div>
+            <div>Duplicados ignorados (já na prospecção): <strong>{report.duplicatesInProspects}</strong></div>
+            <div>Duplicados ignorados (já no CRM): <strong>{report.duplicatesInLeads}</strong></div>
+            <div>Telefones inválidos: <strong className="text-red-600">{report.invalid}</strong></div>
+            <hr className="my-2" />
+            <div className="text-xs uppercase text-muted-foreground">Diagnóstico dos contatos válidos</div>
+            <div>Sem nome: <strong>{report.missingNome}</strong></div>
+            <div>Sem empresa: <strong>{report.missingEmpresa}</strong></div>
+            <div>Sem cargo: <strong>{report.missingCargo}</strong></div>
             {report.errors.length > 0 && (
               <details className="mt-2">
                 <summary className="cursor-pointer text-muted-foreground">Ver detalhes ({report.errors.length})</summary>
