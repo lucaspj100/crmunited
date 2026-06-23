@@ -3,7 +3,7 @@
 
 export type DialerSettings = {
   ddd_origem: string; // 2 dígitos
-  prefixo_interurbano: string; // 3 dígitos, começa com 0 (ex.: 015, 021, 041)
+  prefixo_interurbano: string; // 1 a 5 dígitos, começa com 0 (ex.: 0, 015, 021, 041)
 };
 
 export const DEFAULT_DIALER_SETTINGS: DialerSettings = {
@@ -13,8 +13,8 @@ export const DEFAULT_DIALER_SETTINGS: DialerSettings = {
 
 export function validateDialerSettings(s: DialerSettings): string | null {
   if (!/^[0-9]{2}$/.test(s.ddd_origem)) return "DDD de origem deve ter exatamente 2 dígitos.";
-  if (!/^0[0-9]{2}$/.test(s.prefixo_interurbano))
-    return "Prefixo de interurbano deve ter 3 dígitos começando com 0 (ex.: 015, 021, 041).";
+  if (!/^0[0-9]{0,4}$/.test(s.prefixo_interurbano))
+    return "Informe um prefixo de interurbano válido, usando apenas números e começando com 0. Exemplos: 0, 015 ou 021.";
   return null;
 }
 

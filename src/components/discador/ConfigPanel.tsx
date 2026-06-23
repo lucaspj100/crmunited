@@ -81,13 +81,13 @@ export function ConfigPanel() {
               <Label>Meu prefixo de interurbano</Label>
               <Input
                 value={prefixo}
-                onChange={(e) => setPrefixo(e.target.value.replace(/\D/g, "").slice(0, 3))}
-                maxLength={3}
+                onChange={(e) => setPrefixo(e.target.value.replace(/\D/g, "").slice(0, 5))}
+                maxLength={5}
                 placeholder="015"
                 inputMode="numeric"
               />
               <p className="text-xs text-muted-foreground mt-1">
-                Digite o prefixo completo usado pelo seu chip para ligações interurbanas. Exemplos: 015, 021 ou 041.
+                Digite o prefixo usado pelo seu chip para ligações interurbanas. Exemplos: 0, 015, 021 ou 041.
               </p>
             </div>
           </div>
@@ -195,7 +195,7 @@ function AdminDialerTable() {
                       <Input className="w-20" value={d.ddd} maxLength={2} onChange={(e) => update(s.id, { ddd: e.target.value.replace(/\D/g, "").slice(0, 2) })} />
                     </td>
                     <td className="p-2">
-                      <Input className="w-24" value={d.prefixo} maxLength={3} onChange={(e) => update(s.id, { prefixo: e.target.value.replace(/\D/g, "").slice(0, 3) })} placeholder="015" />
+                      <Input className="w-24" value={d.prefixo} maxLength={5} onChange={(e) => update(s.id, { prefixo: e.target.value.replace(/\D/g, "").slice(0, 5) })} placeholder="015" />
                     </td>
                     <td className="p-2 text-muted-foreground">{cur?.updated_at ? format(new Date(cur.updated_at), "dd/MM/yyyy HH:mm", { locale: ptBR }) : "—"}</td>
                     <td className="p-2"><Button size="sm" onClick={() => save(s.id)}>Salvar</Button></td>
