@@ -119,9 +119,16 @@ export function ImportPanel({ sellers }: { sellers: Seller[] }) {
 
           {file && (
             <div className="space-y-3">
-              <div className="rounded-md border bg-muted/30 p-3 text-sm space-y-1">
+              <div className="rounded-md border bg-muted/30 p-3 text-sm space-y-2">
                 <div>Total de linhas lidas: <strong>{file.rows.length}</strong></div>
-                <div>Colunas detectadas: <strong>{file.headers.join(", ") || "—"}</strong></div>
+                <div>
+                  <div className="text-xs uppercase text-muted-foreground mb-1">Colunas encontradas na planilha</div>
+                  <div className="flex flex-wrap gap-1">
+                    {file.headers.length > 0
+                      ? file.headers.map((h) => <Badge key={h} variant="outline">{h}</Badge>)
+                      : <span className="text-muted-foreground">—</span>}
+                  </div>
+                </div>
                 {parsed && (
                   <div>Válidas: <strong className="text-green-600">{valid}</strong> · Inválidas: <strong className="text-red-600">{invalid}</strong></div>
                 )}
