@@ -45,7 +45,7 @@ function DiscadorPage() {
             {isAdmin && <TabsTrigger value="base">Base</TabsTrigger>}
             <TabsTrigger value="importar">Importar</TabsTrigger>
             {isAdmin && <TabsTrigger value="painel">Painel</TabsTrigger>}
-            {isAdmin && <TabsTrigger value="config">Configurações</TabsTrigger>}
+            <TabsTrigger value="config">Configurações</TabsTrigger>
           </TabsList>
         </div>
 
