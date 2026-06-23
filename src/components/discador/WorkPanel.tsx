@@ -5,13 +5,14 @@ import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Phone, MessageCircle, ListChecks, UserPlus, SkipForward, Inbox } from "lucide-react";
+import { Phone, MessageCircle, ListChecks, UserPlus, SkipForward, Inbox, Pencil } from "lucide-react";
 import { fetchNextProspect, type ProspectContact } from "@/lib/prospect-queue";
 import { statusBadgeClass, getWhatsappTemplate } from "@/lib/prospect-status";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ResultDialog } from "./ResultDialog";
 import { ConvertLeadDialog } from "./ConvertLeadDialog";
+import { EditContactDialog } from "./EditContactDialog";
 import { AttemptHistory } from "./AttemptHistory";
 import { toast } from "sonner";
 
