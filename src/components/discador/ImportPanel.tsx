@@ -232,6 +232,20 @@ export function ImportPanel({ sellers }: { sellers: Seller[] }) {
               </span>
             </label>
 
+            {updateExisting && (
+              <label className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm">
+                <Checkbox checked={overwrite} onCheckedChange={(v) => setOverwrite(v === true)} />
+                <span>
+                  <strong>Sobrescrever dados existentes</strong>
+                  <br />
+                  <span className="text-muted-foreground text-xs">
+                    Substituir nome, empresa, cargo, origem e observação pelos valores da nova planilha,
+                    mesmo quando o contato já tiver esses campos preenchidos. Status, vendedor, tentativas e histórico continuam preservados.
+                  </span>
+                </span>
+              </label>
+            )}
+
             <div>
               <Label>Modo de distribuição (somente para novos contatos)</Label>
               <Select value={mode} onValueChange={(v) => setMode(v as any)}>
