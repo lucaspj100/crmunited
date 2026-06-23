@@ -135,7 +135,10 @@ export function ImportPanel({ sellers }: { sellers: Seller[] }) {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-base">Confirme o mapeamento das colunas</Label>
+                <Label className="text-base">Mapear colunas da planilha</Label>
+                <p className="text-xs text-muted-foreground">
+                  Para cada campo do sistema, escolha qual coluna da planilha corresponde. Telefone é obrigatório, os demais são opcionais.
+                </p>
                 <div className="grid gap-3 sm:grid-cols-2">
                   {FIELDS.map((f) => (
                     <div key={f.key}>
