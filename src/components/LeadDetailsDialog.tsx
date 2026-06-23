@@ -161,6 +161,13 @@ export function LeadDetailsDialog({
               </div>
             )}
 
+            <div className="rounded-md border p-3 bg-muted/20">
+              <div className="text-xs font-semibold text-muted-foreground uppercase mb-2">Histórico de atividades</div>
+              <LeadTimeline leadId={lead.id} />
+            </div>
+
+
+
             <DialogFooter className="gap-2 sm:justify-between">
               <AlertDialog>
                 <AlertDialogTrigger asChild>
