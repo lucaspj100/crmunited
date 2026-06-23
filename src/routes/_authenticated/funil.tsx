@@ -112,9 +112,11 @@ function FunilPage() {
     const { error } = await supabase.from("leads").update({ status: newStatus as any }).eq("id", lead.id);
     if (error) { toast.error(error.message); return; }
     await ensureTaskForStatus({ leadId: lead.id, ownerId: lead.owner_id, status: newStatus });
+    await logLeadEvent({ leadId: lead.id, type: "status_change", description: `${lead.status} → ${newStatus}`, metadata: { from: lead.status, to: newStatus } });
     toast.success("Lead movido");
     qc.invalidateQueries();
   };
+
 
   return (
     <div className="space-y-4">
