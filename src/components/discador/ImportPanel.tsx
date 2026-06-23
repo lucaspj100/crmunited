@@ -80,7 +80,7 @@ export function ImportPanel({ sellers }: { sellers: Seller[] }) {
     if (mode === "single" && !singleId) { toast.error("Escolha um vendedor"); return; }
     if (mode === "round_robin" && selectedSellers.size === 0) { toast.error("Selecione vendedores"); return; }
     setImporting(true);
-    const r = await importProspects(parsed, distribution, user.id, { updateExisting });
+    const r = await importProspects(parsed, distribution, user.id, { updateExisting, overwrite });
     setImporting(false);
     setReport(r);
     qc.invalidateQueries({ queryKey: ["prospect_contacts_admin"] });
