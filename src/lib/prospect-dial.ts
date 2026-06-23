@@ -3,17 +3,18 @@
 
 export type DialerSettings = {
   ddd_origem: string; // 2 dígitos
-  codigo_operadora_interurbano: string; // 2 dígitos
+  prefixo_interurbano: string; // 3 dígitos, começa com 0 (ex.: 015, 021, 041)
 };
 
 export const DEFAULT_DIALER_SETTINGS: DialerSettings = {
   ddd_origem: "11",
-  codigo_operadora_interurbano: "15",
+  prefixo_interurbano: "015",
 };
 
 export function validateDialerSettings(s: DialerSettings): string | null {
-  if (!/^[0-9]{2}$/.test(s.ddd_origem)) return "DDD de origem deve ter 2 dígitos.";
-  if (!/^[0-9]{2}$/.test(s.codigo_operadora_interurbano)) return "Código da operadora deve ter 2 dígitos.";
+  if (!/^[0-9]{2}$/.test(s.ddd_origem)) return "DDD de origem deve ter exatamente 2 dígitos.";
+  if (!/^0[0-9]{2}$/.test(s.prefixo_interurbano))
+    return "Prefixo de interurbano deve ter 3 dígitos começando com 0 (ex.: 015, 021, 041).";
   return null;
 }
 
@@ -24,7 +25,6 @@ export function buildDialNumber(
 ): { dial: string; dddDestino: string | null } {
   if (!telefoneNormalizado) return { dial: "", dddDestino: null };
   const digits = String(telefoneNormalizado).replace(/\D/g, "");
-  // Esperado: 55 + DDD(2) + numero(8 ou 9)
   if (digits.length < 12 || !digits.startsWith("55")) {
     return { dial: digits, dddDestino: null };
   }
@@ -34,7 +34,7 @@ export function buildDialNumber(
     return { dial: local, dddDestino };
   }
   return {
-    dial: `0${settings.codigo_operadora_interurbano}${dddDestino}${local}`,
+    dial: `${settings.prefixo_interurbano}${dddDestino}${local}`,
     dddDestino,
   };
 }
