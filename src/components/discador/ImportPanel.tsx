@@ -110,6 +110,7 @@ export function ImportPanel({ sellers, isAdmin = false }: { sellers: Seller[]; i
 
   return (
     <div className="space-y-4">
+      {!isAdmin && user && <ClearMyContactsCard userId={user.id} />}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><FileSpreadsheet className="h-5 w-5" />Importar planilha</CardTitle>
