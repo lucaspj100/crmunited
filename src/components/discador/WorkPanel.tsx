@@ -225,6 +225,14 @@ export function WorkPanel() {
           onConverted={() => { qc.invalidateQueries({ queryKey: ["prospect_counts"] }); void loadNext(); }}
         />
       )}
+      {contact && (
+        <EditContactDialog
+          open={editOpen}
+          onOpenChange={setEditOpen}
+          contact={contact}
+          onSaved={(updated) => { setContact(updated); qc.invalidateQueries({ queryKey: ["prospect_contacts_admin"] }); }}
+        />
+      )}
     </div>
   );
 }
