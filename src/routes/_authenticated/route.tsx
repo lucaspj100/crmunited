@@ -17,6 +17,7 @@ const BASE_NAV = [
   { to: "/leads", label: "Leads", icon: Users },
   { to: "/funil", label: "Funil", icon: Kanban },
   { to: "/tarefas", label: "Tarefas do Dia", icon: ListChecks },
+  { to: "/agenda", label: "Agenda", icon: Calendar },
   { to: "/perdidos", label: "Perdidos", icon: TrendingDown },
   { to: "/resgates", label: "Resgates", icon: RotateCw },
   { to: "/importar", label: "Importar", icon: Upload },
