@@ -34,8 +34,8 @@ function DiscadorPage() {
   return (
     <div className="space-y-4 max-w-full overflow-x-hidden">
       <header>
-        <h1 className="text-2xl font-bold">Discador de Prospecção</h1>
-        <p className="hidden sm:block text-sm text-muted-foreground">Trabalhe listas frias e envie só os interessados para o CRM.</p>
+        <h1 className="text-xl md:text-2xl font-bold">Discador</h1>
+        <p className="hidden md:block text-sm text-muted-foreground">Trabalhe listas frias e envie só os interessados para o CRM.</p>
       </header>
 
       <Tabs value={tab} onValueChange={setTab}>
