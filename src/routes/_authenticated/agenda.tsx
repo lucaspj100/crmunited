@@ -329,7 +329,7 @@ function InterviewCard({
           <div className="font-semibold truncate">{lead.name}</div>
           {lead.company && <div className="text-xs text-muted-foreground truncate">{lead.company}</div>}
         </div>
-        <Badge variant="outline" className={statusColor(lead.status)}>{labelFor("status", lead.status)}</Badge>
+        <Badge variant="outline" className={statusColor(lead.status)}>{labelFor(LEAD_STATUSES, lead.status)}</Badge>
       </div>
 
       <div className="flex flex-wrap items-center gap-2 text-sm">
