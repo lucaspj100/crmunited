@@ -53,7 +53,7 @@ function DiscadorPage() {
         {isAdmin && <TabsContent value="base" className="mt-4"><BasePanel sellers={sellers} /></TabsContent>}
         <TabsContent value="importar" className="mt-4"><ImportPanel sellers={sellers} isAdmin={isAdmin} /></TabsContent>
         {isAdmin && <TabsContent value="painel" className="mt-4"><DashboardPanel sellers={sellers} /></TabsContent>}
-        {isAdmin && <TabsContent value="config" className="mt-4"><ConfigPanel /></TabsContent>}
+        <TabsContent value="config" className="mt-4"><ConfigPanel /></TabsContent>
       </Tabs>
     </div>
   );
