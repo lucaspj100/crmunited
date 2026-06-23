@@ -425,23 +425,22 @@ function QuickCompleteDialog({
   const submit = async () => {
     setSaving(true);
     try {
-      // Reagendar não conclui — só atualiza data e mantém pendente
       if (action === "reagendar") {
         if (!task) { toast.error("Não há tarefa para reagendar."); return; }
         if (!reagDate) { toast.error("Escolha a nova data."); return; }
         const { error } = await supabase.from("tasks").update({ due_date: reagDate }).eq("id", task.id);
         if (error) throw error;
+        await logLeadEvent({ leadId: lead.id, type: "task_rescheduled", description: `Tarefa reagendada para ${reagDate}` });
         toast.success("Tarefa reagendada");
         onDone();
         return;
       }
 
-      // Concluir tarefa atual (se houver)
       if (task) {
         const { error } = await supabase.from("tasks").update({ status: "concluida" as any }).eq("id", task.id);
         if (error) throw error;
+        await logLeadEvent({ leadId: lead.id, type: "task_done", description: `Tarefa "${task.type}" concluída` });
       }
-      // Atualizar last_contact_at
       await supabase.from("leads").update({ last_contact_at: new Date().toISOString() } as any).eq("id", lead.id);
 
       if (action === "none") {
@@ -454,6 +453,7 @@ function QuickCompleteDialog({
             lead_id: lead.id, owner_id: lead.owner_id, type: "enviar_mensagem" as any,
             due_date: d.toISOString().slice(0, 10), status: "pendente" as any, observation: "Follow-up automático",
           });
+          await logLeadEvent({ leadId: lead.id, type: "task_created", description: `Follow-up automático em ${days} dia(s)` });
         }
       } else if (action === "entrevista") {
         if (!intDate) { toast.error("Escolha a data da entrevista."); return; }
@@ -463,12 +463,12 @@ function QuickCompleteDialog({
           interview_time: intTime || null,
           interview_notes: intObs || null,
         }).eq("id", lead.id);
-        // Cria tarefa de confirmação um dia antes
         const conf = new Date(intDate + "T00:00:00"); conf.setDate(conf.getDate() - 1);
         await supabase.from("tasks").insert({
           lead_id: lead.id, owner_id: lead.owner_id, type: "confirmar_entrevista" as any,
           due_date: conf.toISOString().slice(0, 10), status: "pendente" as any, observation: "Confirmar entrevista",
         });
+        await logLeadEvent({ leadId: lead.id, type: "interview_scheduled", description: `Entrevista marcada para ${intDate}${intTime ? " às " + intTime : ""}` });
       } else if (action === "matricula") {
         await supabase.from("leads").update({
           status: "matricula" as any,
@@ -476,15 +476,16 @@ function QuickCompleteDialog({
           monthly_fee: valMen ? Number(valMen) : null,
           material_value: valMad ? Number(valMad) : null,
         } as any).eq("id", lead.id);
-        // Conclui demais tarefas pendentes
         await supabase.from("tasks").update({ status: "concluida" as any })
           .eq("lead_id", lead.id).eq("status", "pendente");
+        await logLeadEvent({ leadId: lead.id, type: "enrolled", description: `Matrícula registrada via Fila` });
       } else if (action === "perdido") {
         await supabase.from("leads").update({
           status: "perdido" as any,
           lost_reason: lostReason as any,
           lost_type: "definitivo" as any,
         }).eq("id", lead.id);
+        await logLeadEvent({ leadId: lead.id, type: "lost", description: `Motivo: ${lostReason}` });
       }
 
       toast.success("Tarefa concluída");
