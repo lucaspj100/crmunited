@@ -118,25 +118,46 @@ export function WorkPanel() {
         ) : (
           <Card className="border-2">
             <CardHeader className="flex flex-row items-start justify-between gap-3">
-              <div className="min-w-0">
-                <CardTitle className="truncate">{contact.nome || "Sem nome"}</CardTitle>
-                <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+              <div className="min-w-0 space-y-1">
+                <CardTitle className="truncate text-xl">
+                  {contact.nome || <span className="text-muted-foreground italic">Nome não informado</span>}
+                </CardTitle>
+                <div className="text-sm">
+                  {contact.cargo
+                    ? <span>{contact.cargo}</span>
+                    : <span className="text-muted-foreground italic">Cargo não informado</span>}
+                </div>
+                <div className="text-sm">
+                  <span className="text-muted-foreground">Empresa:</span>{" "}
+                  {contact.empresa
+                    ? <strong>{contact.empresa}</strong>
+                    : <span className="text-muted-foreground italic">Empresa não informada</span>}
+                </div>
+                <div className="text-sm flex flex-wrap items-center gap-2">
                   <span className="font-mono">+{contact.telefone_normalizado}</span>
                   {contact.ddd && <Badge variant="outline">DDD {contact.ddd}</Badge>}
                   <Badge className={statusBadgeClass(contact.status_prospeccao)}>{contact.status_prospeccao}</Badge>
                 </div>
+                {contact.origem && (
+                  <div className="text-sm"><span className="text-muted-foreground">Origem:</span> {contact.origem}</div>
+                )}
+                {contact.observacao && (
+                  <div className="text-sm"><span className="text-muted-foreground">Obs:</span> {contact.observacao}</div>
+                )}
               </div>
-              <div className="text-right text-xs text-muted-foreground">
+              <div className="text-right text-xs text-muted-foreground shrink-0">
                 <div>Tentativas: {contact.quantidade_tentativas}</div>
                 {contact.ultima_tentativa && <div>Última: {format(new Date(contact.ultima_tentativa), "dd/MM HH:mm", { locale: ptBR })}</div>}
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid gap-2 text-sm sm:grid-cols-2">
-                {contact.empresa && <div><span className="text-muted-foreground">Empresa:</span> {contact.empresa}</div>}
-                {contact.cargo && <div><span className="text-muted-foreground">Cargo:</span> {contact.cargo}</div>}
-                {contact.origem && <div><span className="text-muted-foreground">Origem:</span> {contact.origem}</div>}
-                {contact.observacao && <div className="sm:col-span-2"><span className="text-muted-foreground">Obs:</span> {contact.observacao}</div>}
+              <div className="rounded-md border bg-muted/40 p-3 text-sm space-y-1">
+                <div className="text-xs font-semibold uppercase text-muted-foreground">Contexto para ligação</div>
+                <div><span className="text-muted-foreground">Nome:</span> {contact.nome || "—"}</div>
+                <div><span className="text-muted-foreground">Cargo:</span> {contact.cargo || "—"}</div>
+                <div><span className="text-muted-foreground">Empresa:</span> {contact.empresa || "—"}</div>
+                <div><span className="text-muted-foreground">Origem:</span> {contact.origem || "—"}</div>
+                <div><span className="text-muted-foreground">Observação:</span> {contact.observacao || "—"}</div>
               </div>
 
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
