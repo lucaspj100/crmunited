@@ -67,6 +67,7 @@ export function NewLeadDialog({ trigger }: { trigger?: ReactNode }) {
     if (error) { toast.error(error.message); return; }
     if (data?.id) {
       await ensureTaskForStatus({ leadId: data.id, ownerId: user.id, status });
+      await logLeadEvent({ leadId: data.id, type: "lead_created", description: `Lead criado com status "${status}"`, metadata: { status, source: payload.source } });
     }
     toast.success("Lead cadastrado");
     setOpen(false);
