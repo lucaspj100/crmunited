@@ -1,0 +1,2 @@
+CREATE POLICY "prospect_contacts_vendedor_delete" ON public.prospect_contacts FOR DELETE TO authenticated USING (vendedor_responsavel_id = auth.uid());
+CREATE POLICY "prospect_attempts_vendedor_delete" ON public.prospect_attempts FOR DELETE TO authenticated USING (EXISTS (SELECT 1 FROM public.prospect_contacts pc WHERE pc.id = prospect_attempts.prospect_contact_id AND pc.vendedor_responsavel_id = auth.uid()));
