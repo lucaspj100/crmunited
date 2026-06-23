@@ -205,9 +205,6 @@ export async function importProspects(
     missingNome: 0,
     missingEmpresa: 0,
     missingCargo: 0,
-    duplicatesInProspects: 0,
-    duplicatesInLeads: 0,
-    invalid: 0,
     errors: [],
   };
 
