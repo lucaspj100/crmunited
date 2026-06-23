@@ -150,12 +150,14 @@ function AgendaPage() {
   async function confirmInterview(l: Lead) {
     const { error } = await supabase.from("leads").update({ interview_confirmed_at: new Date().toISOString() }).eq("id", l.id);
     if (error) { toast.error("Erro ao confirmar"); return; }
+    await logLeadEvent({ leadId: l.id, type: "interview_confirmed", description: `Entrevista de ${l.interview_date} confirmada` });
     toast.success("Entrevista confirmada");
     refresh();
   }
   async function unconfirmInterview(l: Lead) {
     const { error } = await supabase.from("leads").update({ interview_confirmed_at: null }).eq("id", l.id);
     if (error) { toast.error("Erro"); return; }
+    await logLeadEvent({ leadId: l.id, type: "interview_unconfirmed" });
     refresh();
   }
   async function markRealizada(l: Lead, notes?: string) {
@@ -163,20 +165,21 @@ function AgendaPage() {
     if (notes && notes.trim()) updates.interview_notes = notes.trim();
     const { error } = await supabase.from("leads").update(updates).eq("id", l.id);
     if (error) { toast.error("Erro ao marcar"); return; }
-    // cria follow-up pós-entrevista
     await supabase.from("tasks").insert({
       lead_id: l.id, owner_id: l.owner_id, type: "followup_pos",
       due_date: isoPlus(1), status: "pendente", observation: "Follow-up pós-entrevista",
     });
+    await logLeadEvent({ leadId: l.id, type: "interview_done", description: notes?.trim() || undefined });
+    await logLeadEvent({ leadId: l.id, type: "task_created", description: "Follow-up pós-entrevista (amanhã)" });
     toast.success("Entrevista realizada · follow-up criado para amanhã");
     setInterview(null); refresh();
   }
   async function markNoShow(l: Lead) {
-    // mantém status entrevista_marcada e cria tarefa de reagendar
     await supabase.from("tasks").insert({
       lead_id: l.id, owner_id: l.owner_id, type: "reagendar_entrevista",
       due_date: today, status: "pendente", observation: "No-show — reagendar entrevista",
     });
+    await logLeadEvent({ leadId: l.id, type: "interview_no_show", description: `Entrevista de ${l.interview_date} não compareceu` });
     toast.success("No-show registrado · tarefa de reagendar criada");
     refresh();
   }
@@ -186,9 +189,9 @@ function AgendaPage() {
       interview_date: date, interview_time: time || null, interview_confirmed_at: null,
     }).eq("id", l.id);
     if (error) { toast.error("Erro ao reagendar"); return; }
-    // remove tarefas pendentes de reagendar
     await supabase.from("tasks").update({ status: "concluida" })
       .eq("lead_id", l.id).eq("type", "reagendar_entrevista").eq("status", "pendente");
+    await logLeadEvent({ leadId: l.id, type: "interview_rescheduled", description: `Reagendada para ${date}${time ? " às " + time : ""}` });
     toast.success("Entrevista reagendada");
     setResched(null); refresh();
   }
@@ -199,15 +202,18 @@ function AgendaPage() {
     if (material) updates.material_value = Number(material.replace(",", "."));
     const { error } = await supabase.from("leads").update(updates).eq("id", l.id);
     if (error) { toast.error("Erro ao matricular"); return; }
+    await logLeadEvent({ leadId: l.id, type: "enrolled", description: `Matrícula: ${valorMatricula || "—"} · Mensalidade: ${mensalidade || "—"}`, metadata: updates });
     toast.success("Matrícula registrada 🎉");
     setEnrol(null); refresh();
   }
   async function doLost(l: Lead, reason: string) {
     const { error } = await supabase.from("leads").update({ status: "perdido", lost_reason: (reason || null) as any }).eq("id", l.id);
     if (error) { toast.error("Erro"); return; }
+    await logLeadEvent({ leadId: l.id, type: "lost", description: reason ? `Motivo: ${reason}` : undefined });
     toast.success("Lead marcado como perdido");
     setLost(null); refresh();
   }
+
 
   function copyConfirm(l: Lead) {
     const key = pickPresetKey("confirmar_entrevista", l.status, false);
