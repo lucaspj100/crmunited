@@ -5,7 +5,8 @@ import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Phone, MessageCircle, ListChecks, UserPlus, SkipForward, Inbox, Pencil } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Phone, MessageCircle, ListChecks, UserPlus, SkipForward, Inbox, Pencil, ChevronDown } from "lucide-react";
 import { fetchNextProspect, type ProspectContact } from "@/lib/prospect-queue";
 import { statusBadgeClass, getWhatsappTemplate } from "@/lib/prospect-status";
 import { buildDialNumber, DEFAULT_DIALER_SETTINGS, type DialerSettings } from "@/lib/prospect-dial";
@@ -26,6 +27,8 @@ export function WorkPanel() {
   const [convertOpen, setConvertOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [lastAction, setLastAction] = useState<"ligacao" | "whatsapp" | undefined>();
+  const [contextOpen, setContextOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   const loadNext = async () => {
     if (!user) return;
@@ -113,7 +116,6 @@ export function WorkPanel() {
     qc.invalidateQueries({ queryKey: ["prospect_counts"] });
     qc.invalidateQueries({ queryKey: ["prospect_attempts", contact?.id] });
     if (goNext) await loadNext(); else {
-      // refresh current
       if (contact) {
         const { data } = await supabase.from("prospect_contacts").select("*").eq("id", contact.id).single();
         if (data) setContact(data as ProspectContact);
@@ -122,9 +124,21 @@ export function WorkPanel() {
   };
 
   return (
-    <div className="grid gap-4 lg:grid-cols-3">
+    <div className="grid gap-4 lg:grid-cols-3 pb-[140px] sm:pb-4">
       <div className="lg:col-span-2 space-y-4">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {/* Mobile: compact stats line */}
+        <div className="sm:hidden text-xs text-muted-foreground flex flex-wrap gap-x-2 gap-y-1">
+          <span><strong className="text-foreground">{counts?.total ?? 0}</strong> atribuídos</span>
+          <span>·</span>
+          <span><strong className="text-foreground">{counts?.pending ?? 0}</strong> em fila</span>
+          <span>·</span>
+          <span><strong className="text-foreground">{counts?.interested ?? 0}</strong> interessados</span>
+          <span>·</span>
+          <span><strong className="text-foreground">{counts?.done ?? 0}</strong> convertidos</span>
+        </div>
+
+        {/* Desktop: stat cards */}
+        <div className="hidden sm:grid grid-cols-2 gap-3 sm:grid-cols-4">
           <Stat label="Atribuídos" value={counts?.total ?? 0} />
           <Stat label="Em fila" value={counts?.pending ?? 0} />
           <Stat label="Interessados" value={counts?.interested ?? 0} />
@@ -141,62 +155,46 @@ export function WorkPanel() {
           </Card>
         ) : (
           <Card className="border-2">
-            <CardHeader className="flex flex-row items-start justify-between gap-3">
+            <CardHeader className="flex flex-row items-start justify-between gap-3 p-4 sm:p-6">
               <div className="min-w-0 space-y-1">
-                <CardTitle className="truncate text-xl">
+                <CardTitle className="truncate text-lg sm:text-xl">
                   {contact.nome || <span className="text-muted-foreground italic">Nome não informado</span>}
                 </CardTitle>
-                <div className="text-sm">
-                  {contact.cargo
-                    ? <span>{contact.cargo}</span>
-                    : <span className="text-muted-foreground italic">Cargo não informado</span>}
-                </div>
                 <div className="text-sm">
                   <span className="text-muted-foreground">Empresa:</span>{" "}
                   {contact.empresa
                     ? <strong>{contact.empresa}</strong>
-                    : <span className="text-muted-foreground italic">Empresa não informada</span>}
+                    : <span className="text-muted-foreground italic">não informada</span>}
+                </div>
+                <div className="text-sm">
+                  {contact.cargo
+                    ? <span>{contact.cargo}</span>
+                    : <span className="text-muted-foreground italic">Cargo não informado</span>}
                 </div>
                 <div className="text-sm flex flex-wrap items-center gap-2">
                   <span className="font-mono">+{contact.telefone_normalizado}</span>
                   {contact.ddd && <Badge variant="outline">DDD {contact.ddd}</Badge>}
                   <Badge className={statusBadgeClass(contact.status_prospeccao)}>{contact.status_prospeccao}</Badge>
                 </div>
-                {contact.origem && (
-                  <div className="text-sm"><span className="text-muted-foreground">Origem:</span> {contact.origem}</div>
-                )}
-                {contact.observacao && (
-                  <div className="text-sm"><span className="text-muted-foreground">Obs:</span> {contact.observacao}</div>
-                )}
               </div>
               <div className="text-right text-xs text-muted-foreground shrink-0">
-                <div>Tentativas: {contact.quantidade_tentativas}</div>
-                {contact.ultima_tentativa && <div>Última: {format(new Date(contact.ultima_tentativa), "dd/MM HH:mm", { locale: ptBR })}</div>}
+                <div>Tent.: {contact.quantidade_tentativas}</div>
+                {contact.ultima_tentativa && <div className="hidden sm:block">Última: {format(new Date(contact.ultima_tentativa), "dd/MM HH:mm", { locale: ptBR })}</div>}
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="rounded-md border bg-muted/40 p-3 text-sm space-y-1">
-                <div className="text-xs font-semibold uppercase text-muted-foreground">Contexto para ligação</div>
-                <div><span className="text-muted-foreground">Nome:</span> {contact.nome || "—"}</div>
-                <div><span className="text-muted-foreground">Cargo:</span> {contact.cargo || "—"}</div>
-                <div><span className="text-muted-foreground">Empresa:</span> {contact.empresa || "—"}</div>
-                <div><span className="text-muted-foreground">Origem:</span> {contact.origem || "—"}</div>
-                <div><span className="text-muted-foreground">Observação:</span> {contact.observacao || "—"}</div>
-              </div>
-
-              <div className="rounded-md border bg-primary/5 px-3 py-2 text-sm space-y-1">
-                <div>
-                  <span className="text-muted-foreground">Número que será discado:</span>{" "}
-                  <span className="font-mono font-semibold">{dialNumber || "—"}</span>
-                </div>
+            <CardContent className="space-y-4 p-4 sm:p-6 sm:pt-0">
+              {/* Número que será discado — destaque */}
+              <div className="rounded-md border bg-primary/5 px-3 py-3 text-center sm:text-left space-y-1">
+                <div className="text-xs uppercase text-muted-foreground">Número que será discado</div>
+                <div className="font-mono text-2xl sm:text-xl font-bold tracking-wide">{dialNumber || "—"}</div>
                 <div className="text-xs text-muted-foreground">
-                  DDD de origem usado: <strong>{settings.ddd_origem}</strong>
-                  {" · "}Prefixo de interurbano usado: <strong>{settings.prefixo_interurbano}</strong>
-                  {dddDestino && <> · DDD destino: <strong>{dddDestino}</strong></>}
+                  DDD origem: <strong>{settings.ddd_origem}</strong> · Prefixo: <strong>{settings.prefixo_interurbano}</strong>
+                  {dddDestino && <> · Destino: <strong>{dddDestino}</strong></>}
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {/* Botões principais — desktop grid + mobile (não-fixos para fallback de scroll) */}
+              <div className="hidden sm:grid grid-cols-2 gap-2 sm:grid-cols-4">
                 <Button size="lg" onClick={ligar} className="h-14 text-base">
                   <Phone className="h-5 w-5 mr-2" />Ligar agora
                 </Button>
@@ -213,11 +211,60 @@ export function WorkPanel() {
                   className={`h-14 text-base ${contact.status_prospeccao === "Interessado" ? "bg-emerald-600 hover:bg-emerald-700 text-white" : ""}`}
                   variant={contact.status_prospeccao === "Interessado" ? "default" : "outline"}
                 >
-                  <UserPlus className="h-5 w-5 mr-2" />Converter em lead
+                  <UserPlus className="h-5 w-5 mr-2" />Converter
                 </Button>
               </div>
 
-              <div className="flex flex-wrap gap-2">
+              {/* Botões mobile — coluna/grid */}
+              <div className="sm:hidden space-y-2">
+                <Button size="lg" onClick={ligar} className="h-14 w-full text-base">
+                  <Phone className="h-5 w-5 mr-2" />Ligar agora
+                </Button>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button variant="outline" onClick={() => { setLastAction(undefined); setResultOpen(true); }} className="h-12">
+                    <ListChecks className="h-4 w-4 mr-1" />Resultado
+                  </Button>
+                  <Button variant="secondary" onClick={whats} className="h-12">
+                    <MessageCircle className="h-4 w-4 mr-1" />WhatsApp
+                  </Button>
+                  <Button variant="ghost" onClick={loadNext} disabled={loading} className="h-12">
+                    <SkipForward className="h-4 w-4 mr-1" />Próximo
+                  </Button>
+                  <Button
+                    onClick={() => setConvertOpen(true)}
+                    disabled={contact.convertido_em_lead}
+                    className={`h-12 ${contact.status_prospeccao === "Interessado" ? "bg-emerald-600 hover:bg-emerald-700 text-white" : ""}`}
+                    variant={contact.status_prospeccao === "Interessado" ? "default" : "outline"}
+                  >
+                    <UserPlus className="h-4 w-4 mr-1" />Converter
+                  </Button>
+                </div>
+                <Button variant="outline" onClick={() => setEditOpen(true)} className="h-11 w-full">
+                  <Pencil className="h-4 w-4 mr-2" />Editar contato
+                </Button>
+              </div>
+
+              {/* Contexto compacto */}
+              <Collapsible open={contextOpen} onOpenChange={setContextOpen} className="rounded-md border bg-muted/40">
+                <div className="p-3 text-sm">
+                  <div className="text-xs font-semibold uppercase text-muted-foreground mb-1">Contexto</div>
+                  <div className="truncate">
+                    {[contact.nome, contact.empresa, contact.cargo || "Cargo não informado"].filter(Boolean).join(" · ")}
+                  </div>
+                  <CollapsibleTrigger asChild>
+                    <button className="mt-1 inline-flex items-center gap-1 text-xs text-primary">
+                      {contextOpen ? "Ocultar" : "Ver contexto completo"} <ChevronDown className={`h-3 w-3 transition ${contextOpen ? "rotate-180" : ""}`} />
+                    </button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="mt-2 space-y-1 text-sm">
+                    <div><span className="text-muted-foreground">Origem:</span> {contact.origem || "—"}</div>
+                    <div><span className="text-muted-foreground">Observação:</span> {contact.observacao || "—"}</div>
+                  </CollapsibleContent>
+                </div>
+              </Collapsible>
+
+              {/* Desktop only: editar/pular extra */}
+              <div className="hidden sm:flex flex-wrap gap-2">
                 <Button variant="outline" onClick={() => setEditOpen(true)}>
                   <Pencil className="h-4 w-4 mr-2" />Editar contato
                 </Button>
@@ -231,13 +278,47 @@ export function WorkPanel() {
       </div>
 
       <div className="space-y-4">
-        <Card>
+        {/* Desktop history */}
+        <Card className="hidden lg:block">
           <CardHeader><CardTitle className="text-base">Histórico do contato</CardTitle></CardHeader>
           <CardContent>
             {contact ? <AttemptHistory contactId={contact.id} /> : <p className="text-sm text-muted-foreground">Selecione um contato.</p>}
           </CardContent>
         </Card>
+
+        {/* Mobile collapsible history */}
+        {contact && (
+          <Collapsible open={historyOpen} onOpenChange={setHistoryOpen} className="lg:hidden rounded-md border">
+            <CollapsibleTrigger className="flex w-full items-center justify-between p-3 text-sm font-medium">
+              {historyOpen ? "Ocultar histórico" : "Ver histórico"}
+              <ChevronDown className={`h-4 w-4 transition ${historyOpen ? "rotate-180" : ""}`} />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="p-3 pt-0">
+              <AttemptHistory contactId={contact.id} />
+            </CollapsibleContent>
+          </Collapsible>
+        )}
       </div>
+
+      {/* Mobile fixed bottom action bar */}
+      {contact && (
+        <div
+          className="sm:hidden fixed bottom-0 inset-x-0 z-40 border-t bg-background/95 backdrop-blur px-3 pt-2"
+          style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 8px)" }}
+        >
+          <div className="grid grid-cols-[1fr_auto_auto] gap-2">
+            <Button onClick={ligar} className="h-12">
+              <Phone className="h-5 w-5 mr-2" />Ligar agora
+            </Button>
+            <Button variant="outline" onClick={() => { setLastAction(undefined); setResultOpen(true); }} className="h-12 px-3">
+              <ListChecks className="h-5 w-5" />
+            </Button>
+            <Button variant="ghost" onClick={loadNext} disabled={loading} className="h-12 px-3">
+              <SkipForward className="h-5 w-5" />
+            </Button>
+          </div>
+        </div>
+      )}
 
       {contact && user && (
         <ResultDialog
