@@ -184,14 +184,15 @@ export function WorkPanel() {
             </CardHeader>
             <CardContent className="space-y-4 p-4 sm:p-6 sm:pt-0">
               {/* Número que será discado — destaque */}
-              <div className="rounded-md border bg-primary/5 px-3 py-3 text-center sm:text-left space-y-1">
+              <div className="rounded-md border bg-primary/5 px-3 py-3 text-center sm:text-left space-y-1 w-full max-w-full overflow-hidden">
                 <div className="text-xs uppercase text-muted-foreground">Número que será discado</div>
-                <div className="font-mono text-2xl sm:text-xl font-bold tracking-wide">{dialNumber || "—"}</div>
-                <div className="text-xs text-muted-foreground">
+                <div className="font-mono text-xl sm:text-xl font-bold tracking-wide break-all">{dialNumber || "—"}</div>
+                <div className="text-xs text-muted-foreground break-words">
                   DDD origem: <strong>{settings.ddd_origem}</strong> · Prefixo: <strong>{settings.prefixo_interurbano}</strong>
                   {dddDestino && <> · Destino: <strong>{dddDestino}</strong></>}
                 </div>
               </div>
+
 
               {/* Botões principais — desktop grid + mobile (não-fixos para fallback de scroll) */}
               <div className="hidden sm:grid grid-cols-2 gap-2 sm:grid-cols-4">
