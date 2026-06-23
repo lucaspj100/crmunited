@@ -276,32 +276,44 @@ export type Database = {
       }
       prospect_attempts: {
         Row: {
+          codigo_operadora_interurbano: string | null
           created_at: string
+          ddd_destino_contato: string | null
+          ddd_origem_vendedor: string | null
           id: string
           observacao: string | null
           prospect_contact_id: string
           resultado: string | null
           telefone_normalizado: string | null
+          telefone_para_discagem: string | null
           tipo_acao: string
           vendedor_id: string | null
         }
         Insert: {
+          codigo_operadora_interurbano?: string | null
           created_at?: string
+          ddd_destino_contato?: string | null
+          ddd_origem_vendedor?: string | null
           id?: string
           observacao?: string | null
           prospect_contact_id: string
           resultado?: string | null
           telefone_normalizado?: string | null
+          telefone_para_discagem?: string | null
           tipo_acao: string
           vendedor_id?: string | null
         }
         Update: {
+          codigo_operadora_interurbano?: string | null
           created_at?: string
+          ddd_destino_contato?: string | null
+          ddd_origem_vendedor?: string | null
           id?: string
           observacao?: string | null
           prospect_contact_id?: string
           resultado?: string | null
           telefone_normalizado?: string | null
+          telefone_para_discagem?: string | null
           tipo_acao?: string
           vendedor_id?: string | null
         }
@@ -411,6 +423,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      prospect_dialer_settings: {
+        Row: {
+          codigo_operadora_interurbano: string
+          created_at: string
+          ddd_origem: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          codigo_operadora_interurbano?: string
+          created_at?: string
+          ddd_origem?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          codigo_operadora_interurbano?: string
+          created_at?: string
+          ddd_origem?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       sheet_integrations: {
         Row: {

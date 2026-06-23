@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Phone, MessageCircle, ListChecks, UserPlus, SkipForward, Inbox, Pencil } from "lucide-react";
 import { fetchNextProspect, type ProspectContact } from "@/lib/prospect-queue";
 import { statusBadgeClass, getWhatsappTemplate } from "@/lib/prospect-status";
+import { buildDialNumber, DEFAULT_DIALER_SETTINGS, type DialerSettings } from "@/lib/prospect-dial";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ResultDialog } from "./ResultDialog";
@@ -52,6 +53,23 @@ export function WorkPanel() {
     },
   });
 
+  const { data: dialerSettings } = useQuery({
+    enabled: !!user,
+    queryKey: ["dialer_settings", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("prospect_dialer_settings")
+        .select("ddd_origem, codigo_operadora_interurbano")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      return (data as DialerSettings | null) ?? DEFAULT_DIALER_SETTINGS;
+    },
+  });
+  const settings = dialerSettings ?? DEFAULT_DIALER_SETTINGS;
+  const { dial: dialNumber, dddDestino } = contact
+    ? buildDialNumber(contact.telefone_normalizado, settings)
+    : { dial: "", dddDestino: null as string | null };
+
   const ligar = async () => {
     if (!contact || !user) return;
     setLastAction("ligacao");
@@ -68,8 +86,12 @@ export function WorkPanel() {
       vendedor_id: user.id,
       tipo_acao: "ligacao",
       telefone_normalizado: contact.telefone_normalizado,
+      telefone_para_discagem: dialNumber,
+      ddd_origem_vendedor: settings.ddd_origem,
+      codigo_operadora_interurbano: settings.codigo_operadora_interurbano,
+      ddd_destino_contato: dddDestino,
     });
-    window.location.href = `tel:+${contact.telefone_normalizado}`;
+    window.location.href = `tel:${dialNumber}`;
     setResultOpen(true);
   };
 
@@ -160,6 +182,14 @@ export function WorkPanel() {
                 <div><span className="text-muted-foreground">Empresa:</span> {contact.empresa || "—"}</div>
                 <div><span className="text-muted-foreground">Origem:</span> {contact.origem || "—"}</div>
                 <div><span className="text-muted-foreground">Observação:</span> {contact.observacao || "—"}</div>
+              </div>
+
+              <div className="rounded-md border bg-primary/5 px-3 py-2 text-sm">
+                <span className="text-muted-foreground">Número que será discado:</span>{" "}
+                <span className="font-mono font-semibold">{dialNumber || "—"}</span>
+                <span className="ml-2 text-xs text-muted-foreground">
+                  (DDD origem {settings.ddd_origem} · operadora {settings.codigo_operadora_interurbano})
+                </span>
               </div>
 
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
