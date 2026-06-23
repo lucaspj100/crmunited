@@ -32,20 +32,22 @@ function DiscadorPage() {
   });
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 max-w-full overflow-x-hidden">
       <header>
         <h1 className="text-2xl font-bold">Discador de Prospecção</h1>
         <p className="hidden sm:block text-sm text-muted-foreground">Trabalhe listas frias e envie só os interessados para o CRM.</p>
       </header>
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="flex flex-wrap">
-          <TabsTrigger value="trabalhar">Trabalhar</TabsTrigger>
-          {isAdmin && <TabsTrigger value="base">Base</TabsTrigger>}
-          {isAdmin && <TabsTrigger value="importar">Importar</TabsTrigger>}
-          {isAdmin && <TabsTrigger value="painel">Painel</TabsTrigger>}
-          {isAdmin && <TabsTrigger value="config">Configurações</TabsTrigger>}
-        </TabsList>
+        <div className="-mx-1 overflow-x-auto max-w-full">
+          <TabsList className="inline-flex w-max whitespace-nowrap">
+            <TabsTrigger value="trabalhar">Trabalhar</TabsTrigger>
+            {isAdmin && <TabsTrigger value="base">Base</TabsTrigger>}
+            {isAdmin && <TabsTrigger value="importar">Importar</TabsTrigger>}
+            {isAdmin && <TabsTrigger value="painel">Painel</TabsTrigger>}
+            {isAdmin && <TabsTrigger value="config">Configurações</TabsTrigger>}
+          </TabsList>
+        </div>
 
         <TabsContent value="trabalhar" className="mt-4"><WorkPanel /></TabsContent>
         {isAdmin && <TabsContent value="base" className="mt-4"><BasePanel sellers={sellers} /></TabsContent>}

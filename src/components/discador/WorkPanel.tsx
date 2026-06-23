@@ -124,7 +124,7 @@ export function WorkPanel() {
   };
 
   return (
-    <div className="grid gap-4 lg:grid-cols-3 pb-[140px] sm:pb-4">
+    <div className="grid gap-4 lg:grid-cols-3 pb-[140px] sm:pb-4 max-w-full overflow-x-hidden">
       <div className="lg:col-span-2 space-y-4">
         {/* Mobile: compact stats line */}
         <div className="sm:hidden text-xs text-muted-foreground flex flex-wrap gap-x-2 gap-y-1">
@@ -184,14 +184,15 @@ export function WorkPanel() {
             </CardHeader>
             <CardContent className="space-y-4 p-4 sm:p-6 sm:pt-0">
               {/* Número que será discado — destaque */}
-              <div className="rounded-md border bg-primary/5 px-3 py-3 text-center sm:text-left space-y-1">
+              <div className="rounded-md border bg-primary/5 px-3 py-3 text-center sm:text-left space-y-1 w-full max-w-full overflow-hidden">
                 <div className="text-xs uppercase text-muted-foreground">Número que será discado</div>
-                <div className="font-mono text-2xl sm:text-xl font-bold tracking-wide">{dialNumber || "—"}</div>
-                <div className="text-xs text-muted-foreground">
+                <div className="font-mono text-xl sm:text-xl font-bold tracking-wide break-all">{dialNumber || "—"}</div>
+                <div className="text-xs text-muted-foreground break-words">
                   DDD origem: <strong>{settings.ddd_origem}</strong> · Prefixo: <strong>{settings.prefixo_interurbano}</strong>
                   {dddDestino && <> · Destino: <strong>{dddDestino}</strong></>}
                 </div>
               </div>
+
 
               {/* Botões principais — desktop grid + mobile (não-fixos para fallback de scroll) */}
               <div className="hidden sm:grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -215,25 +216,16 @@ export function WorkPanel() {
                 </Button>
               </div>
 
-              {/* Botões mobile — coluna/grid */}
+              {/* Botões secundários mobile — Ligar/Resultado/Próximo ficam na barra fixa inferior */}
               <div className="sm:hidden space-y-2">
-                <Button size="lg" onClick={ligar} className="h-14 w-full text-base">
-                  <Phone className="h-5 w-5 mr-2" />Ligar agora
-                </Button>
                 <div className="grid grid-cols-2 gap-2">
-                  <Button variant="outline" onClick={() => { setLastAction(undefined); setResultOpen(true); }} className="h-12">
-                    <ListChecks className="h-4 w-4 mr-1" />Resultado
-                  </Button>
-                  <Button variant="secondary" onClick={whats} className="h-12">
+                  <Button variant="secondary" onClick={whats} className="h-12 w-full min-w-0">
                     <MessageCircle className="h-4 w-4 mr-1" />WhatsApp
-                  </Button>
-                  <Button variant="ghost" onClick={loadNext} disabled={loading} className="h-12">
-                    <SkipForward className="h-4 w-4 mr-1" />Próximo
                   </Button>
                   <Button
                     onClick={() => setConvertOpen(true)}
                     disabled={contact.convertido_em_lead}
-                    className={`h-12 ${contact.status_prospeccao === "Interessado" ? "bg-emerald-600 hover:bg-emerald-700 text-white" : ""}`}
+                    className={`h-12 w-full min-w-0 ${contact.status_prospeccao === "Interessado" ? "bg-emerald-600 hover:bg-emerald-700 text-white" : ""}`}
                     variant={contact.status_prospeccao === "Interessado" ? "default" : "outline"}
                   >
                     <UserPlus className="h-4 w-4 mr-1" />Converter
@@ -243,6 +235,7 @@ export function WorkPanel() {
                   <Pencil className="h-4 w-4 mr-2" />Editar contato
                 </Button>
               </div>
+
 
               {/* Contexto compacto */}
               <Collapsible open={contextOpen} onOpenChange={setContextOpen} className="rounded-md border bg-muted/40">
