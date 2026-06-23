@@ -193,7 +193,7 @@ export async function importProspects(
   parsed: ParsedRow[],
   mode: DistributionMode,
   createdBy: string,
-  options: { updateExisting?: boolean; overwrite?: boolean } = {},
+  options: { updateExisting?: boolean; overwrite?: boolean; isAdmin?: boolean } = {},
 ): Promise<ImportReport> {
   const report: ImportReport = {
     totalRows: parsed.length,
