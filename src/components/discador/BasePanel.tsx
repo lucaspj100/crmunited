@@ -103,6 +103,34 @@ export function BasePanel({ sellers }: { sellers: Seller[] }) {
     qc.invalidateQueries({ queryKey: ["prospect_contacts_admin"] });
   };
 
+  const deleteSelected = async () => {
+    if (selected.size === 0) return;
+    const ids = Array.from(selected);
+    const { error, count } = await supabase
+      .from("prospect_contacts")
+      .delete({ count: "exact" })
+      .in("id", ids);
+    if (error) { toast.error(`Falha ao apagar: ${error.message}`); return; }
+    toast.success(`${count ?? ids.length} contato(s) apagados`);
+    setSelected(new Set());
+    qc.invalidateQueries({ queryKey: ["prospect_contacts_admin"] });
+    qc.invalidateQueries({ queryKey: ["prospect_queue"] });
+  };
+
+  const deleteAllFiltered = async () => {
+    if (!rows || rows.length === 0) return;
+    const ids = rows.map((r) => r.id);
+    const { error, count } = await supabase
+      .from("prospect_contacts")
+      .delete({ count: "exact" })
+      .in("id", ids);
+    if (error) { toast.error(`Falha ao apagar: ${error.message}`); return; }
+    toast.success(`${count ?? ids.length} contato(s) apagados`);
+    setSelected(new Set());
+    qc.invalidateQueries({ queryKey: ["prospect_contacts_admin"] });
+    qc.invalidateQueries({ queryKey: ["prospect_queue"] });
+  };
+
   const exportar = () => {
     if (!rows) return;
     exportRowsToXlsx(
