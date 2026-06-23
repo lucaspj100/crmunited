@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TASK_TYPES } from "@/lib/constants";
+import { logLeadEvent } from "@/lib/lead-events";
 import { toast } from "sonner";
 
 export function QuickTaskDialog({
