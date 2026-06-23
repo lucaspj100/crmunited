@@ -323,7 +323,10 @@ function InterviewDialog({ lead, onClose, onSaved }: { lead: Lead | null; onClos
     }
     setSaving(false);
     if (error) toast.error(error.message);
-    else { toast.success("Entrevista marcada"); onSaved(); onClose(); }
+    else {
+      await logLeadEvent({ leadId: lead.id, type: "interview_scheduled", description: `Entrevista marcada para ${date}${time ? " às " + time : ""}` });
+      toast.success("Entrevista marcada"); onSaved(); onClose();
+    }
   };
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
