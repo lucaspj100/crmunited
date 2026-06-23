@@ -216,25 +216,16 @@ export function WorkPanel() {
                 </Button>
               </div>
 
-              {/* Botões mobile — coluna/grid */}
+              {/* Botões secundários mobile — Ligar/Resultado/Próximo ficam na barra fixa inferior */}
               <div className="sm:hidden space-y-2">
-                <Button size="lg" onClick={ligar} className="h-14 w-full text-base">
-                  <Phone className="h-5 w-5 mr-2" />Ligar agora
-                </Button>
                 <div className="grid grid-cols-2 gap-2">
-                  <Button variant="outline" onClick={() => { setLastAction(undefined); setResultOpen(true); }} className="h-12">
-                    <ListChecks className="h-4 w-4 mr-1" />Resultado
-                  </Button>
-                  <Button variant="secondary" onClick={whats} className="h-12">
+                  <Button variant="secondary" onClick={whats} className="h-12 w-full min-w-0">
                     <MessageCircle className="h-4 w-4 mr-1" />WhatsApp
-                  </Button>
-                  <Button variant="ghost" onClick={loadNext} disabled={loading} className="h-12">
-                    <SkipForward className="h-4 w-4 mr-1" />Próximo
                   </Button>
                   <Button
                     onClick={() => setConvertOpen(true)}
                     disabled={contact.convertido_em_lead}
-                    className={`h-12 ${contact.status_prospeccao === "Interessado" ? "bg-emerald-600 hover:bg-emerald-700 text-white" : ""}`}
+                    className={`h-12 w-full min-w-0 ${contact.status_prospeccao === "Interessado" ? "bg-emerald-600 hover:bg-emerald-700 text-white" : ""}`}
                     variant={contact.status_prospeccao === "Interessado" ? "default" : "outline"}
                   >
                     <UserPlus className="h-4 w-4 mr-1" />Converter
@@ -244,6 +235,7 @@ export function WorkPanel() {
                   <Pencil className="h-4 w-4 mr-2" />Editar contato
                 </Button>
               </div>
+
 
               {/* Contexto compacto */}
               <Collapsible open={contextOpen} onOpenChange={setContextOpen} className="rounded-md border bg-muted/40">
