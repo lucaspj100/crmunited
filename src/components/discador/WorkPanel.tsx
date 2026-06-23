@@ -175,6 +175,7 @@ export function WorkPanel() {
               <div className="font-mono text-2xl font-bold tracking-wide break-all leading-tight mt-0.5">{dialNumber || "—"}</div>
               <div className="text-[11px] text-muted-foreground mt-1 break-words">
                 DDD origem: <strong>{settings.ddd_origem}</strong> · Prefixo: <strong>{settings.prefixo_interurbano}</strong>
+                {dddDestino && <> · Destino: <strong>{dddDestino}</strong></>}
               </div>
             </div>
 
