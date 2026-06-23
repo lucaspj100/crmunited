@@ -20,7 +20,7 @@ export function ConfigPanel() {
 
   const [text, setText] = useState(getWhatsappTemplate());
   const [ddd, setDdd] = useState(DEFAULT_DIALER_SETTINGS.ddd_origem);
-  const [oper, setOper] = useState(DEFAULT_DIALER_SETTINGS.codigo_operadora_interurbano);
+  const [prefixo, setPrefixo] = useState(DEFAULT_DIALER_SETTINGS.prefixo_interurbano);
 
   const { data: mySettings } = useQuery({
     enabled: !!user,
@@ -28,7 +28,7 @@ export function ConfigPanel() {
     queryFn: async () => {
       const { data } = await supabase
         .from("prospect_dialer_settings")
-        .select("ddd_origem, codigo_operadora_interurbano")
+        .select("ddd_origem, prefixo_interurbano")
         .eq("user_id", user!.id)
         .maybeSingle();
       return (data as DialerSettings | null) ?? null;
@@ -38,17 +38,17 @@ export function ConfigPanel() {
   useEffect(() => {
     if (mySettings) {
       setDdd(mySettings.ddd_origem);
-      setOper(mySettings.codigo_operadora_interurbano);
+      setPrefixo(mySettings.prefixo_interurbano);
     }
   }, [mySettings]);
 
   const saveDialer = async () => {
     if (!user) return;
-    const err = validateDialerSettings({ ddd_origem: ddd, codigo_operadora_interurbano: oper });
+    const err = validateDialerSettings({ ddd_origem: ddd, prefixo_interurbano: prefixo });
     if (err) { toast.error(err); return; }
     const { error } = await supabase
       .from("prospect_dialer_settings")
-      .upsert({ user_id: user.id, ddd_origem: ddd, codigo_operadora_interurbano: oper }, { onConflict: "user_id" });
+      .upsert({ user_id: user.id, ddd_origem: ddd, prefixo_interurbano: prefixo }, { onConflict: "user_id" });
     if (error) { toast.error(error.message); return; }
     toast.success("Configurações de discagem salvas");
     qc.invalidateQueries({ queryKey: ["dialer_settings"] });
@@ -63,20 +63,36 @@ export function ConfigPanel() {
   return (
     <div className="space-y-4">
       <Card>
-        <CardHeader><CardTitle>Minhas configurações de discagem</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Configurações de Discagem</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <Label>Meu DDD de origem</Label>
-              <Input value={ddd} onChange={(e) => setDdd(e.target.value.replace(/\D/g, "").slice(0, 2))} maxLength={2} placeholder="11" inputMode="numeric" />
+              <Input
+                value={ddd}
+                onChange={(e) => setDdd(e.target.value.replace(/\D/g, "").slice(0, 2))}
+                maxLength={2}
+                placeholder="11"
+                inputMode="numeric"
+              />
+              <p className="text-xs text-muted-foreground mt-1">2 dígitos. Exemplos: 11, 21, 31, 41.</p>
             </div>
             <div>
-              <Label>Minha operadora para interurbano</Label>
-              <Input value={oper} onChange={(e) => setOper(e.target.value.replace(/\D/g, "").slice(0, 2))} maxLength={2} placeholder="15" inputMode="numeric" />
+              <Label>Meu prefixo de interurbano</Label>
+              <Input
+                value={prefixo}
+                onChange={(e) => setPrefixo(e.target.value.replace(/\D/g, "").slice(0, 3))}
+                maxLength={3}
+                placeholder="015"
+                inputMode="numeric"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Digite o prefixo completo usado pelo seu chip para ligações interurbanas. Exemplos: 015, 021 ou 041.
+              </p>
             </div>
           </div>
           <p className="text-xs text-muted-foreground">
-            Exemplos: 15 (Vivo), 21 (Claro), 41 (TIM), 31 (Oi). Se o DDD do contato for igual ao seu DDD, o sistema disca apenas o número local. Caso contrário, disca <code>0 + operadora + DDD + número</code>.
+            Se o DDD do contato for igual ao seu DDD, o sistema disca apenas o número local. Caso contrário, disca <code>prefixo + DDD + número</code>.
           </p>
           <div><Button onClick={saveDialer}>Salvar configurações</Button></div>
         </CardContent>
@@ -100,7 +116,7 @@ export function ConfigPanel() {
 }
 
 type Seller = { id: string; full_name: string | null; email: string };
-type AdminRow = { user_id: string; ddd_origem: string; codigo_operadora_interurbano: string; updated_at: string };
+type AdminRow = { user_id: string; ddd_origem: string; prefixo_interurbano: string; updated_at: string };
 
 function AdminDialerTable() {
   const qc = useQueryClient();
@@ -120,31 +136,31 @@ function AdminDialerTable() {
     queryFn: async () => {
       const { data } = await supabase
         .from("prospect_dialer_settings")
-        .select("user_id, ddd_origem, codigo_operadora_interurbano, updated_at");
+        .select("user_id, ddd_origem, prefixo_interurbano, updated_at");
       return (data ?? []) as AdminRow[];
     },
   });
 
   const byUser = useMemo(() => new Map(settings.map((s) => [s.user_id, s])), [settings]);
-  const [drafts, setDrafts] = useState<Record<string, { ddd: string; oper: string }>>({});
+  const [drafts, setDrafts] = useState<Record<string, { ddd: string; prefixo: string }>>({});
 
-  const getDraft = (s: Seller) => {
-    if (drafts[s.id]) return drafts[s.id];
-    const cur = byUser.get(s.id);
-    return { ddd: cur?.ddd_origem ?? "11", oper: cur?.codigo_operadora_interurbano ?? "15" };
+  const getDraft = (id: string) => {
+    if (drafts[id]) return drafts[id];
+    const cur = byUser.get(id);
+    return { ddd: cur?.ddd_origem ?? "11", prefixo: cur?.prefixo_interurbano ?? "015" };
   };
 
-  const update = (id: string, patch: Partial<{ ddd: string; oper: string }>) => {
-    setDrafts((d) => ({ ...d, [id]: { ...getDraft({ id, full_name: null, email: "" } as Seller), ...patch } }));
+  const update = (id: string, patch: Partial<{ ddd: string; prefixo: string }>) => {
+    setDrafts((d) => ({ ...d, [id]: { ...getDraft(id), ...patch } }));
   };
 
   const save = async (id: string) => {
-    const d = getDraft({ id, full_name: null, email: "" } as Seller);
-    const err = validateDialerSettings({ ddd_origem: d.ddd, codigo_operadora_interurbano: d.oper });
+    const d = getDraft(id);
+    const err = validateDialerSettings({ ddd_origem: d.ddd, prefixo_interurbano: d.prefixo });
     if (err) { toast.error(err); return; }
     const { error } = await supabase
       .from("prospect_dialer_settings")
-      .upsert({ user_id: id, ddd_origem: d.ddd, codigo_operadora_interurbano: d.oper }, { onConflict: "user_id" });
+      .upsert({ user_id: id, ddd_origem: d.ddd, prefixo_interurbano: d.prefixo }, { onConflict: "user_id" });
     if (error) { toast.error(error.message); return; }
     toast.success("Salvo");
     qc.invalidateQueries({ queryKey: ["dialer_settings_all"] });
@@ -160,24 +176,26 @@ function AdminDialerTable() {
             <thead className="bg-muted/40 text-left">
               <tr>
                 <th className="p-2">Vendedor</th>
+                <th className="p-2">E-mail</th>
                 <th className="p-2">DDD de origem</th>
-                <th className="p-2">Código operadora</th>
+                <th className="p-2">Prefixo de interurbano</th>
                 <th className="p-2">Atualizado em</th>
                 <th className="p-2"></th>
               </tr>
             </thead>
             <tbody>
               {sellers.map((s) => {
-                const d = getDraft(s);
+                const d = getDraft(s.id);
                 const cur = byUser.get(s.id);
                 return (
                   <tr key={s.id} className="border-t">
-                    <td className="p-2">{s.full_name || s.email}</td>
+                    <td className="p-2">{s.full_name || "—"}</td>
+                    <td className="p-2 text-muted-foreground">{s.email}</td>
                     <td className="p-2">
                       <Input className="w-20" value={d.ddd} maxLength={2} onChange={(e) => update(s.id, { ddd: e.target.value.replace(/\D/g, "").slice(0, 2) })} />
                     </td>
                     <td className="p-2">
-                      <Input className="w-20" value={d.oper} maxLength={2} onChange={(e) => update(s.id, { oper: e.target.value.replace(/\D/g, "").slice(0, 2) })} />
+                      <Input className="w-24" value={d.prefixo} maxLength={3} onChange={(e) => update(s.id, { prefixo: e.target.value.replace(/\D/g, "").slice(0, 3) })} placeholder="015" />
                     </td>
                     <td className="p-2 text-muted-foreground">{cur?.updated_at ? format(new Date(cur.updated_at), "dd/MM/yyyy HH:mm", { locale: ptBR }) : "—"}</td>
                     <td className="p-2"><Button size="sm" onClick={() => save(s.id)}>Salvar</Button></td>
