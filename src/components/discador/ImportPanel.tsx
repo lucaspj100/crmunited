@@ -34,13 +34,13 @@ const FIELDS: { key: FieldKey; label: string; required: boolean }[] = [
   { key: "observacao", label: "Observação", required: false },
 ];
 
-export function ImportPanel({ sellers }: { sellers: Seller[] }) {
+export function ImportPanel({ sellers, isAdmin = false }: { sellers: Seller[]; isAdmin?: boolean }) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [file, setFile] = useState<ParsedFile | null>(null);
   const [mapping, setMapping] = useState<ColumnMapping>({});
-  const [mode, setMode] = useState<"none" | "single" | "round_robin">("none");
-  const [singleId, setSingleId] = useState<string>("");
+  const [mode, setMode] = useState<"none" | "single" | "round_robin">(isAdmin ? "none" : "single");
+  const [singleId, setSingleId] = useState<string>(isAdmin ? "" : (user?.id ?? ""));
   const [selectedSellers, setSelectedSellers] = useState<Set<string>>(new Set());
   const [updateExisting, setUpdateExisting] = useState(false);
   const [overwrite, setOverwrite] = useState(false);
