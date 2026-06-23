@@ -34,13 +34,13 @@ const FIELDS: { key: FieldKey; label: string; required: boolean }[] = [
   { key: "observacao", label: "Observação", required: false },
 ];
 
-export function ImportPanel({ sellers }: { sellers: Seller[] }) {
+export function ImportPanel({ sellers, isAdmin = false }: { sellers: Seller[]; isAdmin?: boolean }) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [file, setFile] = useState<ParsedFile | null>(null);
   const [mapping, setMapping] = useState<ColumnMapping>({});
-  const [mode, setMode] = useState<"none" | "single" | "round_robin">("none");
-  const [singleId, setSingleId] = useState<string>("");
+  const [mode, setMode] = useState<"none" | "single" | "round_robin">(isAdmin ? "none" : "single");
+  const [singleId, setSingleId] = useState<string>(isAdmin ? "" : (user?.id ?? ""));
   const [selectedSellers, setSelectedSellers] = useState<Set<string>>(new Set());
   const [updateExisting, setUpdateExisting] = useState(false);
   const [overwrite, setOverwrite] = useState(false);
@@ -80,7 +80,7 @@ export function ImportPanel({ sellers }: { sellers: Seller[] }) {
     if (mode === "single" && !singleId) { toast.error("Escolha um vendedor"); return; }
     if (mode === "round_robin" && selectedSellers.size === 0) { toast.error("Selecione vendedores"); return; }
     setImporting(true);
-    const r = await importProspects(parsed, distribution, user.id, { updateExisting, overwrite });
+    const r = await importProspects(parsed, distribution, user.id, { updateExisting, overwrite, isAdmin });
     setImporting(false);
     setReport(r);
     qc.invalidateQueries({ queryKey: ["prospect_contacts_admin"] });
@@ -249,39 +249,47 @@ export function ImportPanel({ sellers }: { sellers: Seller[] }) {
               </label>
             )}
 
-            <div>
-              <Label>Modo de distribuição (somente para novos contatos)</Label>
-              <Select value={mode} onValueChange={(v) => setMode(v as any)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Importar sem responsável (distribuir depois)</SelectItem>
-                  <SelectItem value="single">Atribuir todos a um vendedor</SelectItem>
-                  <SelectItem value="round_robin">Distribuir automaticamente (rodízio)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            {mode === "single" && (
-              <div>
-                <Label>Vendedor</Label>
-                <Select value={singleId} onValueChange={setSingleId}>
-                  <SelectTrigger><SelectValue placeholder="Selecione…" /></SelectTrigger>
-                  <SelectContent>
-                    {sellers.map((s) => <SelectItem key={s.id} value={s.id}>{s.full_name || s.email}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-            {mode === "round_robin" && (
-              <div className="space-y-2">
-                <Label>Vendedores ativos</Label>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                  {sellers.map((s) => (
-                    <label key={s.id} className="flex items-center gap-2 rounded-md border p-2 text-sm">
-                      <Checkbox checked={selectedSellers.has(s.id)} onCheckedChange={() => toggleSeller(s.id)} />
-                      <span className="truncate">{s.full_name || s.email}</span>
-                    </label>
-                  ))}
+            {isAdmin ? (
+              <>
+                <div>
+                  <Label>Modo de distribuição (somente para novos contatos)</Label>
+                  <Select value={mode} onValueChange={(v) => setMode(v as any)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Importar sem responsável (distribuir depois)</SelectItem>
+                      <SelectItem value="single">Atribuir todos a um vendedor</SelectItem>
+                      <SelectItem value="round_robin">Distribuir automaticamente (rodízio)</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
+                {mode === "single" && (
+                  <div>
+                    <Label>Vendedor</Label>
+                    <Select value={singleId} onValueChange={setSingleId}>
+                      <SelectTrigger><SelectValue placeholder="Selecione…" /></SelectTrigger>
+                      <SelectContent>
+                        {sellers.map((s) => <SelectItem key={s.id} value={s.id}>{s.full_name || s.email}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                {mode === "round_robin" && (
+                  <div className="space-y-2">
+                    <Label>Vendedores ativos</Label>
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                      {sellers.map((s) => (
+                        <label key={s.id} className="flex items-center gap-2 rounded-md border p-2 text-sm">
+                          <Checkbox checked={selectedSellers.has(s.id)} onCheckedChange={() => toggleSeller(s.id)} />
+                          <span className="truncate">{s.full_name || s.email}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="rounded-md border bg-muted/30 p-3 text-sm text-muted-foreground">
+                Os contatos importados serão atribuídos automaticamente a você. Telefones já cadastrados por outros vendedores ou no CRM serão ignorados.
               </div>
             )}
             <Button onClick={importar} disabled={importing} size="lg">

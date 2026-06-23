@@ -615,6 +615,26 @@ export type Database = {
         }
         Returns: boolean
       }
+      lead_phones_lookup: {
+        Args: { _phones: string[] }
+        Returns: {
+          phone_normalized: string
+        }[]
+      }
+      prospect_phones_lookup: {
+        Args: { _phones: string[] }
+        Returns: {
+          cargo: string
+          empresa: string
+          id: string
+          nome: string
+          observacao: string
+          origem: string
+          status_prospeccao: string
+          telefone_normalizado: string
+          vendedor_responsavel_id: string
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "franqueado" | "vendedor"
