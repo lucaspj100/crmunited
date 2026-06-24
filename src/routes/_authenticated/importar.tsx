@@ -315,7 +315,7 @@ function ImportPage() {
 function CategoryBadge({ p }: { p: ParsedLead }) {
   switch (p.category) {
     case "ok": return <Badge className="bg-emerald-500/20 text-emerald-700 border-emerald-500/30">Pronto</Badge>;
-    case "duplicado_crm": return <Badge className="bg-amber-500/20 text-amber-700 border-amber-500/30" title={`Existe: ${p.dupInfo?.leadName} (${p.dupInfo?.vendor})`}>Duplicado (CRM)</Badge>;
+    case "duplicado_crm": return <Badge className="bg-amber-500/20 text-amber-700 border-amber-500/30" title={`Já existe na sua base: ${p.dupInfo?.leadName}`}>Duplicado do vendedor</Badge>;
     case "duplicado_planilha": return <Badge className="bg-amber-500/20 text-amber-700 border-amber-500/30">Duplicado na planilha</Badge>;
     case "telefone_invalido": return <Badge variant="destructive">Telefone inválido</Badge>;
     case "sem_nome": return <Badge variant="destructive">Sem nome</Badge>;
