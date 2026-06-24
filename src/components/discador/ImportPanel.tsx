@@ -119,8 +119,8 @@ export function ImportPanel({ sellers, isAdmin = false }: { sellers: Seller[]; i
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
             Envie um arquivo CSV ou Excel. O sistema detecta automaticamente as colunas
-            <strong> Telefone, Nome, Empresa, Cargo, Origem e Observação</strong> a partir de variações comuns
-            (ex.: "Full Name", "Company", "Job Title"). Confirme o mapeamento abaixo antes de importar.
+            <strong> Telefone, Nome, Empresa, Cargo, Origem, Observação e LinkedIn</strong> a partir de variações comuns
+            (ex.: "Full Name", "Company", "Job Title", "LinkedIn URL"). Confirme o mapeamento abaixo antes de importar.
           </p>
           <Input type="file" accept=".csv,.xlsx,.xls" onChange={(e) => { const f = e.target.files?.[0]; if (f) void onFile(f); }} />
 
