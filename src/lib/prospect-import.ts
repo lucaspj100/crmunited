@@ -332,15 +332,40 @@ export async function importProspects(
       status_prospeccao: "Aguardando ligação",
       created_by: createdBy,
     }));
+    const fmtErr = (e: any) => {
+      const parts: string[] = [];
+      if (e?.message) parts.push(e.message);
+      if (e?.code) parts.push(`code=${e.code}`);
+      if (e?.details) parts.push(e.details);
+      if (e?.hint) parts.push(`hint: ${e.hint}`);
+      return parts.join(" · ") || "Erro desconhecido";
+    };
     const { error, count } = await supabase
       .from("prospect_contacts")
       .insert(rows, { count: "exact" });
     if (error) {
-      console.error("[prospect-import] insert batch failed", { error, sampleRow: rows[0] });
-      report.errors.push({ line: 0, reason: `Erro ao inserir lote (${rows.length} contatos): ${error.message}${error.details ? " — " + error.details : ""}` });
+      console.error("[prospect-import] insert batch failed — caindo em modo linha-a-linha", { error, batchSize: rows.length });
+      // Fallback: tenta inserir uma a uma para descobrir as linhas problemáticas e salvar o restante
+      for (let i = 0; i < rows.length; i++) {
+        const single = rows[i];
+        const sourceRow = batch[i].row;
+        const { error: rowErr } = await supabase.from("prospect_contacts").insert(single);
+        if (rowErr) {
+          console.error("[prospect-import] insert linha falhou", { line: sourceRow.index, error: rowErr, row: single });
+          report.errors.push({
+            line: sourceRow.index,
+            phone: sourceRow.telefone_original,
+            nome: sourceRow.nome,
+            reason: `Erro ao inserir em prospect_contacts: ${fmtErr(rowErr)}`,
+          });
+        } else {
+          report.imported++;
+        }
+      }
     } else {
       report.imported += count ?? rows.length;
     }
+
 
   }
 
