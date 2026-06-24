@@ -301,18 +301,19 @@ export async function importProspects(
         toUpdate.push({ row: p, existing: ex });
       } else {
         report.duplicatesInProspects++;
-        report.errors.push({ line: p.index, reason: "Telefone já existe na sua base de prospecção" });
+        report.errors.push({ line: p.index, phone: p.telefone_original, nome: p.nome, reason: "Telefone já existe na sua base de prospecção" });
       }
       continue;
     }
     const leadOwners = existingLeadsByPhone.get(p.telefone_normalizado!);
     if (leadOwners && leadOwners.has(item.owner)) {
       report.duplicatesInLeads++;
-      report.errors.push({ line: p.index, reason: "Telefone já existe no seu CRM" });
+      report.errors.push({ line: p.index, phone: p.telefone_original, nome: p.nome, reason: "Telefone já existe no seu CRM" });
       continue;
     }
     toInsert.push(item);
   }
+
 
   // INSERT novos — owner já foi determinado na etapa de deduplicação
   for (const batch of chunk(toInsert, 500)) {
