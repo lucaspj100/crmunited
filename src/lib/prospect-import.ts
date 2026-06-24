@@ -4,7 +4,7 @@ import { normalizeProspectPhone } from "@/lib/prospect-phone";
 
 export type RawRow = Record<string, unknown>;
 
-export type FieldKey = "nome" | "telefone" | "empresa" | "cargo" | "origem" | "observacao";
+export type FieldKey = "nome" | "telefone" | "empresa" | "cargo" | "origem" | "observacao" | "linkedin_url";
 
 export type ColumnMapping = Partial<Record<FieldKey, string | null>>;
 
@@ -18,6 +18,7 @@ export type ParsedRow = {
   cargo: string | null;
   origem: string | null;
   observacao: string | null;
+  linkedin_url: string | null;
   valid: boolean;
   reason?: string;
 };
