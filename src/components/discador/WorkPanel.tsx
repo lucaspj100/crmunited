@@ -159,6 +159,13 @@ export function WorkPanel() {
                 <span className="text-muted-foreground">Cargo:</span>{" "}
                 {contact.cargo || <span className="text-muted-foreground italic">não informado</span>}
               </div>
+              {contact.linkedin_url && (
+                <div className="text-sm">
+                  <a href={contact.linkedin_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-primary underline break-all">
+                    <Linkedin className="h-3.5 w-3.5 shrink-0" />Abrir LinkedIn
+                  </a>
+                </div>
+              )}
               <div className="text-sm break-all">
                 <span className="text-muted-foreground">Telefone:</span>{" "}
                 <span className="font-mono">+{contact.telefone_normalizado}</span>
