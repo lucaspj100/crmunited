@@ -195,6 +195,7 @@ export function ImportPanel({ sellers, isAdmin = false }: { sellers: Seller[]; i
                     <th className="p-2 text-left">Cargo</th>
                     <th className="p-2 text-left">Origem</th>
                     <th className="p-2 text-left">Observação</th>
+                    <th className="p-2 text-left">LinkedIn</th>
                     <th className="p-2 text-left">Status</th>
                   </tr>
                 </thead>
