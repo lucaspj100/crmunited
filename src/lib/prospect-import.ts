@@ -361,8 +361,13 @@ export async function importProspects(
     apply("nome"); apply("empresa"); apply("cargo"); apply("origem"); apply("observacao"); apply("linkedin_url");
     if (Object.keys(patch).length === 0) continue;
     const { error } = await supabase.from("prospect_contacts").update(patch).eq("id", existing.id);
-    if (error) report.errors.push({ line: row.index, reason: `Falha ao atualizar: ${error.message}` });
-    else report.updated++;
+    if (error) {
+      console.error("[prospect-import] update failed", { line: row.index, error, patch });
+      report.errors.push({ line: row.index, phone: row.telefone_original, nome: row.nome, reason: `Falha ao atualizar linha ${row.index}: ${error.message}` });
+    } else {
+      report.updated++;
+    }
+
   }
 
   // Diagnóstico: contatos que ficaram sem dados-chave
