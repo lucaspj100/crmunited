@@ -335,8 +335,13 @@ export async function importProspects(
     const { error, count } = await supabase
       .from("prospect_contacts")
       .insert(rows, { count: "exact" });
-    if (error) report.errors.push({ line: 0, reason: `Erro ao inserir lote: ${error.message}` });
-    else report.imported += count ?? rows.length;
+    if (error) {
+      console.error("[prospect-import] insert batch failed", { error, sampleRow: rows[0] });
+      report.errors.push({ line: 0, reason: `Erro ao inserir lote (${rows.length} contatos): ${error.message}${error.details ? " — " + error.details : ""}` });
+    } else {
+      report.imported += count ?? rows.length;
+    }
+
   }
 
   // UPDATE existentes
