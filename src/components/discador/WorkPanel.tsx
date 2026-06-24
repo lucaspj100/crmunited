@@ -294,6 +294,13 @@ export function WorkPanel() {
                   <div className="text-sm">
                     {contact.cargo ? <span>{contact.cargo}</span> : <span className="text-muted-foreground italic">Cargo não informado</span>}
                   </div>
+                  {contact.linkedin_url && (
+                    <div className="text-sm">
+                      <a href={contact.linkedin_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-primary underline break-all">
+                        <Linkedin className="h-3.5 w-3.5 shrink-0" />Abrir perfil no LinkedIn
+                      </a>
+                    </div>
+                  )}
                   <div className="text-sm flex flex-wrap items-center gap-2">
                     <span className="font-mono">+{contact.telefone_normalizado}</span>
                     {contact.ddd && <Badge variant="outline">DDD {contact.ddd}</Badge>}
