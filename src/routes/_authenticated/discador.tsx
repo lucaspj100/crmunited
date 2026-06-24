@@ -9,6 +9,7 @@ import { BasePanel } from "@/components/discador/BasePanel";
 import { ImportPanel } from "@/components/discador/ImportPanel";
 import { DashboardPanel } from "@/components/discador/DashboardPanel";
 import { ConfigPanel } from "@/components/discador/ConfigPanel";
+import { MyContactsPanel } from "@/components/discador/MyContactsPanel";
 
 export const Route = createFileRoute("/_authenticated/discador")({
   component: DiscadorPage,
