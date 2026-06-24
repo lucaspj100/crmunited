@@ -37,6 +37,7 @@ const FIELDS: { key: FieldKey; label: string; required: boolean }[] = [
   { key: "cargo", label: "Cargo / Profissão", required: false },
   { key: "origem", label: "Origem", required: false },
   { key: "observacao", label: "Observação", required: false },
+  { key: "linkedin_url", label: "LinkedIn (URL do perfil)", required: false },
 ];
 
 export function ImportPanel({ sellers, isAdmin = false }: { sellers: Seller[]; isAdmin?: boolean }) {
