@@ -261,7 +261,7 @@ function ImportPage() {
 
           <div className="grid grid-cols-2 gap-2 md:grid-cols-6">
             <Stat icon={CheckCircle2} label="Válidos novos" value={counts.ok} tone="success" />
-            <Stat icon={Copy} label="Duplicados (CRM)" value={counts.dupCRM} tone="warning" />
+            <Stat icon={Copy} label="Duplicados do vendedor" value={counts.dupCRM} tone="warning" />
             <Stat icon={Copy} label="Duplicados (planilha)" value={counts.dupPlan} tone="warning" />
             <Stat icon={XCircle} label="Telefone inválido" value={counts.invalid} tone="danger" />
             <Stat icon={UserX} label="Sem vendedor" value={counts.noOwner} tone="warning" />
