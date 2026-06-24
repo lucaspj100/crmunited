@@ -51,6 +51,20 @@ export function EditContactDialog({ open, onOpenChange, contact, onSaved }: Prop
         toast.error("Telefone inválido");
         return;
       }
+      if (norm.normalized !== contact.telefone_normalizado && contact.vendedor_responsavel_id) {
+        const { data: dup } = await supabase
+          .from("prospect_contacts")
+          .select("id")
+          .eq("vendedor_responsavel_id", contact.vendedor_responsavel_id)
+          .eq("telefone_normalizado", norm.normalized)
+          .neq("id", contact.id)
+          .limit(1);
+        if (dup && dup.length > 0) {
+          setSaving(false);
+          toast.error("Você já tem outro contato com esse telefone");
+          return;
+        }
+      }
       patch.telefone_original = telefone.trim();
       patch.telefone_normalizado = norm.normalized;
       patch.ddd = norm.ddd;
