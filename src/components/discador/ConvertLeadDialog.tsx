@@ -78,6 +78,7 @@ export function ConvertLeadDialog({ open, onOpenChange, contact, vendedorId, onC
       source: source.trim() || "Discador",
       owner_id: vendedorId,
       status,
+      linkedin_url: contact.linkedin_url || null,
     };
     const { data, error } = await supabase.from("leads").insert(payload).select("id").single();
     if (error) { setSaving(false); toast.error(error.message); return; }
