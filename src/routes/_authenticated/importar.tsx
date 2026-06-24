@@ -147,7 +147,7 @@ function ImportPage() {
         dupInfo,
       };
     });
-  }, [rawRows, profiles, existingPhones, defaultOwner, defaultStatus]);
+  }, [rawRows, profiles, existingPhones, defaultOwner, defaultStatus, user?.id]);
 
   const counts = useMemo(() => {
     const c = { total: parsed.length, ok: 0, dupPlan: 0, dupCRM: 0, invalid: 0, noName: 0, noOwner: 0 };
