@@ -194,7 +194,12 @@ export function ImportPanel({ sellers, isAdmin = false }: { sellers: Seller[]; i
 
               {noneValid && (
                 <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
-                  Nenhum contato foi importado porque a coluna de telefone não foi identificada ou os telefones não passaram na validação. Confira a prévia abaixo.
+                  Nenhum contato válido encontrado. Verifique se a coluna de telefone foi mapeada corretamente e se os números têm formato válido.
+                </div>
+              )}
+              {!noneValid && valid > 0 && invalid > 0 && (
+                <div className="rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
+                  {invalid} telefone(s) inválido(s) serão ignorados. {valid} contato(s) válido(s) serão processados normalmente.
                 </div>
               )}
             </div>
