@@ -78,12 +78,15 @@ function ImportPage() {
   });
 
   const { data: existingPhones = new Map() } = useQuery({
-    queryKey: ["leads-phones-norm"],
+    queryKey: ["leads-phones-norm-by-owner"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("leads").select("name, phone_normalized, owner_id").not("phone_normalized", "is", null).limit(10000);
+      const { data, error } = await supabase.from("leads").select("name, phone_normalized, owner_id").not("phone_normalized", "is", null).limit(50000);
       if (error) throw error;
+      // chave composta: `${phone_normalized}:${owner_id}` — duplicidade só dentro da base do mesmo vendedor
       const m = new Map<string, { name: string; owner_id: string }>();
-      (data ?? []).forEach((l: any) => { if (l.phone_normalized) m.set(l.phone_normalized, l); });
+      (data ?? []).forEach((l: any) => {
+        if (l.phone_normalized && l.owner_id) m.set(`${l.phone_normalized}:${l.owner_id}`, l);
+      });
       return m;
     },
   });
@@ -97,7 +100,8 @@ function ImportPage() {
     });
     const profById = new Map(profiles.map((p) => [p.id, p.full_name || p.email || "—"]));
 
-    const seenInSheet = new Set<string>();
+    const fallbackOwner = defaultOwner || user?.id || null;
+    const seenInSheet = new Set<string>(); // chave: `${phone}:${ownerId}`
     return rawRows.map((row, i) => {
       const mapped: any = { name: "", phone: "", company: "", source: "", observation: "", status: "", linkedin: "", ownerName: "" };
       for (const k of Object.keys(row)) {
@@ -109,20 +113,22 @@ function ImportPage() {
       const { normalized, valid } = normalizePhone(mapped.phone);
       const statusGuess = STATUS_MAP[mapped.status.toLowerCase()] || defaultStatus;
       const ownerId = mapped.ownerName ? profByName.get(mapped.ownerName.toLowerCase()) || null : (defaultOwner || null);
+      const effectiveOwnerId = ownerId || fallbackOwner;
+      const dupKey = normalized && effectiveOwnerId ? `${normalized}:${effectiveOwnerId}` : null;
 
       let category: ParsedLead["category"] = "ok";
       let dupInfo: ParsedLead["dupInfo"] | undefined;
 
       if (!mapped.name) category = "sem_nome";
       else if (normalized && !valid) category = "telefone_invalido";
-      else if (normalized && seenInSheet.has(normalized)) { category = "duplicado_planilha"; }
-      else if (normalized && existingPhones.has(normalized)) {
-        const ex = existingPhones.get(normalized)!;
+      else if (dupKey && seenInSheet.has(dupKey)) { category = "duplicado_planilha"; }
+      else if (dupKey && existingPhones.has(dupKey)) {
+        const ex = existingPhones.get(dupKey)!;
         category = "duplicado_crm";
         dupInfo = { leadName: ex.name, vendor: profById.get(ex.owner_id) || "—" };
-      } else if (!ownerId) category = "sem_vendedor";
+      } else if (!ownerId && !fallbackOwner) category = "sem_vendedor";
 
-      if (normalized && category === "ok") seenInSheet.add(normalized);
+      if (dupKey && category === "ok") seenInSheet.add(dupKey);
 
       return {
         index: i,
