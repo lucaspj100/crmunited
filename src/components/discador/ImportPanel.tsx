@@ -210,6 +210,11 @@ export function ImportPanel({ sellers, isAdmin = false }: { sellers: Seller[]; i
                       <td className="p-2">{p.cargo ?? "—"}</td>
                       <td className="p-2">{p.origem ?? "—"}</td>
                       <td className="p-2 max-w-[16rem] truncate" title={p.observacao ?? ""}>{p.observacao ?? "—"}</td>
+                      <td className="p-2 max-w-[14rem] truncate" title={p.linkedin_url ?? ""}>
+                        {p.linkedin_url
+                          ? <a href={p.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-primary underline">link</a>
+                          : "—"}
+                      </td>
                       <td className="p-2">
                         {p.valid
                           ? <Badge variant="secondary" className="bg-green-100 text-green-700">válido</Badge>
