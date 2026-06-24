@@ -243,7 +243,7 @@ export async function importProspects(
   const phones = dedupedLocal.map((p) => p.row.telefone_normalizado!);
   const chunk = <T,>(arr: T[], n: number) => Array.from({ length: Math.ceil(arr.length / n) }, (_, i) => arr.slice(i * n, i * n + n));
 
-  type Existing = { id: string; nome: string | null; empresa: string | null; cargo: string | null; origem: string | null; observacao: string | null; status_prospeccao: string | null; vendedor_responsavel_id: string | null };
+  type Existing = { id: string; nome: string | null; empresa: string | null; cargo: string | null; origem: string | null; observacao: string | null; linkedin_url: string | null; status_prospeccao: string | null; vendedor_responsavel_id: string | null };
   // Pode haver várias linhas com o mesmo telefone (uma por vendedor) — guardamos todas.
   const existingByPhone = new Map<string, Existing[]>();
   for (const c of chunk(phones, 300)) {
