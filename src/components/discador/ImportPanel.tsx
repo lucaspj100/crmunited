@@ -91,9 +91,24 @@ export function ImportPanel({ sellers, isAdmin = false }: { sellers: Seller[]; i
     setReport(r);
     qc.invalidateQueries({ queryKey: ["prospect_contacts_admin"] });
     qc.invalidateQueries({ queryKey: ["prospect_dashboard"] });
-    if (r.imported > 0 || r.updated > 0) toast.success(`Importados ${r.imported} · Atualizados ${r.updated}`);
-    else toast.error("Nenhum contato foi importado nem atualizado. Confira a prévia.");
+
+    if (r.imported > 0 || r.updated > 0) {
+      toast.success(`Importados ${r.imported} · Atualizados ${r.updated}`);
+      if (r.invalid > 0) toast.warning("Alguns telefones foram ignorados por estarem inválidos. Veja o relatório abaixo.");
+    } else if (updateExisting && (r.duplicatesInProspects > 0 || r.duplicatesInLeads > 0)) {
+      toast.info("Os contatos já existiam, mas nenhum campo novo foi encontrado para atualizar.");
+    } else if (r.duplicatesInProspects > 0 || r.duplicatesInLeads > 0) {
+      toast.warning(
+        "Nenhum contato novo foi importado porque estes telefones já existem na base ou no CRM. Para preencher cargo, empresa ou LinkedIn em contatos existentes, marque 'Atualizar contatos existentes com dados da planilha'.",
+        { duration: 10000 },
+      );
+    } else if (r.invalid > 0 || r.missingPhone > 0) {
+      toast.error("Alguns telefones foram ignorados por estarem inválidos. Veja o relatório abaixo.");
+    } else {
+      toast.error("Nenhum contato foi importado nem atualizado. Confira a prévia.");
+    }
   };
+
 
   const toggleSeller = (id: string) => {
     const next = new Set(selectedSellers);
