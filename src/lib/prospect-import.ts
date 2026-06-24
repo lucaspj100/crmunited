@@ -327,15 +327,15 @@ export async function importProspects(
   // status_prospeccao / vendedor_responsavel_id / quantidade_tentativas / histórico nunca são alterados aqui
   for (const { row, existing } of toUpdate) {
     const patch: {
-      nome?: string; empresa?: string; cargo?: string; origem?: string; observacao?: string;
+      nome?: string; empresa?: string; cargo?: string; origem?: string; observacao?: string; linkedin_url?: string;
     } = {};
-    const apply = (field: "nome" | "empresa" | "cargo" | "origem" | "observacao") => {
+    const apply = (field: "nome" | "empresa" | "cargo" | "origem" | "observacao" | "linkedin_url") => {
       const newVal = row[field];
       const oldVal = (existing as any)[field] as string | null;
       if (!newVal) return;
       if (options.overwrite || !oldVal) patch[field] = newVal;
     };
-    apply("nome"); apply("empresa"); apply("cargo"); apply("origem"); apply("observacao");
+    apply("nome"); apply("empresa"); apply("cargo"); apply("origem"); apply("observacao"); apply("linkedin_url");
     if (Object.keys(patch).length === 0) continue;
     const { error } = await supabase.from("prospect_contacts").update(patch).eq("id", existing.id);
     if (error) report.errors.push({ line: row.index, reason: `Falha ao atualizar: ${error.message}` });
