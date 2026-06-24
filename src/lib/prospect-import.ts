@@ -169,18 +169,25 @@ export function mapRows(rows: RawRow[], mapping: ColumnMapping): ParsedRow[] {
   return out;
 }
 
+export type ImportError = { line: number; phone?: string | null; nome?: string | null; reason: string };
+
 export type ImportReport = {
   totalRows: number;
+  validRows: number;
   imported: number;
   updated: number;
   duplicatesInProspects: number;
   duplicatesInLeads: number;
+  duplicatesInFile: number;
   invalid: number;
+  missingPhone: number;
   missingNome: number;
   missingEmpresa: number;
   missingCargo: number;
-  errors: { line: number; reason: string }[];
+  errors: ImportError[];
 };
+
+
 
 
 export type DistributionMode =
@@ -204,11 +211,14 @@ export async function importProspects(
 ): Promise<ImportReport> {
   const report: ImportReport = {
     totalRows: parsed.length,
+    validRows: 0,
     imported: 0,
     updated: 0,
     duplicatesInProspects: 0,
     duplicatesInLeads: 0,
+    duplicatesInFile: 0,
     invalid: 0,
+    missingPhone: 0,
     missingNome: 0,
     missingEmpresa: 0,
     missingCargo: 0,
@@ -216,9 +226,15 @@ export async function importProspects(
   };
 
   const valid = parsed.filter((p) => p.valid && p.telefone_normalizado);
+  report.validRows = valid.length;
   parsed.filter((p) => !p.valid).forEach((p) => {
-    report.invalid++;
-    report.errors.push({ line: p.index, reason: p.reason || "Inválido" });
+    const reason = p.reason || "Inválido";
+    if (reason === "Telefone vazio" || reason === "Coluna de telefone não mapeada") {
+      report.missingPhone++;
+    } else {
+      report.invalid++;
+    }
+    report.errors.push({ line: p.index, phone: p.telefone_original || null, nome: p.nome, reason });
   });
 
   // Determina o owner final de cada linha ANTES da deduplicação,
@@ -230,13 +246,14 @@ export async function importProspects(
   for (const item of validWithOwner) {
     const key = `${item.row.telefone_normalizado}:${item.owner}`;
     if (seen.has(key)) {
-      report.duplicatesInProspects++;
-      report.errors.push({ line: item.row.index, reason: "Telefone duplicado na planilha para o mesmo vendedor" });
+      report.duplicatesInFile++;
+      report.errors.push({ line: item.row.index, phone: item.row.telefone_original, nome: item.row.nome, reason: "Telefone duplicado na planilha" });
       continue;
     }
     seen.add(key);
     dedupedLocal.push(item);
   }
+
 
   if (dedupedLocal.length === 0) return report;
 
@@ -284,18 +301,19 @@ export async function importProspects(
         toUpdate.push({ row: p, existing: ex });
       } else {
         report.duplicatesInProspects++;
-        report.errors.push({ line: p.index, reason: "Telefone já existe na sua base de prospecção" });
+        report.errors.push({ line: p.index, phone: p.telefone_original, nome: p.nome, reason: "Telefone já existe na sua base de prospecção" });
       }
       continue;
     }
     const leadOwners = existingLeadsByPhone.get(p.telefone_normalizado!);
     if (leadOwners && leadOwners.has(item.owner)) {
       report.duplicatesInLeads++;
-      report.errors.push({ line: p.index, reason: "Telefone já existe no seu CRM" });
+      report.errors.push({ line: p.index, phone: p.telefone_original, nome: p.nome, reason: "Telefone já existe no seu CRM" });
       continue;
     }
     toInsert.push(item);
   }
+
 
   // INSERT novos — owner já foi determinado na etapa de deduplicação
   for (const batch of chunk(toInsert, 500)) {
