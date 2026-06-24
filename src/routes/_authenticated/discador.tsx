@@ -9,6 +9,7 @@ import { BasePanel } from "@/components/discador/BasePanel";
 import { ImportPanel } from "@/components/discador/ImportPanel";
 import { DashboardPanel } from "@/components/discador/DashboardPanel";
 import { ConfigPanel } from "@/components/discador/ConfigPanel";
+import { MyContactsPanel } from "@/components/discador/MyContactsPanel";
 
 export const Route = createFileRoute("/_authenticated/discador")({
   component: DiscadorPage,
@@ -42,6 +43,7 @@ function DiscadorPage() {
         <div className="-mx-1 overflow-x-auto max-w-full">
           <TabsList className="inline-flex w-max whitespace-nowrap">
             <TabsTrigger value="trabalhar">Trabalhar</TabsTrigger>
+            <TabsTrigger value="minha-lista">Minha lista</TabsTrigger>
             {isAdmin && <TabsTrigger value="base">Base</TabsTrigger>}
             <TabsTrigger value="importar">Importar</TabsTrigger>
             {isAdmin && <TabsTrigger value="painel">Painel</TabsTrigger>}
@@ -50,6 +52,7 @@ function DiscadorPage() {
         </div>
 
         <TabsContent value="trabalhar" className="mt-4"><WorkPanel /></TabsContent>
+        <TabsContent value="minha-lista" className="mt-4"><MyContactsPanel /></TabsContent>
         {isAdmin && <TabsContent value="base" className="mt-4"><BasePanel sellers={sellers} /></TabsContent>}
         <TabsContent value="importar" className="mt-4"><ImportPanel sellers={sellers} isAdmin={isAdmin} /></TabsContent>
         {isAdmin && <TabsContent value="painel" className="mt-4"><DashboardPanel sellers={sellers} /></TabsContent>}
