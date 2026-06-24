@@ -57,6 +57,10 @@ const ALIASES: Record<FieldKey, string[]> = {
     "comentario", "comentário", "comentarios", "comentários",
     "descricao", "descrição", "note", "notes", "comment", "comments", "obs",
   ],
+  linkedin_url: [
+    "linkedin", "linkedin url", "url linkedin", "perfil linkedin", "link linkedin",
+    "profile url", "linkedin profile", "linkedin_url", "linkedinurl", "perfil",
+  ],
 };
 
 export function normHeader(h: string): string {
