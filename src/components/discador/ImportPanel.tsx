@@ -93,13 +93,18 @@ export function ImportPanel({ sellers, isAdmin = false }: { sellers: Seller[]; i
     qc.invalidateQueries({ queryKey: ["prospect_dashboard"] });
 
     const processed = r.imported + r.updated;
-    if (processed > 0) {
+    const techErrors = r.errors.filter((e) => /Erro ao inserir|Falha ao atualizar/i.test(e.reason)).length;
+    if (processed > 0 && techErrors > 0) {
+      toast.warning(`Importação parcialmente concluída. ${processed} contato(s) salvo(s), ${techErrors} falharam. Veja os erros técnicos.`, { duration: 10000 });
+    } else if (processed > 0) {
       const parts = [`Importação concluída. ${processed} contato(s) processado(s).`];
       if (r.invalid > 0) parts.push(`${r.invalid} telefone(s) inválido(s) ignorado(s).`);
       if (r.duplicatesInProspects + r.duplicatesInLeads > 0) {
         parts.push(`${r.duplicatesInProspects + r.duplicatesInLeads} duplicado(s) ignorado(s).`);
       }
       toast.success(parts.join(" "));
+    } else if (techErrors > 0) {
+      toast.error("Nenhum contato foi salvo por erro técnico no banco. Veja os detalhes abaixo.", { duration: 10000 });
     } else if (updateExisting && (r.duplicatesInProspects > 0 || r.duplicatesInLeads > 0)) {
       toast.info("Os contatos já existiam, mas nenhum campo novo foi encontrado para atualizar.");
     } else if (r.duplicatesInProspects > 0 || r.duplicatesInLeads > 0) {
@@ -109,11 +114,10 @@ export function ImportPanel({ sellers, isAdmin = false }: { sellers: Seller[]; i
       );
     } else if (r.validRows === 0 && (r.invalid > 0 || r.missingPhone > 0)) {
       toast.error("Nenhum contato válido encontrado. Todos os telefones estão inválidos ou ausentes.");
-    } else if (r.errors.some((e) => /Erro ao inserir|Falha ao atualizar/i.test(e.reason))) {
-      toast.error("Erro técnico ao salvar no banco. Veja a seção 'Erros técnicos' no relatório.");
     } else {
       toast.warning("Nenhum contato foi importado nem atualizado. Confira o relatório abaixo.");
     }
+
 
   };
 
