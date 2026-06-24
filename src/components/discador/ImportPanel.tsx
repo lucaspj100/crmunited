@@ -357,6 +357,23 @@ export function ImportPanel({ sellers, isAdmin = false }: { sellers: Seller[]; i
               <div>Linhas sem telefone: <strong>{report.missingPhone}</strong></div>
             </div>
 
+            {(() => {
+              const tech = report.errors.filter((e) => /Erro ao inserir|Falha ao atualizar/i.test(e.reason));
+              if (tech.length === 0) return null;
+              return (
+                <div className="rounded-md border border-red-300 bg-red-50 p-3 text-xs text-red-900 space-y-1">
+                  <div className="font-semibold uppercase">Erros técnicos ({tech.length})</div>
+                  <ul className="list-disc pl-4 space-y-0.5">
+                    {tech.slice(0, 20).map((e, i) => (
+                      <li key={i}>Linha {e.line || "—"}: {e.reason}</li>
+                    ))}
+                  </ul>
+                  {tech.length > 20 && <div>+ {tech.length - 20} outro(s) erro(s) técnico(s)</div>}
+                </div>
+              );
+            })()}
+
+
             {report.imported === 0 && report.updated === 0 && (report.duplicatesInProspects > 0 || report.duplicatesInLeads > 0) && !updateExisting && (
               <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-amber-900 text-xs">
                 Nenhum contato novo foi importado porque os telefones já existem na sua base ou no CRM.
