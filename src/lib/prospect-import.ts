@@ -387,11 +387,16 @@ export async function importProspects(
     if (Object.keys(patch).length === 0) continue;
     const { error } = await supabase.from("prospect_contacts").update(patch).eq("id", existing.id);
     if (error) {
-      console.error("[prospect-import] update failed", { line: row.index, error, patch });
-      report.errors.push({ line: row.index, phone: row.telefone_original, nome: row.nome, reason: `Falha ao atualizar linha ${row.index}: ${error.message}` });
+      console.error("[prospect-import] update failed", { line: row.index, error, patch, id: existing.id });
+      const parts: string[] = [error.message];
+      if ((error as any).code) parts.push(`code=${(error as any).code}`);
+      if ((error as any).details) parts.push((error as any).details);
+      if ((error as any).hint) parts.push(`hint: ${(error as any).hint}`);
+      report.errors.push({ line: row.index, phone: row.telefone_original, nome: row.nome, reason: `Falha ao atualizar em prospect_contacts: ${parts.join(" · ")}` });
     } else {
       report.updated++;
     }
+
 
   }
 
