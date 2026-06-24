@@ -331,31 +331,73 @@ export function ImportPanel({ sellers, isAdmin = false }: { sellers: Seller[]; i
       {report && (
         <Card>
           <CardHeader><CardTitle>Relatório da importação</CardTitle></CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <div>Total de linhas lidas: <strong>{report.totalRows}</strong></div>
-            <div>Novos contatos importados: <strong className="text-green-600">{report.imported}</strong></div>
-            <div>Contatos existentes atualizados: <strong className="text-blue-600">{report.updated}</strong></div>
-            <div>Duplicados ignorados (já na prospecção): <strong>{report.duplicatesInProspects}</strong></div>
-            <div>Duplicados ignorados (já no CRM): <strong>{report.duplicatesInLeads}</strong></div>
-            <div>Telefones inválidos: <strong className="text-red-600">{report.invalid}</strong></div>
+          <CardContent className="space-y-3 text-sm">
+            <div className="grid gap-2 sm:grid-cols-2">
+              <div>Total de linhas lidas: <strong>{report.totalRows}</strong></div>
+              <div>Contatos válidos: <strong>{report.validRows}</strong></div>
+              <div>Novos contatos importados: <strong className="text-green-600">{report.imported}</strong></div>
+              <div>Contatos existentes atualizados: <strong className="text-blue-600">{report.updated}</strong></div>
+              <div>Duplicados ignorados (já na prospecção): <strong>{report.duplicatesInProspects}</strong></div>
+              <div>Duplicados ignorados (já no CRM): <strong>{report.duplicatesInLeads}</strong></div>
+              <div>Duplicados dentro da planilha: <strong>{report.duplicatesInFile}</strong></div>
+              <div>Telefones inválidos: <strong className="text-red-600">{report.invalid}</strong></div>
+              <div>Linhas sem telefone: <strong>{report.missingPhone}</strong></div>
+            </div>
+
+            {report.imported === 0 && report.updated === 0 && (report.duplicatesInProspects > 0 || report.duplicatesInLeads > 0) && !updateExisting && (
+              <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-amber-900 text-xs">
+                Nenhum contato novo foi importado porque os telefones já existem na sua base ou no CRM.
+                Para preencher cargo, empresa ou LinkedIn em contatos já existentes, marque
+                <strong> "Atualizar contatos existentes com dados da planilha"</strong> e refaça a importação.
+              </div>
+            )}
+
             <hr className="my-2" />
             <div className="text-xs uppercase text-muted-foreground">Diagnóstico dos contatos válidos</div>
-            <div>Sem nome: <strong>{report.missingNome}</strong></div>
-            <div>Sem empresa: <strong>{report.missingEmpresa}</strong></div>
-            <div>Sem cargo: <strong>{report.missingCargo}</strong></div>
+            <div className="grid gap-1 sm:grid-cols-3">
+              <div>Sem nome: <strong>{report.missingNome}</strong></div>
+              <div>Sem empresa: <strong>{report.missingEmpresa}</strong></div>
+              <div>Sem cargo: <strong>{report.missingCargo}</strong></div>
+            </div>
+
             {report.errors.length > 0 && (
-              <details className="mt-2">
-                <summary className="cursor-pointer text-muted-foreground">Ver detalhes ({report.errors.length})</summary>
-                <ul className="mt-2 max-h-60 overflow-auto space-y-1 text-xs">
-                  {report.errors.slice(0, 500).map((e, i) => (
-                    <li key={i}>Linha {e.line}: {e.reason}</li>
-                  ))}
-                </ul>
+              <details className="mt-2" open={report.imported === 0 && report.updated === 0}>
+                <summary className="cursor-pointer text-muted-foreground">
+                  Ver detalhes dos erros ({report.errors.length})
+                </summary>
+                <div className="mt-2 max-h-72 overflow-auto rounded-md border">
+                  <table className="w-full text-xs">
+                    <thead className="sticky top-0 bg-muted/80">
+                      <tr>
+                        <th className="p-2 text-left">Linha</th>
+                        <th className="p-2 text-left">Telefone</th>
+                        <th className="p-2 text-left">Nome</th>
+                        <th className="p-2 text-left">Motivo</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {report.errors.slice(0, 500).map((e, i) => (
+                        <tr key={i} className="border-t align-top">
+                          <td className="p-2 text-muted-foreground">{e.line || "—"}</td>
+                          <td className="p-2 font-mono">{e.phone || "—"}</td>
+                          <td className="p-2">{e.nome || "—"}</td>
+                          <td className="p-2">{e.reason}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {report.errors.length > 500 && (
+                    <div className="p-2 text-center text-muted-foreground">
+                      Mostrando 500 de {report.errors.length} erros
+                    </div>
+                  )}
+                </div>
               </details>
             )}
           </CardContent>
         </Card>
       )}
+
     </div>
   );
 }
