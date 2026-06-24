@@ -37,6 +37,7 @@ const FIELDS: { key: FieldKey; label: string; required: boolean }[] = [
   { key: "cargo", label: "Cargo / Profissão", required: false },
   { key: "origem", label: "Origem", required: false },
   { key: "observacao", label: "Observação", required: false },
+  { key: "linkedin_url", label: "LinkedIn (URL do perfil)", required: false },
 ];
 
 export function ImportPanel({ sellers, isAdmin = false }: { sellers: Seller[]; isAdmin?: boolean }) {
@@ -118,8 +119,8 @@ export function ImportPanel({ sellers, isAdmin = false }: { sellers: Seller[]; i
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
             Envie um arquivo CSV ou Excel. O sistema detecta automaticamente as colunas
-            <strong> Telefone, Nome, Empresa, Cargo, Origem e Observação</strong> a partir de variações comuns
-            (ex.: "Full Name", "Company", "Job Title"). Confirme o mapeamento abaixo antes de importar.
+            <strong> Telefone, Nome, Empresa, Cargo, Origem, Observação e LinkedIn</strong> a partir de variações comuns
+            (ex.: "Full Name", "Company", "Job Title", "LinkedIn URL"). Confirme o mapeamento abaixo antes de importar.
           </p>
           <Input type="file" accept=".csv,.xlsx,.xls" onChange={(e) => { const f = e.target.files?.[0]; if (f) void onFile(f); }} />
 
@@ -194,6 +195,7 @@ export function ImportPanel({ sellers, isAdmin = false }: { sellers: Seller[]; i
                     <th className="p-2 text-left">Cargo</th>
                     <th className="p-2 text-left">Origem</th>
                     <th className="p-2 text-left">Observação</th>
+                    <th className="p-2 text-left">LinkedIn</th>
                     <th className="p-2 text-left">Status</th>
                   </tr>
                 </thead>
@@ -208,6 +210,11 @@ export function ImportPanel({ sellers, isAdmin = false }: { sellers: Seller[]; i
                       <td className="p-2">{p.cargo ?? "—"}</td>
                       <td className="p-2">{p.origem ?? "—"}</td>
                       <td className="p-2 max-w-[16rem] truncate" title={p.observacao ?? ""}>{p.observacao ?? "—"}</td>
+                      <td className="p-2 max-w-[14rem] truncate" title={p.linkedin_url ?? ""}>
+                        {p.linkedin_url
+                          ? <a href={p.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-primary underline">link</a>
+                          : "—"}
+                      </td>
                       <td className="p-2">
                         {p.valid
                           ? <Badge variant="secondary" className="bg-green-100 text-green-700">válido</Badge>

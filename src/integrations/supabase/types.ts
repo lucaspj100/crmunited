@@ -348,6 +348,7 @@ export type Database = {
           empresa: string | null
           id: string
           lead_id: string | null
+          linkedin_url: string | null
           nao_chamar: boolean
           nome: string | null
           observacao: string | null
@@ -372,6 +373,7 @@ export type Database = {
           empresa?: string | null
           id?: string
           lead_id?: string | null
+          linkedin_url?: string | null
           nao_chamar?: boolean
           nome?: string | null
           observacao?: string | null
@@ -396,6 +398,7 @@ export type Database = {
           empresa?: string | null
           id?: string
           lead_id?: string | null
+          linkedin_url?: string | null
           nao_chamar?: boolean
           nome?: string | null
           observacao?: string | null
@@ -627,6 +630,7 @@ export type Database = {
           cargo: string
           empresa: string
           id: string
+          linkedin_url: string
           nome: string
           observacao: string
           origem: string

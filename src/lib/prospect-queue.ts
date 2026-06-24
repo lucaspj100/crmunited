@@ -8,6 +8,7 @@ export type ProspectContact = {
   ddd: string | null;
   empresa: string | null;
   cargo: string | null;
+  linkedin_url: string | null;
   origem: string | null;
   observacao: string | null;
   status_prospeccao: string;

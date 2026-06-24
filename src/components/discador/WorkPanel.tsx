@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Phone, MessageCircle, ListChecks, UserPlus, SkipForward, Inbox, Pencil, ChevronDown } from "lucide-react";
+import { Phone, MessageCircle, ListChecks, UserPlus, SkipForward, Inbox, Pencil, ChevronDown, Linkedin } from "lucide-react";
 import { fetchNextProspect, type ProspectContact } from "@/lib/prospect-queue";
 import { statusBadgeClass, getWhatsappTemplate } from "@/lib/prospect-status";
 import { buildDialNumber, DEFAULT_DIALER_SETTINGS, type DialerSettings } from "@/lib/prospect-dial";
@@ -159,6 +159,13 @@ export function WorkPanel() {
                 <span className="text-muted-foreground">Cargo:</span>{" "}
                 {contact.cargo || <span className="text-muted-foreground italic">não informado</span>}
               </div>
+              {contact.linkedin_url && (
+                <div className="text-sm">
+                  <a href={contact.linkedin_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-primary underline break-all">
+                    <Linkedin className="h-3.5 w-3.5 shrink-0" />Abrir LinkedIn
+                  </a>
+                </div>
+              )}
               <div className="text-sm break-all">
                 <span className="text-muted-foreground">Telefone:</span>{" "}
                 <span className="font-mono">+{contact.telefone_normalizado}</span>
@@ -197,6 +204,7 @@ export function WorkPanel() {
                   <div><span className="text-muted-foreground">Empresa:</span> {contact.empresa || "—"}</div>
                   <div><span className="text-muted-foreground">Origem:</span> {contact.origem || "—"}</div>
                   <div className="break-words"><span className="text-muted-foreground">Observação:</span> {contact.observacao || "—"}</div>
+                  <div className="break-all"><span className="text-muted-foreground">LinkedIn:</span> {contact.linkedin_url ? <a href={contact.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-primary underline">{contact.linkedin_url}</a> : "—"}</div>
                 </CollapsibleContent>
               </div>
             </Collapsible>
@@ -286,6 +294,13 @@ export function WorkPanel() {
                   <div className="text-sm">
                     {contact.cargo ? <span>{contact.cargo}</span> : <span className="text-muted-foreground italic">Cargo não informado</span>}
                   </div>
+                  {contact.linkedin_url && (
+                    <div className="text-sm">
+                      <a href={contact.linkedin_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-primary underline break-all">
+                        <Linkedin className="h-3.5 w-3.5 shrink-0" />Abrir perfil no LinkedIn
+                      </a>
+                    </div>
+                  )}
                   <div className="text-sm flex flex-wrap items-center gap-2">
                     <span className="font-mono">+{contact.telefone_normalizado}</span>
                     {contact.ddd && <Badge variant="outline">DDD {contact.ddd}</Badge>}

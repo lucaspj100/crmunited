@@ -4,7 +4,7 @@ import { normalizeProspectPhone } from "@/lib/prospect-phone";
 
 export type RawRow = Record<string, unknown>;
 
-export type FieldKey = "nome" | "telefone" | "empresa" | "cargo" | "origem" | "observacao";
+export type FieldKey = "nome" | "telefone" | "empresa" | "cargo" | "origem" | "observacao" | "linkedin_url";
 
 export type ColumnMapping = Partial<Record<FieldKey, string | null>>;
 
@@ -18,6 +18,7 @@ export type ParsedRow = {
   cargo: string | null;
   origem: string | null;
   observacao: string | null;
+  linkedin_url: string | null;
   valid: boolean;
   reason?: string;
 };
@@ -55,6 +56,10 @@ const ALIASES: Record<FieldKey, string[]> = {
     "observacao", "observação", "observacoes", "observações", "nota", "notas",
     "comentario", "comentário", "comentarios", "comentários",
     "descricao", "descrição", "note", "notes", "comment", "comments", "obs",
+  ],
+  linkedin_url: [
+    "linkedin", "linkedin url", "url linkedin", "perfil linkedin", "link linkedin",
+    "profile url", "linkedin profile", "linkedin_url", "linkedinurl", "perfil",
   ],
 };
 
@@ -114,6 +119,7 @@ export async function parseProspectFile(file: File): Promise<ParsedFile> {
     cargo: detectHeader(headers, "cargo", taken),
     origem: detectHeader(headers, "origem", taken),
     observacao: detectHeader(headers, "observacao", taken),
+    linkedin_url: detectHeader(headers, "linkedin_url", taken),
   };
   return { headers, rows, detected };
 }
@@ -137,6 +143,7 @@ export function mapRows(rows: RawRow[], mapping: ColumnMapping): ParsedRow[] {
       cargo: get(row, "cargo"),
       origem: get(row, "origem"),
       observacao: get(row, "observacao"),
+      linkedin_url: get(row, "linkedin_url"),
       valid: false,
     };
 
@@ -236,7 +243,7 @@ export async function importProspects(
   const phones = dedupedLocal.map((p) => p.row.telefone_normalizado!);
   const chunk = <T,>(arr: T[], n: number) => Array.from({ length: Math.ceil(arr.length / n) }, (_, i) => arr.slice(i * n, i * n + n));
 
-  type Existing = { id: string; nome: string | null; empresa: string | null; cargo: string | null; origem: string | null; observacao: string | null; status_prospeccao: string | null; vendedor_responsavel_id: string | null };
+  type Existing = { id: string; nome: string | null; empresa: string | null; cargo: string | null; origem: string | null; observacao: string | null; linkedin_url: string | null; status_prospeccao: string | null; vendedor_responsavel_id: string | null };
   // Pode haver várias linhas com o mesmo telefone (uma por vendedor) — guardamos todas.
   const existingByPhone = new Map<string, Existing[]>();
   for (const c of chunk(phones, 300)) {
@@ -301,6 +308,7 @@ export async function importProspects(
       cargo: p.cargo,
       origem: p.origem,
       observacao: p.observacao,
+      linkedin_url: p.linkedin_url,
       vendedor_responsavel_id: owner,
       assigned_at: owner ? new Date().toISOString() : null,
       status_prospeccao: "Aguardando ligação",
@@ -319,15 +327,15 @@ export async function importProspects(
   // status_prospeccao / vendedor_responsavel_id / quantidade_tentativas / histórico nunca são alterados aqui
   for (const { row, existing } of toUpdate) {
     const patch: {
-      nome?: string; empresa?: string; cargo?: string; origem?: string; observacao?: string;
+      nome?: string; empresa?: string; cargo?: string; origem?: string; observacao?: string; linkedin_url?: string;
     } = {};
-    const apply = (field: "nome" | "empresa" | "cargo" | "origem" | "observacao") => {
+    const apply = (field: "nome" | "empresa" | "cargo" | "origem" | "observacao" | "linkedin_url") => {
       const newVal = row[field];
       const oldVal = (existing as any)[field] as string | null;
       if (!newVal) return;
       if (options.overwrite || !oldVal) patch[field] = newVal;
     };
-    apply("nome"); apply("empresa"); apply("cargo"); apply("origem"); apply("observacao");
+    apply("nome"); apply("empresa"); apply("cargo"); apply("origem"); apply("observacao"); apply("linkedin_url");
     if (Object.keys(patch).length === 0) continue;
     const { error } = await supabase.from("prospect_contacts").update(patch).eq("id", existing.id);
     if (error) report.errors.push({ line: row.index, reason: `Falha ao atualizar: ${error.message}` });
