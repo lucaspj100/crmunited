@@ -335,7 +335,7 @@ export async function importProspects(
   }
 
   // Diagnóstico: contatos que ficaram sem dados-chave
-  for (const p of dedupedLocal) {
+  for (const { row: p } of dedupedLocal) {
     if (!p.nome) report.missingNome++;
     if (!p.empresa) report.missingEmpresa++;
     if (!p.cargo) report.missingCargo++;
