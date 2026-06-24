@@ -119,6 +119,7 @@ export async function parseProspectFile(file: File): Promise<ParsedFile> {
     cargo: detectHeader(headers, "cargo", taken),
     origem: detectHeader(headers, "origem", taken),
     observacao: detectHeader(headers, "observacao", taken),
+    linkedin_url: detectHeader(headers, "linkedin_url", taken),
   };
   return { headers, rows, detected };
 }
