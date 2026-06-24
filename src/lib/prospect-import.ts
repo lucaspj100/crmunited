@@ -143,6 +143,7 @@ export function mapRows(rows: RawRow[], mapping: ColumnMapping): ParsedRow[] {
       cargo: get(row, "cargo"),
       origem: get(row, "origem"),
       observacao: get(row, "observacao"),
+      linkedin_url: get(row, "linkedin_url"),
       valid: false,
     };
 
