@@ -308,6 +308,7 @@ export async function importProspects(
       cargo: p.cargo,
       origem: p.origem,
       observacao: p.observacao,
+      linkedin_url: p.linkedin_url,
       vendedor_responsavel_id: owner,
       assigned_at: owner ? new Date().toISOString() : null,
       status_prospeccao: "Aguardando ligação",
