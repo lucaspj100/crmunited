@@ -214,80 +214,98 @@ export async function importProspects(
     report.errors.push({ line: p.index, reason: p.reason || "Inválido" });
   });
 
-  const seen = new Set<string>();
-  const dedupedLocal = valid.filter((p) => {
-    if (seen.has(p.telefone_normalizado!)) {
+  // Determina o owner final de cada linha ANTES da deduplicação,
+  // pois duplicidade no fluxo de discagem é por (telefone + vendedor).
+  const validWithOwner = valid.map((p, i) => ({ row: p, owner: pickOwner(mode, i) ?? createdBy }));
+
+  const seen = new Set<string>(); // chave: `${phone}:${owner}`
+  const dedupedLocal: { row: ParsedRow; owner: string }[] = [];
+  for (const item of validWithOwner) {
+    const key = `${item.row.telefone_normalizado}:${item.owner}`;
+    if (seen.has(key)) {
       report.duplicatesInProspects++;
-      report.errors.push({ line: p.index, reason: "Telefone duplicado na planilha" });
-      return false;
+      report.errors.push({ line: item.row.index, reason: "Telefone duplicado na planilha para o mesmo vendedor" });
+      continue;
     }
-    seen.add(p.telefone_normalizado!);
-    return true;
-  });
+    seen.add(key);
+    dedupedLocal.push(item);
+  }
 
   if (dedupedLocal.length === 0) return report;
 
-  const phones = dedupedLocal.map((p) => p.telefone_normalizado!);
+  const phones = dedupedLocal.map((p) => p.row.telefone_normalizado!);
   const chunk = <T,>(arr: T[], n: number) => Array.from({ length: Math.ceil(arr.length / n) }, (_, i) => arr.slice(i * n, i * n + n));
 
   type Existing = { id: string; nome: string | null; empresa: string | null; cargo: string | null; origem: string | null; observacao: string | null; status_prospeccao: string | null; vendedor_responsavel_id: string | null };
-  const existingProspects = new Map<string, Existing>();
+  // Pode haver várias linhas com o mesmo telefone (uma por vendedor) — guardamos todas.
+  const existingByPhone = new Map<string, Existing[]>();
   for (const c of chunk(phones, 300)) {
     const { data } = await supabase.rpc("prospect_phones_lookup", { _phones: c });
-    (data ?? []).forEach((r: any) => existingProspects.set(r.telefone_normalizado, r));
+    (data ?? []).forEach((r: any) => {
+      const list = existingByPhone.get(r.telefone_normalizado) ?? [];
+      list.push(r);
+      existingByPhone.set(r.telefone_normalizado, list);
+    });
   }
+  const findExistingForOwner = (phone: string, owner: string): Existing | undefined => {
+    const list = existingByPhone.get(phone);
+    if (!list) return undefined;
+    return list.find((r) => r.vendedor_responsavel_id === owner);
+  };
 
-  const existingLeads = new Set<string>();
+  // Para o CRM (leads), também é por owner: o mesmo telefone pode existir para outro vendedor.
+  const existingLeadsByPhone = new Map<string, Set<string>>(); // phone -> set of owner_ids
   for (const c of chunk(phones, 300)) {
-    const { data } = await supabase.rpc("lead_phones_lookup", { _phones: c });
-    (data ?? []).forEach((r: any) => r.phone_normalized && existingLeads.add(r.phone_normalized));
+    const { data } = await supabase.from("leads").select("phone_normalized, owner_id").in("phone_normalized", c);
+    (data ?? []).forEach((r: any) => {
+      if (!r.phone_normalized || !r.owner_id) return;
+      const set = existingLeadsByPhone.get(r.phone_normalized) ?? new Set<string>();
+      set.add(r.owner_id);
+      existingLeadsByPhone.set(r.phone_normalized, set);
+    });
   }
 
   // separa novos x existentes
-  const toInsert: ParsedRow[] = [];
+  const toInsert: { row: ParsedRow; owner: string }[] = [];
   const toUpdate: { row: ParsedRow; existing: Existing }[] = [];
 
-  for (const p of dedupedLocal) {
-    const ex = existingProspects.get(p.telefone_normalizado!);
+  for (const item of dedupedLocal) {
+    const p = item.row;
+    const ex = findExistingForOwner(p.telefone_normalizado!, item.owner);
     if (ex) {
-      // Vendedor comum só pode atualizar contatos atribuídos a si mesmo
-      const canUpdate = options.isAdmin || ex.vendedor_responsavel_id === createdBy;
-      if (options.updateExisting && canUpdate) {
+      if (options.updateExisting) {
         toUpdate.push({ row: p, existing: ex });
       } else {
         report.duplicatesInProspects++;
-        report.errors.push({ line: p.index, reason: ex.vendedor_responsavel_id && ex.vendedor_responsavel_id !== createdBy && !options.isAdmin ? "Telefone já pertence a outro vendedor" : "Telefone já existe na Base de Prospecção" });
+        report.errors.push({ line: p.index, reason: "Telefone já existe na sua base de prospecção" });
       }
       continue;
     }
-    if (existingLeads.has(p.telefone_normalizado!)) {
+    const leadOwners = existingLeadsByPhone.get(p.telefone_normalizado!);
+    if (leadOwners && leadOwners.has(item.owner)) {
       report.duplicatesInLeads++;
-      report.errors.push({ line: p.index, reason: "Telefone já existe no CRM" });
+      report.errors.push({ line: p.index, reason: "Telefone já existe no seu CRM" });
       continue;
     }
-    toInsert.push(p);
+    toInsert.push(item);
   }
 
-  // INSERT novos
-  let idx = 0;
+  // INSERT novos — owner já foi determinado na etapa de deduplicação
   for (const batch of chunk(toInsert, 500)) {
-    const rows = batch.map((p) => {
-      const owner = pickOwner(mode, idx++);
-      return {
-        nome: p.nome,
-        telefone_original: p.telefone_original,
-        telefone_normalizado: p.telefone_normalizado!,
-        ddd: p.ddd,
-        empresa: p.empresa,
-        cargo: p.cargo,
-        origem: p.origem,
-        observacao: p.observacao,
-        vendedor_responsavel_id: owner,
-        assigned_at: owner ? new Date().toISOString() : null,
-        status_prospeccao: "Aguardando ligação",
-        created_by: createdBy,
-      };
-    });
+    const rows = batch.map(({ row: p, owner }) => ({
+      nome: p.nome,
+      telefone_original: p.telefone_original,
+      telefone_normalizado: p.telefone_normalizado!,
+      ddd: p.ddd,
+      empresa: p.empresa,
+      cargo: p.cargo,
+      origem: p.origem,
+      observacao: p.observacao,
+      vendedor_responsavel_id: owner,
+      assigned_at: owner ? new Date().toISOString() : null,
+      status_prospeccao: "Aguardando ligação",
+      created_by: createdBy,
+    }));
     const { error, count } = await supabase
       .from("prospect_contacts")
       .insert(rows, { count: "exact" });
@@ -317,7 +335,7 @@ export async function importProspects(
   }
 
   // Diagnóstico: contatos que ficaram sem dados-chave
-  for (const p of dedupedLocal) {
+  for (const { row: p } of dedupedLocal) {
     if (!p.nome) report.missingNome++;
     if (!p.empresa) report.missingEmpresa++;
     if (!p.cargo) report.missingCargo++;

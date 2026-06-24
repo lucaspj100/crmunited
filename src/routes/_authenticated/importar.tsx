@@ -78,12 +78,15 @@ function ImportPage() {
   });
 
   const { data: existingPhones = new Map() } = useQuery({
-    queryKey: ["leads-phones-norm"],
+    queryKey: ["leads-phones-norm-by-owner"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("leads").select("name, phone_normalized, owner_id").not("phone_normalized", "is", null).limit(10000);
+      const { data, error } = await supabase.from("leads").select("name, phone_normalized, owner_id").not("phone_normalized", "is", null).limit(50000);
       if (error) throw error;
+      // chave composta: `${phone_normalized}:${owner_id}` — duplicidade só dentro da base do mesmo vendedor
       const m = new Map<string, { name: string; owner_id: string }>();
-      (data ?? []).forEach((l: any) => { if (l.phone_normalized) m.set(l.phone_normalized, l); });
+      (data ?? []).forEach((l: any) => {
+        if (l.phone_normalized && l.owner_id) m.set(`${l.phone_normalized}:${l.owner_id}`, l);
+      });
       return m;
     },
   });
@@ -97,7 +100,8 @@ function ImportPage() {
     });
     const profById = new Map(profiles.map((p) => [p.id, p.full_name || p.email || "—"]));
 
-    const seenInSheet = new Set<string>();
+    const fallbackOwner = defaultOwner || user?.id || null;
+    const seenInSheet = new Set<string>(); // chave: `${phone}:${ownerId}`
     return rawRows.map((row, i) => {
       const mapped: any = { name: "", phone: "", company: "", source: "", observation: "", status: "", linkedin: "", ownerName: "" };
       for (const k of Object.keys(row)) {
@@ -109,20 +113,22 @@ function ImportPage() {
       const { normalized, valid } = normalizePhone(mapped.phone);
       const statusGuess = STATUS_MAP[mapped.status.toLowerCase()] || defaultStatus;
       const ownerId = mapped.ownerName ? profByName.get(mapped.ownerName.toLowerCase()) || null : (defaultOwner || null);
+      const effectiveOwnerId = ownerId || fallbackOwner;
+      const dupKey = normalized && effectiveOwnerId ? `${normalized}:${effectiveOwnerId}` : null;
 
       let category: ParsedLead["category"] = "ok";
       let dupInfo: ParsedLead["dupInfo"] | undefined;
 
       if (!mapped.name) category = "sem_nome";
       else if (normalized && !valid) category = "telefone_invalido";
-      else if (normalized && seenInSheet.has(normalized)) { category = "duplicado_planilha"; }
-      else if (normalized && existingPhones.has(normalized)) {
-        const ex = existingPhones.get(normalized)!;
+      else if (dupKey && seenInSheet.has(dupKey)) { category = "duplicado_planilha"; }
+      else if (dupKey && existingPhones.has(dupKey)) {
+        const ex = existingPhones.get(dupKey)!;
         category = "duplicado_crm";
         dupInfo = { leadName: ex.name, vendor: profById.get(ex.owner_id) || "—" };
-      } else if (!ownerId) category = "sem_vendedor";
+      } else if (!ownerId && !fallbackOwner) category = "sem_vendedor";
 
-      if (normalized && category === "ok") seenInSheet.add(normalized);
+      if (dupKey && category === "ok") seenInSheet.add(dupKey);
 
       return {
         index: i,
@@ -141,7 +147,7 @@ function ImportPage() {
         dupInfo,
       };
     });
-  }, [rawRows, profiles, existingPhones, defaultOwner, defaultStatus]);
+  }, [rawRows, profiles, existingPhones, defaultOwner, defaultStatus, user?.id]);
 
   const counts = useMemo(() => {
     const c = { total: parsed.length, ok: 0, dupPlan: 0, dupCRM: 0, invalid: 0, noName: 0, noOwner: 0 };
@@ -255,7 +261,7 @@ function ImportPage() {
 
           <div className="grid grid-cols-2 gap-2 md:grid-cols-6">
             <Stat icon={CheckCircle2} label="Válidos novos" value={counts.ok} tone="success" />
-            <Stat icon={Copy} label="Duplicados (CRM)" value={counts.dupCRM} tone="warning" />
+            <Stat icon={Copy} label="Duplicados do vendedor" value={counts.dupCRM} tone="warning" />
             <Stat icon={Copy} label="Duplicados (planilha)" value={counts.dupPlan} tone="warning" />
             <Stat icon={XCircle} label="Telefone inválido" value={counts.invalid} tone="danger" />
             <Stat icon={UserX} label="Sem vendedor" value={counts.noOwner} tone="warning" />
@@ -291,7 +297,7 @@ function ImportPage() {
                 ))}
               </tbody>
             </table>
-            {parsed.length > 500 && <div className="p-2 text-xs text-muted-foreground text-center">Mostrando 500 de {parsed.length} linhas. A importação considera todas.</div>}
+            {parsed.length > 500 && <div className="p-2 text-xs text-muted-foreground text-center">Prévia mostrando as primeiras 500 linhas de {parsed.length}. A importação processará todos os leads válidos.</div>}
           </Card>
 
           <div className="flex justify-end gap-2">
@@ -309,7 +315,7 @@ function ImportPage() {
 function CategoryBadge({ p }: { p: ParsedLead }) {
   switch (p.category) {
     case "ok": return <Badge className="bg-emerald-500/20 text-emerald-700 border-emerald-500/30">Pronto</Badge>;
-    case "duplicado_crm": return <Badge className="bg-amber-500/20 text-amber-700 border-amber-500/30" title={`Existe: ${p.dupInfo?.leadName} (${p.dupInfo?.vendor})`}>Duplicado (CRM)</Badge>;
+    case "duplicado_crm": return <Badge className="bg-amber-500/20 text-amber-700 border-amber-500/30" title={`Já existe na sua base: ${p.dupInfo?.leadName}`}>Duplicado do vendedor</Badge>;
     case "duplicado_planilha": return <Badge className="bg-amber-500/20 text-amber-700 border-amber-500/30">Duplicado na planilha</Badge>;
     case "telefone_invalido": return <Badge variant="destructive">Telefone inválido</Badge>;
     case "sem_nome": return <Badge variant="destructive">Sem nome</Badge>;
