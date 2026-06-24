@@ -290,26 +290,22 @@ export async function importProspects(
     toInsert.push(item);
   }
 
-  // INSERT novos
-  let idx = 0;
+  // INSERT novos — owner já foi determinado na etapa de deduplicação
   for (const batch of chunk(toInsert, 500)) {
-    const rows = batch.map((p) => {
-      const owner = pickOwner(mode, idx++);
-      return {
-        nome: p.nome,
-        telefone_original: p.telefone_original,
-        telefone_normalizado: p.telefone_normalizado!,
-        ddd: p.ddd,
-        empresa: p.empresa,
-        cargo: p.cargo,
-        origem: p.origem,
-        observacao: p.observacao,
-        vendedor_responsavel_id: owner,
-        assigned_at: owner ? new Date().toISOString() : null,
-        status_prospeccao: "Aguardando ligação",
-        created_by: createdBy,
-      };
-    });
+    const rows = batch.map(({ row: p, owner }) => ({
+      nome: p.nome,
+      telefone_original: p.telefone_original,
+      telefone_normalizado: p.telefone_normalizado!,
+      ddd: p.ddd,
+      empresa: p.empresa,
+      cargo: p.cargo,
+      origem: p.origem,
+      observacao: p.observacao,
+      vendedor_responsavel_id: owner,
+      assigned_at: owner ? new Date().toISOString() : null,
+      status_prospeccao: "Aguardando ligação",
+      created_by: createdBy,
+    }));
     const { error, count } = await supabase
       .from("prospect_contacts")
       .insert(rows, { count: "exact" });
