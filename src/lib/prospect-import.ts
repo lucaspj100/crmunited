@@ -169,18 +169,25 @@ export function mapRows(rows: RawRow[], mapping: ColumnMapping): ParsedRow[] {
   return out;
 }
 
+export type ImportError = { line: number; phone?: string | null; nome?: string | null; reason: string };
+
 export type ImportReport = {
   totalRows: number;
+  validRows: number;
   imported: number;
   updated: number;
   duplicatesInProspects: number;
   duplicatesInLeads: number;
+  duplicatesInFile: number;
   invalid: number;
+  missingPhone: number;
   missingNome: number;
   missingEmpresa: number;
   missingCargo: number;
-  errors: { line: number; reason: string }[];
+  errors: ImportError[];
 };
+
+
 
 
 export type DistributionMode =
