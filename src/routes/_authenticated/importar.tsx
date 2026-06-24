@@ -297,7 +297,7 @@ function ImportPage() {
                 ))}
               </tbody>
             </table>
-            {parsed.length > 500 && <div className="p-2 text-xs text-muted-foreground text-center">Mostrando 500 de {parsed.length} linhas. A importação considera todas.</div>}
+            {parsed.length > 500 && <div className="p-2 text-xs text-muted-foreground text-center">Prévia mostrando as primeiras 500 linhas de {parsed.length}. A importação processará todos os leads válidos.</div>}
           </Card>
 
           <div className="flex justify-end gap-2">
