@@ -204,6 +204,7 @@ export function WorkPanel() {
                   <div><span className="text-muted-foreground">Empresa:</span> {contact.empresa || "—"}</div>
                   <div><span className="text-muted-foreground">Origem:</span> {contact.origem || "—"}</div>
                   <div className="break-words"><span className="text-muted-foreground">Observação:</span> {contact.observacao || "—"}</div>
+                  <div className="break-all"><span className="text-muted-foreground">LinkedIn:</span> {contact.linkedin_url ? <a href={contact.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-primary underline">{contact.linkedin_url}</a> : "—"}</div>
                 </CollapsibleContent>
               </div>
             </Collapsible>
