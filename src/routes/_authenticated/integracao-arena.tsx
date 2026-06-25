@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
@@ -8,8 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Copy, Check, Link2, Search } from "lucide-react";
+import { Copy, Check, Link2, Search, RefreshCw, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import { resendArenaEvent } from "@/lib/arena-webhook.functions";
 
 export const Route = createFileRoute("/_authenticated/integracao-arena")({ component: IntegracaoArena });
 
@@ -197,6 +199,8 @@ function IntegracaoArena() {
         )}
       </Card>
 
+      <FailedEventsPanel />
+
       <Card className="p-4 bg-muted/40">
         <h2 className="text-sm font-semibold mb-1">Como usar</h2>
         <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
@@ -210,5 +214,118 @@ function IntegracaoArena() {
         </div>
       </Card>
     </div>
+  );
+}
+
+type FailedEvent = {
+  id: string;
+  event_type: string;
+  crm_lead_id: string | null;
+  http_status: number | null;
+  error_message: string | null;
+  attempts: number | null;
+  created_at: string;
+};
+
+function FailedEventsPanel() {
+  const qc = useQueryClient();
+  const resend = useServerFn(resendArenaEvent);
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ["arena-failed-events"],
+    queryFn: async (): Promise<FailedEvent[]> => {
+      const { data, error } = await supabase
+        .from("crm_outbound_events")
+        .select("id, event_type, crm_lead_id, http_status, error_message, attempts, created_at")
+        .eq("status", "failed")
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return (data ?? []) as FailedEvent[];
+    },
+  });
+
+  const onResend = async (id: string) => {
+    setBusyId(id);
+    try {
+      const res = (await resend({ data: { eventId: id } })) as { ok: boolean; error?: string | null };
+      if (res.ok) toast.success("Evento reenviado com sucesso");
+      else toast.error(`Falha ao reenviar: ${res.error ?? "erro desconhecido"}`);
+      qc.invalidateQueries({ queryKey: ["arena-failed-events"] });
+    } catch (err: any) {
+      toast.error(err?.message ?? "Erro ao reenviar evento");
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  return (
+    <Card className="p-3 md:p-4">
+      <div className="flex items-center justify-between gap-2 mb-3">
+        <div className="flex items-center gap-2">
+          <AlertCircle className="h-4 w-4 text-destructive" />
+          <h2 className="text-sm font-semibold">Eventos com falha (Arena)</h2>
+          <Badge variant="secondary">{data?.length ?? 0}</Badge>
+        </div>
+        <Button size="sm" variant="ghost" onClick={() => refetch()} className="gap-1.5">
+          <RefreshCw className="h-3.5 w-3.5" /> Atualizar
+        </Button>
+      </div>
+
+      {isLoading ? (
+        <div className="py-6 text-center text-muted-foreground text-sm">Carregando…</div>
+      ) : !data || data.length === 0 ? (
+        <div className="py-6 text-center text-muted-foreground text-sm">
+          Nenhum evento com falha. ✅
+        </div>
+      ) : (
+        <div className="rounded-md border overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Evento</TableHead>
+                <TableHead>Lead</TableHead>
+                <TableHead>HTTP</TableHead>
+                <TableHead>Erro</TableHead>
+                <TableHead>Tentativas</TableHead>
+                <TableHead>Quando</TableHead>
+                <TableHead className="w-[120px]">Ação</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.map((e) => (
+                <TableRow key={e.id}>
+                  <TableCell className="text-xs font-mono">{e.event_type}</TableCell>
+                  <TableCell className="text-[11px] font-mono break-all max-w-[180px]">
+                    {e.crm_lead_id ?? "—"}
+                  </TableCell>
+                  <TableCell>{e.http_status ?? "—"}</TableCell>
+                  <TableCell className="text-xs max-w-[260px] break-words text-destructive">
+                    {e.error_message ?? "—"}
+                  </TableCell>
+                  <TableCell className="text-xs">{e.attempts ?? 0}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">
+                    {new Date(e.created_at).toLocaleString("pt-BR")}
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onResend(e.id)}
+                      disabled={busyId === e.id}
+                      className="gap-1.5"
+                    >
+                      <RefreshCw className={`h-3.5 w-3.5 ${busyId === e.id ? "animate-spin" : ""}`} />
+                      Reenviar
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+    </Card>
   );
 }
