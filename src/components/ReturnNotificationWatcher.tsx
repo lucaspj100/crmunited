@@ -1,11 +1,13 @@
 import { useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { Phone, MessageCircle, Check, Clock, Linkedin } from "lucide-react";
+import { Phone, MessageCircle, Check, Clock, Linkedin, ListChecks } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { normalizeProspectPhone } from "@/lib/prospect-phone";
 import { playReturnSound } from "@/lib/notification-sound";
+type RouterInstance = ReturnType<typeof useRouter>;
 
 type RetornoTask = {
   id: string;
@@ -32,6 +34,7 @@ const POLL_MS = 30_000;
 export function ReturnNotificationWatcher() {
   const { user } = useAuth();
   const qc = useQueryClient();
+  const router = useRouter();
   const shownRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
@@ -79,7 +82,7 @@ export function ReturnNotificationWatcher() {
         }
 
         shownRef.current.add(raw.id);
-        showNotification(raw, contact, qc);
+        showNotification(raw, contact, qc, router);
         void playReturnSound().catch(() => {});
       }
     };
@@ -111,7 +114,7 @@ function extractSellerNote(observation: string | null): string | null {
   return trimmed || null;
 }
 
-function showNotification(task: RetornoTask, contact: ContactInfo | null, qc: ReturnType<typeof useQueryClient>) {
+function showNotification(task: RetornoTask, contact: ContactInfo | null, qc: ReturnType<typeof useQueryClient>, router: RouterInstance) {
   const nome = contact?.nome || "Contato sem nome";
   const empresa = contact?.empresa?.trim() || "Empresa não informada";
   const cargo = contact?.cargo?.trim() || "Cargo não informado";
@@ -125,13 +128,37 @@ function showNotification(task: RetornoTask, contact: ContactInfo | null, qc: Re
 
   const close = (t: string | number) => toast.dismiss(t);
 
+  const openInDiscador = (openResult: boolean) => {
+    if (!task.prospect_contact_id) {
+      toast.error("Esta tarefa não possui contato vinculado");
+      return;
+    }
+    router.navigate({
+      to: "/discador",
+      search: {
+        prospect_contact_id: task.prospect_contact_id,
+        open_result: openResult ? 1 : undefined,
+      },
+    });
+  };
+
   const conclude = async (t: string | number) => {
     const { error } = await supabase.from("tasks").update({ status: "concluida" }).eq("id", task.id);
     if (error) { toast.error(error.message); return; }
     qc.invalidateQueries({ queryKey: ["tasks"] });
     qc.invalidateQueries({ queryKey: ["retornos_pendentes"] });
     close(t);
-    toast.success("Retorno concluído");
+    if (task.prospect_contact_id) {
+      toast.success("Retorno concluído. Registre o resultado da conversa.");
+      openInDiscador(true);
+    } else {
+      toast.success("Retorno concluído");
+    }
+  };
+
+  const registerResult = (t: string | number) => {
+    close(t);
+    openInDiscador(true);
   };
 
   const snooze = async (t: string | number) => {
@@ -191,6 +218,9 @@ function showNotification(task: RetornoTask, contact: ContactInfo | null, qc: Re
               <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
             </a>
           ) : <span />}
+          <button onClick={() => registerResult(id)} className="col-span-2 inline-flex items-center justify-center gap-1.5 rounded-md bg-emerald-600 text-white text-xs px-2 py-1.5 hover:bg-emerald-700">
+            <ListChecks className="h-3.5 w-3.5" /> Registrar resultado
+          </button>
           <button onClick={() => void conclude(id)} className="inline-flex items-center justify-center gap-1.5 rounded-md border text-xs px-2 py-1.5 hover:bg-accent">
             <Check className="h-3.5 w-3.5" /> Concluir
           </button>

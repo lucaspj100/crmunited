@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,14 +11,43 @@ import { DashboardPanel } from "@/components/discador/DashboardPanel";
 import { ConfigPanel } from "@/components/discador/ConfigPanel";
 import { MyContactsPanel } from "@/components/discador/MyContactsPanel";
 
+type DiscadorSearch = {
+  prospect_contact_id?: string;
+  open_result?: number;
+};
+
 export const Route = createFileRoute("/_authenticated/discador")({
+  validateSearch: (raw: Record<string, unknown>): DiscadorSearch => {
+    const id = typeof raw.prospect_contact_id === "string" ? raw.prospect_contact_id : undefined;
+    const openRaw = raw.open_result;
+    const open = typeof openRaw === "number" ? openRaw : typeof openRaw === "string" ? Number(openRaw) : undefined;
+    return {
+      prospect_contact_id: id,
+      open_result: Number.isFinite(open) ? open : undefined,
+    };
+  },
   component: DiscadorPage,
 });
 
 function DiscadorPage() {
   const { roles } = useAuth();
   const isAdmin = roles.includes("admin") || roles.includes("franqueado");
-  const [tab, setTab] = useState("trabalhar");
+  const search = Route.useSearch();
+  const navigate = useNavigate();
+  const [tab, setTab] = useState(search.prospect_contact_id ? "trabalhar" : "trabalhar");
+
+  // Se chegou com prospect_contact_id, força a aba Trabalhar
+  useEffect(() => {
+    if (search.prospect_contact_id) setTab("trabalhar");
+  }, [search.prospect_contact_id]);
+
+  const clearFocus = () => {
+    navigate({
+      to: "/discador",
+      search: { prospect_contact_id: undefined, open_result: undefined },
+      replace: true,
+    });
+  };
 
   const { data: sellers = [] } = useQuery({
     enabled: isAdmin,
@@ -51,7 +80,13 @@ function DiscadorPage() {
           </TabsList>
         </div>
 
-        <TabsContent value="trabalhar" className="mt-4"><WorkPanel /></TabsContent>
+        <TabsContent value="trabalhar" className="mt-4">
+          <WorkPanel
+            focusContactId={search.prospect_contact_id}
+            autoOpenResult={search.open_result === 1}
+            onFocusConsumed={clearFocus}
+          />
+        </TabsContent>
         <TabsContent value="minha-lista" className="mt-4"><MyContactsPanel /></TabsContent>
         {isAdmin && <TabsContent value="base" className="mt-4"><BasePanel sellers={sellers} /></TabsContent>}
         <TabsContent value="importar" className="mt-4"><ImportPanel sellers={sellers} isAdmin={isAdmin} /></TabsContent>
