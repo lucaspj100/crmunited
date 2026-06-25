@@ -128,13 +128,37 @@ function showNotification(task: RetornoTask, contact: ContactInfo | null, qc: Re
 
   const close = (t: string | number) => toast.dismiss(t);
 
+  const openInDiscador = (openResult: boolean) => {
+    if (!task.prospect_contact_id) {
+      toast.error("Esta tarefa não possui contato vinculado");
+      return;
+    }
+    router.navigate({
+      to: "/discador",
+      search: {
+        prospect_contact_id: task.prospect_contact_id,
+        open_result: openResult ? 1 : undefined,
+      },
+    });
+  };
+
   const conclude = async (t: string | number) => {
     const { error } = await supabase.from("tasks").update({ status: "concluida" }).eq("id", task.id);
     if (error) { toast.error(error.message); return; }
     qc.invalidateQueries({ queryKey: ["tasks"] });
     qc.invalidateQueries({ queryKey: ["retornos_pendentes"] });
     close(t);
-    toast.success("Retorno concluído");
+    if (task.prospect_contact_id) {
+      toast.success("Retorno concluído. Registre o resultado da conversa.");
+      openInDiscador(true);
+    } else {
+      toast.success("Retorno concluído");
+    }
+  };
+
+  const registerResult = (t: string | number) => {
+    close(t);
+    openInDiscador(true);
   };
 
   const snooze = async (t: string | number) => {
