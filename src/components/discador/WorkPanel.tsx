@@ -371,9 +371,8 @@ export function WorkPanel() {
         <ResultDialog
           open={resultOpen}
           onOpenChange={setResultOpen}
-          contactId={contact.id}
+          contact={contact}
           vendedorId={user.id}
-          telefone={contact.telefone_normalizado}
           initialAction={lastAction}
           onSaved={onResultSaved}
         />
