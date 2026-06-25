@@ -127,6 +127,7 @@ export function WorkPanel() {
 
   return (
     <>
+      <div className="mb-3"><ReturnsDebugCard contact={contact} /></div>
       {/* ============================== MOBILE (<768px) ============================== */}
       <div className="md:hidden w-full max-w-full overflow-x-hidden pb-[140px] space-y-3">
         {/* Linha de indicadores compacta */}
