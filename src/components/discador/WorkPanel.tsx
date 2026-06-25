@@ -16,6 +16,7 @@ import { ResultDialog } from "./ResultDialog";
 import { ConvertLeadDialog } from "./ConvertLeadDialog";
 import { EditContactDialog } from "./EditContactDialog";
 import { AttemptHistory } from "./AttemptHistory";
+import { ReturnsDebugCard } from "./ReturnsDebugCard";
 import { toast } from "sonner";
 
 export function WorkPanel() {
@@ -127,6 +128,7 @@ export function WorkPanel() {
 
   return (
     <>
+      <div className="mb-3"><ReturnsDebugCard contact={contact} /></div>
       {/* ============================== MOBILE (<768px) ============================== */}
       <div className="md:hidden w-full max-w-full overflow-x-hidden pb-[140px] space-y-3">
         {/* Linha de indicadores compacta */}
