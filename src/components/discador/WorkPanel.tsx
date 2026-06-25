@@ -16,6 +16,7 @@ import { ResultDialog } from "./ResultDialog";
 import { ConvertLeadDialog } from "./ConvertLeadDialog";
 import { EditContactDialog } from "./EditContactDialog";
 import { AttemptHistory } from "./AttemptHistory";
+import { ReturnsDebugCard } from "./ReturnsDebugCard";
 import { toast } from "sonner";
 
 export function WorkPanel() {
