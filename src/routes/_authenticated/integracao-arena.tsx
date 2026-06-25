@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
@@ -8,8 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Copy, Check, Link2, Search } from "lucide-react";
+import { Copy, Check, Link2, Search, RefreshCw, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import { resendArenaEvent } from "@/lib/arena-webhook.functions";
 
 export const Route = createFileRoute("/_authenticated/integracao-arena")({ component: IntegracaoArena });
 
