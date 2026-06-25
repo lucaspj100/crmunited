@@ -114,7 +114,7 @@ function extractSellerNote(observation: string | null): string | null {
   return trimmed || null;
 }
 
-function showNotification(task: RetornoTask, contact: ContactInfo | null, qc: ReturnType<typeof useQueryClient>) {
+function showNotification(task: RetornoTask, contact: ContactInfo | null, qc: ReturnType<typeof useQueryClient>, router: Router) {
   const nome = contact?.nome || "Contato sem nome";
   const empresa = contact?.empresa?.trim() || "Empresa não informada";
   const cargo = contact?.cargo?.trim() || "Cargo não informado";
