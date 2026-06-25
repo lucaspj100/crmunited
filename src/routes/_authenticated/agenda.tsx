@@ -16,6 +16,7 @@ import { waLink, labelFor, statusColor, LOST_REASONS, LEAD_STATUSES } from "@/li
 import { buildMessage, pickPresetKey, copyToClipboard, rawPhoneDigits, MESSAGE_LIBRARY } from "@/lib/messages";
 import { LeadDetailsDialog } from "@/components/LeadDetailsDialog";
 import { logLeadEvent } from "@/lib/lead-events";
+import { notifyArena } from "@/lib/arena-dispatch";
 import {
   Calendar as CalendarIcon, Check, X, RotateCw, GraduationCap, MessageCircle,
   Phone, Eye, Copy, AlertTriangle, CheckCircle2, Clock, Users,
@@ -170,6 +171,7 @@ function AgendaPage() {
       due_date: isoPlus(1), status: "pendente", observation: "Follow-up pós-entrevista",
     });
     await logLeadEvent({ leadId: l.id, type: "interview_done", description: notes?.trim() || undefined });
+    notifyArena(l.id, "crm_interview_done");
     await logLeadEvent({ leadId: l.id, type: "task_created", description: "Follow-up pós-entrevista (amanhã)" });
     toast.success("Entrevista realizada · follow-up criado para amanhã");
     setInterview(null); refresh();
@@ -180,6 +182,7 @@ function AgendaPage() {
       due_date: today, status: "pendente", observation: "No-show — reagendar entrevista",
     });
     await logLeadEvent({ leadId: l.id, type: "interview_no_show", description: `Entrevista de ${l.interview_date} não compareceu` });
+    notifyArena(l.id, "crm_interview_no_show");
     toast.success("No-show registrado · tarefa de reagendar criada");
     refresh();
   }
@@ -192,6 +195,7 @@ function AgendaPage() {
     await supabase.from("tasks").update({ status: "concluida" })
       .eq("lead_id", l.id).eq("type", "reagendar_entrevista").eq("status", "pendente");
     await logLeadEvent({ leadId: l.id, type: "interview_rescheduled", description: `Reagendada para ${date}${time ? " às " + time : ""}` });
+    notifyArena(l.id, "crm_interview_rescheduled");
     toast.success("Entrevista reagendada");
     setResched(null); refresh();
   }
@@ -203,6 +207,7 @@ function AgendaPage() {
     const { error } = await supabase.from("leads").update(updates).eq("id", l.id);
     if (error) { toast.error("Erro ao matricular"); return; }
     await logLeadEvent({ leadId: l.id, type: "enrolled", description: `Matrícula: ${valorMatricula || "—"} · Mensalidade: ${mensalidade || "—"}`, metadata: updates });
+    notifyArena(l.id, "crm_enrollment_created");
     toast.success("Matrícula registrada 🎉");
     setEnrol(null); refresh();
   }
@@ -210,6 +215,8 @@ function AgendaPage() {
     const { error } = await supabase.from("leads").update({ status: "perdido", lost_reason: (reason || null) as any }).eq("id", l.id);
     if (error) { toast.error("Erro"); return; }
     await logLeadEvent({ leadId: l.id, type: "lost", description: reason ? `Motivo: ${reason}` : undefined });
+    // Lead foi marcado como perdido a partir da agenda → necessariamente havia entrevista
+    notifyArena(l.id, "crm_lost_after_interview");
     toast.success("Lead marcado como perdido");
     setLost(null); refresh();
   }

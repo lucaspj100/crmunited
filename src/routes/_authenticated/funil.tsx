@@ -20,6 +20,7 @@ import { LeadDetailsDialog } from "@/components/LeadDetailsDialog";
 import { QuickTaskDialog } from "@/components/QuickTaskDialog";
 import { ensureTaskForStatus } from "@/lib/task-automation";
 import { logLeadEvent } from "@/lib/lead-events";
+import { notifyArena } from "@/lib/arena-dispatch";
 import { labelFor, TASK_TYPES } from "@/lib/constants";
 import { toast } from "sonner";
 
@@ -325,6 +326,7 @@ function InterviewDialog({ lead, onClose, onSaved }: { lead: Lead | null; onClos
     if (error) toast.error(error.message);
     else {
       await logLeadEvent({ leadId: lead.id, type: "interview_scheduled", description: `Entrevista marcada para ${date}${time ? " às " + time : ""}` });
+      notifyArena(lead.id, "crm_interview_scheduled");
       toast.success("Entrevista marcada"); onSaved(); onClose();
     }
   };
@@ -413,6 +415,8 @@ function LostDialog({ lead, onClose, onSaved }: { lead: Lead | null; onClose: ()
     if (error) toast.error(error.message);
     else {
       await logLeadEvent({ leadId: lead.id, type: "lost", description: `Motivo: ${reason}${rescueDate ? ` · Resgate em ${rescueDate}` : ""}`, metadata: { reason, lostType, rescueDate } });
+      // Apenas notifica perda à Arena quando já houve entrevista no histórico
+      if (lead.interview_date) notifyArena(lead.id, "crm_lost_after_interview");
       toast.success("Lead marcado como perdido"); onSaved(); onClose();
     }
   };
@@ -500,6 +504,7 @@ function MatriculaDialog({ lead, onClose, onSaved }: { lead: Lead | null; onClos
     if (error) toast.error(error.message);
     else {
       await logLeadEvent({ leadId: lead.id, type: "enrolled", description: `Matrícula R$ ${ev} · Mensalidade R$ ${mv} · Material R$ ${mt}`, metadata: { ev, mv, mt } });
+      notifyArena(lead.id, "crm_enrollment_created");
       toast.success("Matrícula registrada"); onSaved(); onClose();
     }
   };

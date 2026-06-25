@@ -38,6 +38,53 @@ export type Database = {
         }
         Relationships: []
       }
+      crm_outbound_events: {
+        Row: {
+          attempts: number
+          created_at: string
+          crm_lead_id: string
+          error_message: string | null
+          event_type: string
+          http_status: number | null
+          id: string
+          payload: Json
+          sent_at: string | null
+          status: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          crm_lead_id: string
+          error_message?: string | null
+          event_type: string
+          http_status?: number | null
+          id?: string
+          payload: Json
+          sent_at?: string | null
+          status?: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          crm_lead_id?: string
+          error_message?: string | null
+          event_type?: string
+          http_status?: number | null
+          id?: string
+          payload?: Json
+          sent_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_outbound_events_crm_lead_id_fkey"
+            columns: ["crm_lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       google_oauth_tokens: {
         Row: {
           access_token: string

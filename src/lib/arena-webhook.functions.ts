@@ -1,0 +1,139 @@
+import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
+const ARENA_EVENT_TYPES = [
+  "crm_interview_scheduled",
+  "crm_interview_done",
+  "crm_interview_no_show",
+  "crm_interview_rescheduled",
+  "crm_enrollment_created",
+  "crm_lost_after_interview",
+] as const;
+
+export type ArenaEventType = (typeof ARENA_EVENT_TYPES)[number];
+
+function isArenaEventType(v: unknown): v is ArenaEventType {
+  return typeof v === "string" && (ARENA_EVENT_TYPES as readonly string[]).includes(v);
+}
+
+export const dispatchArenaEvent = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { leadId: string; eventType: ArenaEventType }) => {
+    if (!input || typeof input.leadId !== "string" || !isArenaEventType(input.eventType)) {
+      throw new Error("invalid input");
+    }
+    return input;
+  })
+  .handler(async ({ data, context }) => {
+    const { leadId, eventType } = data;
+    const webhookUrl = process.env.ARENA_CRM_WEBHOOK_URL;
+    const secret = process.env.CRM_WEBHOOK_SECRET;
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // Load lead via user-scoped client (RLS protects access)
+    const { data: lead, error: leadErr } = await context.supabase
+      .from("leads")
+      .select(
+        "id, name, phone, owner_id, status, interview_date, interview_time, interview_notes, enrollment_value, monthly_fee, material_value"
+      )
+      .eq("id", leadId)
+      .maybeSingle();
+
+    if (leadErr || !lead) {
+      return { ok: false, skipped: true, reason: leadErr?.message ?? "lead_not_found" };
+    }
+
+    // Dedupe enrollments per lead
+    if (eventType === "crm_enrollment_created") {
+      const { data: existing } = await supabaseAdmin
+        .from("crm_outbound_events")
+        .select("id")
+        .eq("crm_lead_id", leadId)
+        .eq("event_type", "crm_enrollment_created")
+        .eq("status", "sent")
+        .maybeSingle();
+      if (existing) return { ok: true, skipped: true, reason: "already_sent" };
+    }
+
+    const occurredAt = new Date().toISOString();
+    const payload = {
+      event_type: eventType,
+      crm_lead_id: lead.id,
+      crm_user_id: lead.owner_id,
+      lead_name: lead.name,
+      lead_phone: lead.phone,
+      interview_date: lead.interview_date,
+      interview_time: lead.interview_time,
+      interview_notes: lead.interview_notes,
+      enrollment_value: lead.enrollment_value,
+      monthly_fee: lead.monthly_fee,
+      material_value: lead.material_value,
+      status: lead.status,
+      occurred_at: occurredAt,
+    };
+
+    // Insert log row (pending)
+    const { data: logRow } = await supabaseAdmin
+      .from("crm_outbound_events")
+      .insert({ event_type: eventType, crm_lead_id: lead.id, payload, status: "pending", attempts: 0 })
+      .select("id")
+      .single();
+    const logId = logRow?.id as string | undefined;
+
+    if (!webhookUrl || !secret) {
+      const msg = "ARENA_CRM_WEBHOOK_URL ou CRM_WEBHOOK_SECRET não configurados";
+      if (logId) {
+        await supabaseAdmin
+          .from("crm_outbound_events")
+          .update({ status: "failed", error_message: msg, attempts: 1 })
+          .eq("id", logId);
+      }
+      console.error("[arena-webhook]", msg);
+      return { ok: false, skipped: true, reason: "missing_config" };
+    }
+
+    // Sign with HMAC-SHA256
+    const body = JSON.stringify(payload);
+    const { createHmac } = await import("node:crypto");
+    const signature = createHmac("sha256", secret).update(body).digest("hex");
+
+    let httpStatus: number | null = null;
+    let errorMessage: string | null = null;
+    let ok = false;
+    try {
+      const res = await fetch(webhookUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Webhook-Signature": `sha256=${signature}`,
+          "X-CRM-Event": eventType,
+        },
+        body,
+      });
+      httpStatus = res.status;
+      ok = res.ok;
+      if (!ok) {
+        const txt = await res.text().catch(() => "");
+        errorMessage = `HTTP ${res.status}: ${txt.slice(0, 500)}`;
+      }
+    } catch (err: any) {
+      errorMessage = err?.message ?? String(err);
+    }
+
+    if (logId) {
+      await supabaseAdmin
+        .from("crm_outbound_events")
+        .update({
+          status: ok ? "sent" : "failed",
+          error_message: errorMessage,
+          http_status: httpStatus,
+          attempts: 1,
+          sent_at: ok ? new Date().toISOString() : null,
+        })
+        .eq("id", logId);
+    }
+
+    if (!ok) console.error("[arena-webhook] falha", { eventType, leadId, httpStatus, errorMessage });
+    return { ok, httpStatus, error: errorMessage };
+  });
