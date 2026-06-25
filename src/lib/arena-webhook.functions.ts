@@ -181,7 +181,7 @@ export const resendArenaEvent = createServerFn({ method: "POST" })
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-CRM-Signature": `sha256=${signature}`,
+          "X-CRM-Signature": signature,
           "X-CRM-Event": String(ev.event_type),
         },
         body,
