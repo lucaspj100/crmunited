@@ -29,6 +29,7 @@ export const Route = createFileRoute("/_authenticated/funil")({ component: Funil
 type Lead = {
   id: string; name: string; phone: string | null; company: string | null;
   linkedin_url: string | null; status: string; owner_id: string;
+  source: string | null;
   created_at: string; updated_at: string; last_contact_at: string | null;
   interview_date: string | null; interview_time: string | null;
 };
