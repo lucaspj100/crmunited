@@ -213,6 +213,11 @@ function FunilPage() {
                         <div className="min-w-0">
                           <div className="font-medium text-sm truncate">{l.name}</div>
                           {l.company && <div className="text-xs text-muted-foreground truncate">{l.company}</div>}
+                          {l.source === "Discador" && (
+                            <span className="mt-1 inline-flex items-center rounded-full border border-purple-500/40 bg-purple-500/10 px-1.5 py-0 text-[9px] font-medium text-purple-700 dark:text-purple-300">
+                              Discador
+                            </span>
+                          )}
                         </div>
                         <span title={tempMeta.label} className={`shrink-0 inline-flex items-center justify-center h-5 px-1.5 rounded-full border text-[10px] ${tempMeta.color}`}>
                           {tempMeta.emoji}
