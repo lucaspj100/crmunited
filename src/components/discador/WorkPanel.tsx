@@ -19,7 +19,13 @@ import { AttemptHistory } from "./AttemptHistory";
 import { ReturnsDebugCard } from "./ReturnsDebugCard";
 import { toast } from "sonner";
 
-export function WorkPanel() {
+type Props = {
+  focusContactId?: string;
+  autoOpenResult?: boolean;
+  onFocusConsumed?: () => void;
+};
+
+export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: Props = {}) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [contact, setContact] = useState<ProspectContact | null>(null);
@@ -31,6 +37,17 @@ export function WorkPanel() {
   const [contextOpen, setContextOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
 
+  const loadContactById = async (id: string) => {
+    setLoading(true);
+    const { data, error } = await supabase.from("prospect_contacts").select("*").eq("id", id).maybeSingle();
+    setLoading(false);
+    if (error) { toast.error(`Erro ao carregar contato: ${error.message}`); return null; }
+    if (!data) { toast.error("Contato não encontrado"); return null; }
+    setContact(data as ProspectContact);
+    qc.invalidateQueries({ queryKey: ["prospect_attempts", (data as ProspectContact).id] });
+    return data as ProspectContact;
+  };
+
   const loadNext = async () => {
     if (!user) return;
     setLoading(true);
@@ -40,7 +57,24 @@ export function WorkPanel() {
     if (!next) toast.info("Sem contatos pendentes na sua fila");
   };
 
-  useEffect(() => { void loadNext(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [user?.id]);
+  useEffect(() => { if (!focusContactId) void loadNext(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [user?.id]);
+
+  // Foco vindo da URL (ex.: notificação de retorno → /discador?prospect_contact_id=…&open_result=1)
+  useEffect(() => {
+    if (!focusContactId || !user) return;
+    let cancelled = false;
+    (async () => {
+      const c = await loadContactById(focusContactId);
+      if (cancelled) return;
+      if (c && autoOpenResult) {
+        setLastAction(undefined);
+        setResultOpen(true);
+      }
+      onFocusConsumed?.();
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusContactId, autoOpenResult, user?.id]);
 
   const { data: counts } = useQuery({
     queryKey: ["prospect_counts", user?.id],
