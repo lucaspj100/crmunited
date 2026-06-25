@@ -589,9 +589,10 @@ export type Database = {
           due_time: string | null
           id: string
           is_rescue: boolean
-          lead_id: string
+          lead_id: string | null
           observation: string | null
           owner_id: string
+          prospect_contact_id: string | null
           rescue_reason: Database["public"]["Enums"]["lost_reason"] | null
           status: Database["public"]["Enums"]["task_status"]
           type: Database["public"]["Enums"]["task_type"]
@@ -603,9 +604,10 @@ export type Database = {
           due_time?: string | null
           id?: string
           is_rescue?: boolean
-          lead_id: string
+          lead_id?: string | null
           observation?: string | null
           owner_id: string
+          prospect_contact_id?: string | null
           rescue_reason?: Database["public"]["Enums"]["lost_reason"] | null
           status?: Database["public"]["Enums"]["task_status"]
           type?: Database["public"]["Enums"]["task_type"]
@@ -617,9 +619,10 @@ export type Database = {
           due_time?: string | null
           id?: string
           is_rescue?: boolean
-          lead_id?: string
+          lead_id?: string | null
           observation?: string | null
           owner_id?: string
+          prospect_contact_id?: string | null
           rescue_reason?: Database["public"]["Enums"]["lost_reason"] | null
           status?: Database["public"]["Enums"]["task_status"]
           type?: Database["public"]["Enums"]["task_type"]
@@ -631,6 +634,13 @@ export type Database = {
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_prospect_contact_id_fkey"
+            columns: ["prospect_contact_id"]
+            isOneToOne: false
+            referencedRelation: "prospect_contacts"
             referencedColumns: ["id"]
           },
         ]
@@ -722,6 +732,7 @@ export type Database = {
         | "outro"
         | "primeiro_contato"
         | "ligar"
+        | "retorno_ligacao"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -885,6 +896,7 @@ export const Constants = {
         "outro",
         "primeiro_contato",
         "ligar",
+        "retorno_ligacao",
       ],
     },
   },

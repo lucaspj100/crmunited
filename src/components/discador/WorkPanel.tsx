@@ -115,6 +115,8 @@ export function WorkPanel() {
   const onResultSaved = async (goNext: boolean) => {
     qc.invalidateQueries({ queryKey: ["prospect_counts"] });
     qc.invalidateQueries({ queryKey: ["prospect_attempts", contact?.id] });
+    qc.invalidateQueries({ queryKey: ["leads"] });
+    qc.invalidateQueries({ queryKey: ["tasks"] });
     if (goNext) await loadNext(); else {
       if (contact) {
         const { data } = await supabase.from("prospect_contacts").select("*").eq("id", contact.id).single();
@@ -371,9 +373,8 @@ export function WorkPanel() {
         <ResultDialog
           open={resultOpen}
           onOpenChange={setResultOpen}
-          contactId={contact.id}
+          contact={contact}
           vendedorId={user.id}
-          telefone={contact.telefone_normalizado}
           initialAction={lastAction}
           onSaved={onResultSaved}
         />
