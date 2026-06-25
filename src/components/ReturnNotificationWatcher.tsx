@@ -82,7 +82,7 @@ export function ReturnNotificationWatcher() {
         }
 
         shownRef.current.add(raw.id);
-        showNotification(raw, contact, qc);
+        showNotification(raw, contact, qc, router);
         void playReturnSound().catch(() => {});
       }
     };
