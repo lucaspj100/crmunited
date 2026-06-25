@@ -199,6 +199,8 @@ function IntegracaoArena() {
         )}
       </Card>
 
+      <FailedEventsPanel />
+
       <Card className="p-4 bg-muted/40">
         <h2 className="text-sm font-semibold mb-1">Como usar</h2>
         <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
