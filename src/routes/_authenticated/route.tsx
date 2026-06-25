@@ -5,6 +5,7 @@ import { useBrand } from "@/lib/brand";
 import { LayoutDashboard, Users, Kanban, ListChecks, RotateCw, BarChart3, LogOut, Settings, Upload, TrendingDown, Zap, Trophy, Calendar, PhoneCall, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { ReturnNotificationWatcher } from "@/components/ReturnNotificationWatcher";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
