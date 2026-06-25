@@ -34,7 +34,17 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
     if (result === "Ligar depois" && !proxima) { toast.error("Informe data/hora da próxima tentativa"); return; }
     setSaving(true);
 
-    const proximaIso = result === "Ligar depois" ? new Date(proxima).toISOString() : null;
+    // Parse datetime-local sem timezone (mantém o horário local digitado)
+    let due_date = "";
+    let due_time = "";
+    let proximaIso: string | null = null;
+    if (result === "Ligar depois") {
+      const [datePart, timePartRaw] = proxima.split("T");
+      due_date = datePart;
+      due_time = timePartRaw && timePartRaw.length === 5 ? `${timePartRaw}:00` : (timePartRaw ?? "00:00:00");
+      // Para registrar em prospect_contacts.proxima_tentativa usamos ISO do horário local
+      proximaIso = new Date(`${due_date}T${due_time}`).toISOString();
+    }
     const patch = applyResultToFields(result, proximaIso);
 
     const { error: e1 } = await supabase.from("prospect_contacts").update(patch as never).eq("id", contactId);
@@ -50,27 +60,33 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
     });
 
     // 1) Ligar depois → criar tarefa de retorno
-    if (result === "Ligar depois" && proximaIso) {
-      const d = new Date(proximaIso);
-      const due_date = d.toISOString().slice(0, 10);
-      const due_time = d.toTimeString().slice(0, 8);
+    if (result === "Ligar depois" && due_date) {
       const nome = contact.nome || "Contato";
       const tel = contact.telefone_original || `+${telefone}`;
-      const { error: te } = await supabase.from("tasks").insert({
+      const payload = {
         owner_id: vendedorId,
         prospect_contact_id: contactId,
         lead_id: contact.lead_id ?? null,
-        type: "retorno_ligacao" as never,
+        type: "retorno_ligacao",
         status: "pendente",
         due_date,
         due_time,
         observation: `Retornar ligação para ${nome} - ${tel}${obs ? `\n${obs}` : ""}`,
-      } as never);
+      };
+      console.log("[ResultDialog] criando task retorno_ligacao", payload);
+      const { data: inserted, error: te } = await supabase
+        .from("tasks")
+        .insert(payload as never)
+        .select("id")
+        .maybeSingle();
       if (te) {
-        // Não bloqueia o fluxo, mas avisa
+        console.error("[ResultDialog] falha ao criar task retorno_ligacao", te);
         toast.error(`Resultado salvo, tarefa de retorno falhou: ${te.message}`);
       } else {
-        toast.success("Retorno agendado");
+        console.log("[ResultDialog] task criada", inserted);
+        const [hh, mm] = due_time.split(":");
+        const [yyyy, mo, dd] = due_date.split("-");
+        toast.success(`Retorno agendado para ${dd}/${mo} às ${hh}:${mm}`);
       }
     }
 
