@@ -18,6 +18,7 @@ import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authentic
 import { Route as AuthenticatedPerdidosRouteImport } from './routes/_authenticated/perdidos'
 import { Route as AuthenticatedPainelAdmRouteImport } from './routes/_authenticated/painel-adm'
 import { Route as AuthenticatedLeadsRouteImport } from './routes/_authenticated/leads'
+import { Route as AuthenticatedIntegracaoArenaRouteImport } from './routes/_authenticated/integracao-arena'
 import { Route as AuthenticatedImportarRouteImport } from './routes/_authenticated/importar'
 import { Route as AuthenticatedFunilRouteImport } from './routes/_authenticated/funil'
 import { Route as AuthenticatedFilaRouteImport } from './routes/_authenticated/fila'
@@ -70,6 +71,12 @@ const AuthenticatedLeadsRoute = AuthenticatedLeadsRouteImport.update({
   path: '/leads',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedIntegracaoArenaRoute =
+  AuthenticatedIntegracaoArenaRouteImport.update({
+    id: '/integracao-arena',
+    path: '/integracao-arena',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedImportarRoute = AuthenticatedImportarRouteImport.update({
   id: '/importar',
   path: '/importar',
@@ -117,6 +124,7 @@ export interface FileRoutesByFullPath {
   '/fila': typeof AuthenticatedFilaRoute
   '/funil': typeof AuthenticatedFunilRoute
   '/importar': typeof AuthenticatedImportarRoute
+  '/integracao-arena': typeof AuthenticatedIntegracaoArenaRoute
   '/leads': typeof AuthenticatedLeadsRoute
   '/painel-adm': typeof AuthenticatedPainelAdmRoute
   '/perdidos': typeof AuthenticatedPerdidosRoute
@@ -134,6 +142,7 @@ export interface FileRoutesByTo {
   '/fila': typeof AuthenticatedFilaRoute
   '/funil': typeof AuthenticatedFunilRoute
   '/importar': typeof AuthenticatedImportarRoute
+  '/integracao-arena': typeof AuthenticatedIntegracaoArenaRoute
   '/leads': typeof AuthenticatedLeadsRoute
   '/painel-adm': typeof AuthenticatedPainelAdmRoute
   '/perdidos': typeof AuthenticatedPerdidosRoute
@@ -153,6 +162,7 @@ export interface FileRoutesById {
   '/_authenticated/fila': typeof AuthenticatedFilaRoute
   '/_authenticated/funil': typeof AuthenticatedFunilRoute
   '/_authenticated/importar': typeof AuthenticatedImportarRoute
+  '/_authenticated/integracao-arena': typeof AuthenticatedIntegracaoArenaRoute
   '/_authenticated/leads': typeof AuthenticatedLeadsRoute
   '/_authenticated/painel-adm': typeof AuthenticatedPainelAdmRoute
   '/_authenticated/perdidos': typeof AuthenticatedPerdidosRoute
@@ -172,6 +182,7 @@ export interface FileRouteTypes {
     | '/fila'
     | '/funil'
     | '/importar'
+    | '/integracao-arena'
     | '/leads'
     | '/painel-adm'
     | '/perdidos'
@@ -189,6 +200,7 @@ export interface FileRouteTypes {
     | '/fila'
     | '/funil'
     | '/importar'
+    | '/integracao-arena'
     | '/leads'
     | '/painel-adm'
     | '/perdidos'
@@ -207,6 +219,7 @@ export interface FileRouteTypes {
     | '/_authenticated/fila'
     | '/_authenticated/funil'
     | '/_authenticated/importar'
+    | '/_authenticated/integracao-arena'
     | '/_authenticated/leads'
     | '/_authenticated/painel-adm'
     | '/_authenticated/perdidos'
@@ -286,6 +299,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLeadsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/integracao-arena': {
+      id: '/_authenticated/integracao-arena'
+      path: '/integracao-arena'
+      fullPath: '/integracao-arena'
+      preLoaderRoute: typeof AuthenticatedIntegracaoArenaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/importar': {
       id: '/_authenticated/importar'
       path: '/importar'
@@ -346,6 +366,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFilaRoute: typeof AuthenticatedFilaRoute
   AuthenticatedFunilRoute: typeof AuthenticatedFunilRoute
   AuthenticatedImportarRoute: typeof AuthenticatedImportarRoute
+  AuthenticatedIntegracaoArenaRoute: typeof AuthenticatedIntegracaoArenaRoute
   AuthenticatedLeadsRoute: typeof AuthenticatedLeadsRoute
   AuthenticatedPainelAdmRoute: typeof AuthenticatedPainelAdmRoute
   AuthenticatedPerdidosRoute: typeof AuthenticatedPerdidosRoute
@@ -362,6 +383,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedFilaRoute: AuthenticatedFilaRoute,
   AuthenticatedFunilRoute: AuthenticatedFunilRoute,
   AuthenticatedImportarRoute: AuthenticatedImportarRoute,
+  AuthenticatedIntegracaoArenaRoute: AuthenticatedIntegracaoArenaRoute,
   AuthenticatedLeadsRoute: AuthenticatedLeadsRoute,
   AuthenticatedPainelAdmRoute: AuthenticatedPainelAdmRoute,
   AuthenticatedPerdidosRoute: AuthenticatedPerdidosRoute,
@@ -381,13 +403,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
