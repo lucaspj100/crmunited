@@ -34,6 +34,7 @@ const POLL_MS = 30_000;
 export function ReturnNotificationWatcher() {
   const { user } = useAuth();
   const qc = useQueryClient();
+  const router = useRouter();
   const shownRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
