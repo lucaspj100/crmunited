@@ -216,3 +216,116 @@ function IntegracaoArena() {
     </div>
   );
 }
+
+type FailedEvent = {
+  id: string;
+  event_type: string;
+  crm_lead_id: string | null;
+  http_status: number | null;
+  error_message: string | null;
+  attempts: number | null;
+  created_at: string;
+};
+
+function FailedEventsPanel() {
+  const qc = useQueryClient();
+  const resend = useServerFn(resendArenaEvent);
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ["arena-failed-events"],
+    queryFn: async (): Promise<FailedEvent[]> => {
+      const { data, error } = await supabase
+        .from("crm_outbound_events")
+        .select("id, event_type, crm_lead_id, http_status, error_message, attempts, created_at")
+        .eq("status", "failed")
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return (data ?? []) as FailedEvent[];
+    },
+  });
+
+  const onResend = async (id: string) => {
+    setBusyId(id);
+    try {
+      const res = (await resend({ data: { eventId: id } })) as { ok: boolean; error?: string | null };
+      if (res.ok) toast.success("Evento reenviado com sucesso");
+      else toast.error(`Falha ao reenviar: ${res.error ?? "erro desconhecido"}`);
+      qc.invalidateQueries({ queryKey: ["arena-failed-events"] });
+    } catch (err: any) {
+      toast.error(err?.message ?? "Erro ao reenviar evento");
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  return (
+    <Card className="p-3 md:p-4">
+      <div className="flex items-center justify-between gap-2 mb-3">
+        <div className="flex items-center gap-2">
+          <AlertCircle className="h-4 w-4 text-destructive" />
+          <h2 className="text-sm font-semibold">Eventos com falha (Arena)</h2>
+          <Badge variant="secondary">{data?.length ?? 0}</Badge>
+        </div>
+        <Button size="sm" variant="ghost" onClick={() => refetch()} className="gap-1.5">
+          <RefreshCw className="h-3.5 w-3.5" /> Atualizar
+        </Button>
+      </div>
+
+      {isLoading ? (
+        <div className="py-6 text-center text-muted-foreground text-sm">Carregando…</div>
+      ) : !data || data.length === 0 ? (
+        <div className="py-6 text-center text-muted-foreground text-sm">
+          Nenhum evento com falha. ✅
+        </div>
+      ) : (
+        <div className="rounded-md border overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Evento</TableHead>
+                <TableHead>Lead</TableHead>
+                <TableHead>HTTP</TableHead>
+                <TableHead>Erro</TableHead>
+                <TableHead>Tentativas</TableHead>
+                <TableHead>Quando</TableHead>
+                <TableHead className="w-[120px]">Ação</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.map((e) => (
+                <TableRow key={e.id}>
+                  <TableCell className="text-xs font-mono">{e.event_type}</TableCell>
+                  <TableCell className="text-[11px] font-mono break-all max-w-[180px]">
+                    {e.crm_lead_id ?? "—"}
+                  </TableCell>
+                  <TableCell>{e.http_status ?? "—"}</TableCell>
+                  <TableCell className="text-xs max-w-[260px] break-words text-destructive">
+                    {e.error_message ?? "—"}
+                  </TableCell>
+                  <TableCell className="text-xs">{e.attempts ?? 0}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">
+                    {new Date(e.created_at).toLocaleString("pt-BR")}
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onResend(e.id)}
+                      disabled={busyId === e.id}
+                      className="gap-1.5"
+                    >
+                      <RefreshCw className={`h-3.5 w-3.5 ${busyId === e.id ? "animate-spin" : ""}`} />
+                      Reenviar
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+    </Card>
+  );
+}
