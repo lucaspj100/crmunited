@@ -111,6 +111,7 @@ function AuthedLayout() {
           <Outlet />
         </main>
       </div>
+      <ReturnNotificationWatcher />
     </div>
   );
 }
