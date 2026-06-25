@@ -1,8 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { z } from "zod";
-import { fallback, zodValidator } from "@tanstack/zod-adapter";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -13,13 +11,21 @@ import { DashboardPanel } from "@/components/discador/DashboardPanel";
 import { ConfigPanel } from "@/components/discador/ConfigPanel";
 import { MyContactsPanel } from "@/components/discador/MyContactsPanel";
 
-const searchSchema = z.object({
-  prospect_contact_id: fallback(z.string().optional(), undefined).default(undefined),
-  open_result: fallback(z.coerce.number().optional(), undefined).default(undefined),
-});
+type DiscadorSearch = {
+  prospect_contact_id?: string;
+  open_result?: number;
+};
 
 export const Route = createFileRoute("/_authenticated/discador")({
-  validateSearch: zodValidator(searchSchema),
+  validateSearch: (raw: Record<string, unknown>): DiscadorSearch => {
+    const id = typeof raw.prospect_contact_id === "string" ? raw.prospect_contact_id : undefined;
+    const openRaw = raw.open_result;
+    const open = typeof openRaw === "number" ? openRaw : typeof openRaw === "string" ? Number(openRaw) : undefined;
+    return {
+      prospect_contact_id: id,
+      open_result: Number.isFinite(open) ? open : undefined,
+    };
+  },
   component: DiscadorPage,
 });
 
