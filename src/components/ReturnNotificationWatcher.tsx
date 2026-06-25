@@ -5,6 +5,7 @@ import { Phone, MessageCircle, Check, Clock, Linkedin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { normalizeProspectPhone } from "@/lib/prospect-phone";
+import { playReturnSound } from "@/lib/notification-sound";
 
 type RetornoTask = {
   id: string;
@@ -79,6 +80,7 @@ export function ReturnNotificationWatcher() {
 
         shownRef.current.add(raw.id);
         showNotification(raw, contact, qc);
+        void playReturnSound().catch(() => {});
       }
     };
 
