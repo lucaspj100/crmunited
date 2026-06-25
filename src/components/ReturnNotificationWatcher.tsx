@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { normalizeProspectPhone } from "@/lib/prospect-phone";
 import { playReturnSound } from "@/lib/notification-sound";
-import type { Router } from "@tanstack/react-router";
+type RouterInstance = ReturnType<typeof useRouter>;
 
 type RetornoTask = {
   id: string;
