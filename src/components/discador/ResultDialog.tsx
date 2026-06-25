@@ -61,8 +61,19 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
 
     // 1) Ligar depois → criar tarefa de retorno
     if (result === "Ligar depois" && due_date) {
-      const nome = contact.nome || "Contato";
+      const nome = contact.nome || "Contato sem nome";
       const tel = contact.telefone_original || `+${telefone}`;
+      const empresa = contact.empresa?.trim() || "Empresa não informada";
+      const cargo = contact.cargo?.trim() || "Cargo não informado";
+      const sellerNote = obs.trim() || "(nenhuma)";
+      const observation = [
+        "Retorno solicitado pelo lead.",
+        `Contato: ${nome}`,
+        `Telefone: ${tel}`,
+        `Empresa: ${empresa}`,
+        `Cargo: ${cargo}`,
+        `Observação do vendedor: ${sellerNote}`,
+      ].join("\n");
       const payload = {
         owner_id: vendedorId,
         prospect_contact_id: contactId,
@@ -71,7 +82,7 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
         status: "pendente",
         due_date,
         due_time,
-        observation: `Retornar ligação para ${nome} - ${tel}${obs ? `\n${obs}` : ""}`,
+        observation,
       };
       console.log("[ResultDialog] criando task retorno_ligacao", payload);
       const { data: inserted, error: te } = await supabase
