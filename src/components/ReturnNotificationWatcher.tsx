@@ -218,6 +218,9 @@ function showNotification(task: RetornoTask, contact: ContactInfo | null, qc: Re
               <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
             </a>
           ) : <span />}
+          <button onClick={() => registerResult(id)} className="col-span-2 inline-flex items-center justify-center gap-1.5 rounded-md bg-emerald-600 text-white text-xs px-2 py-1.5 hover:bg-emerald-700">
+            <ListChecks className="h-3.5 w-3.5" /> Registrar resultado
+          </button>
           <button onClick={() => void conclude(id)} className="inline-flex items-center justify-center gap-1.5 rounded-md border text-xs px-2 py-1.5 hover:bg-accent">
             <Check className="h-3.5 w-3.5" /> Concluir
           </button>
