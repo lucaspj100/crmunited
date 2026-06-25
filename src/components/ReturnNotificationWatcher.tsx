@@ -1,11 +1,13 @@
 import { useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { Phone, MessageCircle, Check, Clock, Linkedin } from "lucide-react";
+import { Phone, MessageCircle, Check, Clock, Linkedin, ListChecks } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { normalizeProspectPhone } from "@/lib/prospect-phone";
 import { playReturnSound } from "@/lib/notification-sound";
+import type { Router } from "@tanstack/react-router";
 
 type RetornoTask = {
   id: string;
