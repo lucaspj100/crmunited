@@ -14,6 +14,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { LEAD_STATUSES, TASK_TYPES, labelFor, statusColor, waLink } from "@/lib/constants";
 import { copyToClipboard, waFollowupMessage, waConfirmInterviewMessage, leadSummary, rawPhoneDigits } from "@/lib/messages";
 import { logLeadEvent } from "@/lib/lead-events";
+import { notifyArena } from "@/lib/arena-dispatch";
 import { LeadDetailsDialog } from "@/components/LeadDetailsDialog";
 import { ListChecks, MessageCircle, Check, Calendar, X, User, Copy, Phone, FileText, Eye, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -212,6 +213,7 @@ function CompleteTaskDialog({ task, lead, onClose, onDone }: { task: Task; lead:
     else if (next === "matricula") {
       await supabase.from("leads").update({ status: "matricula" }).eq("id", lead.id);
       await logLeadEvent({ leadId: lead.id, type: "enrolled" });
+      notifyArena(lead.id, "crm_enrollment_created");
     } else if (next === "entrevista") {
       await supabase.from("leads").update({ status: "entrevista_marcada" }).eq("id", lead.id);
       await logLeadEvent({ leadId: lead.id, type: "status_change", description: "→ entrevista_marcada" });
@@ -219,6 +221,7 @@ function CompleteTaskDialog({ task, lead, onClose, onDone }: { task: Task; lead:
       toast.info("Vá ao funil para detalhar a perda.");
       await supabase.from("leads").update({ status: "perdido", lost_reason: "outro", lost_type: "definitivo" }).eq("id", lead.id);
       await logLeadEvent({ leadId: lead.id, type: "lost" });
+      if (lead.interview_date) notifyArena(lead.id, "crm_lost_after_interview");
     } else if (next === "custom") {
       if (!customDate) { toast.error("Escolha a data"); setSaving(false); return; }
       await supabase.from("tasks").insert({
