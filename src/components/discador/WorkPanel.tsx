@@ -137,6 +137,13 @@ export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: P
     if (!contact || !user) return;
     setLastAction("whatsapp");
     const template = getWhatsappTemplate();
+    const message = renderWhatsappTemplate(template, {
+      nome: contact.nome,
+      empresa: contact.empresa,
+      cargo: contact.cargo,
+      origem: contact.origem,
+      telefone: contact.telefone_normalizado ? `+${contact.telefone_normalizado}` : contact.telefone_original,
+    });
     await supabase.from("prospect_attempts").insert({
       prospect_contact_id: contact.id,
       vendedor_id: user.id,
