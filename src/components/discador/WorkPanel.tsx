@@ -264,7 +264,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: P
     qc.invalidateQueries({ queryKey: ["prospect_attempts", contact?.id] });
     qc.invalidateQueries({ queryKey: ["leads"] });
     qc.invalidateQueries({ queryKey: ["tasks"] });
-    if (goNext) await loadNext(); else {
+    if (goNext) await fetchNew(); else {
       if (contact) {
         const { data } = await supabase.from("prospect_contacts").select("*").eq("id", contact.id).single();
         if (data) setContact(data as ProspectContact);
