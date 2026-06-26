@@ -38,6 +38,36 @@ export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: P
   const [historyOpen, setHistoryOpen] = useState(false);
   const [prevStack, setPrevStack] = useState<string[]>([]);
 
+  const HISTORY_CAP = 50;
+  const storageKey = user ? `discador:prev_stack:${user.id}` : null;
+
+  // Hydrate stack from localStorage (per user)
+  useEffect(() => {
+    if (!storageKey) return;
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) setPrevStack(parsed.filter((x) => typeof x === "string").slice(-HISTORY_CAP));
+      }
+    } catch { /* ignore */ }
+  }, [storageKey]);
+
+  // Persist stack
+  useEffect(() => {
+    if (!storageKey) return;
+    try { localStorage.setItem(storageKey, JSON.stringify(prevStack.slice(-HISTORY_CAP))); } catch { /* ignore */ }
+  }, [prevStack, storageKey]);
+
+  const pushHistory = (id: string) => {
+    setPrevStack((s) => {
+      // não duplica consecutivo
+      if (s.length > 0 && s[s.length - 1] === id) return s;
+      const next = [...s, id];
+      return next.length > HISTORY_CAP ? next.slice(-HISTORY_CAP) : next;
+    });
+  };
+
   const loadContactById = async (id: string) => {
     setLoading(true);
     const { data, error } = await supabase.from("prospect_contacts").select("*").eq("id", id).maybeSingle();
@@ -51,7 +81,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: P
 
   const loadNext = async () => {
     if (!user) return;
-    if (contact) setPrevStack((s) => [...s, contact.id]);
+    if (contact) pushHistory(contact.id);
     setLoading(true);
     const next = await fetchNextProspect(user.id);
     setContact(next);
@@ -62,6 +92,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: P
   const goBack = async () => {
     if (prevStack.length === 0) return;
     const prevId = prevStack[prevStack.length - 1];
+    // remove apenas o último; mantém o restante para permitir voltar várias vezes
     setPrevStack((s) => s.slice(0, -1));
     await loadContactById(prevId);
   };
