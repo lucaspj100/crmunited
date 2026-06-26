@@ -53,24 +53,10 @@ const REMOVE_FROM_QUEUE_STATUSES = new Set([
 ]);
 
 function sortQueue(list: ProspectContact[]): ProspectContact[] {
-  const now = Date.now();
   return [...list].sort((a, b) => {
     const pa = STATUS_PRIORITY[a.status_prospeccao] ?? 99;
     const pb = STATUS_PRIORITY[b.status_prospeccao] ?? 99;
-    if (pa !== pb) {
-      // Ligar depois only ranks before "Não atendeu" if vencido; otherwise pushed to the end of group
-      if (a.status_prospeccao === "Ligar depois" || b.status_prospeccao === "Ligar depois") {
-        const aDue = a.status_prospeccao === "Ligar depois"
-          ? (a.proxima_acao_em ? new Date(a.proxima_acao_em).getTime() <= now : true)
-          : true;
-        const bDue = b.status_prospeccao === "Ligar depois"
-          ? (b.proxima_acao_em ? new Date(b.proxima_acao_em).getTime() <= now : true)
-          : true;
-        if (!aDue && bDue) return 1;
-        if (aDue && !bDue) return -1;
-      }
-      return pa - pb;
-    }
+    if (pa !== pb) return pa - pb;
     const ta = new Date(a.updated_at || a.created_at).getTime();
     const tb = new Date(b.updated_at || b.created_at).getTime();
     return ta - tb;
