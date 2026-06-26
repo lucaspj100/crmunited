@@ -292,7 +292,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: P
           <div className="rounded-lg border bg-card p-6 flex flex-col items-center gap-3 text-center">
             <Inbox className="h-8 w-8 text-muted-foreground" />
             <p className="text-sm text-muted-foreground">{loading ? "Buscando…" : "Nenhum contato pendente na sua fila."}</p>
-            <Button onClick={loadNext} disabled={loading} size="sm"><SkipForward className="h-4 w-4 mr-2" />Buscar próximo</Button>
+            <Button onClick={fetchNew} disabled={loading} size="sm"><Plus className="h-4 w-4 mr-2" />Buscar novo</Button>
           </div>
         ) : (
           <>
