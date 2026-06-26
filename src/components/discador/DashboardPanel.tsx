@@ -4,77 +4,77 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 type Seller = { id: string; full_name: string | null; email: string };
 
+type DashboardData = {
+  totals: {
+    total: number;
+    trabalhados: number;
+    interessados: number;
+    convertidos: number;
+    invalidos: number;
+    nao_chamar: number;
+    disponiveis: number;
+  };
+  attempts: { ligacoes: number; whats: number };
+  by_seller: { id: string; atribuidos: number; trabalhados: number; interessados: number; convertidos: number }[];
+  by_seller_att: { id: string; ligacoes: number; whats: number }[];
+  by_origem: { k: string; total: number; tent: number; interessados: number; convertidos: number }[];
+  by_ddd: { k: string; total: number; tent: number; interessados: number; convertidos: number }[];
+};
+
 export function DashboardPanel({ sellers }: { sellers: Seller[] }) {
-  const { data } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ["prospect_dashboard"],
-    queryFn: async () => {
-      const [contacts, attempts] = await Promise.all([
-        supabase.from("prospect_contacts").select("id, status_prospeccao, quantidade_tentativas, telefone_invalido, nao_chamar, convertido_em_lead, origem, ddd, vendedor_responsavel_id"),
-        supabase.from("prospect_attempts").select("id, tipo_acao, vendedor_id"),
-      ]);
-      return { contacts: contacts.data ?? [], attempts: attempts.data ?? [] };
+    queryFn: async (): Promise<DashboardData> => {
+      const { data, error } = await supabase.rpc("prospect_dashboard" as never);
+      if (error) throw error;
+      return data as unknown as DashboardData;
     },
   });
 
-  if (!data) return <p className="text-muted-foreground">Carregando…</p>;
+  if (isLoading) return <p className="text-muted-foreground">Carregando…</p>;
+  if (error || !data) return <p className="text-destructive">Erro ao carregar painel.</p>;
 
-  const c = data.contacts;
+  const t = data.totals;
   const a = data.attempts;
-  const total = c.length;
-  const trabalhados = c.filter((x) => x.quantidade_tentativas > 0).length;
-  const interessados = c.filter((x) => x.status_prospeccao === "Interessado").length;
-  const convertidos = c.filter((x) => x.convertido_em_lead).length;
-  const invalidos = c.filter((x) => x.telefone_invalido).length;
-  const naoChamar = c.filter((x) => x.nao_chamar).length;
-  const ligacoes = a.filter((x) => x.tipo_acao === "ligacao").length;
-  const whats = a.filter((x) => x.tipo_acao === "whatsapp").length;
-  const disponiveis = c.filter((x) => !x.convertido_em_lead && !x.nao_chamar && !x.telefone_invalido && !["Sem interesse", "Convertido em lead", "Não chamar"].includes(x.status_prospeccao)).length;
+  const taxaFrioInteressado = t.trabalhados ? ((t.interessados / t.trabalhados) * 100).toFixed(1) : "0";
+  const taxaInteressadoLead = t.interessados ? ((t.convertidos / t.interessados) * 100).toFixed(1) : "0";
 
-  const taxaFrioInteressado = trabalhados ? ((interessados / trabalhados) * 100).toFixed(1) : "0";
-  const taxaInteressadoLead = interessados ? ((convertidos / interessados) * 100).toFixed(1) : "0";
+  const sellerMap = new Map(data.by_seller.map((s) => [s.id, s]));
+  const sellerAttMap = new Map(data.by_seller_att.map((s) => [s.id, s]));
 
   const bySeller = sellers.map((s) => {
-    const mine = c.filter((x) => x.vendedor_responsavel_id === s.id);
-    const myAtt = a.filter((x) => x.vendedor_id === s.id);
-    const att = mine.length ? ((mine.filter((x) => x.quantidade_tentativas > 0).length / mine.length) * 100).toFixed(0) : "0";
-    const conv = mine.length ? ((mine.filter((x) => x.convertido_em_lead).length / mine.length) * 100).toFixed(1) : "0";
+    const row = sellerMap.get(s.id);
+    const att = sellerAttMap.get(s.id);
+    const atribuidos = row?.atribuidos ?? 0;
+    const trabalhados = row?.trabalhados ?? 0;
+    const interessados = row?.interessados ?? 0;
+    const convertidos = row?.convertidos ?? 0;
+    const txAtend = atribuidos ? ((trabalhados / atribuidos) * 100).toFixed(0) : "0";
+    const txConv = atribuidos ? ((convertidos / atribuidos) * 100).toFixed(1) : "0";
     return {
-      id: s.id, name: s.full_name || s.email,
-      atribuidos: mine.length,
-      ligacoes: myAtt.filter((x) => x.tipo_acao === "ligacao").length,
-      whats: myAtt.filter((x) => x.tipo_acao === "whatsapp").length,
-      interessados: mine.filter((x) => x.status_prospeccao === "Interessado").length,
-      convertidos: mine.filter((x) => x.convertido_em_lead).length,
-      tx_atend: att + "%",
-      tx_conv: conv + "%",
+      id: s.id,
+      name: s.full_name || s.email,
+      atribuidos,
+      ligacoes: att?.ligacoes ?? 0,
+      whats: att?.whats ?? 0,
+      interessados,
+      convertidos,
+      tx_atend: txAtend + "%",
+      tx_conv: txConv + "%",
     };
   });
-
-  const groupBy = (key: "origem" | "ddd") => {
-    const map = new Map<string, { total: number; interessados: number; convertidos: number; tent: number }>();
-    c.forEach((x) => {
-      const k = (x[key] as string | null) || "—";
-      const g = map.get(k) ?? { total: 0, interessados: 0, convertidos: 0, tent: 0 };
-      g.total++;
-      if (x.status_prospeccao === "Interessado") g.interessados++;
-      if (x.convertido_em_lead) g.convertidos++;
-      g.tent += x.quantidade_tentativas;
-      map.set(k, g);
-    });
-    return Array.from(map.entries()).sort((a, b) => b[1].total - a[1].total);
-  };
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Stat label="Importados" value={total} />
-        <Stat label="Disponíveis" value={disponiveis} />
-        <Stat label="Trabalhados" value={trabalhados} />
-        <Stat label="Convertidos" value={convertidos} />
-        <Stat label="Interessados" value={interessados} />
-        <Stat label="Ligações" value={ligacoes} />
-        <Stat label="WhatsApps" value={whats} />
-        <Stat label="Inválidos / Não chamar" value={`${invalidos} / ${naoChamar}`} />
+        <Stat label="Importados" value={t.total} />
+        <Stat label="Disponíveis" value={t.disponiveis} />
+        <Stat label="Trabalhados" value={t.trabalhados} />
+        <Stat label="Convertidos" value={t.convertidos} />
+        <Stat label="Interessados" value={t.interessados} />
+        <Stat label="Ligações" value={a.ligacoes} />
+        <Stat label="WhatsApps" value={a.whats} />
+        <Stat label="Inválidos / Não chamar" value={`${t.invalidos} / ${t.nao_chamar}`} />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <Card><CardContent className="p-4"><div className="text-xs uppercase text-muted-foreground">Frio → Interessado</div><div className="text-2xl font-bold">{taxaFrioInteressado}%</div></CardContent></Card>
@@ -100,8 +100,8 @@ export function DashboardPanel({ sellers }: { sellers: Seller[] }) {
       </Card>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <GroupTable title="Por origem" rows={groupBy("origem")} />
-        <GroupTable title="Por DDD" rows={groupBy("ddd")} />
+        <GroupTable title="Por origem" rows={data.by_origem} />
+        <GroupTable title="Por DDD" rows={data.by_ddd} />
       </div>
     </div>
   );
@@ -116,7 +116,7 @@ function Stat({ label, value }: { label: string; value: number | string }) {
   );
 }
 
-function GroupTable({ title, rows }: { title: string; rows: [string, { total: number; interessados: number; convertidos: number; tent: number }][] }) {
+function GroupTable({ title, rows }: { title: string; rows: { k: string; total: number; tent: number; interessados: number; convertidos: number }[] }) {
   return (
     <Card>
       <CardHeader><CardTitle>{title}</CardTitle></CardHeader>
@@ -124,10 +124,10 @@ function GroupTable({ title, rows }: { title: string; rows: [string, { total: nu
         <table className="w-full text-sm">
           <thead className="bg-muted/40 text-left"><tr><th className="p-2">{title.split(" ")[1]}</th><th className="p-2">Contatos</th><th className="p-2">Tentativas</th><th className="p-2">Interessados</th><th className="p-2">Convertidos</th><th className="p-2">Tx.</th></tr></thead>
           <tbody>
-            {rows.slice(0, 30).map(([k, v]) => (
-              <tr key={k} className="border-t">
-                <td className="p-2">{k}</td><td className="p-2">{v.total}</td><td className="p-2">{v.tent}</td><td className="p-2">{v.interessados}</td><td className="p-2">{v.convertidos}</td>
-                <td className="p-2">{v.total ? ((v.convertidos / v.total) * 100).toFixed(1) : "0"}%</td>
+            {rows.map((r) => (
+              <tr key={r.k} className="border-t">
+                <td className="p-2">{r.k}</td><td className="p-2">{r.total}</td><td className="p-2">{r.tent}</td><td className="p-2">{r.interessados}</td><td className="p-2">{r.convertidos}</td>
+                <td className="p-2">{r.total ? ((r.convertidos / r.total) * 100).toFixed(1) : "0"}%</td>
               </tr>
             ))}
           </tbody>
