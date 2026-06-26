@@ -36,6 +36,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: P
   const [lastAction, setLastAction] = useState<"ligacao" | "whatsapp" | undefined>();
   const [contextOpen, setContextOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [prevStack, setPrevStack] = useState<string[]>([]);
 
   const loadContactById = async (id: string) => {
     setLoading(true);
@@ -50,11 +51,19 @@ export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: P
 
   const loadNext = async () => {
     if (!user) return;
+    if (contact) setPrevStack((s) => [...s, contact.id]);
     setLoading(true);
     const next = await fetchNextProspect(user.id);
     setContact(next);
     setLoading(false);
     if (!next) toast.info("Sem contatos pendentes na sua fila");
+  };
+
+  const goBack = async () => {
+    if (prevStack.length === 0) return;
+    const prevId = prevStack[prevStack.length - 1];
+    setPrevStack((s) => s.slice(0, -1));
+    await loadContactById(prevId);
   };
 
   useEffect(() => { if (!focusContactId) void loadNext(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [user?.id]);
