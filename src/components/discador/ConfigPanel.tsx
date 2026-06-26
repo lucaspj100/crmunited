@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
@@ -7,7 +7,13 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { DEFAULT_WHATSAPP_TEMPLATE, getWhatsappTemplate, setWhatsappTemplate } from "@/lib/prospect-status";
+import {
+  DEFAULT_WHATSAPP_TEMPLATE,
+  getWhatsappTemplate,
+  setWhatsappTemplate,
+  renderWhatsappTemplate,
+  WHATSAPP_TEMPLATE_VARS,
+} from "@/lib/prospect-status";
 import { DEFAULT_DIALER_SETTINGS, validateDialerSettings, type DialerSettings } from "@/lib/prospect-dial";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -21,6 +27,36 @@ export function ConfigPanel() {
   const [text, setText] = useState(getWhatsappTemplate());
   const [ddd, setDdd] = useState(DEFAULT_DIALER_SETTINGS.ddd_origem);
   const [prefixo, setPrefixo] = useState(DEFAULT_DIALER_SETTINGS.prefixo_interurbano);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const insertVar = (key: string) => {
+    const token = `{${key}}`;
+    const el = textareaRef.current;
+    if (!el) { setText((t) => t + token); return; }
+    const start = el.selectionStart ?? text.length;
+    const end = el.selectionEnd ?? text.length;
+    const next = text.slice(0, start) + token + text.slice(end);
+    setText(next);
+    requestAnimationFrame(() => {
+      el.focus();
+      const pos = start + token.length;
+      el.setSelectionRange(pos, pos);
+    });
+  };
+
+  const sampleVars = useMemo(() => {
+    const sample: Record<string, string> = {};
+    for (const v of WHATSAPP_TEMPLATE_VARS) sample[v.key] = v.sample;
+    return {
+      nome: sample.nome,
+      empresa: sample.empresa,
+      cargo: sample.cargo,
+      origem: sample.origem,
+      telefone: sample.telefone,
+    };
+  }, []);
+
+  const preview = useMemo(() => renderWhatsappTemplate(text, sampleVars), [text, sampleVars]);
 
   const { data: mySettings } = useQuery({
     enabled: !!user,
@@ -103,7 +139,32 @@ export function ConfigPanel() {
       <Card>
         <CardHeader><CardTitle>Mensagem padrão de WhatsApp</CardTitle></CardHeader>
         <CardContent className="space-y-3">
-          <Textarea rows={6} value={text} onChange={(e) => setText(e.target.value)} maxLength={1000} />
+          <Textarea
+            ref={textareaRef}
+            rows={7}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            maxLength={2000}
+          />
+          <p className="text-xs text-muted-foreground">
+            Variáveis disponíveis: <code>{"{primeiro_nome}"}</code>, <code>{"{nome}"}</code>,{" "}
+            <code>{"{empresa}"}</code>, <code>{"{cargo}"}</code>, <code>{"{origem}"}</code>,{" "}
+            <code>{"{telefone}"}</code>. Elas são substituídas automaticamente pelos dados do contato ao abrir o WhatsApp.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <span className="text-xs text-muted-foreground self-center">Inserir variável:</span>
+            {WHATSAPP_TEMPLATE_VARS.map((v) => (
+              <Button key={v.key} size="sm" variant="outline" type="button" onClick={() => insertVar(v.key)}>
+                {v.label}
+              </Button>
+            ))}
+          </div>
+          <div>
+            <Label className="text-xs uppercase text-muted-foreground">Prévia (contato de exemplo: Leandro Souza · Aché · Analista · Lista Aché)</Label>
+            <div className="mt-1 rounded-md border bg-muted/40 p-3 text-sm whitespace-pre-wrap break-words min-h-[80px]">
+              {preview || <span className="text-muted-foreground italic">A prévia aparecerá aqui.</span>}
+            </div>
+          </div>
           <p className="text-xs text-muted-foreground">Usada no botão WhatsApp do Discador. Salva no navegador atual.</p>
           <div className="flex gap-2">
             <Button onClick={saveWpp}>Salvar</Button>

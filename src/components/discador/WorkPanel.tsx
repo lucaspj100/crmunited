@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Phone, MessageCircle, ListChecks, UserPlus, SkipForward, Inbox, Pencil, ChevronDown, Linkedin } from "lucide-react";
 import { fetchNextProspect, type ProspectContact } from "@/lib/prospect-queue";
-import { statusBadgeClass, getWhatsappTemplate } from "@/lib/prospect-status";
+import { statusBadgeClass, getWhatsappTemplate, renderWhatsappTemplate } from "@/lib/prospect-status";
 import { buildDialNumber, DEFAULT_DIALER_SETTINGS, type DialerSettings } from "@/lib/prospect-dial";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -137,13 +137,20 @@ export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: P
     if (!contact || !user) return;
     setLastAction("whatsapp");
     const template = getWhatsappTemplate();
+    const message = renderWhatsappTemplate(template, {
+      nome: contact.nome,
+      empresa: contact.empresa,
+      cargo: contact.cargo,
+      origem: contact.origem,
+      telefone: contact.telefone_normalizado ? `+${contact.telefone_normalizado}` : contact.telefone_original,
+    });
     await supabase.from("prospect_attempts").insert({
       prospect_contact_id: contact.id,
       vendedor_id: user.id,
       tipo_acao: "whatsapp",
       telefone_normalizado: contact.telefone_normalizado,
     });
-    window.open(`https://wa.me/${contact.telefone_normalizado}?text=${encodeURIComponent(template)}`, "_blank");
+    window.open(`https://wa.me/${contact.telefone_normalizado}?text=${encodeURIComponent(message)}`, "_blank");
     setResultOpen(true);
   };
 
