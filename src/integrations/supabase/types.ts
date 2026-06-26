@@ -681,6 +681,7 @@ export type Database = {
           phone_normalized: string
         }[]
       }
+      prospect_dashboard: { Args: never; Returns: Json }
       prospect_phones_lookup: {
         Args: { _phones: string[] }
         Returns: {
