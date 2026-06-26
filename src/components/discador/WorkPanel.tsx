@@ -404,6 +404,9 @@ export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: P
                   <Button variant="outline" onClick={() => setEditOpen(true)}>
                     <Pencil className="h-4 w-4 mr-2" />Editar contato
                   </Button>
+                  <Button variant="outline" onClick={goBack} disabled={loading || prevStack.length === 0}>
+                    <ArrowLeft className="h-4 w-4 mr-2" />Voltar anterior
+                  </Button>
                   <Button variant="ghost" onClick={loadNext} disabled={loading}>
                     <SkipForward className="h-4 w-4 mr-2" />Pular para próximo
                   </Button>
