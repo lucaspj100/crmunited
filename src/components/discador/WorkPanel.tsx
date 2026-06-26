@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Phone, MessageCircle, ListChecks, UserPlus, SkipForward, Inbox, Pencil, ChevronDown, Linkedin } from "lucide-react";
+import { Phone, MessageCircle, ListChecks, UserPlus, SkipForward, Inbox, Pencil, ChevronDown, Linkedin, ArrowLeft } from "lucide-react";
 import { fetchNextProspect, type ProspectContact } from "@/lib/prospect-queue";
 import { statusBadgeClass, getWhatsappTemplate, renderWhatsappTemplate } from "@/lib/prospect-status";
 import { buildDialNumber, DEFAULT_DIALER_SETTINGS, type DialerSettings } from "@/lib/prospect-dial";
@@ -36,6 +36,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: P
   const [lastAction, setLastAction] = useState<"ligacao" | "whatsapp" | undefined>();
   const [contextOpen, setContextOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [prevStack, setPrevStack] = useState<string[]>([]);
 
   const loadContactById = async (id: string) => {
     setLoading(true);
@@ -50,11 +51,19 @@ export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: P
 
   const loadNext = async () => {
     if (!user) return;
+    if (contact) setPrevStack((s) => [...s, contact.id]);
     setLoading(true);
     const next = await fetchNextProspect(user.id);
     setContact(next);
     setLoading(false);
     if (!next) toast.info("Sem contatos pendentes na sua fila");
+  };
+
+  const goBack = async () => {
+    if (prevStack.length === 0) return;
+    const prevId = prevStack[prevStack.length - 1];
+    setPrevStack((s) => s.slice(0, -1));
+    await loadContactById(prevId);
   };
 
   useEffect(() => { if (!focusContactId) void loadNext(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [user?.id]);
@@ -292,15 +301,18 @@ export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: P
             className="fixed bottom-0 inset-x-0 z-40 border-t bg-background/95 backdrop-blur px-3 pt-2 w-full max-w-full"
             style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 8px)" }}
           >
-            <div className="grid grid-cols-3 gap-2 w-full max-w-full">
-              <Button onClick={ligar} className="h-12 min-w-0 px-2">
-                <Phone className="h-4 w-4 mr-1 shrink-0" /><span className="truncate">Ligar</span>
+            <div className="grid grid-cols-4 gap-2 w-full max-w-full">
+              <Button onClick={ligar} className="h-12 min-w-0 px-1">
+                <Phone className="h-4 w-4 mr-1 shrink-0" /><span className="truncate text-xs">Ligar</span>
               </Button>
-              <Button variant="outline" onClick={() => { setLastAction(undefined); setResultOpen(true); }} className="h-12 min-w-0 px-2">
-                <ListChecks className="h-4 w-4 mr-1 shrink-0" /><span className="truncate">Resultado</span>
+              <Button variant="outline" onClick={() => { setLastAction(undefined); setResultOpen(true); }} className="h-12 min-w-0 px-1">
+                <ListChecks className="h-4 w-4 mr-1 shrink-0" /><span className="truncate text-xs">Resultado</span>
               </Button>
-              <Button variant="ghost" onClick={loadNext} disabled={loading} className="h-12 min-w-0 px-2">
-                <SkipForward className="h-4 w-4 mr-1 shrink-0" /><span className="truncate">Próximo</span>
+              <Button variant="ghost" onClick={goBack} disabled={loading || prevStack.length === 0} className="h-12 min-w-0 px-1">
+                <ArrowLeft className="h-4 w-4 mr-1 shrink-0" /><span className="truncate text-xs">Voltar</span>
+              </Button>
+              <Button variant="ghost" onClick={loadNext} disabled={loading} className="h-12 min-w-0 px-1">
+                <SkipForward className="h-4 w-4 mr-1 shrink-0" /><span className="truncate text-xs">Próximo</span>
               </Button>
             </div>
           </div>
@@ -391,6 +403,9 @@ export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: P
                 <div className="flex flex-wrap gap-2">
                   <Button variant="outline" onClick={() => setEditOpen(true)}>
                     <Pencil className="h-4 w-4 mr-2" />Editar contato
+                  </Button>
+                  <Button variant="outline" onClick={goBack} disabled={loading || prevStack.length === 0}>
+                    <ArrowLeft className="h-4 w-4 mr-2" />Voltar anterior
                   </Button>
                   <Button variant="ghost" onClick={loadNext} disabled={loading}>
                     <SkipForward className="h-4 w-4 mr-2" />Pular para próximo
