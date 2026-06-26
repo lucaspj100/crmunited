@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Phone, MessageCircle, ListChecks, UserPlus, SkipForward, Inbox, Pencil, ChevronDown, Linkedin, ArrowLeft } from "lucide-react";
+import { Phone, MessageCircle, ListChecks, UserPlus, SkipForward, Inbox, Pencil, ChevronDown, Linkedin, ArrowLeft, ArrowRight, Plus } from "lucide-react";
 import { fetchNextProspect, type ProspectContact } from "@/lib/prospect-queue";
 import { statusBadgeClass, getWhatsappTemplate, renderWhatsappTemplate } from "@/lib/prospect-status";
 import { buildDialNumber, DEFAULT_DIALER_SETTINGS, type DialerSettings } from "@/lib/prospect-dial";
@@ -36,89 +36,136 @@ export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: P
   const [lastAction, setLastAction] = useState<"ligacao" | "whatsapp" | undefined>();
   const [contextOpen, setContextOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
-  const [prevStack, setPrevStack] = useState<string[]>([]);
+
+  // Roda circular de contatos visualizados
+  const [history, setHistory] = useState<string[]>([]);
+  const [historyIndex, setHistoryIndex] = useState<number>(-1);
   const [hydrated, setHydrated] = useState(false);
 
   const HISTORY_CAP = 50;
-  const storageKey = user ? `discador:prev_stack:${user.id}` : null;
+  const historyKey = user ? `discador:view_history:${user.id}` : null;
+  const indexKey = user ? `discador:view_history_index:${user.id}` : null;
 
-  // Hydrate stack from localStorage (per user) — uma vez por usuário
+  // Hydrate from localStorage
   useEffect(() => {
-    if (!storageKey) return;
+    if (!historyKey || !indexKey) return;
     try {
-      const raw = localStorage.getItem(storageKey);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) {
-          setPrevStack(parsed.filter((x) => typeof x === "string").slice(-HISTORY_CAP));
-        }
+      const rawH = localStorage.getItem(historyKey);
+      const rawI = localStorage.getItem(indexKey);
+      let h: string[] = [];
+      let i = -1;
+      if (rawH) {
+        const parsed = JSON.parse(rawH);
+        if (Array.isArray(parsed)) h = parsed.filter((x) => typeof x === "string").slice(-HISTORY_CAP);
       }
+      if (rawI) {
+        const n = Number(rawI);
+        if (Number.isFinite(n) && n >= 0 && n < h.length) i = n;
+      }
+      if (h.length > 0 && i < 0) i = h.length - 1;
+      setHistory(h);
+      setHistoryIndex(i);
     } catch { /* ignore */ }
     setHydrated(true);
-  }, [storageKey]);
+  }, [historyKey, indexKey]);
 
-  // Persist stack apenas depois de hidratar (evita sobrescrever com [])
+  // Persist
   useEffect(() => {
-    if (!storageKey || !hydrated) return;
-    try { localStorage.setItem(storageKey, JSON.stringify(prevStack.slice(-HISTORY_CAP))); } catch { /* ignore */ }
-  }, [prevStack, storageKey, hydrated]);
+    if (!hydrated || !historyKey || !indexKey) return;
+    try {
+      localStorage.setItem(historyKey, JSON.stringify(history.slice(-HISTORY_CAP)));
+      localStorage.setItem(indexKey, String(historyIndex));
+    } catch { /* ignore */ }
+  }, [history, historyIndex, hydrated, historyKey, indexKey]);
 
-  /**
-   * Centraliza a troca do contato atual.
-   * Empilha o contato anterior no histórico quando:
-   *  - existe um contato atual
-   *  - o próximo contato é diferente do atual
-   *  - pushHistory !== false (ex.: ao voltar, não empilha)
-   */
-  const setCurrentContact = (
-    next: ProspectContact | null,
-    options: { pushHistory?: boolean } = {},
-  ) => {
-    const shouldPush = options.pushHistory !== false;
-    if (shouldPush && contact && (!next || next.id !== contact.id)) {
-      setPrevStack((s) => {
-        if (s.length > 0 && s[s.length - 1] === contact.id) return s;
-        const merged = [...s, contact.id];
-        return merged.length > HISTORY_CAP ? merged.slice(-HISTORY_CAP) : merged;
-      });
-    }
-    setContact(next);
-    if (next) qc.invalidateQueries({ queryKey: ["prospect_attempts", next.id] });
-  };
-
-  const loadContactById = async (id: string, options: { pushHistory?: boolean } = {}) => {
-    setLoading(true);
+  const fetchById = async (id: string): Promise<ProspectContact | null> => {
     const { data, error } = await supabase.from("prospect_contacts").select("*").eq("id", id).maybeSingle();
-    setLoading(false);
     if (error) { toast.error(`Erro ao carregar contato: ${error.message}`); return null; }
     if (!data) { toast.error("Contato não encontrado"); return null; }
-    setCurrentContact(data as ProspectContact, options);
     return data as ProspectContact;
   };
 
-  const loadNext = async () => {
+  // Adiciona um contato ao histórico e posiciona índice no fim
+  const pushToHistory = (id: string) => {
+    setHistory((h) => {
+      // dedupe consecutivo no fim
+      if (h.length > 0 && h[h.length - 1] === id) {
+        setHistoryIndex(h.length - 1);
+        return h;
+      }
+      const merged = [...h, id];
+      const capped = merged.length > HISTORY_CAP ? merged.slice(-HISTORY_CAP) : merged;
+      setHistoryIndex(capped.length - 1);
+      return capped;
+    });
+  };
+
+  // Navega para índice (sem alterar histórico nem fila)
+  const goToIndex = async (newIdx: number) => {
+    if (history.length === 0) return;
+    const target = history[newIdx];
+    if (!target) return;
+    setHistoryIndex(newIdx);
+    setLoading(true);
+    const c = await fetchById(target);
+    setLoading(false);
+    if (c) {
+      setContact(c);
+      qc.invalidateQueries({ queryKey: ["prospect_attempts", c.id] });
+    }
+  };
+
+  const goPrev = async () => {
+    if (history.length < 2) return;
+    const newIdx = historyIndex <= 0 ? history.length - 1 : historyIndex - 1;
+    await goToIndex(newIdx);
+  };
+
+  const goNext = async () => {
+    if (history.length < 2) return;
+    const newIdx = historyIndex >= history.length - 1 ? 0 : historyIndex + 1;
+    await goToIndex(newIdx);
+  };
+
+  // Busca novo contato da fila e adiciona ao histórico
+  const fetchNew = async () => {
     if (!user) return;
     setLoading(true);
     const next = await fetchNextProspect(user.id);
     setLoading(false);
-    setCurrentContact(next); // empilha o atual automaticamente
-    if (!next) toast.info("Sem contatos pendentes na sua fila");
+    if (!next) { toast.info("Sem contatos pendentes na sua fila"); return; }
+    setContact(next);
+    pushToHistory(next.id);
+    qc.invalidateQueries({ queryKey: ["prospect_attempts", next.id] });
   };
 
-  const goBack = async () => {
-    if (prevStack.length === 0) return;
-    const prevId = prevStack[prevStack.length - 1];
-    // remove apenas o último; mantém o restante para permitir voltar várias vezes
-    setPrevStack((s) => s.slice(0, -1));
-    // ao voltar, não empilha o contato atual (é navegação, não avanço)
-    await loadContactById(prevId, { pushHistory: false });
+  // Carrega contato externo (foco por URL) e adiciona ao histórico
+  const loadContactById = async (id: string) => {
+    setLoading(true);
+    const c = await fetchById(id);
+    setLoading(false);
+    if (c) {
+      setContact(c);
+      pushToHistory(c.id);
+    }
+    return c;
   };
 
-  useEffect(() => { if (!focusContactId) void loadNext(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [user?.id]);
-
-  // Foco vindo da URL (ex.: notificação de retorno → /discador?prospect_contact_id=…&open_result=1)
+  // Bootstrap: se há histórico salvo e nenhum foco, carrega o contato do índice atual; senão busca novo
   useEffect(() => {
-    if (!focusContactId || !user) return;
+    if (!hydrated || !user || focusContactId) return;
+    if (contact) return;
+    if (history.length > 0 && historyIndex >= 0 && historyIndex < history.length) {
+      void goToIndex(historyIndex);
+    } else {
+      void fetchNew();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated, user?.id]);
+
+  // Foco vindo da URL
+  useEffect(() => {
+    if (!focusContactId || !user || !hydrated) return;
     let cancelled = false;
     (async () => {
       const c = await loadContactById(focusContactId);
@@ -131,7 +178,8 @@ export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: P
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [focusContactId, autoOpenResult, user?.id]);
+  }, [focusContactId, autoOpenResult, user?.id, hydrated]);
+
 
   const { data: counts } = useQuery({
     queryKey: ["prospect_counts", user?.id],
@@ -216,7 +264,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: P
     qc.invalidateQueries({ queryKey: ["prospect_attempts", contact?.id] });
     qc.invalidateQueries({ queryKey: ["leads"] });
     qc.invalidateQueries({ queryKey: ["tasks"] });
-    if (goNext) await loadNext(); else {
+    if (goNext) await fetchNew(); else {
       if (contact) {
         const { data } = await supabase.from("prospect_contacts").select("*").eq("id", contact.id).single();
         if (data) setContact(data as ProspectContact);
@@ -244,7 +292,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: P
           <div className="rounded-lg border bg-card p-6 flex flex-col items-center gap-3 text-center">
             <Inbox className="h-8 w-8 text-muted-foreground" />
             <p className="text-sm text-muted-foreground">{loading ? "Buscando…" : "Nenhum contato pendente na sua fila."}</p>
-            <Button onClick={loadNext} disabled={loading} size="sm"><SkipForward className="h-4 w-4 mr-2" />Buscar próximo</Button>
+            <Button onClick={fetchNew} disabled={loading} size="sm"><Plus className="h-4 w-4 mr-2" />Buscar novo</Button>
           </div>
         ) : (
           <>
@@ -349,18 +397,21 @@ export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: P
             className="fixed bottom-0 inset-x-0 z-40 border-t bg-background/95 backdrop-blur px-3 pt-2 w-full max-w-full"
             style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 8px)" }}
           >
-            <div className="grid grid-cols-4 gap-2 w-full max-w-full">
+            <div className="grid grid-cols-5 gap-1.5 w-full max-w-full">
               <Button onClick={ligar} className="h-12 min-w-0 px-1">
-                <Phone className="h-4 w-4 mr-1 shrink-0" /><span className="truncate text-xs">Ligar</span>
+                <Phone className="h-4 w-4 shrink-0" /><span className="truncate text-[10px] ml-1">Ligar</span>
               </Button>
               <Button variant="outline" onClick={() => { setLastAction(undefined); setResultOpen(true); }} className="h-12 min-w-0 px-1">
-                <ListChecks className="h-4 w-4 mr-1 shrink-0" /><span className="truncate text-xs">Resultado</span>
+                <ListChecks className="h-4 w-4 shrink-0" /><span className="truncate text-[10px] ml-1">Reg.</span>
               </Button>
-              <Button variant="ghost" onClick={goBack} disabled={loading || prevStack.length === 0} className="h-12 min-w-0 px-1">
-                <ArrowLeft className="h-4 w-4 mr-1 shrink-0" /><span className="truncate text-xs">Voltar</span>
+              <Button variant="ghost" onClick={goPrev} disabled={loading || history.length < 2} className="h-12 min-w-0 px-1">
+                <ArrowLeft className="h-4 w-4 shrink-0" /><span className="truncate text-[10px] ml-1">Ant.</span>
               </Button>
-              <Button variant="ghost" onClick={loadNext} disabled={loading} className="h-12 min-w-0 px-1">
-                <SkipForward className="h-4 w-4 mr-1 shrink-0" /><span className="truncate text-xs">Próximo</span>
+              <Button variant="ghost" onClick={goNext} disabled={loading || history.length < 2} className="h-12 min-w-0 px-1">
+                <ArrowRight className="h-4 w-4 shrink-0" /><span className="truncate text-[10px] ml-1">Próx.</span>
+              </Button>
+              <Button variant="secondary" onClick={fetchNew} disabled={loading} className="h-12 min-w-0 px-1">
+                <Plus className="h-4 w-4 shrink-0" /><span className="truncate text-[10px] ml-1">Novo</span>
               </Button>
             </div>
           </div>
@@ -382,7 +433,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: P
               <CardContent className="flex flex-col items-center justify-center gap-3 py-12">
                 <Inbox className="h-10 w-10 text-muted-foreground" />
                 <p className="text-muted-foreground">{loading ? "Buscando…" : "Nenhum contato pendente na sua fila."}</p>
-                <Button onClick={loadNext} disabled={loading}><SkipForward className="h-4 w-4 mr-2" />Buscar próximo</Button>
+                <Button onClick={fetchNew} disabled={loading}><Plus className="h-4 w-4 mr-2" />Buscar novo</Button>
               </CardContent>
             </Card>
           ) : (
@@ -452,12 +503,20 @@ export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: P
                   <Button variant="outline" onClick={() => setEditOpen(true)}>
                     <Pencil className="h-4 w-4 mr-2" />Editar contato
                   </Button>
-                  <Button variant="outline" onClick={goBack} disabled={loading || prevStack.length === 0}>
-                    <ArrowLeft className="h-4 w-4 mr-2" />Voltar anterior
+                  <Button variant="outline" onClick={goPrev} disabled={loading || history.length < 2}>
+                    <ArrowLeft className="h-4 w-4 mr-2" />Anterior
                   </Button>
-                  <Button variant="ghost" onClick={loadNext} disabled={loading}>
-                    <SkipForward className="h-4 w-4 mr-2" />Pular para próximo
+                  <Button variant="outline" onClick={goNext} disabled={loading || history.length < 2}>
+                    <ArrowRight className="h-4 w-4 mr-2" />Próximo
                   </Button>
+                  <Button variant="secondary" onClick={fetchNew} disabled={loading}>
+                    <Plus className="h-4 w-4 mr-2" />Buscar novo
+                  </Button>
+                  {history.length > 0 && historyIndex >= 0 && (
+                    <span className="text-xs text-muted-foreground self-center ml-2">
+                      {historyIndex + 1} / {history.length} no histórico
+                    </span>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -491,7 +550,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: P
           onOpenChange={setConvertOpen}
           contact={contact}
           vendedorId={user.id}
-          onConverted={() => { qc.invalidateQueries({ queryKey: ["prospect_counts"] }); void loadNext(); }}
+          onConverted={() => { qc.invalidateQueries({ queryKey: ["prospect_counts"] }); void fetchNew(); }}
         />
       )}
       {contact && (
