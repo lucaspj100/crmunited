@@ -433,7 +433,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: P
               <CardContent className="flex flex-col items-center justify-center gap-3 py-12">
                 <Inbox className="h-10 w-10 text-muted-foreground" />
                 <p className="text-muted-foreground">{loading ? "Buscando…" : "Nenhum contato pendente na sua fila."}</p>
-                <Button onClick={loadNext} disabled={loading}><SkipForward className="h-4 w-4 mr-2" />Buscar próximo</Button>
+                <Button onClick={fetchNew} disabled={loading}><Plus className="h-4 w-4 mr-2" />Buscar novo</Button>
               </CardContent>
             </Card>
           ) : (
