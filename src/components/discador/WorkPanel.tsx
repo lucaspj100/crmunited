@@ -503,12 +503,20 @@ export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: P
                   <Button variant="outline" onClick={() => setEditOpen(true)}>
                     <Pencil className="h-4 w-4 mr-2" />Editar contato
                   </Button>
-                  <Button variant="outline" onClick={goBack} disabled={loading || prevStack.length === 0}>
-                    <ArrowLeft className="h-4 w-4 mr-2" />Voltar anterior
+                  <Button variant="outline" onClick={goPrev} disabled={loading || history.length < 2}>
+                    <ArrowLeft className="h-4 w-4 mr-2" />Anterior
                   </Button>
-                  <Button variant="ghost" onClick={loadNext} disabled={loading}>
-                    <SkipForward className="h-4 w-4 mr-2" />Pular para próximo
+                  <Button variant="outline" onClick={goNext} disabled={loading || history.length < 2}>
+                    <ArrowRight className="h-4 w-4 mr-2" />Próximo
                   </Button>
+                  <Button variant="secondary" onClick={fetchNew} disabled={loading}>
+                    <Plus className="h-4 w-4 mr-2" />Buscar novo
+                  </Button>
+                  {history.length > 0 && historyIndex >= 0 && (
+                    <span className="text-xs text-muted-foreground self-center ml-2">
+                      {historyIndex + 1} / {history.length} no histórico
+                    </span>
+                  )}
                 </div>
               </CardContent>
             </Card>
