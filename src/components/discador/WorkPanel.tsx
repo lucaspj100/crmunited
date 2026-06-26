@@ -397,18 +397,21 @@ export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: P
             className="fixed bottom-0 inset-x-0 z-40 border-t bg-background/95 backdrop-blur px-3 pt-2 w-full max-w-full"
             style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 8px)" }}
           >
-            <div className="grid grid-cols-4 gap-2 w-full max-w-full">
+            <div className="grid grid-cols-5 gap-1.5 w-full max-w-full">
               <Button onClick={ligar} className="h-12 min-w-0 px-1">
-                <Phone className="h-4 w-4 mr-1 shrink-0" /><span className="truncate text-xs">Ligar</span>
+                <Phone className="h-4 w-4 shrink-0" /><span className="truncate text-[10px] ml-1">Ligar</span>
               </Button>
               <Button variant="outline" onClick={() => { setLastAction(undefined); setResultOpen(true); }} className="h-12 min-w-0 px-1">
-                <ListChecks className="h-4 w-4 mr-1 shrink-0" /><span className="truncate text-xs">Resultado</span>
+                <ListChecks className="h-4 w-4 shrink-0" /><span className="truncate text-[10px] ml-1">Reg.</span>
               </Button>
-              <Button variant="ghost" onClick={goBack} disabled={loading || prevStack.length === 0} className="h-12 min-w-0 px-1">
-                <ArrowLeft className="h-4 w-4 mr-1 shrink-0" /><span className="truncate text-xs">Voltar</span>
+              <Button variant="ghost" onClick={goPrev} disabled={loading || history.length < 2} className="h-12 min-w-0 px-1">
+                <ArrowLeft className="h-4 w-4 shrink-0" /><span className="truncate text-[10px] ml-1">Ant.</span>
               </Button>
-              <Button variant="ghost" onClick={loadNext} disabled={loading} className="h-12 min-w-0 px-1">
-                <SkipForward className="h-4 w-4 mr-1 shrink-0" /><span className="truncate text-xs">Próximo</span>
+              <Button variant="ghost" onClick={goNext} disabled={loading || history.length < 2} className="h-12 min-w-0 px-1">
+                <ArrowRight className="h-4 w-4 shrink-0" /><span className="truncate text-[10px] ml-1">Próx.</span>
+              </Button>
+              <Button variant="secondary" onClick={fetchNew} disabled={loading} className="h-12 min-w-0 px-1">
+                <Plus className="h-4 w-4 shrink-0" /><span className="truncate text-[10px] ml-1">Novo</span>
               </Button>
             </div>
           </div>
