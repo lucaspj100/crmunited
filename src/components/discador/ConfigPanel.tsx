@@ -27,6 +27,36 @@ export function ConfigPanel() {
   const [text, setText] = useState(getWhatsappTemplate());
   const [ddd, setDdd] = useState(DEFAULT_DIALER_SETTINGS.ddd_origem);
   const [prefixo, setPrefixo] = useState(DEFAULT_DIALER_SETTINGS.prefixo_interurbano);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const insertVar = (key: string) => {
+    const token = `{${key}}`;
+    const el = textareaRef.current;
+    if (!el) { setText((t) => t + token); return; }
+    const start = el.selectionStart ?? text.length;
+    const end = el.selectionEnd ?? text.length;
+    const next = text.slice(0, start) + token + text.slice(end);
+    setText(next);
+    requestAnimationFrame(() => {
+      el.focus();
+      const pos = start + token.length;
+      el.setSelectionRange(pos, pos);
+    });
+  };
+
+  const sampleVars = useMemo(() => {
+    const sample: Record<string, string> = {};
+    for (const v of WHATSAPP_TEMPLATE_VARS) sample[v.key] = v.sample;
+    return {
+      nome: sample.nome,
+      empresa: sample.empresa,
+      cargo: sample.cargo,
+      origem: sample.origem,
+      telefone: sample.telefone,
+    };
+  }, []);
+
+  const preview = useMemo(() => renderWhatsappTemplate(text, sampleVars), [text, sampleVars]);
 
   const { data: mySettings } = useQuery({
     enabled: !!user,
