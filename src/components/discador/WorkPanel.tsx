@@ -37,55 +37,71 @@ export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: P
   const [contextOpen, setContextOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [prevStack, setPrevStack] = useState<string[]>([]);
+  const [hydrated, setHydrated] = useState(false);
 
   const HISTORY_CAP = 50;
   const storageKey = user ? `discador:prev_stack:${user.id}` : null;
 
-  // Hydrate stack from localStorage (per user)
+  // Hydrate stack from localStorage (per user) — uma vez por usuário
   useEffect(() => {
     if (!storageKey) return;
     try {
       const raw = localStorage.getItem(storageKey);
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) setPrevStack(parsed.filter((x) => typeof x === "string").slice(-HISTORY_CAP));
+        if (Array.isArray(parsed)) {
+          setPrevStack(parsed.filter((x) => typeof x === "string").slice(-HISTORY_CAP));
+        }
       }
     } catch { /* ignore */ }
+    setHydrated(true);
   }, [storageKey]);
 
-  // Persist stack
+  // Persist stack apenas depois de hidratar (evita sobrescrever com [])
   useEffect(() => {
-    if (!storageKey) return;
+    if (!storageKey || !hydrated) return;
     try { localStorage.setItem(storageKey, JSON.stringify(prevStack.slice(-HISTORY_CAP))); } catch { /* ignore */ }
-  }, [prevStack, storageKey]);
+  }, [prevStack, storageKey, hydrated]);
 
-  const pushHistory = (id: string) => {
-    setPrevStack((s) => {
-      // não duplica consecutivo
-      if (s.length > 0 && s[s.length - 1] === id) return s;
-      const next = [...s, id];
-      return next.length > HISTORY_CAP ? next.slice(-HISTORY_CAP) : next;
-    });
+  /**
+   * Centraliza a troca do contato atual.
+   * Empilha o contato anterior no histórico quando:
+   *  - existe um contato atual
+   *  - o próximo contato é diferente do atual
+   *  - pushHistory !== false (ex.: ao voltar, não empilha)
+   */
+  const setCurrentContact = (
+    next: ProspectContact | null,
+    options: { pushHistory?: boolean } = {},
+  ) => {
+    const shouldPush = options.pushHistory !== false;
+    if (shouldPush && contact && (!next || next.id !== contact.id)) {
+      setPrevStack((s) => {
+        if (s.length > 0 && s[s.length - 1] === contact.id) return s;
+        const merged = [...s, contact.id];
+        return merged.length > HISTORY_CAP ? merged.slice(-HISTORY_CAP) : merged;
+      });
+    }
+    setContact(next);
+    if (next) qc.invalidateQueries({ queryKey: ["prospect_attempts", next.id] });
   };
 
-  const loadContactById = async (id: string) => {
+  const loadContactById = async (id: string, options: { pushHistory?: boolean } = {}) => {
     setLoading(true);
     const { data, error } = await supabase.from("prospect_contacts").select("*").eq("id", id).maybeSingle();
     setLoading(false);
     if (error) { toast.error(`Erro ao carregar contato: ${error.message}`); return null; }
     if (!data) { toast.error("Contato não encontrado"); return null; }
-    setContact(data as ProspectContact);
-    qc.invalidateQueries({ queryKey: ["prospect_attempts", (data as ProspectContact).id] });
+    setCurrentContact(data as ProspectContact, options);
     return data as ProspectContact;
   };
 
   const loadNext = async () => {
     if (!user) return;
-    if (contact) pushHistory(contact.id);
     setLoading(true);
     const next = await fetchNextProspect(user.id);
-    setContact(next);
     setLoading(false);
+    setCurrentContact(next); // empilha o atual automaticamente
     if (!next) toast.info("Sem contatos pendentes na sua fila");
   };
 
@@ -94,7 +110,8 @@ export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: P
     const prevId = prevStack[prevStack.length - 1];
     // remove apenas o último; mantém o restante para permitir voltar várias vezes
     setPrevStack((s) => s.slice(0, -1));
-    await loadContactById(prevId);
+    // ao voltar, não empilha o contato atual (é navegação, não avanço)
+    await loadContactById(prevId, { pushHistory: false });
   };
 
   useEffect(() => { if (!focusContactId) void loadNext(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [user?.id]);
