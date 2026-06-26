@@ -91,6 +91,10 @@ export function ImportPanel({ sellers, isAdmin = false }: { sellers: Seller[]; i
     setReport(r);
     qc.invalidateQueries({ queryKey: ["prospect_contacts_admin"] });
     qc.invalidateQueries({ queryKey: ["prospect_dashboard"] });
+    qc.invalidateQueries({ queryKey: ["prospect_queue"] });
+    qc.invalidateQueries({ queryKey: ["prospect_counts"] });
+    qc.invalidateQueries({ queryKey: ["my_prospect_contacts"] });
+    qc.invalidateQueries({ queryKey: ["my_prospect_count"] });
 
     const processed = r.imported + r.updated;
     const techErrors = r.errors.filter((e) => /Erro ao inserir|Falha ao atualizar/i.test(e.reason)).length;
