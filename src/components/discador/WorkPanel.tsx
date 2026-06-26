@@ -550,7 +550,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: P
           onOpenChange={setConvertOpen}
           contact={contact}
           vendedorId={user.id}
-          onConverted={() => { qc.invalidateQueries({ queryKey: ["prospect_counts"] }); void loadNext(); }}
+          onConverted={() => { qc.invalidateQueries({ queryKey: ["prospect_counts"] }); void fetchNew(); }}
         />
       )}
       {contact && (
