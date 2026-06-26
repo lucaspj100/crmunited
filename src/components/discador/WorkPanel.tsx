@@ -301,15 +301,18 @@ export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: P
             className="fixed bottom-0 inset-x-0 z-40 border-t bg-background/95 backdrop-blur px-3 pt-2 w-full max-w-full"
             style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 8px)" }}
           >
-            <div className="grid grid-cols-3 gap-2 w-full max-w-full">
-              <Button onClick={ligar} className="h-12 min-w-0 px-2">
-                <Phone className="h-4 w-4 mr-1 shrink-0" /><span className="truncate">Ligar</span>
+            <div className="grid grid-cols-4 gap-2 w-full max-w-full">
+              <Button onClick={ligar} className="h-12 min-w-0 px-1">
+                <Phone className="h-4 w-4 mr-1 shrink-0" /><span className="truncate text-xs">Ligar</span>
               </Button>
-              <Button variant="outline" onClick={() => { setLastAction(undefined); setResultOpen(true); }} className="h-12 min-w-0 px-2">
-                <ListChecks className="h-4 w-4 mr-1 shrink-0" /><span className="truncate">Resultado</span>
+              <Button variant="outline" onClick={() => { setLastAction(undefined); setResultOpen(true); }} className="h-12 min-w-0 px-1">
+                <ListChecks className="h-4 w-4 mr-1 shrink-0" /><span className="truncate text-xs">Resultado</span>
               </Button>
-              <Button variant="ghost" onClick={loadNext} disabled={loading} className="h-12 min-w-0 px-2">
-                <SkipForward className="h-4 w-4 mr-1 shrink-0" /><span className="truncate">Próximo</span>
+              <Button variant="ghost" onClick={goBack} disabled={loading || prevStack.length === 0} className="h-12 min-w-0 px-1">
+                <ArrowLeft className="h-4 w-4 mr-1 shrink-0" /><span className="truncate text-xs">Voltar</span>
+              </Button>
+              <Button variant="ghost" onClick={loadNext} disabled={loading} className="h-12 min-w-0 px-1">
+                <SkipForward className="h-4 w-4 mr-1 shrink-0" /><span className="truncate text-xs">Próximo</span>
               </Button>
             </div>
           </div>
