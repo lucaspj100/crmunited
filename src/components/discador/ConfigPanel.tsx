@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
@@ -7,7 +7,13 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { DEFAULT_WHATSAPP_TEMPLATE, getWhatsappTemplate, setWhatsappTemplate } from "@/lib/prospect-status";
+import {
+  DEFAULT_WHATSAPP_TEMPLATE,
+  getWhatsappTemplate,
+  setWhatsappTemplate,
+  renderWhatsappTemplate,
+  WHATSAPP_TEMPLATE_VARS,
+} from "@/lib/prospect-status";
 import { DEFAULT_DIALER_SETTINGS, validateDialerSettings, type DialerSettings } from "@/lib/prospect-dial";
 import { toast } from "sonner";
 import { format } from "date-fns";
