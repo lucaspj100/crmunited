@@ -150,7 +150,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: P
       tipo_acao: "whatsapp",
       telefone_normalizado: contact.telefone_normalizado,
     });
-    window.open(`https://wa.me/${contact.telefone_normalizado}?text=${encodeURIComponent(template)}`, "_blank");
+    window.open(`https://wa.me/${contact.telefone_normalizado}?text=${encodeURIComponent(message)}`, "_blank");
     setResultOpen(true);
   };
 
