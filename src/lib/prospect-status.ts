@@ -94,7 +94,7 @@ export function applyResultToFields(result: ProspectResult, proximaTentativa: st
 }
 
 export const DEFAULT_WHATSAPP_TEMPLATE =
-  "Olá, tudo bem? Aqui é da United Idiomas. Estou entrando em contato para entender se faz sentido te explicar uma oportunidade de bolsa para inglês voltado à carreira.";
+  "Olá, {primeiro_nome}! Aqui é da United Idiomas. Estou entrando em contato para entender se faz sentido te explicar uma oportunidade de bolsa para inglês voltado à carreira.";
 
 const WPP_KEY = "prospect_whatsapp_template";
 
@@ -106,4 +106,50 @@ export function getWhatsappTemplate(): string {
 export function setWhatsappTemplate(text: string) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(WPP_KEY, text);
+}
+
+export type WhatsappTemplateVars = {
+  nome?: string | null;
+  empresa?: string | null;
+  cargo?: string | null;
+  origem?: string | null;
+  telefone?: string | null;
+};
+
+export const WHATSAPP_TEMPLATE_VARS: { key: string; label: string; sample: string }[] = [
+  { key: "primeiro_nome", label: "Primeiro nome", sample: "Leandro" },
+  { key: "nome", label: "Nome completo", sample: "Leandro Souza" },
+  { key: "empresa", label: "Empresa", sample: "Aché" },
+  { key: "cargo", label: "Cargo", sample: "Analista" },
+  { key: "origem", label: "Origem", sample: "Lista Aché" },
+  { key: "telefone", label: "Telefone", sample: "+5511999998888" },
+];
+
+const WPP_FALLBACKS: Record<string, string> = {
+  primeiro_nome: "",
+  nome: "",
+  empresa: "sua empresa",
+  cargo: "",
+  origem: "",
+  telefone: "",
+};
+
+function firstNameOf(name: string | null | undefined): string {
+  return (name ?? "").trim().split(/\s+/)[0] || "";
+}
+
+export function renderWhatsappTemplate(template: string, vars: WhatsappTemplateVars): string {
+  const values: Record<string, string> = {
+    nome: (vars.nome ?? "").trim(),
+    primeiro_nome: firstNameOf(vars.nome),
+    empresa: (vars.empresa ?? "").trim(),
+    cargo: (vars.cargo ?? "").trim(),
+    origem: (vars.origem ?? "").trim(),
+    telefone: (vars.telefone ?? "").trim(),
+  };
+  return template.replace(/\{(primeiro_nome|nome|empresa|cargo|origem|telefone)\}/g, (_m, key: string) => {
+    const v = values[key];
+    if (v) return v;
+    return WPP_FALLBACKS[key] ?? "";
+  });
 }
