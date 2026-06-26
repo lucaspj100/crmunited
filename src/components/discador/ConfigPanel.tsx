@@ -139,7 +139,32 @@ export function ConfigPanel() {
       <Card>
         <CardHeader><CardTitle>Mensagem padrão de WhatsApp</CardTitle></CardHeader>
         <CardContent className="space-y-3">
-          <Textarea rows={6} value={text} onChange={(e) => setText(e.target.value)} maxLength={1000} />
+          <Textarea
+            ref={textareaRef}
+            rows={7}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            maxLength={2000}
+          />
+          <p className="text-xs text-muted-foreground">
+            Variáveis disponíveis: <code>{"{primeiro_nome}"}</code>, <code>{"{nome}"}</code>,{" "}
+            <code>{"{empresa}"}</code>, <code>{"{cargo}"}</code>, <code>{"{origem}"}</code>,{" "}
+            <code>{"{telefone}"}</code>. Elas são substituídas automaticamente pelos dados do contato ao abrir o WhatsApp.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <span className="text-xs text-muted-foreground self-center">Inserir variável:</span>
+            {WHATSAPP_TEMPLATE_VARS.map((v) => (
+              <Button key={v.key} size="sm" variant="outline" type="button" onClick={() => insertVar(v.key)}>
+                {v.label}
+              </Button>
+            ))}
+          </div>
+          <div>
+            <Label className="text-xs uppercase text-muted-foreground">Prévia (contato de exemplo: Leandro Souza · Aché · Analista · Lista Aché)</Label>
+            <div className="mt-1 rounded-md border bg-muted/40 p-3 text-sm whitespace-pre-wrap break-words min-h-[80px]">
+              {preview || <span className="text-muted-foreground italic">A prévia aparecerá aqui.</span>}
+            </div>
+          </div>
           <p className="text-xs text-muted-foreground">Usada no botão WhatsApp do Discador. Salva no navegador atual.</p>
           <div className="flex gap-2">
             <Button onClick={saveWpp}>Salvar</Button>
