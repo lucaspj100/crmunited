@@ -464,6 +464,8 @@ function ClearMyContactsCard({ userId }: { userId: string }) {
       await refetch();
       qc.invalidateQueries({ queryKey: ["prospect_queue"] });
       qc.invalidateQueries({ queryKey: ["prospect_contacts_admin"] });
+      qc.invalidateQueries({ queryKey: ["prospect_dashboard"] });
+      qc.invalidateQueries({ queryKey: ["my_prospect_count"] });
     } finally {
       setBusy(false);
     }
