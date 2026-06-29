@@ -20,7 +20,8 @@ import { LeadDetailsDialog } from "@/components/LeadDetailsDialog";
 import { QuickTaskDialog } from "@/components/QuickTaskDialog";
 import { ensureTaskForStatus } from "@/lib/task-automation";
 import { logLeadEvent } from "@/lib/lead-events";
-import { notifyArena, notifyArenaAsync } from "@/lib/arena-dispatch";
+import { notifyArena } from "@/lib/arena-dispatch";
+import { registerEnrollmentAndSyncArena } from "@/lib/enrollment";
 import { labelFor, TASK_TYPES } from "@/lib/constants";
 import { toast } from "sonner";
 
