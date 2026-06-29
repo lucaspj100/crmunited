@@ -10,6 +10,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { autoConvertProspectToLead } from "@/lib/prospect-auto-convert";
 import type { ProspectContact } from "@/lib/prospect-queue";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
+import { format } from "date-fns";
 
 type Props = {
   open: boolean;
@@ -25,6 +27,7 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
   const [obs, setObs] = useState("");
   const [proxima, setProxima] = useState("");
   const [saving, setSaving] = useState(false);
+  const queryClient = useQueryClient();
 
   const contactId = contact.id;
   const telefone = contact.telefone_normalizado;
@@ -58,6 +61,24 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
       resultado: result,
       observacao: obs || null,
     });
+
+    // Sincroniza observação mais recente em prospect_contacts.observacao (preserva histórico anterior)
+    const obsTrim = obs.trim();
+    if (obsTrim) {
+      const stamp = format(new Date(), "dd/MM HH:mm");
+      const tipoLabel = (initialAction ?? "edicao") === "whatsapp" ? "WhatsApp" : (initialAction === "ligacao" ? "Ligação" : "Registro");
+      const newEntry = `[${stamp}] ${tipoLabel} - ${result}: ${obsTrim}`;
+      const prev = (contact.observacao ?? "").trim();
+      const merged = prev ? `${newEntry}\n${prev}` : newEntry;
+      // Limita tamanho para evitar crescimento infinito (mantém ~4000 chars)
+      const capped = merged.length > 4000 ? merged.slice(0, 4000) : merged;
+      const { error: eObs } = await supabase
+        .from("prospect_contacts")
+        .update({ observacao: capped })
+        .eq("id", contactId);
+      if (eObs) console.warn("[ResultDialog] falha ao sincronizar observacao", eObs);
+    }
+
 
     // 1) Ligar depois → criar tarefa de retorno
     if (result === "Ligar depois" && due_date) {
@@ -113,6 +134,8 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
 
     setSaving(false);
     setResult(""); setObs(""); setProxima("");
+    queryClient.invalidateQueries({ queryKey: ["my_prospect_contacts"] });
+    queryClient.invalidateQueries({ queryKey: ["prospect_queue"] });
     onOpenChange(false);
     onSaved(goNext);
   };
