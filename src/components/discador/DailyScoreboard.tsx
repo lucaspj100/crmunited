@@ -1,12 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Phone, MessageCircle, Users, Sparkles, CalendarCheck, Clock, Flame } from "lucide-react";
+import { Phone, MessageCircle, Users, Sparkles, CalendarCheck, Clock, Flame, Settings2, AlertTriangle } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
-const DAILY_CALL_GOAL = 50;
+const DEFAULT_CALL_GOAL = 100;
+const MIN_RECOMMENDED_GOAL = 70;
 const INTERESTED_RESULTS = ["Interessado", "Pediu WhatsApp"];
 
 function startOfTodayISO() {
