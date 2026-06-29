@@ -81,3 +81,68 @@ export async function ensureEnrollmentSentToArena(leadId: string): Promise<Notif
   if (existing) return { ok: true, skipped: true, reason: "already_sent" };
   return notifyArenaAsync(leadId, "crm_enrollment_created");
 }
+
+export type CancelEnrollmentResult = {
+  ok: boolean;
+  saved: boolean;
+  /** true se nunca existiu envio anterior — cancelamento não é necessário */
+  noPriorEnrollment: boolean;
+  arena: NotifyArenaResult | null;
+  error?: string;
+};
+
+/**
+ * Cancela uma matrícula no CRM: muda status, opcionalmente limpa valores,
+ * grava log e dispara crm_enrollment_cancelled para a Arena (somente se
+ * já existir um crm_enrollment_created sent anterior).
+ */
+export async function cancelEnrollmentAndSyncArena(
+  leadId: string,
+  newStatus: string,
+  options?: { reason?: string; clearValues?: boolean; previousStatus?: string },
+): Promise<CancelEnrollmentResult> {
+  const reason = options?.reason ?? null;
+  const clearValues = options?.clearValues ?? false;
+  const previousStatus = options?.previousStatus ?? "matricula";
+
+  const update: Record<string, unknown> = { status: newStatus };
+  if (clearValues) {
+    update.enrollment_value = null;
+    update.monthly_fee = null;
+    update.material_value = null;
+  }
+
+  const { error } = await supabase.from("leads").update(update as any).eq("id", leadId);
+  if (error) {
+    return { ok: false, saved: false, noPriorEnrollment: false, arena: null, error: error.message };
+  }
+
+  await logLeadEvent({
+    leadId,
+    type: "enrollment_cancelled",
+    description: `Matrícula cancelada — ${previousStatus} → ${newStatus}${reason ? ` · ${reason}` : ""}`,
+    metadata: { previousStatus, newStatus, reason, clearedValues: clearValues },
+  });
+
+  // Só envia cancelamento se já existir envio anterior bem-sucedido
+  const { data: prior } = await supabase
+    .from("crm_outbound_events")
+    .select("id")
+    .eq("crm_lead_id", leadId)
+    .eq("event_type", "crm_enrollment_created")
+    .eq("status", "sent")
+    .maybeSingle();
+
+  if (!prior) {
+    return { ok: true, saved: true, noPriorEnrollment: true, arena: null };
+  }
+
+  const arena = await notifyArenaAsync(leadId, "crm_enrollment_cancelled", {
+    previous_status: previousStatus,
+    new_status: newStatus,
+    cancellation_reason: reason,
+  });
+
+  return { ok: arena.ok, saved: true, noPriorEnrollment: false, arena };
+}
+
