@@ -27,6 +27,7 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
   const [obs, setObs] = useState("");
   const [proxima, setProxima] = useState("");
   const [saving, setSaving] = useState(false);
+  const queryClient = useQueryClient();
 
   const contactId = contact.id;
   const telefone = contact.telefone_normalizado;
