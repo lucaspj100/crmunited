@@ -235,8 +235,10 @@ const EVENT_TYPES = [
   "crm_interview_no_show",
   "crm_interview_rescheduled",
   "crm_enrollment_created",
+  "crm_enrollment_cancelled",
   "crm_lost_after_interview",
 ] as const;
+
 
 const STATUS_OPTIONS = ["all", "pending", "sent", "failed", "skipped"] as const;
 
