@@ -171,6 +171,29 @@ export function LeadDetailsDialog({
               </div>
             )}
 
+            {lead.status === "matricula" && arenaSent === false && (
+              <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3 space-y-2">
+                <div className="flex items-start gap-2 text-sm text-amber-800 dark:text-amber-200">
+                  <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+                  <div>
+                    <div className="font-medium">Matrícula registrada no CRM, mas ainda não existe envio para Arena.</div>
+                    <div className="text-xs mt-0.5 opacity-90">Reenvie agora para garantir que a matrícula apareça na Arena.</div>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={onResendEnrollment}
+                  disabled={resending}
+                  className="gap-1.5"
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 ${resending ? "animate-spin" : ""}`} />
+                  {resending ? "Enviando…" : "Enviar matrícula para Arena agora"}
+                </Button>
+              </div>
+            )}
+
             {(lead.interview_date || lead.interview_time || lead.interview_notes) && (
               <div className="rounded-md border p-3 space-y-1 bg-muted/30">
                 <div className="text-xs font-semibold text-muted-foreground uppercase">Entrevista</div>
