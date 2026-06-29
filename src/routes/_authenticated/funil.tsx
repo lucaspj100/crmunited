@@ -20,7 +20,7 @@ import { LeadDetailsDialog } from "@/components/LeadDetailsDialog";
 import { QuickTaskDialog } from "@/components/QuickTaskDialog";
 import { ensureTaskForStatus } from "@/lib/task-automation";
 import { logLeadEvent } from "@/lib/lead-events";
-import { notifyArena } from "@/lib/arena-dispatch";
+import { notifyArena, notifyArenaAsync } from "@/lib/arena-dispatch";
 import { labelFor, TASK_TYPES } from "@/lib/constants";
 import { toast } from "sonner";
 
@@ -510,8 +510,13 @@ function MatriculaDialog({ lead, onClose, onSaved }: { lead: Lead | null; onClos
     if (error) toast.error(error.message);
     else {
       await logLeadEvent({ leadId: lead.id, type: "enrolled", description: `Matrícula R$ ${ev} · Mensalidade R$ ${mv} · Material R$ ${mt}`, metadata: { ev, mv, mt } });
-      notifyArena(lead.id, "crm_enrollment_created");
-      toast.success("Matrícula registrada"); onSaved(); onClose();
+      const arenaRes = await notifyArenaAsync(lead.id, "crm_enrollment_created");
+      if (arenaRes.ok) {
+        toast.success("Matrícula registrada");
+      } else {
+        toast.warning("Matrícula salva no CRM, mas não foi enviada para a Arena. Verifique a integração.");
+      }
+      onSaved(); onClose();
     }
   };
 
