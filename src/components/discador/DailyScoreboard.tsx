@@ -145,9 +145,20 @@ export function DailyScoreboard({
         </div>
 
         <div className="rounded-md border bg-muted/40 p-3 space-y-2">
-          <div className="flex items-center justify-between text-xs">
+          <div className="flex items-center justify-between gap-2 text-xs">
             <span className="font-semibold uppercase tracking-wide text-muted-foreground">Sprint de Ligações</span>
-            <span className="font-mono font-semibold">{stats.calls} / {DAILY_CALL_GOAL} ligações hoje</span>
+            <div className="flex items-center gap-2">
+              <span className="font-mono font-semibold">{stats.calls} / {callGoal} ligações hoje</span>
+              <button
+                type="button"
+                onClick={() => setGoalDialogOpen(true)}
+                className="inline-flex items-center gap-1 rounded border px-2 py-0.5 text-[11px] hover:bg-background"
+                title="Configurar meta"
+              >
+                <Settings2 className="h-3 w-3" />
+                <span className="hidden sm:inline">Configurar meta</span>
+              </button>
+            </div>
           </div>
           <Progress value={goalProgress} className="h-2" />
           <p className="text-xs text-muted-foreground">{message}</p>
