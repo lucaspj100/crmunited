@@ -56,7 +56,24 @@ export function DailyScoreboard({
   hasContact?: boolean;
 }) {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const todayISO = startOfTodayISO();
+  const [goalDialogOpen, setGoalDialogOpen] = useState(false);
+
+  const { data: goalRow } = useQuery({
+    enabled: !!user,
+    queryKey: ["seller_daily_goal", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("seller_daily_goals")
+        .select("daily_calls_goal")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+  const callGoal = goalRow?.daily_calls_goal ?? DEFAULT_CALL_GOAL;
 
   const { data } = useQuery<DailyStats>({
     enabled: !!user,
