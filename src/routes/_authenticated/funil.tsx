@@ -490,15 +490,18 @@ function MatriculaDialog({ lead, onClose, onSaved }: { lead: Lead | null; onClos
       toast.error("Informe os três valores"); return;
     }
     setSaving(true);
-    const { error } = await supabase.from("leads").update({
-      status: "matricula",
-      enrollment_value: ev,
-      monthly_fee: mv,
-      material_value: mt,
-    } as any).eq("id", lead.id);
 
     const fDate = computeFollowupDate(followup, followupDate);
-    if (!error && fDate) {
+
+    const res = await registerEnrollmentAndSyncArena(lead.id, ev, mv, mt);
+
+    if (!res.saved) {
+      setSaving(false);
+      toast.error(res.error ?? "Não foi possível salvar a matrícula");
+      return;
+    }
+
+    if (fDate) {
       await supabase.from("tasks").insert({
         lead_id: lead.id, owner_id: lead.owner_id, type: "followup_pos",
         due_date: fDate, status: "pendente", observation: "Follow-up pós-matrícula",
@@ -508,17 +511,18 @@ function MatriculaDialog({ lead, onClose, onSaved }: { lead: Lead | null; onClos
       .eq("lead_id", lead.id).eq("status", "pendente").eq("is_rescue", false);
 
     setSaving(false);
-    if (error) toast.error(error.message);
-    else {
-      await logLeadEvent({ leadId: lead.id, type: "enrolled", description: `Matrícula R$ ${ev} · Mensalidade R$ ${mv} · Material R$ ${mt}`, metadata: { ev, mv, mt } });
-      const arenaRes = await notifyArenaAsync(lead.id, "crm_enrollment_created");
-      if (arenaRes.ok) {
-        toast.success("Matrícula registrada");
-      } else {
-        toast.warning("Matrícula salva no CRM, mas não foi enviada para a Arena. Verifique a integração.");
-      }
-      onSaved(); onClose();
+
+    if (res.alreadySent) {
+      toast.success("Matrícula registrada (Arena já havia sido notificada).");
+    } else if (res.arena?.ok) {
+      toast.success("Matrícula registrada e enviada para a Arena.");
+    } else {
+      toast.warning(
+        `Matrícula salva no CRM, mas não entrou na Arena. Vá em Integração Arena para reenviar.${res.arena?.error ? ` (${res.arena.error})` : ""}`,
+        { duration: 8000 },
+      );
     }
+    onSaved(); onClose();
   };
 
   return (
