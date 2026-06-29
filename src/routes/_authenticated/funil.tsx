@@ -46,6 +46,8 @@ function FunilPage() {
   const [vendorFilter, setVendorFilter] = useState<string>("all");
   const [tempFilter, setTempFilter] = useState<string>("all");
   const [quickTaskLead, setQuickTaskLead] = useState<Lead | null>(null);
+  const [cancelEnrollment, setCancelEnrollment] = useState<{ lead: Lead; newStatus: string } | null>(null);
+
 
   const { data: leads = [] } = useQuery({
     queryKey: ["leads-funil"],
