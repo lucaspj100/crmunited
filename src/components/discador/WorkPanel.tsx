@@ -249,6 +249,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: P
     qc.invalidateQueries({ queryKey: ["prospect_counts"] });
     qc.invalidateQueries({ queryKey: ["prospect_attempts", contact?.id] });
     qc.invalidateQueries({ queryKey: ["daily_scoreboard"] });
+    qc.invalidateQueries({ queryKey: ["my_prospect_contacts"] });
     qc.invalidateQueries({ queryKey: ["leads"] });
     qc.invalidateQueries({ queryKey: ["tasks"] });
     if (!contact) return;
