@@ -21,7 +21,7 @@ import { QuickTaskDialog } from "@/components/QuickTaskDialog";
 import { ensureTaskForStatus } from "@/lib/task-automation";
 import { logLeadEvent } from "@/lib/lead-events";
 import { notifyArena } from "@/lib/arena-dispatch";
-import { registerEnrollmentAndSyncArena } from "@/lib/enrollment";
+import { registerEnrollmentAndSyncArena, cancelEnrollmentAndSyncArena } from "@/lib/enrollment";
 import { labelFor, TASK_TYPES } from "@/lib/constants";
 import { toast } from "sonner";
 
@@ -46,6 +46,8 @@ function FunilPage() {
   const [vendorFilter, setVendorFilter] = useState<string>("all");
   const [tempFilter, setTempFilter] = useState<string>("all");
   const [quickTaskLead, setQuickTaskLead] = useState<Lead | null>(null);
+  const [cancelEnrollment, setCancelEnrollment] = useState<{ lead: Lead; newStatus: string } | null>(null);
+
 
   const { data: leads = [] } = useQuery({
     queryKey: ["leads-funil"],
@@ -109,6 +111,11 @@ function FunilPage() {
 
   const moveLead = async (lead: Lead, newStatus: string) => {
     if (lead.status === newStatus) return;
+    // Saindo de matrícula → exige confirmação e cancela na Arena
+    if (lead.status === "matricula" && newStatus !== "matricula") {
+      setCancelEnrollment({ lead, newStatus });
+      return;
+    }
     if (newStatus === "entrevista_marcada") { setInterviewLead(lead); return; }
     if (newStatus === "perdido") { setLostLead(lead); return; }
     if (newStatus === "matricula") { setMatriculaLead(lead); return; }
@@ -119,6 +126,7 @@ function FunilPage() {
     toast.success("Lead movido");
     qc.invalidateQueries();
   };
+
 
 
   return (
@@ -292,6 +300,11 @@ function FunilPage() {
       <InterviewDialog lead={interviewLead} onClose={() => setInterviewLead(null)} onSaved={() => qc.invalidateQueries()} />
       <LostDialog lead={lostLead} onClose={() => setLostLead(null)} onSaved={() => qc.invalidateQueries()} />
       <MatriculaDialog lead={matriculaLead} onClose={() => setMatriculaLead(null)} onSaved={() => qc.invalidateQueries()} />
+      <CancelEnrollmentDialog
+        data={cancelEnrollment}
+        onClose={() => setCancelEnrollment(null)}
+        onDone={() => qc.invalidateQueries()}
+      />
       <LeadDetailsDialog leadId={detailsId} onClose={() => setDetailsId(null)} />
       {quickTaskLead && (
         <QuickTaskDialog
@@ -302,6 +315,7 @@ function FunilPage() {
           onSaved={() => qc.invalidateQueries()}
         />
       )}
+
     </div>
   );
 }
@@ -549,3 +563,92 @@ function MatriculaDialog({ lead, onClose, onSaved }: { lead: Lead | null; onClos
     </Dialog>
   );
 }
+
+function CancelEnrollmentDialog({
+  data,
+  onClose,
+  onDone,
+}: {
+  data: { lead: Lead; newStatus: string } | null;
+  onClose: () => void;
+  onDone: () => void;
+}) {
+  const [clearValues, setClearValues] = useState(true);
+  const [reason, setReason] = useState("");
+  const [saving, setSaving] = useState(false);
+  if (!data) return null;
+  const { lead, newStatus } = data;
+  const newStatusLabel = LEAD_STATUSES.find((s) => s.value === newStatus)?.label ?? newStatus;
+
+  const onConfirm = async () => {
+    setSaving(true);
+    const res = await cancelEnrollmentAndSyncArena(lead.id, newStatus, {
+      reason: reason.trim() || undefined,
+      clearValues,
+      previousStatus: lead.status,
+    });
+    setSaving(false);
+    if (!res.saved) {
+      toast.error(res.error ?? "Não foi possível mover o lead");
+      return;
+    }
+    await ensureTaskForStatus({ leadId: lead.id, ownerId: lead.owner_id, status: newStatus });
+    if (res.noPriorEnrollment) {
+      toast.success("Matrícula desfeita (sem envio anterior à Arena).");
+    } else if (res.arena?.ok) {
+      toast.success("Matrícula cancelada e Arena notificada.");
+    } else {
+      toast.warning(
+        `Lead movido, mas o cancelamento não chegou na Arena. Vá em Integração Arena para reenviar.${res.arena?.error ? ` (${res.arena.error})` : ""}`,
+        { duration: 8000 },
+      );
+    }
+    onDone();
+    onClose();
+  };
+
+  return (
+    <Dialog open onOpenChange={(o) => !o && !saving && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Desfazer matrícula — {lead.name}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 text-sm">
+          <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-amber-900 dark:text-amber-200">
+            Este lead já foi enviado como <strong>matrícula</strong> para a Arena.
+            Se você mover para <strong>{newStatusLabel}</strong>, a matrícula será
+            cancelada na Arena. Deseja continuar?
+          </div>
+          <div>
+            <Label>Motivo (opcional)</Label>
+            <Textarea
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="Ex.: matrícula registrada por engano, cliente desistiu…"
+              rows={2}
+            />
+          </div>
+          <label className="flex items-start gap-2 text-xs">
+            <input
+              type="checkbox"
+              className="mt-0.5"
+              checked={clearValues}
+              onChange={(e) => setClearValues(e.target.checked)}
+            />
+            <span>
+              Limpar valores de matrícula, mensalidade e material no CRM.
+              Desmarque para preservar os valores no histórico do lead.
+            </span>
+          </label>
+        </div>
+        <DialogFooter>
+          <Button type="button" variant="ghost" onClick={onClose} disabled={saving}>Cancelar</Button>
+          <Button type="button" variant="destructive" onClick={onConfirm} disabled={saving}>
+            {saving ? "Processando…" : "Sim, desfazer matrícula"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+

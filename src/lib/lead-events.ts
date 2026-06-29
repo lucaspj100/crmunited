@@ -16,10 +16,12 @@ export type LeadEventType =
   | "interview_no_show"
   | "interview_rescheduled"
   | "enrolled"
+  | "enrollment_cancelled"
   | "lost"
   | "rescue_moved"
   | "rescue_activated"
   | "note";
+
 
 export async function logLeadEvent(input: {
   leadId: string;
@@ -57,6 +59,8 @@ export const EVENT_META: Record<string, { label: string; icon: string; color: st
   interview_no_show:     { label: "No-show",                      icon: "🚫", color: "text-rose-700" },
   interview_rescheduled: { label: "Entrevista reagendada",        icon: "🔁", color: "text-orange-700" },
   enrolled:              { label: "Matrícula registrada",         icon: "🎓", color: "text-emerald-700" },
+  enrollment_cancelled:  { label: "Matrícula cancelada",          icon: "↩️", color: "text-rose-700" },
+
   lost:                  { label: "Lead perdido",                 icon: "❌", color: "text-rose-700" },
   rescue_moved:          { label: "Movido para resgate",          icon: "♻️", color: "text-cyan-700" },
   rescue_activated:      { label: "Resgate ativado",              icon: "🔥", color: "text-amber-700" },
