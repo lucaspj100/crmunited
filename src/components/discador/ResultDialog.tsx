@@ -68,6 +68,14 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
       telefone_normalizado: telefone,
       resultado: result,
       observacao: obs || null,
+      ...(initialAction === "ligacao" && dialMeta
+        ? {
+            telefone_para_discagem: dialMeta.telefone_para_discagem,
+            ddd_origem_vendedor: dialMeta.ddd_origem_vendedor,
+            prefixo_interurbano: dialMeta.prefixo_interurbano,
+            ddd_destino_contato: dialMeta.ddd_destino_contato,
+          }
+        : {}),
     });
 
     // Sincroniza observação mais recente em prospect_contacts.observacao (preserva histórico anterior)
