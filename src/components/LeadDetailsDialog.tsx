@@ -48,6 +48,8 @@ export function LeadDetailsDialog({
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [arenaSent, setArenaSent] = useState<boolean | null>(null);
+  const [resending, setResending] = useState(false);
 
   // editable fields (mesmos do cadastro)
   const [name, setName] = useState("");
