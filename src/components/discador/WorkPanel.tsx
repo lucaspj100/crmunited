@@ -223,16 +223,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: P
         quantidade_tentativas: contact.quantidade_tentativas + 1,
       })
       .eq("id", contact.id);
-    await supabase.from("prospect_attempts").insert({
-      prospect_contact_id: contact.id,
-      vendedor_id: user.id,
-      tipo_acao: "ligacao",
-      telefone_normalizado: contact.telefone_normalizado,
-      telefone_para_discagem: dialNumber,
-      ddd_origem_vendedor: settings.ddd_origem,
-      prefixo_interurbano: settings.prefixo_interurbano,
-      ddd_destino_contato: dddDestino,
-    });
+    // NÃO inserir em prospect_attempts aqui: o registro único é criado no ResultDialog ao salvar.
     window.location.href = `tel:${dialNumber}`;
     setResultOpen(true);
   };
@@ -248,15 +239,11 @@ export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: P
       origem: contact.origem,
       telefone: contact.telefone_normalizado ? `+${contact.telefone_normalizado}` : contact.telefone_original,
     });
-    await supabase.from("prospect_attempts").insert({
-      prospect_contact_id: contact.id,
-      vendedor_id: user.id,
-      tipo_acao: "whatsapp",
-      telefone_normalizado: contact.telefone_normalizado,
-    });
+    // NÃO inserir em prospect_attempts aqui: o registro único é criado no ResultDialog ao salvar.
     window.open(`https://wa.me/${contact.telefone_normalizado}?text=${encodeURIComponent(message)}`, "_blank");
     setResultOpen(true);
   };
+
 
   const onResultSaved = async (_goNext: boolean) => {
     qc.invalidateQueries({ queryKey: ["prospect_counts"] });
