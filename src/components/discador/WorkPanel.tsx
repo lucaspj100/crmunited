@@ -17,6 +17,7 @@ import { ConvertLeadDialog } from "./ConvertLeadDialog";
 import { EditContactDialog } from "./EditContactDialog";
 import { AttemptHistory } from "./AttemptHistory";
 import { ReturnsDebugCard } from "./ReturnsDebugCard";
+import { DailyScoreboard } from "./DailyScoreboard";
 import { toast } from "sonner";
 
 type Props = {
@@ -260,6 +261,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: P
   const onResultSaved = async (_goNext: boolean) => {
     qc.invalidateQueries({ queryKey: ["prospect_counts"] });
     qc.invalidateQueries({ queryKey: ["prospect_attempts", contact?.id] });
+    qc.invalidateQueries({ queryKey: ["daily_scoreboard"] });
     qc.invalidateQueries({ queryKey: ["leads"] });
     qc.invalidateQueries({ queryKey: ["tasks"] });
     if (!contact) return;
@@ -305,6 +307,10 @@ export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: P
           <span className="mx-1.5">·</span>
           <span><strong className="text-foreground">{counts?.done ?? 0}</strong> convertidos</span>
         </div>
+
+        <DailyScoreboard onStartSprint={ligar} hasContact={!!contact} />
+
+
 
         {!contact ? (
           <div className="rounded-lg border bg-card p-6 flex flex-col items-center gap-3 text-center">
@@ -442,6 +448,10 @@ export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: P
             <Stat label="Interessados" value={counts?.interested ?? 0} />
             <Stat label="Convertidos" value={counts?.done ?? 0} />
           </div>
+
+          <DailyScoreboard onStartSprint={ligar} hasContact={!!contact} />
+
+
 
           {!contact ? (
             <Card>
