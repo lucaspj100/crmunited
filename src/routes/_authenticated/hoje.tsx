@@ -115,7 +115,7 @@ function HojePage() {
   });
 
   const today = new Date().toISOString().slice(0, 10);
-  const nowHHMM = new Date().toTimeString().slice(0, 5);
+  // const now is computed via Date when needed
   const in7 = new Date(); in7.setDate(in7.getDate() + 7);
   const in7Str = in7.toISOString().slice(0, 10);
 
