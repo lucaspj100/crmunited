@@ -174,7 +174,83 @@ export function DailyScoreboard({
           )}
         </div>
       </CardContent>
+      <GoalDialog
+        open={goalDialogOpen}
+        onOpenChange={setGoalDialogOpen}
+        currentGoal={callGoal}
+        userId={user?.id}
+        onSaved={() => queryClient.invalidateQueries({ queryKey: ["seller_daily_goal", user?.id] })}
+      />
     </Card>
+  );
+}
+
+function GoalDialog({
+  open, onOpenChange, currentGoal, userId, onSaved,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  currentGoal: number;
+  userId?: string;
+  onSaved: () => void;
+}) {
+  const [value, setValue] = useState<string>(String(currentGoal));
+  useEffect(() => { if (open) setValue(String(currentGoal)); }, [open, currentGoal]);
+
+  const numeric = Number.parseInt(value, 10);
+  const isValid = Number.isFinite(numeric) && numeric > 0;
+  const isLow = isValid && numeric < MIN_RECOMMENDED_GOAL;
+
+  const mutation = useMutation({
+    mutationFn: async () => {
+      if (!userId || !isValid) throw new Error("Meta inválida");
+      const { error } = await supabase
+        .from("seller_daily_goals")
+        .upsert({ user_id: userId, daily_calls_goal: numeric }, { onConflict: "user_id" });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Meta diária atualizada");
+      onSaved();
+      onOpenChange(false);
+    },
+    onError: (e: Error) => toast.error(e.message ?? "Erro ao salvar meta"),
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Configurar meta diária</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="daily-calls-goal">Meta diária de ligações</Label>
+            <Input
+              id="daily-calls-goal"
+              type="number"
+              inputMode="numeric"
+              min={1}
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+            />
+            <p className="text-[11px] text-muted-foreground">Exemplo: 100 ligações por dia.</p>
+          </div>
+          {isLow && (
+            <div className="flex gap-2 rounded-md border border-amber-300 bg-amber-50 p-2 text-xs text-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
+              <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+              <span>Essa meta está baixa para outbound B2C. Recomendamos pelo menos 70 ligações por dia.</span>
+            </div>
+          )}
+        </div>
+        <DialogFooter className="gap-2 sm:gap-2">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button onClick={() => mutation.mutate()} disabled={!isValid || mutation.isPending}>
+            {mutation.isPending ? "Salvando..." : "Salvar meta"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
