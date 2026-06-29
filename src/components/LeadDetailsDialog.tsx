@@ -59,8 +59,9 @@ export function LeadDetailsDialog({
   const [observation, setObservation] = useState("");
 
   useEffect(() => {
-    if (!leadId) { setLead(null); setOwnerName(""); return; }
+    if (!leadId) { setLead(null); setOwnerName(""); setArenaSent(null); return; }
     setLoading(true);
+    setArenaSent(null);
     supabase.from("leads").select("*").eq("id", leadId).single().then(async ({ data, error }) => {
       setLoading(false);
       if (error || !data) { toast.error(error?.message || "Lead não encontrado"); onClose(); return; }
@@ -75,8 +76,31 @@ export function LeadDetailsDialog({
         const { data: p } = await supabase.from("profiles").select("full_name, email").eq("id", l.owner_id).maybeSingle();
         setOwnerName(p?.full_name || p?.email || "—");
       }
+      if (l.status === "matricula") {
+        const { data: ev } = await supabase
+          .from("crm_outbound_events")
+          .select("id")
+          .eq("crm_lead_id", l.id)
+          .eq("event_type", "crm_enrollment_created")
+          .eq("status", "sent")
+          .maybeSingle();
+        setArenaSent(!!ev);
+      }
     });
   }, [leadId]);
+
+  const onResendEnrollment = async () => {
+    if (!lead) return;
+    setResending(true);
+    const res = await ensureEnrollmentSentToArena(lead.id);
+    setResending(false);
+    if (res.ok) {
+      toast.success(res.skipped ? "Já havia sido enviado anteriormente." : "Matrícula enviada para a Arena.");
+      setArenaSent(true);
+    } else {
+      toast.error(`Falha ao enviar para a Arena: ${res.error ?? "erro desconhecido"}`);
+    }
+  };
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
