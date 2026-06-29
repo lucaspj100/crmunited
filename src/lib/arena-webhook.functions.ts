@@ -30,7 +30,7 @@ export const dispatchArenaEvent = createServerFn({ method: "POST" })
   })
 
   .handler(async ({ data, context }) => {
-    const { leadId, eventType } = data;
+    const { leadId, eventType, extra } = data;
     const webhookUrl = process.env.ARENA_CRM_WEBHOOK_URL;
     const secret = process.env.CRM_WEBHOOK_SECRET;
 
@@ -61,8 +61,20 @@ export const dispatchArenaEvent = createServerFn({ method: "POST" })
       if (existing) return { ok: true, skipped: true, reason: "already_sent" };
     }
 
+    // Cancelamento: só envia se houve crm_enrollment_created enviado antes
+    if (eventType === "crm_enrollment_cancelled") {
+      const { data: prior } = await supabaseAdmin
+        .from("crm_outbound_events")
+        .select("id")
+        .eq("crm_lead_id", leadId)
+        .eq("event_type", "crm_enrollment_created")
+        .eq("status", "sent")
+        .maybeSingle();
+      if (!prior) return { ok: true, skipped: true, reason: "no_prior_enrollment" };
+    }
+
     const occurredAt = new Date().toISOString();
-    const payload = {
+    const payload: Record<string, unknown> = {
       event_type: eventType,
       crm_lead_id: lead.id,
       crm_user_id: lead.owner_id,
@@ -76,6 +88,7 @@ export const dispatchArenaEvent = createServerFn({ method: "POST" })
       material_value: lead.material_value,
       status: lead.status,
       occurred_at: occurredAt,
+      ...(extra ?? {}),
     };
 
     // Insert log row (pending)
@@ -85,6 +98,7 @@ export const dispatchArenaEvent = createServerFn({ method: "POST" })
       .select("id")
       .single();
     const logId = logRow?.id as string | undefined;
+
 
     if (!webhookUrl || !secret) {
       const msg = "ARENA_CRM_WEBHOOK_URL ou CRM_WEBHOOK_SECRET não configurados";
