@@ -1,12 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Phone, MessageCircle, Users, Sparkles, CalendarCheck, Clock, Flame } from "lucide-react";
+import { Phone, MessageCircle, Users, Sparkles, CalendarCheck, Clock, Flame, Settings2, AlertTriangle } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
-const DAILY_CALL_GOAL = 50;
+const DEFAULT_CALL_GOAL = 100;
+const MIN_RECOMMENDED_GOAL = 70;
 const INTERESTED_RESULTS = ["Interessado", "Pediu WhatsApp"];
 
 function startOfTodayISO() {
@@ -50,7 +56,24 @@ export function DailyScoreboard({
   hasContact?: boolean;
 }) {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const todayISO = startOfTodayISO();
+  const [goalDialogOpen, setGoalDialogOpen] = useState(false);
+
+  const { data: goalRow } = useQuery({
+    enabled: !!user,
+    queryKey: ["seller_daily_goal", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("seller_daily_goals")
+        .select("daily_calls_goal")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+  const callGoal = goalRow?.daily_calls_goal ?? DEFAULT_CALL_GOAL;
 
   const { data } = useQuery<DailyStats>({
     enabled: !!user,
@@ -97,8 +120,8 @@ export function DailyScoreboard({
 
   const stats = data ?? { calls: 0, whats: 0, worked: 0, interested: 0, interviews: 0, lastActionAt: null };
   const lastDate = useMemo(() => (stats.lastActionAt ? new Date(stats.lastActionAt) : null), [stats.lastActionAt]);
-  const goalProgress = Math.min(100, (stats.calls / DAILY_CALL_GOAL) * 100);
-  const message = rhythmMessage(stats.calls, DAILY_CALL_GOAL);
+  const goalProgress = Math.min(100, (stats.calls / callGoal) * 100);
+  const message = rhythmMessage(stats.calls, callGoal);
 
   return (
     <Card className="border-2">
@@ -122,9 +145,20 @@ export function DailyScoreboard({
         </div>
 
         <div className="rounded-md border bg-muted/40 p-3 space-y-2">
-          <div className="flex items-center justify-between text-xs">
+          <div className="flex items-center justify-between gap-2 text-xs">
             <span className="font-semibold uppercase tracking-wide text-muted-foreground">Sprint de Ligações</span>
-            <span className="font-mono font-semibold">{stats.calls} / {DAILY_CALL_GOAL} ligações hoje</span>
+            <div className="flex items-center gap-2">
+              <span className="font-mono font-semibold">{stats.calls} / {callGoal} ligações hoje</span>
+              <button
+                type="button"
+                onClick={() => setGoalDialogOpen(true)}
+                className="inline-flex items-center gap-1 rounded border px-2 py-0.5 text-[11px] hover:bg-background"
+                title="Configurar meta"
+              >
+                <Settings2 className="h-3 w-3" />
+                <span className="hidden sm:inline">Configurar meta</span>
+              </button>
+            </div>
           </div>
           <Progress value={goalProgress} className="h-2" />
           <p className="text-xs text-muted-foreground">{message}</p>
@@ -140,7 +174,83 @@ export function DailyScoreboard({
           )}
         </div>
       </CardContent>
+      <GoalDialog
+        open={goalDialogOpen}
+        onOpenChange={setGoalDialogOpen}
+        currentGoal={callGoal}
+        userId={user?.id}
+        onSaved={() => queryClient.invalidateQueries({ queryKey: ["seller_daily_goal", user?.id] })}
+      />
     </Card>
+  );
+}
+
+function GoalDialog({
+  open, onOpenChange, currentGoal, userId, onSaved,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  currentGoal: number;
+  userId?: string;
+  onSaved: () => void;
+}) {
+  const [value, setValue] = useState<string>(String(currentGoal));
+  useEffect(() => { if (open) setValue(String(currentGoal)); }, [open, currentGoal]);
+
+  const numeric = Number.parseInt(value, 10);
+  const isValid = Number.isFinite(numeric) && numeric > 0;
+  const isLow = isValid && numeric < MIN_RECOMMENDED_GOAL;
+
+  const mutation = useMutation({
+    mutationFn: async () => {
+      if (!userId || !isValid) throw new Error("Meta inválida");
+      const { error } = await supabase
+        .from("seller_daily_goals")
+        .upsert({ user_id: userId, daily_calls_goal: numeric }, { onConflict: "user_id" });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Meta diária atualizada");
+      onSaved();
+      onOpenChange(false);
+    },
+    onError: (e: Error) => toast.error(e.message ?? "Erro ao salvar meta"),
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Configurar meta diária</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="daily-calls-goal">Meta diária de ligações</Label>
+            <Input
+              id="daily-calls-goal"
+              type="number"
+              inputMode="numeric"
+              min={1}
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+            />
+            <p className="text-[11px] text-muted-foreground">Exemplo: 100 ligações por dia.</p>
+          </div>
+          {isLow && (
+            <div className="flex gap-2 rounded-md border border-amber-300 bg-amber-50 p-2 text-xs text-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
+              <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+              <span>Essa meta está baixa para outbound B2C. Recomendamos pelo menos 70 ligações por dia.</span>
+            </div>
+          )}
+        </div>
+        <DialogFooter className="gap-2 sm:gap-2">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button onClick={() => mutation.mutate()} disabled={!isValid || mutation.isPending}>
+            {mutation.isPending ? "Salvando..." : "Salvar meta"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
