@@ -134,6 +134,8 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
 
     setSaving(false);
     setResult(""); setObs(""); setProxima("");
+    queryClient.invalidateQueries({ queryKey: ["my_prospect_contacts"] });
+    queryClient.invalidateQueries({ queryKey: ["prospect_queue"] });
     onOpenChange(false);
     onSaved(goNext);
   };
