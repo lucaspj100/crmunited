@@ -10,6 +10,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { autoConvertProspectToLead } from "@/lib/prospect-auto-convert";
 import type { ProspectContact } from "@/lib/prospect-queue";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
+import { format } from "date-fns";
 
 type Props = {
   open: boolean;
