@@ -13,12 +13,20 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 
+type DialMeta = {
+  telefone_para_discagem: string | null;
+  ddd_origem_vendedor: string | null;
+  prefixo_interurbano: string | null;
+  ddd_destino_contato: string | null;
+};
+
 type Props = {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   contact: ProspectContact;
   vendedorId: string;
   initialAction?: "ligacao" | "whatsapp";
+  dialMeta?: DialMeta;
   onSaved: (goNext: boolean) => void;
 };
 
