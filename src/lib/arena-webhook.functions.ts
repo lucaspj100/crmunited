@@ -94,7 +94,7 @@ export const dispatchArenaEvent = createServerFn({ method: "POST" })
     // Insert log row (pending)
     const { data: logRow } = await supabaseAdmin
       .from("crm_outbound_events")
-      .insert({ event_type: eventType, crm_lead_id: lead.id, payload, status: "pending", attempts: 0 })
+      .insert({ event_type: eventType, crm_lead_id: lead.id, payload: payload as any, status: "pending", attempts: 0 })
       .select("id")
       .single();
     const logId = logRow?.id as string | undefined;
