@@ -261,6 +261,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: P
   const onResultSaved = async (_goNext: boolean) => {
     qc.invalidateQueries({ queryKey: ["prospect_counts"] });
     qc.invalidateQueries({ queryKey: ["prospect_attempts", contact?.id] });
+    qc.invalidateQueries({ queryKey: ["daily_scoreboard"] });
     qc.invalidateQueries({ queryKey: ["leads"] });
     qc.invalidateQueries({ queryKey: ["tasks"] });
     if (!contact) return;
