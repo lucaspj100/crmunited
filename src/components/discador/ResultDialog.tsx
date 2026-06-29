@@ -62,6 +62,24 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
       observacao: obs || null,
     });
 
+    // Sincroniza observação mais recente em prospect_contacts.observacao (preserva histórico anterior)
+    const obsTrim = obs.trim();
+    if (obsTrim) {
+      const stamp = format(new Date(), "dd/MM HH:mm");
+      const tipoLabel = (initialAction ?? "edicao") === "whatsapp" ? "WhatsApp" : (initialAction === "ligacao" ? "Ligação" : "Registro");
+      const newEntry = `[${stamp}] ${tipoLabel} - ${result}: ${obsTrim}`;
+      const prev = (contact.observacao ?? "").trim();
+      const merged = prev ? `${newEntry}\n${prev}` : newEntry;
+      // Limita tamanho para evitar crescimento infinito (mantém ~4000 chars)
+      const capped = merged.length > 4000 ? merged.slice(0, 4000) : merged;
+      const { error: eObs } = await supabase
+        .from("prospect_contacts")
+        .update({ observacao: capped })
+        .eq("id", contactId);
+      if (eObs) console.warn("[ResultDialog] falha ao sincronizar observacao", eObs);
+    }
+
+
     // 1) Ligar depois → criar tarefa de retorno
     if (result === "Ligar depois" && due_date) {
       const nome = contact.nome || "Contato sem nome";
