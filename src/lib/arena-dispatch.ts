@@ -4,9 +4,13 @@ import { dispatchArenaEvent, type ArenaEventType } from "@/lib/arena-webhook.fun
  * Fire-and-forget: envia evento para o webhook da Arena sem bloquear a UI
  * e sem propagar erros caso a Arena esteja fora do ar.
  */
-export function notifyArena(leadId: string, eventType: ArenaEventType): void {
+export function notifyArena(
+  leadId: string,
+  eventType: ArenaEventType,
+  extra?: Record<string, unknown>,
+): void {
   try {
-    void dispatchArenaEvent({ data: { leadId, eventType } }).catch((err) => {
+    void dispatchArenaEvent({ data: { leadId, eventType, extra } }).catch((err) => {
       console.error("[arena] dispatch failed", eventType, err);
     });
   } catch (err) {
@@ -20,16 +24,15 @@ export type NotifyArenaResult =
 
 /**
  * Versão awaitável: usar em fluxos críticos (ex.: matrícula) onde o usuário
- * precisa saber se o evento chegou na Arena. Nunca lança — sempre retorna
- * um objeto com `ok`. Falhas ficam registradas em `crm_outbound_events`
- * (visíveis em /integracao-arena) e no console.
+ * precisa saber se o evento chegou na Arena.
  */
 export async function notifyArenaAsync(
   leadId: string,
   eventType: ArenaEventType,
+  extra?: Record<string, unknown>,
 ): Promise<NotifyArenaResult> {
   try {
-    const res = (await dispatchArenaEvent({ data: { leadId, eventType } })) as {
+    const res = (await dispatchArenaEvent({ data: { leadId, eventType, extra } })) as {
       ok: boolean;
       httpStatus?: number | null;
       error?: string | null;
@@ -48,3 +51,4 @@ export async function notifyArenaAsync(
     return { ok: false, error: message };
   }
 }
+
