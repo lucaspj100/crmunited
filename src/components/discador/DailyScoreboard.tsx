@@ -120,8 +120,8 @@ export function DailyScoreboard({
 
   const stats = data ?? { calls: 0, whats: 0, worked: 0, interested: 0, interviews: 0, lastActionAt: null };
   const lastDate = useMemo(() => (stats.lastActionAt ? new Date(stats.lastActionAt) : null), [stats.lastActionAt]);
-  const goalProgress = Math.min(100, (stats.calls / DAILY_CALL_GOAL) * 100);
-  const message = rhythmMessage(stats.calls, DAILY_CALL_GOAL);
+  const goalProgress = Math.min(100, (stats.calls / callGoal) * 100);
+  const message = rhythmMessage(stats.calls, callGoal);
 
   return (
     <Card className="border-2">
