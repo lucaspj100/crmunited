@@ -300,6 +300,11 @@ function FunilPage() {
       <InterviewDialog lead={interviewLead} onClose={() => setInterviewLead(null)} onSaved={() => qc.invalidateQueries()} />
       <LostDialog lead={lostLead} onClose={() => setLostLead(null)} onSaved={() => qc.invalidateQueries()} />
       <MatriculaDialog lead={matriculaLead} onClose={() => setMatriculaLead(null)} onSaved={() => qc.invalidateQueries()} />
+      <CancelEnrollmentDialog
+        data={cancelEnrollment}
+        onClose={() => setCancelEnrollment(null)}
+        onDone={() => qc.invalidateQueries()}
+      />
       <LeadDetailsDialog leadId={detailsId} onClose={() => setDetailsId(null)} />
       {quickTaskLead && (
         <QuickTaskDialog
@@ -310,6 +315,7 @@ function FunilPage() {
           onSaved={() => qc.invalidateQueries()}
         />
       )}
+
     </div>
   );
 }
