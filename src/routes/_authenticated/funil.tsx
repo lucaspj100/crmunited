@@ -111,6 +111,11 @@ function FunilPage() {
 
   const moveLead = async (lead: Lead, newStatus: string) => {
     if (lead.status === newStatus) return;
+    // Saindo de matrícula → exige confirmação e cancela na Arena
+    if (lead.status === "matricula" && newStatus !== "matricula") {
+      setCancelEnrollment({ lead, newStatus });
+      return;
+    }
     if (newStatus === "entrevista_marcada") { setInterviewLead(lead); return; }
     if (newStatus === "perdido") { setLostLead(lead); return; }
     if (newStatus === "matricula") { setMatriculaLead(lead); return; }
@@ -121,6 +126,7 @@ function FunilPage() {
     toast.success("Lead movido");
     qc.invalidateQueries();
   };
+
 
 
   return (
