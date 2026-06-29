@@ -307,6 +307,10 @@ export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: P
           <span><strong className="text-foreground">{counts?.done ?? 0}</strong> convertidos</span>
         </div>
 
+        <DailyScoreboard onStartSprint={ligar} hasContact={!!contact} />
+
+
+
         {!contact ? (
           <div className="rounded-lg border bg-card p-6 flex flex-col items-center gap-3 text-center">
             <Inbox className="h-8 w-8 text-muted-foreground" />
