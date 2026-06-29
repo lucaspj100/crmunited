@@ -17,6 +17,7 @@ import { ConvertLeadDialog } from "./ConvertLeadDialog";
 import { EditContactDialog } from "./EditContactDialog";
 import { AttemptHistory } from "./AttemptHistory";
 import { ReturnsDebugCard } from "./ReturnsDebugCard";
+import { DailyScoreboard } from "./DailyScoreboard";
 import { toast } from "sonner";
 
 type Props = {
