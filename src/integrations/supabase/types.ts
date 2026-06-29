@@ -504,6 +504,30 @@ export type Database = {
         }
         Relationships: []
       }
+      seller_daily_goals: {
+        Row: {
+          created_at: string
+          daily_calls_goal: number
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          daily_calls_goal?: number
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          daily_calls_goal?: number
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       sheet_integrations: {
         Row: {
           created_at: string
