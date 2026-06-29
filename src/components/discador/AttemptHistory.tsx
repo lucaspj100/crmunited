@@ -14,7 +14,8 @@ export function AttemptHistory({ contactId }: { contactId: string }) {
         .eq("prospect_contact_id", contactId)
         .order("created_at", { ascending: false })
         .limit(50);
-      return data ?? [];
+      // Oculta registros legados sem resultado (criados pelo antigo fluxo de "clicar em Ligar").
+      return (data ?? []).filter((a) => a.tipo_acao === "edicao" || !!a.resultado);
     },
   });
   if (!data || data.length === 0) return <p className="text-sm text-muted-foreground">Sem tentativas registradas.</p>;

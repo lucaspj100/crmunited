@@ -98,10 +98,12 @@ export function DailyScoreboard({
       const attempts = (attemptsRes.data ?? []) as Array<{
         tipo_acao: string; resultado: string | null; prospect_contact_id: string; created_at: string;
       }>;
-      const calls = attempts.filter((a) => a.tipo_acao === "ligacao").length;
-      const whats = attempts.filter((a) => a.tipo_acao === "whatsapp").length;
-      const worked = new Set(attempts.map((a) => a.prospect_contact_id)).size;
-      const interested = attempts.filter((a) => a.resultado && INTERESTED_RESULTS.includes(a.resultado)).length;
+      // Conta apenas tentativas com resultado preenchido (evita duplicatas legadas sem resultado).
+      const withResult = attempts.filter((a) => !!a.resultado);
+      const calls = withResult.filter((a) => a.tipo_acao === "ligacao").length;
+      const whats = withResult.filter((a) => a.tipo_acao === "whatsapp").length;
+      const worked = new Set(withResult.map((a) => a.prospect_contact_id)).size;
+      const interested = withResult.filter((a) => a.resultado && INTERESTED_RESULTS.includes(a.resultado)).length;
       const lastActionAt = attempts[0]?.created_at ?? null;
       return {
         calls, whats, worked, interested,

@@ -13,16 +13,24 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 
+type DialMeta = {
+  telefone_para_discagem: string | null;
+  ddd_origem_vendedor: string | null;
+  prefixo_interurbano: string | null;
+  ddd_destino_contato: string | null;
+};
+
 type Props = {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   contact: ProspectContact;
   vendedorId: string;
   initialAction?: "ligacao" | "whatsapp";
+  dialMeta?: DialMeta;
   onSaved: (goNext: boolean) => void;
 };
 
-export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialAction, onSaved }: Props) {
+export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialAction, dialMeta, onSaved }: Props) {
   const [result, setResult] = useState<ProspectResult | "">("");
   const [obs, setObs] = useState("");
   const [proxima, setProxima] = useState("");
@@ -60,6 +68,14 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
       telefone_normalizado: telefone,
       resultado: result,
       observacao: obs || null,
+      ...(initialAction === "ligacao" && dialMeta
+        ? {
+            telefone_para_discagem: dialMeta.telefone_para_discagem,
+            ddd_origem_vendedor: dialMeta.ddd_origem_vendedor,
+            prefixo_interurbano: dialMeta.prefixo_interurbano,
+            ddd_destino_contato: dialMeta.ddd_destino_contato,
+          }
+        : {}),
     });
 
     // Sincroniza observação mais recente em prospect_contacts.observacao (preserva histórico anterior)
