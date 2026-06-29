@@ -20,6 +20,7 @@ import { Route as AuthenticatedPainelAdmRouteImport } from './routes/_authentica
 import { Route as AuthenticatedLeadsRouteImport } from './routes/_authenticated/leads'
 import { Route as AuthenticatedIntegracaoArenaRouteImport } from './routes/_authenticated/integracao-arena'
 import { Route as AuthenticatedImportarRouteImport } from './routes/_authenticated/importar'
+import { Route as AuthenticatedHojeRouteImport } from './routes/_authenticated/hoje'
 import { Route as AuthenticatedFunilRouteImport } from './routes/_authenticated/funil'
 import { Route as AuthenticatedFilaRouteImport } from './routes/_authenticated/fila'
 import { Route as AuthenticatedDiscadorRouteImport } from './routes/_authenticated/discador'
@@ -82,6 +83,11 @@ const AuthenticatedImportarRoute = AuthenticatedImportarRouteImport.update({
   path: '/importar',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedHojeRoute = AuthenticatedHojeRouteImport.update({
+  id: '/hoje',
+  path: '/hoje',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedFunilRoute = AuthenticatedFunilRouteImport.update({
   id: '/funil',
   path: '/funil',
@@ -123,6 +129,7 @@ export interface FileRoutesByFullPath {
   '/discador': typeof AuthenticatedDiscadorRoute
   '/fila': typeof AuthenticatedFilaRoute
   '/funil': typeof AuthenticatedFunilRoute
+  '/hoje': typeof AuthenticatedHojeRoute
   '/importar': typeof AuthenticatedImportarRoute
   '/integracao-arena': typeof AuthenticatedIntegracaoArenaRoute
   '/leads': typeof AuthenticatedLeadsRoute
@@ -141,6 +148,7 @@ export interface FileRoutesByTo {
   '/discador': typeof AuthenticatedDiscadorRoute
   '/fila': typeof AuthenticatedFilaRoute
   '/funil': typeof AuthenticatedFunilRoute
+  '/hoje': typeof AuthenticatedHojeRoute
   '/importar': typeof AuthenticatedImportarRoute
   '/integracao-arena': typeof AuthenticatedIntegracaoArenaRoute
   '/leads': typeof AuthenticatedLeadsRoute
@@ -161,6 +169,7 @@ export interface FileRoutesById {
   '/_authenticated/discador': typeof AuthenticatedDiscadorRoute
   '/_authenticated/fila': typeof AuthenticatedFilaRoute
   '/_authenticated/funil': typeof AuthenticatedFunilRoute
+  '/_authenticated/hoje': typeof AuthenticatedHojeRoute
   '/_authenticated/importar': typeof AuthenticatedImportarRoute
   '/_authenticated/integracao-arena': typeof AuthenticatedIntegracaoArenaRoute
   '/_authenticated/leads': typeof AuthenticatedLeadsRoute
@@ -181,6 +190,7 @@ export interface FileRouteTypes {
     | '/discador'
     | '/fila'
     | '/funil'
+    | '/hoje'
     | '/importar'
     | '/integracao-arena'
     | '/leads'
@@ -199,6 +209,7 @@ export interface FileRouteTypes {
     | '/discador'
     | '/fila'
     | '/funil'
+    | '/hoje'
     | '/importar'
     | '/integracao-arena'
     | '/leads'
@@ -218,6 +229,7 @@ export interface FileRouteTypes {
     | '/_authenticated/discador'
     | '/_authenticated/fila'
     | '/_authenticated/funil'
+    | '/_authenticated/hoje'
     | '/_authenticated/importar'
     | '/_authenticated/integracao-arena'
     | '/_authenticated/leads'
@@ -313,6 +325,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedImportarRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/hoje': {
+      id: '/_authenticated/hoje'
+      path: '/hoje'
+      fullPath: '/hoje'
+      preLoaderRoute: typeof AuthenticatedHojeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/funil': {
       id: '/_authenticated/funil'
       path: '/funil'
@@ -365,6 +384,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDiscadorRoute: typeof AuthenticatedDiscadorRoute
   AuthenticatedFilaRoute: typeof AuthenticatedFilaRoute
   AuthenticatedFunilRoute: typeof AuthenticatedFunilRoute
+  AuthenticatedHojeRoute: typeof AuthenticatedHojeRoute
   AuthenticatedImportarRoute: typeof AuthenticatedImportarRoute
   AuthenticatedIntegracaoArenaRoute: typeof AuthenticatedIntegracaoArenaRoute
   AuthenticatedLeadsRoute: typeof AuthenticatedLeadsRoute
@@ -382,6 +402,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDiscadorRoute: AuthenticatedDiscadorRoute,
   AuthenticatedFilaRoute: AuthenticatedFilaRoute,
   AuthenticatedFunilRoute: AuthenticatedFunilRoute,
+  AuthenticatedHojeRoute: AuthenticatedHojeRoute,
   AuthenticatedImportarRoute: AuthenticatedImportarRoute,
   AuthenticatedIntegracaoArenaRoute: AuthenticatedIntegracaoArenaRoute,
   AuthenticatedLeadsRoute: AuthenticatedLeadsRoute,
