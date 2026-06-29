@@ -7,6 +7,7 @@ const ARENA_EVENT_TYPES = [
   "crm_interview_no_show",
   "crm_interview_rescheduled",
   "crm_enrollment_created",
+  "crm_enrollment_cancelled",
   "crm_lost_after_interview",
 ] as const;
 
@@ -18,12 +19,16 @@ function isArenaEventType(v: unknown): v is ArenaEventType {
 
 export const dispatchArenaEvent = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { leadId: string; eventType: ArenaEventType }) => {
+  .inputValidator((input: { leadId: string; eventType: ArenaEventType; extra?: Record<string, unknown> }) => {
     if (!input || typeof input.leadId !== "string" || !isArenaEventType(input.eventType)) {
       throw new Error("invalid input");
     }
+    if (input.extra !== undefined && (typeof input.extra !== "object" || input.extra === null)) {
+      throw new Error("invalid extra");
+    }
     return input;
   })
+
   .handler(async ({ data, context }) => {
     const { leadId, eventType } = data;
     const webhookUrl = process.env.ARENA_CRM_WEBHOOK_URL;
