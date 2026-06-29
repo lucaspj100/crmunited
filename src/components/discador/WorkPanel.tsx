@@ -448,6 +448,10 @@ export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: P
             <Stat label="Convertidos" value={counts?.done ?? 0} />
           </div>
 
+          <DailyScoreboard onStartSprint={ligar} hasContact={!!contact} />
+
+
+
           {!contact ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center gap-3 py-12">
