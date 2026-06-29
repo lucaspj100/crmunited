@@ -16,10 +16,12 @@ export type LeadEventType =
   | "interview_no_show"
   | "interview_rescheduled"
   | "enrolled"
+  | "enrollment_cancelled"
   | "lost"
   | "rescue_moved"
   | "rescue_activated"
   | "note";
+
 
 export async function logLeadEvent(input: {
   leadId: string;
