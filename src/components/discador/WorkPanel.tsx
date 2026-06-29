@@ -551,9 +551,16 @@ export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: P
           contact={contact}
           vendedorId={user.id}
           initialAction={lastAction}
+          dialMeta={{
+            telefone_para_discagem: dialNumber || null,
+            ddd_origem_vendedor: settings.ddd_origem ?? null,
+            prefixo_interurbano: settings.prefixo_interurbano ?? null,
+            ddd_destino_contato: dddDestino ?? null,
+          }}
           onSaved={onResultSaved}
         />
       )}
+
       {contact && user && (
         <ConvertLeadDialog
           open={convertOpen}
