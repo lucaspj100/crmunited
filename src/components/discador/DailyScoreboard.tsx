@@ -1,0 +1,156 @@
+import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth-context";
+import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Phone, MessageCircle, Users, Sparkles, CalendarCheck, Clock, Flame } from "lucide-react";
+
+const DAILY_CALL_GOAL = 50;
+const INTERESTED_RESULTS = ["Interessado", "Pediu WhatsApp"];
+
+function startOfTodayISO() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString();
+}
+
+function formatSince(date: Date | null): string {
+  if (!date) return "Nenhuma ação hoje";
+  const diffMin = Math.floor((Date.now() - date.getTime()) / 60000);
+  if (diffMin < 1) return "Última ação agora";
+  if (diffMin < 60) return `Última ação há ${diffMin} min`;
+  const h = Math.floor(diffMin / 60);
+  const m = diffMin % 60;
+  return `Última ação há ${h}h${m ? ` ${m}min` : ""}`;
+}
+
+function rhythmMessage(calls: number, goal: number): string {
+  if (calls <= 0) return "Você ainda não começou sua sprint hoje.";
+  if (calls <= 15) return "Bom começo. Continue o ritmo.";
+  if (calls <= 35) return "Você está ganhando ritmo. Continue.";
+  if (calls < goal) return "Falta pouco para bater a meta.";
+  return "Meta batida. Excelente trabalho.";
+}
+
+type DailyStats = {
+  calls: number;
+  whats: number;
+  worked: number;
+  interested: number;
+  interviews: number;
+  lastActionAt: string | null;
+};
+
+export function DailyScoreboard({
+  onStartSprint,
+  hasContact,
+}: {
+  onStartSprint?: () => void;
+  hasContact?: boolean;
+}) {
+  const { user } = useAuth();
+  const todayISO = startOfTodayISO();
+
+  const { data } = useQuery<DailyStats>({
+    enabled: !!user,
+    queryKey: ["daily_scoreboard", user?.id, todayISO],
+    refetchInterval: 30_000,
+    queryFn: async () => {
+      const [attemptsRes, interviewsRes] = await Promise.all([
+        supabase
+          .from("prospect_attempts")
+          .select("tipo_acao, resultado, prospect_contact_id, created_at")
+          .eq("vendedor_id", user!.id)
+          .gte("created_at", todayISO)
+          .order("created_at", { ascending: false })
+          .limit(5000),
+        supabase
+          .from("leads")
+          .select("id", { count: "exact", head: true })
+          .eq("owner_id", user!.id)
+          .eq("status", "entrevista_marcada")
+          .gte("updated_at", todayISO),
+      ]);
+      const attempts = (attemptsRes.data ?? []) as Array<{
+        tipo_acao: string; resultado: string | null; prospect_contact_id: string; created_at: string;
+      }>;
+      const calls = attempts.filter((a) => a.tipo_acao === "ligacao").length;
+      const whats = attempts.filter((a) => a.tipo_acao === "whatsapp").length;
+      const worked = new Set(attempts.map((a) => a.prospect_contact_id)).size;
+      const interested = attempts.filter((a) => a.resultado && INTERESTED_RESULTS.includes(a.resultado)).length;
+      const lastActionAt = attempts[0]?.created_at ?? null;
+      return {
+        calls, whats, worked, interested,
+        interviews: interviewsRes.count ?? 0,
+        lastActionAt,
+      };
+    },
+  });
+
+  // tick a cada 30s para atualizar o "há X min"
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setTick((x) => x + 1), 30_000);
+    return () => clearInterval(t);
+  }, []);
+
+  const stats = data ?? { calls: 0, whats: 0, worked: 0, interested: 0, interviews: 0, lastActionAt: null };
+  const lastDate = useMemo(() => (stats.lastActionAt ? new Date(stats.lastActionAt) : null), [stats.lastActionAt]);
+  const goalProgress = Math.min(100, (stats.calls / DAILY_CALL_GOAL) * 100);
+  const message = rhythmMessage(stats.calls, DAILY_CALL_GOAL);
+
+  return (
+    <Card className="border-2">
+      <CardContent className="p-3 md:p-4 space-y-3">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Flame className="h-4 w-4 text-orange-500" />
+            <span className="text-sm font-semibold">Placar de hoje</span>
+          </div>
+          <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+            <Clock className="h-3 w-3" />{formatSince(lastDate)}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
+          <Metric icon={<Phone className="h-3.5 w-3.5" />} label="Ligações" value={stats.calls} />
+          <Metric icon={<MessageCircle className="h-3.5 w-3.5" />} label="WhatsApp" value={stats.whats} />
+          <Metric icon={<Users className="h-3.5 w-3.5" />} label="Trabalhados" value={stats.worked} />
+          <Metric icon={<Sparkles className="h-3.5 w-3.5" />} label="Interessados" value={stats.interested} />
+          <Metric icon={<CalendarCheck className="h-3.5 w-3.5" />} label="Entrevistas" value={stats.interviews} />
+        </div>
+
+        <div className="rounded-md border bg-muted/40 p-3 space-y-2">
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-semibold uppercase tracking-wide text-muted-foreground">Sprint de Ligações</span>
+            <span className="font-mono font-semibold">{stats.calls} / {DAILY_CALL_GOAL} ligações hoje</span>
+          </div>
+          <Progress value={goalProgress} className="h-2" />
+          <p className="text-xs text-muted-foreground">{message}</p>
+          {onStartSprint && (
+            <button
+              onClick={onStartSprint}
+              disabled={!hasContact}
+              className="w-full mt-1 inline-flex items-center justify-center gap-2 rounded-md bg-primary text-primary-foreground text-sm font-semibold h-10 disabled:opacity-50"
+            >
+              <Phone className="h-4 w-4" />
+              {stats.calls === 0 ? "Iniciar sprint" : "Continuar sprint"}
+            </button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function Metric({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {
+  return (
+    <div className="rounded-md border bg-card p-2 flex flex-col items-center text-center">
+      <div className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground">
+        {icon}<span className="truncate">{label}</span>
+      </div>
+      <div className="text-lg md:text-xl font-bold leading-tight">{value}</div>
+    </div>
+  );
+}
