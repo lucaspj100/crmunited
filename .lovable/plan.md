@@ -1,123 +1,70 @@
-# Discador de Prospecção
+# Processos Comerciais + Checkout do Dia
 
-Módulo novo, paralelo ao CRM, que trabalha listas frias de telefone. Só envia para o CRM existente os contatos realmente interessados. Reusa usuários, papéis (admin/vendedor), tabela `leads` e funil atuais — nada disso é duplicado.
+## Visão geral
+Nova área de produtividade que cruza dados do CRM (leads, tasks, prospect_attempts) com um novo registro diário (checkout) preenchido pelo vendedor. O ADM acompanha; o vendedor faz 1 checkout/dia com apenas 3 campos manuais.
 
-## 1. Banco de dados (migração única)
+## 1. Banco — nova tabela `daily_checkouts`
 
-Duas tabelas novas, no padrão dos GRANTs/RLS do projeto.
-
-**`prospect_contacts`**
-- nome, telefone_original, telefone_normalizado (unique), ddd, empresa, cargo, origem, observacao
-- vendedor_responsavel_id (fk profiles), assigned_at
-- status_prospeccao (enum textual com os 13 status pedidos), quantidade_tentativas (int default 0), ultima_tentativa, proxima_tentativa
-- nao_chamar (bool), telefone_invalido (bool), convertido_em_lead (bool), lead_id (fk leads)
-- created_at, updated_at, created_by
-
-**`prospect_attempts`**
-- prospect_contact_id, vendedor_id, tipo_acao (`ligacao|whatsapp|edicao`), telefone_normalizado, resultado, observacao, created_at
-
-**`app_settings`** ganha chave `prospect_whatsapp_template` (texto). Sem nova tabela.
-
-**RLS**
-- Vendedor: SELECT/UPDATE só onde `vendedor_responsavel_id = auth.uid()`.
-- Admin/franqueado: tudo (via `has_role`).
-- INSERT em `prospect_contacts` só admin. INSERT em `prospect_attempts` pelo próprio vendedor do contato ou admin.
-- GRANTs para `authenticated` e `service_role`.
-
-Trigger `set_updated_at` no `prospect_contacts`.
-
-## 2. Helpers (frontend)
-
-- `src/lib/prospect-phone.ts` — reaproveita `normalizePhone` e devolve `{ normalized, ddd, e164 }`. Formato salvo: dígitos puros (mesmo padrão BR já usado), o `tel:` e `wa.me` montam o prefixo na hora.
-- `src/lib/prospect-status.ts` — labels, cores, lista de status, regras de fila.
-- `src/lib/prospect-import.ts` — parse XLSX/CSV (já existe `xlsx`), normaliza, deduplica contra `prospect_contacts` + `leads`, gera relatório.
-
-## 3. Rotas novas (sob `_authenticated/`)
-
-Uma rota raiz `/discador` com sub-abas internas controladas por estado (sem subrota) para manter simples:
-
-- **Aba "Trabalhar" (vendedor + admin)** — fila pessoal, card grande do contato atual, botões Ligar (`tel:`), WhatsApp (`wa.me`), Registrar resultado, Converter em lead, histórico do contato.
-- **Aba "Base" (admin)** — tabela de todos os contatos com filtros (vendedor, status, origem, DDD, datas, tentativas, "sem tentativa", "para hoje", interessados, pediu wpp, inválidos, não chamar, convertidos). Ações em massa: redistribuir, marcar não chamar.
-- **Aba "Importar" (admin)** — upload XLSX/CSV, escolha de distribuição (auto entre ativos / vendedor X / sem dono), preview, relatório final.
-- **Aba "Painel" (admin)** — indicadores geral, por vendedor, por origem, por DDD.
-- **Aba "Config" (admin)** — mensagem padrão de WhatsApp.
-
-Item de menu "Discador" (ícone PhoneCall) no sidebar para todos os papéis; sub-abas admin só aparecem se `roles.includes('admin')`.
-
-## 4. Fluxo "Próximo contato"
-
-Server-side query (cliente Supabase com RLS):
+```sql
+create table public.daily_checkouts (
+  id uuid pk default gen_random_uuid(),
+  vendedor_id uuid not null references auth.users on delete cascade,
+  data date not null,
+  submitted_at timestamptz not null default now(),
+  -- snapshot automático do CRM no momento do envio
+  ligacoes_feitas int not null default 0,
+  ligacoes_atendidas int not null default 0,
+  interessados_gerados int not null default 0,
+  entrevistas_marcadas int not null default 0,
+  matriculas int not null default 0,
+  leads_trabalhados int not null default 0,
+  leads_novos_atribuidos int not null default 0,
+  -- manuais
+  linkedin_msgs int not null default 0,
+  whatsapp_msgs int not null default 0,
+  observacoes text,
+  created_at, updated_at,
+  unique(vendedor_id, data)
+);
 ```
-status_prospeccao IN ('Aguardando ligação')
-  OR (status_prospeccao = 'Ligar depois' AND proxima_tentativa <= now())
-ordem: Aguardando primeiro, depois proxima_tentativa asc, depois created_at asc
-limit 1
-```
-Excluindo `convertido_em_lead`, `nao_chamar`, `telefone_invalido`, e status finais ("Sem interesse", "Não chamar", "Convertido em lead").
+- GRANT authenticated/service_role.
+- RLS: vendedor lê/escreve só os próprios; admin/franqueado lê todos.
+- 1 checkout por dia garantido pelo UNIQUE; UPDATE permitido no mesmo dia.
 
-## 5. Ações
+## 2. RPC `productivity_summary(start date, end date, vendedor_id uuid|null)`
 
-- **Ligar agora**: `window.location.href = 'tel:+' + telefone_normalizado`; incrementa `quantidade_tentativas`, seta `status='Ligando'`, `ultima_tentativa=now()`, insere `prospect_attempts` (tipo `ligacao`, resultado vazio), abre modal obrigatório de resultado.
-- **WhatsApp**: `window.open('https://wa.me/' + telefone + '?text=' + encodeURIComponent(template))`; insere attempt tipo `whatsapp`, abre modal de resultado (não obrigatório fechar antes de próximo, mas recomendado).
-- **Modal Resultado**: select dos 9 resultados, observação curta, datetime de próxima tentativa quando "Ligar depois". Botão "Salvar e ir para próximo" aplica efeitos:
-  - Interessado → status Interessado, destaca botão Converter.
-  - Pediu WhatsApp → status Pediu WhatsApp.
-  - Ligar depois → grava `proxima_tentativa`, status `Ligar depois`.
-  - Número inválido → `telefone_invalido=true`.
-  - Não chamar → `nao_chamar=true`, bloqueia fila.
-  - Demais → status correspondente.
-- **Converter em lead**: antes verifica duplicidade em `leads.phone`. Se existe, mostra alerta com link "Abrir lead existente" (`/funil` + dialog). Senão abre `NewLeadDialog` pré-preenchido (nome, telefone, empresa→observação, origem). No success: marca `convertido_em_lead`, `lead_id`, status `Convertido em lead`, registra `lead_events` (`enrolled?` não — usa evento `lead_created` já existente).
+Agrega por vendedor no período:
+- `leads_novos`: count(leads where created_at in range & owner)
+- `leads_trabalhados`: count(distinct lead_id em prospect_attempts + leads com last_contact_at no range)
+- `ligacoes_feitas`: count prospect_attempts tipo=ligacao
+- `ligacoes_atendidas`: count com resultado in ('Atendeu','Interessado','Pediu WhatsApp','Ligar depois')
+- `interessados`: count prospect_contacts status='Interessado' updated in range + leads criados com source='Discador'
+- `entrevistas_marcadas`: leads com interview_date no range
+- `matriculas`: leads status='matricula' updated no range
+- `whatsapps_checkout` / `linkedins_checkout`: soma dos checkouts no range
+- `checkout_hoje`: bool + horário (apenas quando range = hoje)
 
-## 6. Importação
+Retorna jsonb array por vendedor.
 
-- Upload aceita `.xlsx`, `.xls`, `.csv` (usa `xlsx` package).
-- Mapeamento fuzzy de cabeçalhos: telefone/phone/celular; nome/name; empresa/company; cargo/role; origem/source; observação/obs/notes.
-- Para cada linha: normaliza → valida (10-13 dígitos BR) → checa duplicado em `prospect_contacts.telefone_normalizado` e `leads.phone`.
-- Distribuição: round-robin entre vendedores ativos selecionados, ou um único vendedor, ou null.
-- Insert em lote (chunks de 500).
-- Relatório: lidas, importadas, duplicadas (com lista), inválidas, erros.
+## 3. Rotas
 
-## 7. Painel admin
+- `/_authenticated/processos-comerciais` (admin/franqueado) — tabela + filtros (Hoje/Semana/Mês/Custom + Vendedor).
+- `/_authenticated/checkout-do-dia` (vendedor) — formulário com snapshot automático + 3 campos manuais. Se já houver checkout do dia, abre em modo editar.
+- Card no Painel ADM com "X de Y vendedores fizeram checkout hoje" + link.
+- Card na tela Hoje (sidebar/topo) lembrando o vendedor de fazer checkout no fim do dia.
 
-KPIs com queries agregadas:
-- Totais: importados, disponíveis (status Aguardando + Ligar depois vencido), trabalhados (tentativas>0), inválidos, não chamar, ligações, whatsapps, interessados, convertidos.
-- Taxas: interessado/trabalhado, convertido/interessado.
-- Tabela por vendedor (join profiles).
-- Tabela por origem.
-- Tabela por DDD.
+## 4. Componentes
 
-Período: hoje / 7d / mês / customizado (mesmo padrão de `painel-adm.tsx`).
+- `src/components/processos/ProductivityTable.tsx` — tabela com todas colunas pedidas + indicador "Checkout: feito HH:mm / pendente".
+- `src/components/processos/PeriodFilter.tsx` — Hoje/Semana/Mês/Custom + select vendedor.
+- `src/components/processos/CheckoutHistoryPanel.tsx` — histórico filtrável.
+- `src/components/checkout/DailyCheckoutForm.tsx` — snapshot read-only (cards) + 3 inputs + observações.
 
-## 8. Itens técnicos
+## 5. Sidebar
+Adicionar item "Processos" (admin) e "Checkout do dia" (vendedor) no menu.
 
-```text
-src/
-  routes/_authenticated/discador.tsx        (shell + tabs)
-  components/discador/
-    WorkPanel.tsx         (fila + card vendedor)
-    ContactCard.tsx
-    ResultDialog.tsx
-    ConvertLeadDialog.tsx (reusa NewLeadDialog)
-    AttemptHistory.tsx
-    BasePanel.tsx         (tabela admin + filtros + bulk)
-    ImportPanel.tsx
-    DashboardPanel.tsx
-    ConfigPanel.tsx
-  lib/
-    prospect-phone.ts
-    prospect-status.ts
-    prospect-import.ts
-    prospect-queue.ts     (next contact query)
-supabase/migrations/<ts>_prospect_module.sql
-```
-
-Sem novos secrets, sem edge functions, sem Twilio. Usa apenas o que já existe: Supabase client, `xlsx`, shadcn, sidebar atual, `NewLeadDialog`, `has_role`, padrão de `lead_events` para auditoria de conversão.
-
-## Entrega faseada (uma execução só, mas nessa ordem dentro do PR)
-
-1. Migração + tipos.
-2. Helpers (`prospect-*.ts`).
-3. Rota `/discador` + item no menu.
-4. Aba Trabalhar (núcleo de valor para vendedor).
-5. Aba Base + Importar (admin).
-6. Aba Painel + Config.
+## Detalhes técnicos
+- Snapshot é calculado server-side pela RPC `productivity_summary` com range = hoje e vendedor = caller, salvo no INSERT/UPDATE do checkout.
+- Editar checkout do mesmo dia recalcula o snapshot (sempre reflete o estado atual do CRM no momento do envio/edição).
+- "Ligações atendidas" usa a coluna `resultado` da tabela `prospect_attempts`.
+- Taxa de atendimento = atendidas / feitas (0 quando feitas=0).

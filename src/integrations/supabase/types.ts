@@ -85,6 +85,63 @@ export type Database = {
           },
         ]
       }
+      daily_checkouts: {
+        Row: {
+          created_at: string
+          data: string
+          entrevistas_marcadas: number
+          id: string
+          interessados_gerados: number
+          leads_novos_atribuidos: number
+          leads_trabalhados: number
+          ligacoes_atendidas: number
+          ligacoes_feitas: number
+          linkedin_msgs: number
+          matriculas: number
+          observacoes: string | null
+          submitted_at: string
+          updated_at: string
+          vendedor_id: string
+          whatsapp_msgs: number
+        }
+        Insert: {
+          created_at?: string
+          data: string
+          entrevistas_marcadas?: number
+          id?: string
+          interessados_gerados?: number
+          leads_novos_atribuidos?: number
+          leads_trabalhados?: number
+          ligacoes_atendidas?: number
+          ligacoes_feitas?: number
+          linkedin_msgs?: number
+          matriculas?: number
+          observacoes?: string | null
+          submitted_at?: string
+          updated_at?: string
+          vendedor_id: string
+          whatsapp_msgs?: number
+        }
+        Update: {
+          created_at?: string
+          data?: string
+          entrevistas_marcadas?: number
+          id?: string
+          interessados_gerados?: number
+          leads_novos_atribuidos?: number
+          leads_trabalhados?: number
+          ligacoes_atendidas?: number
+          ligacoes_feitas?: number
+          linkedin_msgs?: number
+          matriculas?: number
+          observacoes?: string | null
+          submitted_at?: string
+          updated_at?: string
+          vendedor_id?: string
+          whatsapp_msgs?: number
+        }
+        Relationships: []
+      }
       google_oauth_tokens: {
         Row: {
           access_token: string
@@ -704,6 +761,10 @@ export type Database = {
         Returns: {
           phone_normalized: string
         }[]
+      }
+      productivity_summary: {
+        Args: { _end: string; _start: string; _vendedor_id?: string }
+        Returns: Json
       }
       prospect_dashboard: { Args: never; Returns: Json }
       prospect_phones_lookup: {

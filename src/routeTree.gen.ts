@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedTarefasRouteImport } from './routes/_authenticated/tarefas'
 import { Route as AuthenticatedResgatesRouteImport } from './routes/_authenticated/resgates'
 import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authenticated/relatorios'
+import { Route as AuthenticatedProcessosComerciaisRouteImport } from './routes/_authenticated/processos-comerciais'
 import { Route as AuthenticatedPerdidosRouteImport } from './routes/_authenticated/perdidos'
 import { Route as AuthenticatedPainelAdmRouteImport } from './routes/_authenticated/painel-adm'
 import { Route as AuthenticatedLeadsRouteImport } from './routes/_authenticated/leads'
@@ -26,6 +27,7 @@ import { Route as AuthenticatedFilaRouteImport } from './routes/_authenticated/f
 import { Route as AuthenticatedDiscadorRouteImport } from './routes/_authenticated/discador'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
+import { Route as AuthenticatedCheckoutDoDiaRouteImport } from './routes/_authenticated/checkout-do-dia'
 import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
 
 const AuthRoute = AuthRouteImport.update({
@@ -57,6 +59,12 @@ const AuthenticatedRelatoriosRoute = AuthenticatedRelatoriosRouteImport.update({
   path: '/relatorios',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedProcessosComerciaisRoute =
+  AuthenticatedProcessosComerciaisRouteImport.update({
+    id: '/processos-comerciais',
+    path: '/processos-comerciais',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedPerdidosRoute = AuthenticatedPerdidosRouteImport.update({
   id: '/perdidos',
   path: '/perdidos',
@@ -114,6 +122,12 @@ const AuthenticatedConfiguracoesRoute =
     path: '/configuracoes',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedCheckoutDoDiaRoute =
+  AuthenticatedCheckoutDoDiaRouteImport.update({
+    id: '/checkout-do-dia',
+    path: '/checkout-do-dia',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAgendaRoute = AuthenticatedAgendaRouteImport.update({
   id: '/agenda',
   path: '/agenda',
@@ -124,6 +138,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/agenda': typeof AuthenticatedAgendaRoute
+  '/checkout-do-dia': typeof AuthenticatedCheckoutDoDiaRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/discador': typeof AuthenticatedDiscadorRoute
@@ -135,6 +150,7 @@ export interface FileRoutesByFullPath {
   '/leads': typeof AuthenticatedLeadsRoute
   '/painel-adm': typeof AuthenticatedPainelAdmRoute
   '/perdidos': typeof AuthenticatedPerdidosRoute
+  '/processos-comerciais': typeof AuthenticatedProcessosComerciaisRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
   '/resgates': typeof AuthenticatedResgatesRoute
   '/tarefas': typeof AuthenticatedTarefasRoute
@@ -143,6 +159,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/agenda': typeof AuthenticatedAgendaRoute
+  '/checkout-do-dia': typeof AuthenticatedCheckoutDoDiaRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/discador': typeof AuthenticatedDiscadorRoute
@@ -154,6 +171,7 @@ export interface FileRoutesByTo {
   '/leads': typeof AuthenticatedLeadsRoute
   '/painel-adm': typeof AuthenticatedPainelAdmRoute
   '/perdidos': typeof AuthenticatedPerdidosRoute
+  '/processos-comerciais': typeof AuthenticatedProcessosComerciaisRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
   '/resgates': typeof AuthenticatedResgatesRoute
   '/tarefas': typeof AuthenticatedTarefasRoute
@@ -164,6 +182,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/agenda': typeof AuthenticatedAgendaRoute
+  '/_authenticated/checkout-do-dia': typeof AuthenticatedCheckoutDoDiaRoute
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/discador': typeof AuthenticatedDiscadorRoute
@@ -175,6 +194,7 @@ export interface FileRoutesById {
   '/_authenticated/leads': typeof AuthenticatedLeadsRoute
   '/_authenticated/painel-adm': typeof AuthenticatedPainelAdmRoute
   '/_authenticated/perdidos': typeof AuthenticatedPerdidosRoute
+  '/_authenticated/processos-comerciais': typeof AuthenticatedProcessosComerciaisRoute
   '/_authenticated/relatorios': typeof AuthenticatedRelatoriosRoute
   '/_authenticated/resgates': typeof AuthenticatedResgatesRoute
   '/_authenticated/tarefas': typeof AuthenticatedTarefasRoute
@@ -185,6 +205,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/agenda'
+    | '/checkout-do-dia'
     | '/configuracoes'
     | '/dashboard'
     | '/discador'
@@ -196,6 +217,7 @@ export interface FileRouteTypes {
     | '/leads'
     | '/painel-adm'
     | '/perdidos'
+    | '/processos-comerciais'
     | '/relatorios'
     | '/resgates'
     | '/tarefas'
@@ -204,6 +226,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/agenda'
+    | '/checkout-do-dia'
     | '/configuracoes'
     | '/dashboard'
     | '/discador'
@@ -215,6 +238,7 @@ export interface FileRouteTypes {
     | '/leads'
     | '/painel-adm'
     | '/perdidos'
+    | '/processos-comerciais'
     | '/relatorios'
     | '/resgates'
     | '/tarefas'
@@ -224,6 +248,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/agenda'
+    | '/_authenticated/checkout-do-dia'
     | '/_authenticated/configuracoes'
     | '/_authenticated/dashboard'
     | '/_authenticated/discador'
@@ -235,6 +260,7 @@ export interface FileRouteTypes {
     | '/_authenticated/leads'
     | '/_authenticated/painel-adm'
     | '/_authenticated/perdidos'
+    | '/_authenticated/processos-comerciais'
     | '/_authenticated/relatorios'
     | '/_authenticated/resgates'
     | '/_authenticated/tarefas'
@@ -288,6 +314,13 @@ declare module '@tanstack/react-router' {
       path: '/relatorios'
       fullPath: '/relatorios'
       preLoaderRoute: typeof AuthenticatedRelatoriosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/processos-comerciais': {
+      id: '/_authenticated/processos-comerciais'
+      path: '/processos-comerciais'
+      fullPath: '/processos-comerciais'
+      preLoaderRoute: typeof AuthenticatedProcessosComerciaisRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/perdidos': {
@@ -367,6 +400,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedConfiguracoesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/checkout-do-dia': {
+      id: '/_authenticated/checkout-do-dia'
+      path: '/checkout-do-dia'
+      fullPath: '/checkout-do-dia'
+      preLoaderRoute: typeof AuthenticatedCheckoutDoDiaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/agenda': {
       id: '/_authenticated/agenda'
       path: '/agenda'
@@ -379,6 +419,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAgendaRoute: typeof AuthenticatedAgendaRoute
+  AuthenticatedCheckoutDoDiaRoute: typeof AuthenticatedCheckoutDoDiaRoute
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDiscadorRoute: typeof AuthenticatedDiscadorRoute
@@ -390,6 +431,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedLeadsRoute: typeof AuthenticatedLeadsRoute
   AuthenticatedPainelAdmRoute: typeof AuthenticatedPainelAdmRoute
   AuthenticatedPerdidosRoute: typeof AuthenticatedPerdidosRoute
+  AuthenticatedProcessosComerciaisRoute: typeof AuthenticatedProcessosComerciaisRoute
   AuthenticatedRelatoriosRoute: typeof AuthenticatedRelatoriosRoute
   AuthenticatedResgatesRoute: typeof AuthenticatedResgatesRoute
   AuthenticatedTarefasRoute: typeof AuthenticatedTarefasRoute
@@ -397,6 +439,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAgendaRoute: AuthenticatedAgendaRoute,
+  AuthenticatedCheckoutDoDiaRoute: AuthenticatedCheckoutDoDiaRoute,
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDiscadorRoute: AuthenticatedDiscadorRoute,
@@ -408,6 +451,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedLeadsRoute: AuthenticatedLeadsRoute,
   AuthenticatedPainelAdmRoute: AuthenticatedPainelAdmRoute,
   AuthenticatedPerdidosRoute: AuthenticatedPerdidosRoute,
+  AuthenticatedProcessosComerciaisRoute: AuthenticatedProcessosComerciaisRoute,
   AuthenticatedRelatoriosRoute: AuthenticatedRelatoriosRoute,
   AuthenticatedResgatesRoute: AuthenticatedResgatesRoute,
   AuthenticatedTarefasRoute: AuthenticatedTarefasRoute,
@@ -424,13 +468,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
