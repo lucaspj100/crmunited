@@ -76,7 +76,7 @@ const REASON_META: Record<Reason, { label: string; icon: any; color: string }> =
 const FILTERS: { key: string; label: string; match: (it: QueueItem) => boolean }[] = [
   { key: "todos",        label: "Todos",            match: () => true },
   { key: "agora",        label: "Agora",            match: (i) => i.reason === "atrasada" || i.reason === "retorno_pendente" || i.reason === "entrevista_hoje" },
-  { key: "hoje",         label: "Hoje",             match: (i) => i.reason !== "futura_proxima" },
+  { key: "hoje",         label: "Hoje",             match: () => true },
   { key: "atrasadas",    label: "Atrasadas",        match: (i) => i.reason === "atrasada" },
   { key: "entrevistas",  label: "Entrevistas",      match: (i) => i.reason === "entrevista_hoje" },
   { key: "retornos",     label: "Retornos",         match: (i) => i.reason === "retorno_pendente" },
