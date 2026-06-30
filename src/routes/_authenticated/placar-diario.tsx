@@ -282,8 +282,10 @@ function GoalBar({ label, value, goal }: { label: string; value: number; goal: n
 function Highlight({ title, row, field }: { title: string; row: ProductivityRow | null; field: keyof ProductivityRow }) {
   return (
     <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-orange-600 font-bold text-slate-900">
-        {row ? initials(row.nome) : "—"}
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-amber-400 to-orange-600 font-bold text-slate-900">
+        {row?.avatar_url
+          ? <img src={row.avatar_url} alt="" className="h-full w-full object-cover" />
+          : (row ? initials(row.nome) : "—")}
       </div>
       <div className="min-w-0 flex-1">
         <div className="text-[11px] uppercase tracking-wider text-white/60">{title}</div>
