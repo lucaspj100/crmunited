@@ -210,17 +210,6 @@ function HojePage() {
       }
     }
 
-    // 8) Futuras (próximos 7 dias)
-    const future = data.tasks.filter((t) => ownerFilter(t.owner_id) && t.due_date > today && t.due_date <= in7Str && t.lead_id)
-      .sort((a, b) => a.due_date.localeCompare(b.due_date));
-    for (const t of future) {
-      const l = leads.find((x) => x.id === t.lead_id);
-      if (l && !seenLeads.has(l.id)) {
-        seenLeads.add(l.id);
-        items.push({ reason: "futura_proxima", lead: l, task: t, priority: 8, sortKey: t.due_date, owner_id: t.owner_id });
-      }
-    }
-
     items.sort((a, b) => a.priority - b.priority || a.sortKey.localeCompare(b.sortKey));
     return items;
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -251,7 +240,7 @@ function HojePage() {
 
   const next = queue[0];
 
-  const orderedReasons: Reason[] = ["atrasada", "entrevista_hoje", "retorno_pendente", "followup_hoje", "resgate_hoje", "novo_sem_contato", "sem_proxima_acao", "futura_proxima"];
+  const orderedReasons: Reason[] = ["atrasada", "entrevista_hoje", "retorno_pendente", "followup_hoje", "resgate_hoje", "novo_sem_contato", "sem_proxima_acao"];
 
   const openItem = (item: QueueItem) => {
     if (item.reason === "retorno_pendente" && item.prospect) {
