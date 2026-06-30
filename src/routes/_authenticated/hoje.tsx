@@ -346,10 +346,11 @@ function HojePage() {
           item={working as Required<Pick<QueueItem, "lead">> & QueueItem}
           queue={filtered}
           onClose={() => setWorking(null)}
-          onAdvance={() => {
+          onAdvance={async () => {
             const idx = filtered.findIndex((q) => q.lead?.id === working.lead?.id);
             const nxt = filtered[idx + 1];
-            qc.invalidateQueries();
+            await qc.invalidateQueries({ queryKey: ["hoje"] });
+            await qc.refetchQueries({ queryKey: ["hoje"] });
             if (nxt) setWorking(nxt); else setWorking(null);
           }}
           onOpenDetails={(id) => { setWorking(null); setDetailsId(id); }}
