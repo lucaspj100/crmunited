@@ -193,41 +193,48 @@ function PlacarDiario() {
         )}
 
         <div className="grid grid-cols-1 xl:grid-cols-[2fr_1fr] gap-5">
-          {/* Ranking */}
+          {/* Pódio - Top 3 */}
           <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
             <div className="flex items-center gap-2 mb-4">
               <Crown className="h-5 w-5 text-amber-400" />
-              <h2 className="text-lg font-bold">Ranking de hoje</h2>
+              <h2 className="text-lg font-bold">Pódio de hoje — Top 3</h2>
               <span className="text-xs text-white/50 ml-2">Pontuação: ligação 1 · atendida 2 · interessado 5 · entrevista 10 · matrícula 30</span>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-3">
               {ranked.length === 0 && <p className="text-white/60 text-sm">Sem dados ainda.</p>}
-              {ranked.map((r, idx) => (
-                <div key={r.vendedor_id} className={`flex items-center gap-3 rounded-xl border border-white/10 p-3 ${idx === 0 ? "bg-gradient-to-r from-amber-500/20 to-transparent" : "bg-white/5"}`}>
-                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full font-black ${idx === 0 ? "bg-amber-400 text-slate-900" : idx === 1 ? "bg-slate-300 text-slate-900" : idx === 2 ? "bg-amber-700 text-white" : "bg-white/10 text-white/80"}`}>
-                    {idx + 1}
-                  </div>
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 to-violet-600 font-bold">
-                    {initials(r.nome)}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate font-semibold">{r.nome}</div>
-                    <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-white/70">
-                      <span>📞 {r.ligacoes_feitas}</span>
-                      <span>✅ {r.ligacoes_atendidas}</span>
-                      <span>✨ {r.interessados_gerados}</span>
-                      <span>📅 {r.entrevistas_marcadas}</span>
-                      <span>🎓 {r.matriculas}</span>
+              {ranked.slice(0, 3).map((r, idx) => {
+                const medal = idx === 0 ? "bg-amber-400 text-slate-900" : idx === 1 ? "bg-slate-300 text-slate-900" : "bg-amber-700 text-white";
+                const size = idx === 0 ? "h-20 w-20 text-2xl" : "h-16 w-16 text-xl";
+                return (
+                  <div key={r.vendedor_id} className={`flex items-center gap-4 rounded-xl border border-white/10 p-4 ${idx === 0 ? "bg-gradient-to-r from-amber-500/25 to-transparent" : "bg-white/5"}`}>
+                    <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full font-black text-xl ${medal}`}>
+                      {idx + 1}
+                    </div>
+                    <div className={`shrink-0 overflow-hidden rounded-full border-2 ${idx === 0 ? "border-amber-400" : "border-white/20"} bg-gradient-to-br from-sky-500 to-violet-600 ${size} flex items-center justify-center font-bold`}>
+                      {r.avatar_url
+                        ? <img src={r.avatar_url} alt="" className="h-full w-full object-cover" />
+                        : <span>{initials(r.nome)}</span>}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className={`truncate font-bold ${idx === 0 ? "text-2xl" : "text-xl"}`}>{r.nome}</div>
+                      <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-white/70 mt-1">
+                        <span>📞 {r.ligacoes_feitas}</span>
+                        <span>✅ {r.ligacoes_atendidas}</span>
+                        <span>✨ {r.interessados_gerados}</span>
+                        <span>📅 {r.entrevistas_marcadas}</span>
+                        <span>🎓 {r.matriculas}</span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className={`font-black tabular-nums ${idx === 0 ? "text-5xl" : "text-4xl"}`}>{r.score}</div>
+                      <div className="text-[10px] uppercase tracking-wider text-white/50">pontos</div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-2xl md:text-3xl font-black tabular-nums">{r.score}</div>
-                    <div className="text-[10px] uppercase tracking-wider text-white/50">pontos</div>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
+
 
           {/* Destaques */}
           <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
