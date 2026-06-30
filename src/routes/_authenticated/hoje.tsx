@@ -205,7 +205,8 @@ function HojePage() {
     // 7) Sem próxima ação
     for (const l of leads) {
       if (seenLeads.has(l.id)) continue;
-      if (!tasksByLead.has(l.id)) {
+      const contactedToday = l.last_contact_at?.slice(0, 10) === today;
+      if (!tasksByLead.has(l.id) && !contactedToday) {
         seenLeads.add(l.id);
         items.push({ reason: "sem_proxima_acao", lead: l, priority: 7, sortKey: l.last_contact_at ?? l.created_at, owner_id: l.owner_id });
       }
