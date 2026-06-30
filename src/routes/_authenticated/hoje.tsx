@@ -51,8 +51,7 @@ type Reason =
   | "followup_hoje"
   | "resgate_hoje"
   | "novo_sem_contato"
-  | "sem_proxima_acao"
-  | "futura_proxima";
+  | "sem_proxima_acao";
 
 type QueueItem = {
   reason: Reason;
