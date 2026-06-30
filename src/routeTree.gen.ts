@@ -16,6 +16,7 @@ import { Route as AuthenticatedTarefasRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedResgatesRouteImport } from './routes/_authenticated/resgates'
 import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authenticated/relatorios'
 import { Route as AuthenticatedProcessosComerciaisRouteImport } from './routes/_authenticated/processos-comerciais'
+import { Route as AuthenticatedPlacarDiarioRouteImport } from './routes/_authenticated/placar-diario'
 import { Route as AuthenticatedPerdidosRouteImport } from './routes/_authenticated/perdidos'
 import { Route as AuthenticatedPainelAdmRouteImport } from './routes/_authenticated/painel-adm'
 import { Route as AuthenticatedLeadsRouteImport } from './routes/_authenticated/leads'
@@ -63,6 +64,12 @@ const AuthenticatedProcessosComerciaisRoute =
   AuthenticatedProcessosComerciaisRouteImport.update({
     id: '/processos-comerciais',
     path: '/processos-comerciais',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPlacarDiarioRoute =
+  AuthenticatedPlacarDiarioRouteImport.update({
+    id: '/placar-diario',
+    path: '/placar-diario',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedPerdidosRoute = AuthenticatedPerdidosRouteImport.update({
@@ -150,6 +157,7 @@ export interface FileRoutesByFullPath {
   '/leads': typeof AuthenticatedLeadsRoute
   '/painel-adm': typeof AuthenticatedPainelAdmRoute
   '/perdidos': typeof AuthenticatedPerdidosRoute
+  '/placar-diario': typeof AuthenticatedPlacarDiarioRoute
   '/processos-comerciais': typeof AuthenticatedProcessosComerciaisRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
   '/resgates': typeof AuthenticatedResgatesRoute
@@ -171,6 +179,7 @@ export interface FileRoutesByTo {
   '/leads': typeof AuthenticatedLeadsRoute
   '/painel-adm': typeof AuthenticatedPainelAdmRoute
   '/perdidos': typeof AuthenticatedPerdidosRoute
+  '/placar-diario': typeof AuthenticatedPlacarDiarioRoute
   '/processos-comerciais': typeof AuthenticatedProcessosComerciaisRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
   '/resgates': typeof AuthenticatedResgatesRoute
@@ -194,6 +203,7 @@ export interface FileRoutesById {
   '/_authenticated/leads': typeof AuthenticatedLeadsRoute
   '/_authenticated/painel-adm': typeof AuthenticatedPainelAdmRoute
   '/_authenticated/perdidos': typeof AuthenticatedPerdidosRoute
+  '/_authenticated/placar-diario': typeof AuthenticatedPlacarDiarioRoute
   '/_authenticated/processos-comerciais': typeof AuthenticatedProcessosComerciaisRoute
   '/_authenticated/relatorios': typeof AuthenticatedRelatoriosRoute
   '/_authenticated/resgates': typeof AuthenticatedResgatesRoute
@@ -217,6 +227,7 @@ export interface FileRouteTypes {
     | '/leads'
     | '/painel-adm'
     | '/perdidos'
+    | '/placar-diario'
     | '/processos-comerciais'
     | '/relatorios'
     | '/resgates'
@@ -238,6 +249,7 @@ export interface FileRouteTypes {
     | '/leads'
     | '/painel-adm'
     | '/perdidos'
+    | '/placar-diario'
     | '/processos-comerciais'
     | '/relatorios'
     | '/resgates'
@@ -260,6 +272,7 @@ export interface FileRouteTypes {
     | '/_authenticated/leads'
     | '/_authenticated/painel-adm'
     | '/_authenticated/perdidos'
+    | '/_authenticated/placar-diario'
     | '/_authenticated/processos-comerciais'
     | '/_authenticated/relatorios'
     | '/_authenticated/resgates'
@@ -321,6 +334,13 @@ declare module '@tanstack/react-router' {
       path: '/processos-comerciais'
       fullPath: '/processos-comerciais'
       preLoaderRoute: typeof AuthenticatedProcessosComerciaisRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/placar-diario': {
+      id: '/_authenticated/placar-diario'
+      path: '/placar-diario'
+      fullPath: '/placar-diario'
+      preLoaderRoute: typeof AuthenticatedPlacarDiarioRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/perdidos': {
@@ -431,6 +451,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedLeadsRoute: typeof AuthenticatedLeadsRoute
   AuthenticatedPainelAdmRoute: typeof AuthenticatedPainelAdmRoute
   AuthenticatedPerdidosRoute: typeof AuthenticatedPerdidosRoute
+  AuthenticatedPlacarDiarioRoute: typeof AuthenticatedPlacarDiarioRoute
   AuthenticatedProcessosComerciaisRoute: typeof AuthenticatedProcessosComerciaisRoute
   AuthenticatedRelatoriosRoute: typeof AuthenticatedRelatoriosRoute
   AuthenticatedResgatesRoute: typeof AuthenticatedResgatesRoute
@@ -451,6 +472,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedLeadsRoute: AuthenticatedLeadsRoute,
   AuthenticatedPainelAdmRoute: AuthenticatedPainelAdmRoute,
   AuthenticatedPerdidosRoute: AuthenticatedPerdidosRoute,
+  AuthenticatedPlacarDiarioRoute: AuthenticatedPlacarDiarioRoute,
   AuthenticatedProcessosComerciaisRoute: AuthenticatedProcessosComerciaisRoute,
   AuthenticatedRelatoriosRoute: AuthenticatedRelatoriosRoute,
   AuthenticatedResgatesRoute: AuthenticatedResgatesRoute,
