@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, useNavigate, useLocation, Link } from "@tansta
 import { useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useBrand } from "@/lib/brand";
-import { LayoutDashboard, Users, Kanban, RotateCw, BarChart3, LogOut, Settings, Upload, TrendingDown, Sparkles, Trophy, Calendar, PhoneCall, Link2, ClipboardCheck, Activity, Tv } from "lucide-react";
+import { LayoutDashboard, Users, Kanban, RotateCw, BarChart3, LogOut, Settings, Upload, TrendingDown, Sparkles, Trophy, Calendar, PhoneCall, Link2, ClipboardCheck, Activity, Tv, User as UserIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ReturnNotificationWatcher } from "@/components/ReturnNotificationWatcher";
@@ -24,6 +24,7 @@ const BASE_NAV = [
   { to: "/importar", label: "Importar", icon: Upload },
   { to: "/relatorios", label: "Relatórios", icon: BarChart3 },
   { to: "/checkout-do-dia", label: "Checkout do dia", icon: ClipboardCheck },
+  { to: "/meu-perfil", label: "Meu perfil", icon: UserIcon },
 ] as const;
 
 function AuthedLayout() {
