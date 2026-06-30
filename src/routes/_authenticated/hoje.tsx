@@ -71,7 +71,6 @@ const REASON_META: Record<Reason, { label: string; icon: any; color: string }> =
   resgate_hoje:       { label: "Resgates",           icon: Zap,            color: "bg-emerald-500/15 text-emerald-700 border-emerald-500/30" },
   novo_sem_contato:   { label: "Leads novos",        icon: Flame,          color: "bg-orange-500/15 text-orange-700 border-orange-500/30" },
   sem_proxima_acao:   { label: "Sem próxima ação",   icon: Snowflake,      color: "bg-slate-500/15 text-slate-700 border-slate-500/30" },
-  futura_proxima:     { label: "Futuras",            icon: CalendarIcon,   color: "bg-muted text-muted-foreground" },
 };
 
 const FILTERS: { key: string; label: string; match: (it: QueueItem) => boolean }[] = [
