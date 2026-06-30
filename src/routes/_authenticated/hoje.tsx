@@ -205,7 +205,8 @@ function HojePage() {
     // 7) Sem próxima ação
     for (const l of leads) {
       if (seenLeads.has(l.id)) continue;
-      if (!tasksByLead.has(l.id)) {
+      const contactedToday = l.last_contact_at?.slice(0, 10) === today;
+      if (!tasksByLead.has(l.id) && !contactedToday) {
         seenLeads.add(l.id);
         items.push({ reason: "sem_proxima_acao", lead: l, priority: 7, sortKey: l.last_contact_at ?? l.created_at, owner_id: l.owner_id });
       }
@@ -345,10 +346,11 @@ function HojePage() {
           item={working as Required<Pick<QueueItem, "lead">> & QueueItem}
           queue={filtered}
           onClose={() => setWorking(null)}
-          onAdvance={() => {
+          onAdvance={async () => {
             const idx = filtered.findIndex((q) => q.lead?.id === working.lead?.id);
             const nxt = filtered[idx + 1];
-            qc.invalidateQueries();
+            await qc.invalidateQueries({ queryKey: ["hoje"] });
+            await qc.refetchQueries({ queryKey: ["hoje"] });
             if (nxt) setWorking(nxt); else setWorking(null);
           }}
           onOpenDetails={(id) => { setWorking(null); setDetailsId(id); }}
