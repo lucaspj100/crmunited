@@ -4,6 +4,7 @@ export type ProductivityRow = {
   vendedor_id: string;
   nome: string;
   email: string;
+  avatar_url: string | null;
   leads_novos_atribuidos: number;
   leads_trabalhados: number;
   ligacoes_feitas: number;
