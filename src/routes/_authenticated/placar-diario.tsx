@@ -48,7 +48,7 @@ function PlacarDiario() {
   const range = useMemo(() => periodRange(period), [period]);
 
   const { data: rowsRaw = [], dataUpdatedAt } = useQuery({
-    enabled: isAdmin,
+    enabled: true,
     queryKey: ["placar_diario", range.start, range.end],
     queryFn: () => fetchProductivity({ start: range.start, end: range.end, vendedorId: null }),
     refetchInterval: 30_000,
@@ -57,7 +57,7 @@ function PlacarDiario() {
   // Realtime: atualiza assim que houver nova tentativa ou mudança de lead
   const qc = (useQuery as unknown as { getClient?: () => unknown }) && undefined; // no-op marker
   useEffect(() => {
-    if (!isAdmin) return;
+    // open to all authenticated
     const ch = supabase
       .channel("placar-diario")
       .on("postgres_changes", { event: "*", schema: "public", table: "prospect_attempts" }, () => {
