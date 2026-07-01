@@ -34,8 +34,7 @@ function initials(name: string) {
 }
 
 function PlacarDiario() {
-  const { roles } = useAuth();
-  const isAdmin = roles.includes("admin") || roles.includes("franqueado");
+  useAuth();
 
   const [period, setPeriod] = useState<Period>("hoje");
   const [now, setNow] = useState(new Date());
