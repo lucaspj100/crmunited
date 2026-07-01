@@ -78,7 +78,7 @@ function PlacarDiario() {
       })
       .subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, [isAdmin, range.start, range.end]);
+  }, [range.start, range.end]);
 
   const [live, setLive] = useState<ProductivityRow[] | null>(null);
   const rows = (live ?? rowsRaw) as ProductivityRow[];
@@ -121,9 +121,6 @@ function PlacarDiario() {
     } catch { /* ignore */ }
   };
 
-  if (!isAdmin) {
-    return <p className="text-muted-foreground">Acesso restrito ao Placar Diário.</p>;
-  }
 
   const lastUpdate = new Date(dataUpdatedAt || now);
   const dateLabel = now.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long", year: "numeric" });
