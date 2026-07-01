@@ -24,6 +24,7 @@ const BASE_NAV = [
   { to: "/importar", label: "Importar", icon: Upload },
   { to: "/relatorios", label: "Relatórios", icon: BarChart3 },
   { to: "/checkout-do-dia", label: "Checkout do dia", icon: ClipboardCheck },
+  { to: "/placar-diario", label: "Placar (Telão)", icon: Tv },
   { to: "/meu-perfil", label: "Meu perfil", icon: UserIcon },
 ] as const;
 
@@ -38,7 +39,6 @@ function AuthedLayout() {
         ...BASE_NAV,
         { to: "/painel-adm", label: "Painel ADM", icon: Trophy } as const,
         { to: "/processos-comerciais", label: "Processos", icon: Activity } as const,
-        { to: "/placar-diario", label: "Placar (Telão)", icon: Tv } as const,
         { to: "/integracao-arena", label: "Integração Arena", icon: Link2 } as const,
         { to: "/configuracoes", label: "Configurações", icon: Settings } as const,
       ]
