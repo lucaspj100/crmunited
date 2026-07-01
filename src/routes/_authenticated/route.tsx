@@ -39,7 +39,6 @@ function AuthedLayout() {
         ...BASE_NAV,
         { to: "/painel-adm", label: "Painel ADM", icon: Trophy } as const,
         { to: "/processos-comerciais", label: "Processos", icon: Activity } as const,
-        { to: "/placar-diario", label: "Placar (Telão)", icon: Tv } as const,
         { to: "/integracao-arena", label: "Integração Arena", icon: Link2 } as const,
         { to: "/configuracoes", label: "Configurações", icon: Settings } as const,
       ]
