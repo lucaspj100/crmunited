@@ -13,7 +13,7 @@ export const Route = createFileRoute("/_authenticated/placar-diario")({
 });
 
 // Pontuação por ação
-const POINTS = { call: 1, answered: 2, interested: 5, interview: 10, enrollment: 30 };
+const POINTS = { call: 1, answered: 2, interested: 30, interview: 60, enrollment: 300, whatsapp: 1, linkedin: 1 };
 // Metas diárias do time (somatório de todos os vendedores)
 const TEAM_GOALS = { ligacoes: 500, entrevistas: 20, matriculas: 5 };
 
