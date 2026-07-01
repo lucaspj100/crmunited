@@ -23,7 +23,9 @@ function scoreOf(r: ProductivityRow) {
     r.ligacoes_atendidas * POINTS.answered +
     r.interessados_gerados * POINTS.interested +
     r.entrevistas_marcadas * POINTS.interview +
-    r.matriculas * POINTS.enrollment
+    r.matriculas * POINTS.enrollment +
+    (r.whatsapps_checkout ?? 0) * POINTS.whatsapp +
+    (r.linkedins_checkout ?? 0) * POINTS.linkedin
   );
 }
 
