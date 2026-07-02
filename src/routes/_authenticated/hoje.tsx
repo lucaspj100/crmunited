@@ -638,11 +638,9 @@ function QuickCompleteDialog({
           interview_time: intTime || null,
           interview_notes: intObs || null,
         }).eq("id", lead.id);
-        const conf = new Date(intDate + "T00:00:00"); conf.setDate(conf.getDate() - 1);
-        await supabase.from("tasks").insert({
-          lead_id: lead.id, owner_id: lead.owner_id, type: "confirmar_entrevista" as any,
-          due_date: conf.toISOString().slice(0, 10), status: "pendente" as any, observation: "Confirmar entrevista",
-        });
+        // Entrevista agendada é compromisso — remove tarefas operacionais pendentes do lead.
+        await supabase.from("tasks").update({ status: "concluida" as any })
+          .eq("lead_id", lead.id).eq("status", "pendente");
         await logLeadEvent({ leadId: lead.id, type: "interview_scheduled", description: `Entrevista marcada para ${intDate}${intTime ? " às " + intTime : ""}` });
       } else if (action === "matricula") {
         await supabase.from("leads").update({
