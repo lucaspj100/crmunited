@@ -146,6 +146,7 @@ function AgendaPage() {
     qc.invalidateQueries({ queryKey: ["agenda"] });
     qc.invalidateQueries({ queryKey: ["fila"] });
     qc.invalidateQueries({ queryKey: ["tasks-today"] });
+    qc.invalidateQueries({ queryKey: ["hoje"] });
   };
 
   async function confirmInterview(l: Lead) {
