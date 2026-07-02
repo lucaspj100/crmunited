@@ -387,7 +387,7 @@ function NextBestAction({ item, onWork, onDetails }: { item: QueueItem | undefin
   const company = item.lead?.company ?? item.prospect?.empresa ?? null;
   const statusLabel = item.lead ? labelFor(LEAD_STATUSES, item.lead.status) : "Prospecção";
   const horario = item.task?.due_time?.slice(0, 5)
-    ?? (item.reason === "entrevista_hoje" ? item.lead?.interview_time?.slice(0, 5) : null);
+    ?? (item.reason === "atualizar_resultado" ? item.lead?.interview_time?.slice(0, 5) : null);
 
   return (
     <Card className="p-5 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/30">
