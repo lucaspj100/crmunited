@@ -140,11 +140,20 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
 
     // 2) Interessado / Pediu WhatsApp → auto-converter em lead
     if (result === "Interessado" || result === "Pediu WhatsApp") {
-      const conv = await autoConvertProspectToLead({ contact, vendedorId, resultLabel: result });
+      const conv = await autoConvertProspectToLead({
+        contact,
+        vendedorId,
+        resultLabel: result,
+        latestObservation: obs.trim() || undefined,
+      });
       if (!conv.ok) {
         toast.error(`Resultado salvo, mas não foi possível criar o lead no funil. ${conv.error}`);
       } else {
         toast.success(conv.created ? "Lead criado no funil automaticamente" : "Contato vinculado a lead já existente");
+        queryClient.invalidateQueries({ queryKey: ["leads-funil"] });
+        queryClient.invalidateQueries({ queryKey: ["funil-next-tasks"] });
+        queryClient.invalidateQueries({ queryKey: ["leads"] });
+        queryClient.invalidateQueries({ queryKey: ["tasks"] });
       }
     }
 
