@@ -8,10 +8,21 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { PROSPECT_STATUSES, statusBadgeClass } from "@/lib/prospect-status";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Linkedin, Pencil, ExternalLink } from "lucide-react";
+import { Linkedin, Pencil, ExternalLink, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { EditContactDialog } from "./EditContactDialog";
 import type { ProspectContact } from "@/lib/prospect-queue";
 
