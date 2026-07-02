@@ -13,7 +13,7 @@ export const Route = createFileRoute("/_authenticated/placar-diario")({
 });
 
 // Pontuação por ação
-const POINTS = { call: 1, answered: 2, interested: 30, interview: 60, enrollment: 300, whatsapp: 1, linkedin: 1 };
+const POINTS = { call: 1, answered: 2, interested: 30, interview: 60, enrollment: 300, whatsapp: 0.1, linkedin: 0.1 };
 // Metas diárias do time (somatório de todos os vendedores)
 const TEAM_GOALS = { ligacoes: 500, entrevistas: 20, matriculas: 5 };
 
@@ -31,6 +31,10 @@ function scoreOf(r: ProductivityRow) {
 
 function initials(name: string) {
   return name.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "").join("") || "?";
+}
+
+function fmtScore(n: number) {
+  return Number.isInteger(n) ? String(n) : n.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 }
 
 function PlacarDiario() {
@@ -196,7 +200,7 @@ function PlacarDiario() {
             <div className="flex items-center gap-2 mb-4">
               <Crown className="h-5 w-5 text-amber-400" />
               <h2 className="text-lg font-bold">Pódio de hoje — Top 3</h2>
-              <span className="text-xs text-white/50 ml-2">Pontuação: ligação 1 · atendida 2 · interessado 30 · entrevista 60 · matrícula 300 · WhatsApp 1 · LinkedIn 1</span>
+              <span className="text-xs text-white/50 ml-2">Pontuação: ligação 1 · atendida 2 · interessado 30 · entrevista 60 · matrícula 300 · WhatsApp 0,1 · LinkedIn 0,1</span>
             </div>
             <div className="space-y-3">
               {ranked.length === 0 && <p className="text-white/60 text-sm">Sem dados ainda.</p>}
@@ -224,7 +228,7 @@ function PlacarDiario() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className={`font-black tabular-nums ${idx === 0 ? "text-5xl" : "text-4xl"}`}>{r.score}</div>
+                      <div className={`font-black tabular-nums ${idx === 0 ? "text-5xl" : "text-4xl"}`}>{fmtScore(r.score)}</div>
                       <div className="text-[10px] uppercase tracking-wider text-white/50">pontos</div>
                     </div>
                   </div>
