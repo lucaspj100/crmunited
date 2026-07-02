@@ -264,6 +264,27 @@ export function MyContactsPanel() {
           onSaved={(u) => { onSaved(u); setEditing(null); }}
         />
       )}
+
+      <AlertDialog open={!!deleting} onOpenChange={(v) => { if (!v && !isDeleting) setDeleting(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir contato?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Essa ação vai remover este contato da sua lista do Discador. Essa ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); handleDelete(); }}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? "Excluindo…" : "Excluir"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
