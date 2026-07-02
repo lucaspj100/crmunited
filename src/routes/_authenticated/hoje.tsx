@@ -500,9 +500,9 @@ function WorkLeadDialog({
               </div>
             )}
 
-            {reason === "entrevista_hoje" && (
+            {reason === "atualizar_resultado" && (
               <div className="rounded-md border border-violet-500/30 bg-violet-500/5 px-3 py-2 text-sm">
-                <div className="font-medium text-violet-700">Entrevista hoje</div>
+                <div className="font-medium text-violet-700">Entrevista já ocorreu — atualize o resultado</div>
                 <div className="text-muted-foreground">
                   {lead.interview_date && new Date(lead.interview_date + "T00:00:00").toLocaleDateString("pt-BR")}
                   {lead.interview_time ? ` às ${lead.interview_time.slice(0, 5)}` : ""}
