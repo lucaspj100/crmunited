@@ -259,7 +259,7 @@ function HojePage() {
 
   const next = queue[0];
 
-  const orderedReasons: Reason[] = ["atrasada", "entrevista_hoje", "retorno_pendente", "followup_hoje", "resgate_hoje", "novo_sem_contato", "sem_proxima_acao"];
+  const orderedReasons: Reason[] = ["atrasada", "atualizar_resultado", "retorno_pendente", "followup_hoje", "resgate_hoje", "novo_sem_contato", "sem_proxima_acao"];
 
   const openItem = (item: QueueItem) => {
     if (item.reason === "retorno_pendente" && item.prospect) {
