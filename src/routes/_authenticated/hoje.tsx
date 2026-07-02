@@ -437,9 +437,9 @@ function Row({ item, isAdmin, owner, onClick }: { item: QueueItem; isAdmin: bool
           {item.lead && <Badge variant="outline" className={statusColor(item.lead.status)}>{statusLabel}</Badge>}
           {!item.lead && <Badge variant="outline" className="bg-amber-500/15 text-amber-700 border-amber-500/30">Prospecção</Badge>}
           {item.task && <Badge variant="secondary">{item.task.due_date}{item.task.due_time ? ` ${item.task.due_time.slice(0, 5)}` : ""}</Badge>}
-          {item.lead?.interview_date && item.reason === "entrevista_hoje" && (
+          {item.lead?.interview_date && item.reason === "atualizar_resultado" && (
             <Badge className="bg-violet-500/15 text-violet-700 border-violet-500/30">
-              {item.lead.interview_time ? item.lead.interview_time.slice(0, 5) : "Entrevista hoje"}
+              Entrevista {item.lead.interview_time ? item.lead.interview_time.slice(0, 5) : ""} — atualizar
             </Badge>
           )}
         </div>
