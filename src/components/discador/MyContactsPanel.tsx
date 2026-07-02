@@ -37,6 +37,36 @@ export function MyContactsPanel() {
   const [orderBy, setOrderBy] = useState<OrderKey>("created_at");
   const [orderDir, setOrderDir] = useState<"asc" | "desc">("desc");
   const [editing, setEditing] = useState<ProspectContact | null>(null);
+  const [deleting, setDeleting] = useState<ProspectContact | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const invalidateAll = () => {
+    qc.invalidateQueries({ queryKey: ["my_prospect_contacts"] });
+    qc.invalidateQueries({ queryKey: ["prospect_queue"] });
+    qc.invalidateQueries({ queryKey: ["prospect_counts"] });
+    qc.invalidateQueries({ queryKey: ["daily_scoreboard"] });
+  };
+
+  const handleDelete = async () => {
+    if (!deleting || !user) return;
+    setIsDeleting(true);
+    const { error } = await supabase
+      .from("prospect_contacts")
+      .delete()
+      .eq("id", deleting.id)
+      .eq("vendedor_responsavel_id", user.id);
+    setIsDeleting(false);
+    if (error) {
+      toast.error(`Erro ao excluir contato: ${error.message}`);
+      return;
+    }
+    qc.setQueriesData<ProspectContact[]>({ queryKey: ["my_prospect_contacts"] }, (prev) =>
+      (prev ?? []).filter((r) => r.id !== deleting.id),
+    );
+    invalidateAll();
+    toast.success("Contato excluído");
+    setDeleting(null);
+  };
 
   const { data: rows = [], isLoading } = useQuery({
     enabled: !!user,
