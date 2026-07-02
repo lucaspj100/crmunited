@@ -8,10 +8,21 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { PROSPECT_STATUSES, statusBadgeClass } from "@/lib/prospect-status";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Linkedin, Pencil, ExternalLink } from "lucide-react";
+import { Linkedin, Pencil, ExternalLink, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { EditContactDialog } from "./EditContactDialog";
 import type { ProspectContact } from "@/lib/prospect-queue";
 
@@ -26,6 +37,36 @@ export function MyContactsPanel() {
   const [orderBy, setOrderBy] = useState<OrderKey>("created_at");
   const [orderDir, setOrderDir] = useState<"asc" | "desc">("desc");
   const [editing, setEditing] = useState<ProspectContact | null>(null);
+  const [deleting, setDeleting] = useState<ProspectContact | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const invalidateAll = () => {
+    qc.invalidateQueries({ queryKey: ["my_prospect_contacts"] });
+    qc.invalidateQueries({ queryKey: ["prospect_queue"] });
+    qc.invalidateQueries({ queryKey: ["prospect_counts"] });
+    qc.invalidateQueries({ queryKey: ["daily_scoreboard"] });
+  };
+
+  const handleDelete = async () => {
+    if (!deleting || !user) return;
+    setIsDeleting(true);
+    const { error } = await supabase
+      .from("prospect_contacts")
+      .delete()
+      .eq("id", deleting.id)
+      .eq("vendedor_responsavel_id", user.id);
+    setIsDeleting(false);
+    if (error) {
+      toast.error(`Erro ao excluir contato: ${error.message}`);
+      return;
+    }
+    qc.setQueriesData<ProspectContact[]>({ queryKey: ["my_prospect_contacts"] }, (prev) =>
+      (prev ?? []).filter((r) => r.id !== deleting.id),
+    );
+    invalidateAll();
+    toast.success("Contato excluído");
+    setDeleting(null);
+  };
 
   const { data: rows = [], isLoading } = useQuery({
     enabled: !!user,
@@ -120,9 +161,14 @@ export function MyContactsPanel() {
                     <div className="font-semibold truncate">{r.nome || <span className="italic text-muted-foreground font-normal">sem nome</span>}</div>
                     <div className="text-xs text-muted-foreground truncate">{r.empresa || "—"}{r.cargo ? ` · ${r.cargo}` : ""}</div>
                   </div>
-                  <Button size="sm" variant="outline" onClick={() => setEditing(r)} className="shrink-0 h-8 px-2">
-                    <Pencil className="h-3.5 w-3.5" />
-                  </Button>
+                  <div className="flex gap-1 shrink-0">
+                    <Button size="sm" variant="outline" onClick={() => setEditing(r)} className="h-8 px-2">
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button size="sm" variant="destructive" onClick={() => setDeleting(r)} className="h-8 px-2">
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </div>
                 <div className="font-mono text-sm">+{r.telefone_normalizado}</div>
                 <div className="flex flex-wrap items-center gap-1.5">
@@ -190,9 +236,14 @@ export function MyContactsPanel() {
                     <td className="p-2 text-xs max-w-[160px] truncate" title={r.origem ?? ""}>{r.origem || <span className="text-muted-foreground">—</span>}</td>
                     <td className="p-2 text-xs max-w-[220px] truncate" title={r.observacao ?? ""}>{r.observacao || <span className="text-muted-foreground">—</span>}</td>
                     <td className="p-2 text-right">
-                      <Button size="sm" variant="outline" onClick={() => setEditing(r)} className="h-8">
-                        <Pencil className="h-3.5 w-3.5 mr-1" />Editar
-                      </Button>
+                      <div className="inline-flex gap-1">
+                        <Button size="sm" variant="outline" onClick={() => setEditing(r)} className="h-8">
+                          <Pencil className="h-3.5 w-3.5 mr-1" />Editar
+                        </Button>
+                        <Button size="sm" variant="destructive" onClick={() => setDeleting(r)} className="h-8">
+                          <Trash2 className="h-3.5 w-3.5 mr-1" />Excluir
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -213,6 +264,27 @@ export function MyContactsPanel() {
           onSaved={(u) => { onSaved(u); setEditing(null); }}
         />
       )}
+
+      <AlertDialog open={!!deleting} onOpenChange={(v) => { if (!v && !isDeleting) setDeleting(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir contato?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Essa ação vai remover este contato da sua lista do Discador. Essa ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); handleDelete(); }}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? "Excluindo…" : "Excluir"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
