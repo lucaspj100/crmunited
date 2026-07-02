@@ -337,11 +337,12 @@ function InterviewDialog({ lead, onClose, onSaved }: { lead: Lead | null; onClos
       interview_notes: notes || null,
     }).eq("id", lead.id);
     if (!error) {
-      await supabase.from("tasks").insert({
-        lead_id: lead.id, owner_id: lead.owner_id, type: "confirmar_entrevista",
-        due_date: date, due_time: time || null, status: "pendente",
-        observation: "Confirmar entrevista",
-      });
+      // Entrevista marcada é compromisso agendado — remove tarefas operacionais pendentes
+      // do lead (primeiro contato, follow-ups, "trabalhar agora" etc.) da fila do dia.
+      await supabase.from("tasks")
+        .update({ status: "concluida" as any })
+        .eq("lead_id", lead.id)
+        .eq("status", "pendente");
     }
     setSaving(false);
     if (error) toast.error(error.message);
