@@ -7,28 +7,62 @@ export type AutoConvertResult =
   | { ok: true; leadId: string; created: boolean }
   | { ok: false; error: string };
 
+function buildObservation(params: {
+  contact: ProspectContact;
+  resultLabel: string;
+  latestObservation?: string;
+}): string {
+  const { contact, resultLabel, latestObservation } = params;
+  const parts = [
+    contact.cargo ? `Cargo: ${contact.cargo}` : "",
+    contact.origem ? `Origem original: ${contact.origem}` : "",
+    contact.observacao ? `Observação anterior: ${contact.observacao}` : "",
+    latestObservation ? `Observação do Discador: ${latestObservation}` : "",
+    `Resultado no Discador: ${resultLabel}`,
+  ].filter(Boolean);
+  return parts.join("\n");
+}
+
 /**
  * Converte automaticamente um prospect em lead do CRM.
- * - Se já existir lead com mesmo phone_normalized, apenas vincula.
+ * - Se já existir lead com mesmo phone_normalized, apenas vincula e atualiza a observação.
  * - Caso contrário, cria novo lead com status "interessado".
  */
 export async function autoConvertProspectToLead(params: {
   contact: ProspectContact;
   vendedorId: string;
   resultLabel: string; // "Interessado" | "Pediu WhatsApp"
+  latestObservation?: string;
 }): Promise<AutoConvertResult> {
-  const { contact, vendedorId, resultLabel } = params;
+  const { contact, vendedorId, resultLabel, latestObservation } = params;
   try {
     // 1) Buscar duplicidade global (pode ser de outro vendedor)
     const { data: existing, error: lookupErr } = await supabase
       .from("leads")
-      .select("id")
+      .select("id, observation")
       .eq("phone_normalized", contact.telefone_normalizado)
       .limit(1);
     if (lookupErr) return { ok: false, error: lookupErr.message };
 
     if (existing && existing.length > 0) {
       const leadId = existing[0].id;
+      const prevObs = (existing[0].observation ?? "").trim();
+      const newEntry = latestObservation
+        ? `Observação do Discador: ${latestObservation}\nResultado no Discador: ${resultLabel}`
+        : `Resultado no Discador: ${resultLabel}`;
+
+      let mergedObs = prevObs;
+      if (!prevObs) {
+        mergedObs = newEntry;
+      } else if (!prevObs.includes(newEntry)) {
+        mergedObs = `${newEntry}\n\n${prevObs}`;
+      }
+
+      await supabase
+        .from("leads")
+        .update({ observation: mergedObs })
+        .eq("id", leadId);
+
       await supabase
         .from("prospect_contacts")
         .update({
@@ -41,12 +75,7 @@ export async function autoConvertProspectToLead(params: {
     }
 
     // 2) Criar novo lead
-    const obsParts = [
-      contact.cargo ? `Cargo: ${contact.cargo}` : "",
-      contact.origem ? `Origem original: ${contact.origem}` : "",
-      contact.observacao ? `Observação: ${contact.observacao}` : "",
-      `Resultado no Discador: ${resultLabel}`,
-    ].filter(Boolean);
+    const observation = buildObservation({ contact, resultLabel, latestObservation });
 
     const payload = {
       name: (contact.nome && contact.nome.trim()) || "Contato sem nome",
@@ -54,7 +83,7 @@ export async function autoConvertProspectToLead(params: {
       phone_normalized: contact.telefone_normalizado,
       phone_invalid: false,
       company: contact.empresa || null,
-      observation: obsParts.join("\n") || null,
+      observation: observation || null,
       source: "Discador",
       owner_id: vendedorId,
       status: "interessado" as const,
