@@ -161,9 +161,14 @@ export function MyContactsPanel() {
                     <div className="font-semibold truncate">{r.nome || <span className="italic text-muted-foreground font-normal">sem nome</span>}</div>
                     <div className="text-xs text-muted-foreground truncate">{r.empresa || "—"}{r.cargo ? ` · ${r.cargo}` : ""}</div>
                   </div>
-                  <Button size="sm" variant="outline" onClick={() => setEditing(r)} className="shrink-0 h-8 px-2">
-                    <Pencil className="h-3.5 w-3.5" />
-                  </Button>
+                  <div className="flex gap-1 shrink-0">
+                    <Button size="sm" variant="outline" onClick={() => setEditing(r)} className="h-8 px-2">
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button size="sm" variant="destructive" onClick={() => setDeleting(r)} className="h-8 px-2">
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </div>
                 <div className="font-mono text-sm">+{r.telefone_normalizado}</div>
                 <div className="flex flex-wrap items-center gap-1.5">
