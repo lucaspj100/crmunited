@@ -131,7 +131,14 @@ function HojePage() {
 
   const queue = useMemo<QueueItem[]>(() => {
     if (!data) return [];
-    const leads = data.leads.filter((l) => ownerFilter(l.owner_id) && l.status !== "perdido" && l.status !== "matricula");
+    const allLeads = data.leads.filter((l) => ownerFilter(l.owner_id) && l.status !== "perdido" && l.status !== "matricula");
+    // Leads com entrevista já marcada são compromissos: ficam de fora da fila operacional
+    // (aparecem na Agenda). Só entram aqui quando a entrevista já passou e o status
+    // ainda não foi atualizado para "entrevista realizada".
+    const scheduledLeads = allLeads.filter((l) => l.status === "entrevista_marcada");
+    const leads = allLeads.filter((l) => l.status !== "entrevista_marcada");
+    const scheduledIds = new Set(scheduledLeads.map((l) => l.id));
+
     const tasksByLead = new Map<string, Task[]>();
     for (const t of data.tasks.filter((t) => ownerFilter(t.owner_id) && t.lead_id)) {
       const a = tasksByLead.get(t.lead_id!) ?? [];
@@ -141,8 +148,8 @@ function HojePage() {
     const seenLeads = new Set<string>();
     const items: QueueItem[] = [];
 
-    // 1) Atrasadas (tasks de leads com due_date < hoje, ou retornos vencidos)
-    const overdue = data.tasks.filter((t) => ownerFilter(t.owner_id) && t.due_date < today && t.lead_id)
+    // 1) Atrasadas — ignora tasks de leads com entrevista já marcada (compromisso agendado)
+    const overdue = data.tasks.filter((t) => ownerFilter(t.owner_id) && t.due_date < today && t.lead_id && !scheduledIds.has(t.lead_id!))
       .sort((a, b) => a.due_date.localeCompare(b.due_date));
     for (const t of overdue) {
       const l = leads.find((x) => x.id === t.lead_id);
@@ -152,13 +159,23 @@ function HojePage() {
       }
     }
 
-    // 2) Entrevistas hoje
-    for (const l of leads) {
+    // 2) Atualizar resultado de entrevista (horário já passou, status ainda "entrevista_marcada")
+    const nowHm = new Date().toTimeString().slice(0, 5);
+    for (const l of scheduledLeads) {
+      if (!l.interview_date) continue;
+      const passed =
+        l.interview_date < today ||
+        (l.interview_date === today && (l.interview_time?.slice(0, 5) ?? "23:59") <= nowHm);
+      if (!passed) continue;
       if (seenLeads.has(l.id)) continue;
-      if (l.interview_date === today && (l.status === "entrevista_marcada" || l.status === "entrevista_realizada")) {
-        seenLeads.add(l.id);
-        items.push({ reason: "entrevista_hoje", lead: l, priority: 2, sortKey: l.interview_time ?? "00:00", owner_id: l.owner_id });
-      }
+      seenLeads.add(l.id);
+      items.push({
+        reason: "atualizar_resultado",
+        lead: l,
+        priority: 2,
+        sortKey: `${l.interview_date} ${l.interview_time ?? "00:00"}`,
+        owner_id: l.owner_id,
+      });
     }
 
     // 3) Retornos pendentes (tasks de prospect_contacts vencidas/hoje)
@@ -171,8 +188,8 @@ function HojePage() {
       items.push({ reason: "retorno_pendente", task: t, prospect: p, priority: 3, sortKey: `${t.due_date} ${t.due_time ?? "00:00"}`, owner_id: t.owner_id });
     }
 
-    // 4) Follow-ups hoje (não-resgate)
-    const todayTasks = data.tasks.filter((t) => ownerFilter(t.owner_id) && t.due_date === today && !t.is_rescue && t.lead_id && t.type !== "retorno_ligacao")
+    // 4) Follow-ups hoje (não-resgate) — ignora leads com entrevista já marcada
+    const todayTasks = data.tasks.filter((t) => ownerFilter(t.owner_id) && t.due_date === today && !t.is_rescue && t.lead_id && t.type !== "retorno_ligacao" && !scheduledIds.has(t.lead_id!))
       .sort((a, b) => (a.due_time ?? "").localeCompare(b.due_time ?? ""));
     for (const t of todayTasks) {
       const l = leads.find((x) => x.id === t.lead_id);
@@ -183,7 +200,7 @@ function HojePage() {
     }
 
     // 5) Resgates hoje
-    const rescTasks = data.tasks.filter((t) => ownerFilter(t.owner_id) && t.due_date === today && t.is_rescue && t.lead_id);
+    const rescTasks = data.tasks.filter((t) => ownerFilter(t.owner_id) && t.due_date === today && t.is_rescue && t.lead_id && !scheduledIds.has(t.lead_id!));
     for (const t of rescTasks) {
       const l = leads.find((x) => x.id === t.lead_id);
       if (l && !seenLeads.has(l.id)) {
@@ -215,6 +232,7 @@ function HojePage() {
     return items;
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, vendor, isAdmin, user?.id]);
+
 
   const vendorOptions = useMemo(() => {
     const ids = new Set((data?.leads ?? []).map((l) => l.owner_id));
