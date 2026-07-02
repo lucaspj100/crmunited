@@ -46,7 +46,7 @@ type ProspectMini = {
 
 type Reason =
   | "atrasada"
-  | "entrevista_hoje"
+  | "atualizar_resultado"
   | "retorno_pendente"
   | "followup_hoje"
   | "resgate_hoje"
@@ -64,25 +64,26 @@ type QueueItem = {
 };
 
 const REASON_META: Record<Reason, { label: string; icon: any; color: string }> = {
-  atrasada:           { label: "Atrasadas",          icon: AlertTriangle,  color: "bg-rose-500/15 text-rose-700 border-rose-500/30" },
-  entrevista_hoje:    { label: "Entrevistas de hoje", icon: CalendarIcon,  color: "bg-violet-500/15 text-violet-700 border-violet-500/30" },
-  retorno_pendente:   { label: "Retornos",           icon: PhoneCall,      color: "bg-amber-500/15 text-amber-700 border-amber-500/30" },
-  followup_hoje:      { label: "Follow-ups",         icon: Sun,            color: "bg-primary/15 text-primary border-primary/30" },
-  resgate_hoje:       { label: "Resgates",           icon: Zap,            color: "bg-emerald-500/15 text-emerald-700 border-emerald-500/30" },
-  novo_sem_contato:   { label: "Leads novos",        icon: Flame,          color: "bg-orange-500/15 text-orange-700 border-orange-500/30" },
-  sem_proxima_acao:   { label: "Sem próxima ação",   icon: Snowflake,      color: "bg-slate-500/15 text-slate-700 border-slate-500/30" },
+  atrasada:            { label: "Atrasadas",              icon: AlertTriangle,  color: "bg-rose-500/15 text-rose-700 border-rose-500/30" },
+  atualizar_resultado: { label: "Atualizar entrevista",   icon: CalendarIcon,   color: "bg-violet-500/15 text-violet-700 border-violet-500/30" },
+  retorno_pendente:    { label: "Retornos",               icon: PhoneCall,      color: "bg-amber-500/15 text-amber-700 border-amber-500/30" },
+  followup_hoje:       { label: "Follow-ups",             icon: Sun,            color: "bg-primary/15 text-primary border-primary/30" },
+  resgate_hoje:        { label: "Resgates",               icon: Zap,            color: "bg-emerald-500/15 text-emerald-700 border-emerald-500/30" },
+  novo_sem_contato:    { label: "Leads novos",            icon: Flame,          color: "bg-orange-500/15 text-orange-700 border-orange-500/30" },
+  sem_proxima_acao:    { label: "Sem próxima ação",       icon: Snowflake,      color: "bg-slate-500/15 text-slate-700 border-slate-500/30" },
 };
 
 const FILTERS: { key: string; label: string; match: (it: QueueItem) => boolean }[] = [
-  { key: "todos",        label: "Todos",            match: () => true },
-  { key: "agora",        label: "Agora",            match: (i) => i.reason === "atrasada" || i.reason === "retorno_pendente" || i.reason === "entrevista_hoje" },
-  { key: "hoje",         label: "Hoje",             match: () => true },
-  { key: "atrasadas",    label: "Atrasadas",        match: (i) => i.reason === "atrasada" },
-  { key: "entrevistas",  label: "Entrevistas",      match: (i) => i.reason === "entrevista_hoje" },
-  { key: "retornos",     label: "Retornos",         match: (i) => i.reason === "retorno_pendente" },
-  { key: "resgates",     label: "Resgates",         match: (i) => i.reason === "resgate_hoje" },
-  { key: "sem_acao",     label: "Sem próxima ação", match: (i) => i.reason === "sem_proxima_acao" || i.reason === "novo_sem_contato" },
+  { key: "todos",        label: "Todos",              match: () => true },
+  { key: "agora",        label: "Agora",              match: (i) => i.reason === "atrasada" || i.reason === "retorno_pendente" || i.reason === "atualizar_resultado" },
+  { key: "hoje",         label: "Hoje",               match: () => true },
+  { key: "atrasadas",    label: "Atrasadas",          match: (i) => i.reason === "atrasada" },
+  { key: "entrevistas",  label: "Atualizar entrev.",  match: (i) => i.reason === "atualizar_resultado" },
+  { key: "retornos",     label: "Retornos",           match: (i) => i.reason === "retorno_pendente" },
+  { key: "resgates",     label: "Resgates",           match: (i) => i.reason === "resgate_hoje" },
+  { key: "sem_acao",     label: "Sem próxima ação",   match: (i) => i.reason === "sem_proxima_acao" || i.reason === "novo_sem_contato" },
 ];
+
 
 function HojePage() {
   const qc = useQueryClient();
