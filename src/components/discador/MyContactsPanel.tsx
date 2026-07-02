@@ -236,9 +236,14 @@ export function MyContactsPanel() {
                     <td className="p-2 text-xs max-w-[160px] truncate" title={r.origem ?? ""}>{r.origem || <span className="text-muted-foreground">—</span>}</td>
                     <td className="p-2 text-xs max-w-[220px] truncate" title={r.observacao ?? ""}>{r.observacao || <span className="text-muted-foreground">—</span>}</td>
                     <td className="p-2 text-right">
-                      <Button size="sm" variant="outline" onClick={() => setEditing(r)} className="h-8">
-                        <Pencil className="h-3.5 w-3.5 mr-1" />Editar
-                      </Button>
+                      <div className="inline-flex gap-1">
+                        <Button size="sm" variant="outline" onClick={() => setEditing(r)} className="h-8">
+                          <Pencil className="h-3.5 w-3.5 mr-1" />Editar
+                        </Button>
+                        <Button size="sm" variant="destructive" onClick={() => setDeleting(r)} className="h-8">
+                          <Trash2 className="h-3.5 w-3.5 mr-1" />Excluir
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}
