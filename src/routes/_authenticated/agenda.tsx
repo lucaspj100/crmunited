@@ -146,6 +146,7 @@ function AgendaPage() {
     qc.invalidateQueries({ queryKey: ["agenda"] });
     qc.invalidateQueries({ queryKey: ["fila"] });
     qc.invalidateQueries({ queryKey: ["tasks-today"] });
+    qc.invalidateQueries({ queryKey: ["hoje"] });
   };
 
   async function confirmInterview(l: Lead) {
@@ -177,6 +178,11 @@ function AgendaPage() {
     setInterview(null); refresh();
   }
   async function markNoShow(l: Lead) {
+    // Reverte status para "interessado" — a entrevista deixou de ser um compromisso ativo.
+    // Assim o lead sai da lista "Atualizar entrevista" e volta ao funil, tendo a
+    // tarefa de reagendamento como próxima ação.
+    const { error } = await supabase.from("leads").update({ status: "interessado" as any }).eq("id", l.id);
+    if (error) { toast.error("Erro ao marcar no-show"); return; }
     await supabase.from("tasks").insert({
       lead_id: l.id, owner_id: l.owner_id, type: "reagendar_entrevista",
       due_date: today, status: "pendente", observation: "No-show — reagendar entrevista",

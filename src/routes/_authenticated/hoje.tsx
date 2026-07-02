@@ -159,7 +159,8 @@ function HojePage() {
       }
     }
 
-    // 2) Atualizar resultado de entrevista (horário já passou, status ainda "entrevista_marcada")
+    // 2) Atualizar resultado de entrevista (horário já passou, status ainda "entrevista_marcada"
+    //    e sem nenhuma tarefa pendente — se já houver tarefa, ela é a próxima ação real).
     const nowHm = new Date().toTimeString().slice(0, 5);
     for (const l of scheduledLeads) {
       if (!l.interview_date) continue;
@@ -168,6 +169,8 @@ function HojePage() {
         (l.interview_date === today && (l.interview_time?.slice(0, 5) ?? "23:59") <= nowHm);
       if (!passed) continue;
       if (seenLeads.has(l.id)) continue;
+      const pendingTasks = tasksByLead.get(l.id);
+      if (pendingTasks && pendingTasks.length > 0) continue;
       seenLeads.add(l.id);
       items.push({
         reason: "atualizar_resultado",
