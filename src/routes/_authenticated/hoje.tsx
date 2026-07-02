@@ -46,7 +46,7 @@ type ProspectMini = {
 
 type Reason =
   | "atrasada"
-  | "entrevista_hoje"
+  | "atualizar_resultado"
   | "retorno_pendente"
   | "followup_hoje"
   | "resgate_hoje"
@@ -64,25 +64,26 @@ type QueueItem = {
 };
 
 const REASON_META: Record<Reason, { label: string; icon: any; color: string }> = {
-  atrasada:           { label: "Atrasadas",          icon: AlertTriangle,  color: "bg-rose-500/15 text-rose-700 border-rose-500/30" },
-  entrevista_hoje:    { label: "Entrevistas de hoje", icon: CalendarIcon,  color: "bg-violet-500/15 text-violet-700 border-violet-500/30" },
-  retorno_pendente:   { label: "Retornos",           icon: PhoneCall,      color: "bg-amber-500/15 text-amber-700 border-amber-500/30" },
-  followup_hoje:      { label: "Follow-ups",         icon: Sun,            color: "bg-primary/15 text-primary border-primary/30" },
-  resgate_hoje:       { label: "Resgates",           icon: Zap,            color: "bg-emerald-500/15 text-emerald-700 border-emerald-500/30" },
-  novo_sem_contato:   { label: "Leads novos",        icon: Flame,          color: "bg-orange-500/15 text-orange-700 border-orange-500/30" },
-  sem_proxima_acao:   { label: "Sem próxima ação",   icon: Snowflake,      color: "bg-slate-500/15 text-slate-700 border-slate-500/30" },
+  atrasada:            { label: "Atrasadas",              icon: AlertTriangle,  color: "bg-rose-500/15 text-rose-700 border-rose-500/30" },
+  atualizar_resultado: { label: "Atualizar entrevista",   icon: CalendarIcon,   color: "bg-violet-500/15 text-violet-700 border-violet-500/30" },
+  retorno_pendente:    { label: "Retornos",               icon: PhoneCall,      color: "bg-amber-500/15 text-amber-700 border-amber-500/30" },
+  followup_hoje:       { label: "Follow-ups",             icon: Sun,            color: "bg-primary/15 text-primary border-primary/30" },
+  resgate_hoje:        { label: "Resgates",               icon: Zap,            color: "bg-emerald-500/15 text-emerald-700 border-emerald-500/30" },
+  novo_sem_contato:    { label: "Leads novos",            icon: Flame,          color: "bg-orange-500/15 text-orange-700 border-orange-500/30" },
+  sem_proxima_acao:    { label: "Sem próxima ação",       icon: Snowflake,      color: "bg-slate-500/15 text-slate-700 border-slate-500/30" },
 };
 
 const FILTERS: { key: string; label: string; match: (it: QueueItem) => boolean }[] = [
-  { key: "todos",        label: "Todos",            match: () => true },
-  { key: "agora",        label: "Agora",            match: (i) => i.reason === "atrasada" || i.reason === "retorno_pendente" || i.reason === "entrevista_hoje" },
-  { key: "hoje",         label: "Hoje",             match: () => true },
-  { key: "atrasadas",    label: "Atrasadas",        match: (i) => i.reason === "atrasada" },
-  { key: "entrevistas",  label: "Entrevistas",      match: (i) => i.reason === "entrevista_hoje" },
-  { key: "retornos",     label: "Retornos",         match: (i) => i.reason === "retorno_pendente" },
-  { key: "resgates",     label: "Resgates",         match: (i) => i.reason === "resgate_hoje" },
-  { key: "sem_acao",     label: "Sem próxima ação", match: (i) => i.reason === "sem_proxima_acao" || i.reason === "novo_sem_contato" },
+  { key: "todos",        label: "Todos",              match: () => true },
+  { key: "agora",        label: "Agora",              match: (i) => i.reason === "atrasada" || i.reason === "retorno_pendente" || i.reason === "atualizar_resultado" },
+  { key: "hoje",         label: "Hoje",               match: () => true },
+  { key: "atrasadas",    label: "Atrasadas",          match: (i) => i.reason === "atrasada" },
+  { key: "entrevistas",  label: "Atualizar entrev.",  match: (i) => i.reason === "atualizar_resultado" },
+  { key: "retornos",     label: "Retornos",           match: (i) => i.reason === "retorno_pendente" },
+  { key: "resgates",     label: "Resgates",           match: (i) => i.reason === "resgate_hoje" },
+  { key: "sem_acao",     label: "Sem próxima ação",   match: (i) => i.reason === "sem_proxima_acao" || i.reason === "novo_sem_contato" },
 ];
+
 
 function HojePage() {
   const qc = useQueryClient();
@@ -130,7 +131,14 @@ function HojePage() {
 
   const queue = useMemo<QueueItem[]>(() => {
     if (!data) return [];
-    const leads = data.leads.filter((l) => ownerFilter(l.owner_id) && l.status !== "perdido" && l.status !== "matricula");
+    const allLeads = data.leads.filter((l) => ownerFilter(l.owner_id) && l.status !== "perdido" && l.status !== "matricula");
+    // Leads com entrevista já marcada são compromissos: ficam de fora da fila operacional
+    // (aparecem na Agenda). Só entram aqui quando a entrevista já passou e o status
+    // ainda não foi atualizado para "entrevista realizada".
+    const scheduledLeads = allLeads.filter((l) => l.status === "entrevista_marcada");
+    const leads = allLeads.filter((l) => l.status !== "entrevista_marcada");
+    const scheduledIds = new Set(scheduledLeads.map((l) => l.id));
+
     const tasksByLead = new Map<string, Task[]>();
     for (const t of data.tasks.filter((t) => ownerFilter(t.owner_id) && t.lead_id)) {
       const a = tasksByLead.get(t.lead_id!) ?? [];
@@ -140,8 +148,8 @@ function HojePage() {
     const seenLeads = new Set<string>();
     const items: QueueItem[] = [];
 
-    // 1) Atrasadas (tasks de leads com due_date < hoje, ou retornos vencidos)
-    const overdue = data.tasks.filter((t) => ownerFilter(t.owner_id) && t.due_date < today && t.lead_id)
+    // 1) Atrasadas — ignora tasks de leads com entrevista já marcada (compromisso agendado)
+    const overdue = data.tasks.filter((t) => ownerFilter(t.owner_id) && t.due_date < today && t.lead_id && !scheduledIds.has(t.lead_id!))
       .sort((a, b) => a.due_date.localeCompare(b.due_date));
     for (const t of overdue) {
       const l = leads.find((x) => x.id === t.lead_id);
@@ -151,13 +159,23 @@ function HojePage() {
       }
     }
 
-    // 2) Entrevistas hoje
-    for (const l of leads) {
+    // 2) Atualizar resultado de entrevista (horário já passou, status ainda "entrevista_marcada")
+    const nowHm = new Date().toTimeString().slice(0, 5);
+    for (const l of scheduledLeads) {
+      if (!l.interview_date) continue;
+      const passed =
+        l.interview_date < today ||
+        (l.interview_date === today && (l.interview_time?.slice(0, 5) ?? "23:59") <= nowHm);
+      if (!passed) continue;
       if (seenLeads.has(l.id)) continue;
-      if (l.interview_date === today && (l.status === "entrevista_marcada" || l.status === "entrevista_realizada")) {
-        seenLeads.add(l.id);
-        items.push({ reason: "entrevista_hoje", lead: l, priority: 2, sortKey: l.interview_time ?? "00:00", owner_id: l.owner_id });
-      }
+      seenLeads.add(l.id);
+      items.push({
+        reason: "atualizar_resultado",
+        lead: l,
+        priority: 2,
+        sortKey: `${l.interview_date} ${l.interview_time ?? "00:00"}`,
+        owner_id: l.owner_id,
+      });
     }
 
     // 3) Retornos pendentes (tasks de prospect_contacts vencidas/hoje)
@@ -170,8 +188,8 @@ function HojePage() {
       items.push({ reason: "retorno_pendente", task: t, prospect: p, priority: 3, sortKey: `${t.due_date} ${t.due_time ?? "00:00"}`, owner_id: t.owner_id });
     }
 
-    // 4) Follow-ups hoje (não-resgate)
-    const todayTasks = data.tasks.filter((t) => ownerFilter(t.owner_id) && t.due_date === today && !t.is_rescue && t.lead_id && t.type !== "retorno_ligacao")
+    // 4) Follow-ups hoje (não-resgate) — ignora leads com entrevista já marcada
+    const todayTasks = data.tasks.filter((t) => ownerFilter(t.owner_id) && t.due_date === today && !t.is_rescue && t.lead_id && t.type !== "retorno_ligacao" && !scheduledIds.has(t.lead_id!))
       .sort((a, b) => (a.due_time ?? "").localeCompare(b.due_time ?? ""));
     for (const t of todayTasks) {
       const l = leads.find((x) => x.id === t.lead_id);
@@ -182,7 +200,7 @@ function HojePage() {
     }
 
     // 5) Resgates hoje
-    const rescTasks = data.tasks.filter((t) => ownerFilter(t.owner_id) && t.due_date === today && t.is_rescue && t.lead_id);
+    const rescTasks = data.tasks.filter((t) => ownerFilter(t.owner_id) && t.due_date === today && t.is_rescue && t.lead_id && !scheduledIds.has(t.lead_id!));
     for (const t of rescTasks) {
       const l = leads.find((x) => x.id === t.lead_id);
       if (l && !seenLeads.has(l.id)) {
@@ -215,6 +233,7 @@ function HojePage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, vendor, isAdmin, user?.id]);
 
+
   const vendorOptions = useMemo(() => {
     const ids = new Set((data?.leads ?? []).map((l) => l.owner_id));
     return Array.from(ids).map((id) => ({ id, name: byProfile.get(id)?.full_name || byProfile.get(id)?.email || "Vendedor" }));
@@ -240,7 +259,7 @@ function HojePage() {
 
   const next = queue[0];
 
-  const orderedReasons: Reason[] = ["atrasada", "entrevista_hoje", "retorno_pendente", "followup_hoje", "resgate_hoje", "novo_sem_contato", "sem_proxima_acao"];
+  const orderedReasons: Reason[] = ["atrasada", "atualizar_resultado", "retorno_pendente", "followup_hoje", "resgate_hoje", "novo_sem_contato", "sem_proxima_acao"];
 
   const openItem = (item: QueueItem) => {
     if (item.reason === "retorno_pendente" && item.prospect) {
@@ -368,7 +387,7 @@ function NextBestAction({ item, onWork, onDetails }: { item: QueueItem | undefin
   const company = item.lead?.company ?? item.prospect?.empresa ?? null;
   const statusLabel = item.lead ? labelFor(LEAD_STATUSES, item.lead.status) : "Prospecção";
   const horario = item.task?.due_time?.slice(0, 5)
-    ?? (item.reason === "entrevista_hoje" ? item.lead?.interview_time?.slice(0, 5) : null);
+    ?? (item.reason === "atualizar_resultado" ? item.lead?.interview_time?.slice(0, 5) : null);
 
   return (
     <Card className="p-5 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/30">
@@ -418,9 +437,9 @@ function Row({ item, isAdmin, owner, onClick }: { item: QueueItem; isAdmin: bool
           {item.lead && <Badge variant="outline" className={statusColor(item.lead.status)}>{statusLabel}</Badge>}
           {!item.lead && <Badge variant="outline" className="bg-amber-500/15 text-amber-700 border-amber-500/30">Prospecção</Badge>}
           {item.task && <Badge variant="secondary">{item.task.due_date}{item.task.due_time ? ` ${item.task.due_time.slice(0, 5)}` : ""}</Badge>}
-          {item.lead?.interview_date && item.reason === "entrevista_hoje" && (
+          {item.lead?.interview_date && item.reason === "atualizar_resultado" && (
             <Badge className="bg-violet-500/15 text-violet-700 border-violet-500/30">
-              {item.lead.interview_time ? item.lead.interview_time.slice(0, 5) : "Entrevista hoje"}
+              Entrevista {item.lead.interview_time ? item.lead.interview_time.slice(0, 5) : ""} — atualizar
             </Badge>
           )}
         </div>
@@ -481,9 +500,9 @@ function WorkLeadDialog({
               </div>
             )}
 
-            {reason === "entrevista_hoje" && (
+            {reason === "atualizar_resultado" && (
               <div className="rounded-md border border-violet-500/30 bg-violet-500/5 px-3 py-2 text-sm">
-                <div className="font-medium text-violet-700">Entrevista hoje</div>
+                <div className="font-medium text-violet-700">Entrevista já ocorreu — atualize o resultado</div>
                 <div className="text-muted-foreground">
                   {lead.interview_date && new Date(lead.interview_date + "T00:00:00").toLocaleDateString("pt-BR")}
                   {lead.interview_time ? ` às ${lead.interview_time.slice(0, 5)}` : ""}
@@ -619,11 +638,9 @@ function QuickCompleteDialog({
           interview_time: intTime || null,
           interview_notes: intObs || null,
         }).eq("id", lead.id);
-        const conf = new Date(intDate + "T00:00:00"); conf.setDate(conf.getDate() - 1);
-        await supabase.from("tasks").insert({
-          lead_id: lead.id, owner_id: lead.owner_id, type: "confirmar_entrevista" as any,
-          due_date: conf.toISOString().slice(0, 10), status: "pendente" as any, observation: "Confirmar entrevista",
-        });
+        // Entrevista agendada é compromisso — remove tarefas operacionais pendentes do lead.
+        await supabase.from("tasks").update({ status: "concluida" as any })
+          .eq("lead_id", lead.id).eq("status", "pendente");
         await logLeadEvent({ leadId: lead.id, type: "interview_scheduled", description: `Entrevista marcada para ${intDate}${intTime ? " às " + intTime : ""}` });
       } else if (action === "matricula") {
         await supabase.from("leads").update({
