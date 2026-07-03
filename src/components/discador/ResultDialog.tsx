@@ -59,7 +59,7 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
       return !!data;
     };
 
-    if (retornoTaskId && await finishTaskById(retornoTaskId)) return true;
+    if (retornoTaskId) return finishTaskById(retornoTaskId);
 
     if (!completeRetornoFallback) return false;
 
