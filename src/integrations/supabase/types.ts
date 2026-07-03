@@ -674,6 +674,7 @@ export type Database = {
           id: string
           is_rescue: boolean
           lead_id: string | null
+          notified_at: string | null
           observation: string | null
           owner_id: string
           prospect_contact_id: string | null
@@ -689,6 +690,7 @@ export type Database = {
           id?: string
           is_rescue?: boolean
           lead_id?: string | null
+          notified_at?: string | null
           observation?: string | null
           owner_id: string
           prospect_contact_id?: string | null
@@ -704,6 +706,7 @@ export type Database = {
           id?: string
           is_rescue?: boolean
           lead_id?: string | null
+          notified_at?: string | null
           observation?: string | null
           owner_id?: string
           prospect_contact_id?: string | null

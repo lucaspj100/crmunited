@@ -655,7 +655,7 @@ function QuickCompleteDialog({
       if (action === "reagendar") {
         if (!task) { toast.error("Não há tarefa para reagendar."); return; }
         if (!reagDate) { toast.error("Escolha a nova data."); return; }
-        const { error } = await supabase.from("tasks").update({ due_date: reagDate }).eq("id", task.id);
+        const { error } = await supabase.from("tasks").update({ due_date: reagDate, notified_at: null }).eq("id", task.id);
         if (error) throw error;
         await logLeadEvent({ leadId: lead.id, type: "task_rescheduled", description: `Tarefa reagendada para ${reagDate}` });
         toast.success("Tarefa reagendada");

@@ -66,7 +66,7 @@ function ResgatesPage() {
   };
 
   const onReagendar = async (task: Task, newDate: string) => {
-    await supabase.from("tasks").update({ due_date: newDate }).eq("id", task.id);
+    await supabase.from("tasks").update({ due_date: newDate, notified_at: null }).eq("id", task.id);
     await supabase.from("leads").update({ rescue_date: newDate }).eq("id", task.lead_id);
     await logLeadEvent({ leadId: task.lead_id, type: "task_rescheduled", description: `Resgate reagendado para ${newDate}` });
     toast.success("Resgate reagendado");
