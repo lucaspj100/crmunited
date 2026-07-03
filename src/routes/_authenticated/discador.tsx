@@ -47,7 +47,7 @@ function DiscadorPage() {
   const clearFocus = () => {
     navigate({
       to: "/discador",
-      search: { prospect_contact_id: undefined, open_result: undefined },
+      search: { prospect_contact_id: undefined, open_result: undefined, task_id: undefined },
       replace: true,
     });
   };
