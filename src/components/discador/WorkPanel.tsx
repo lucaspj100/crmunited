@@ -23,7 +23,15 @@ import { toast } from "sonner";
 type Props = {
   focusContactId?: string;
   autoOpenResult?: boolean;
+  focusTaskId?: string;
   onFocusConsumed?: () => void;
+};
+
+type RetornoTask = {
+  id: string;
+  observation: string | null;
+  due_date: string;
+  due_time: string | null;
 };
 
 const QUEUE_STATUSES = [
