@@ -87,6 +87,7 @@ function DiscadorPage() {
           <WorkPanel
             focusContactId={search.prospect_contact_id}
             autoOpenResult={search.open_result === 1}
+            focusTaskId={search.task_id}
             onFocusConsumed={clearFocus}
           />
         </TabsContent>
