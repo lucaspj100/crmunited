@@ -269,7 +269,81 @@ function PlacarDiario() {
             </div>
           </div>
         </div>
+
+        {/* Diagnóstico Comercial — apenas ADM/Franqueado */}
+        {isAdmin && <AdmDiagnostic totals={totals} rows={rows} />}
       </div>
+    </div>
+  );
+}
+
+function AdmDiagnostic({
+  totals, rows,
+}: {
+  totals: { ligacoes: number; atendidas: number; interessados: number; entrevistas: number; matriculas: number };
+  rows: ProductivityRow[];
+}) {
+  const pct = (n: number, d: number) => (d > 0 ? `${((n / d) * 100).toFixed(1)}%` : "—");
+  const taxaAtend = pct(totals.atendidas, totals.ligacoes);
+  const convInter = pct(totals.interessados, totals.ligacoes);
+  const convEntrev = pct(totals.entrevistas, totals.interessados);
+  const convMatr = pct(totals.matriculas, totals.entrevistas);
+
+  const alerts: { nome: string; msg: string }[] = [];
+  for (const r of rows) {
+    const total = r.ligacoes_feitas + r.ligacoes_atendidas + r.interessados_gerados + r.entrevistas_marcadas + r.matriculas;
+    if (total === 0) { alerts.push({ nome: r.nome, msg: "Sem atividade no dia" }); continue; }
+    if (r.ligacoes_feitas >= 30 && r.ligacoes_atendidas / Math.max(1, r.ligacoes_feitas) < 0.15) {
+      alerts.push({ nome: r.nome, msg: `Baixa taxa de atendimento (${r.ligacoes_atendidas}/${r.ligacoes_feitas})` });
+    }
+    if (r.ligacoes_atendidas >= 15 && r.interessados_gerados / Math.max(1, r.ligacoes_atendidas) < 0.1) {
+      alerts.push({ nome: r.nome, msg: `Muitas atendidas, poucos interessados (${r.interessados_gerados}/${r.ligacoes_atendidas})` });
+    }
+    if (r.entrevistas_marcadas >= 3 && r.matriculas === 0) {
+      alerts.push({ nome: r.nome, msg: `${r.entrevistas_marcadas} entrevistas sem matrícula` });
+    }
+  }
+
+  return (
+    <div className="rounded-2xl border border-amber-400/30 bg-gradient-to-br from-amber-500/10 via-white/5 to-transparent p-5 space-y-5">
+      <div className="flex items-center gap-2">
+        <Target className="h-5 w-5 text-amber-400" />
+        <h2 className="text-lg font-bold">Diagnóstico Comercial — Visão do ADM</h2>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <KpiCard label="Taxa de atendimento" value={taxaAtend} hint="atendidas / ligações" />
+        <KpiCard label="Ligação → Interessado" value={convInter} hint="interessados / ligações" />
+        <KpiCard label="Interessado → Entrevista" value={convEntrev} hint="entrevistas / interessados" />
+        <KpiCard label="Entrevista → Matrícula" value={convMatr} hint="matrículas / entrevistas" />
+      </div>
+
+      <div>
+        <div className="text-sm font-semibold mb-2">Alertas de gargalo</div>
+        {alerts.length === 0 ? (
+          <div className="text-sm text-white/60">Sem gargalos identificados no período.</div>
+        ) : (
+          <ul className="space-y-1.5">
+            {alerts.map((a, i) => (
+              <li key={i} className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm">
+                <span className="h-2 w-2 rounded-full bg-amber-400" />
+                <span className="font-semibold">{a.nome}</span>
+                <span className="text-white/70">— {a.msg}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function KpiCard({ label, value, hint }: { label: string; value: string; hint: string }) {
+  return (
+    <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+      <div className="text-[11px] uppercase tracking-wider text-white/60">{label}</div>
+      <div className="mt-1 text-2xl md:text-3xl font-black tabular-nums">{value}</div>
+      <div className="text-[10px] text-white/40">{hint}</div>
     </div>
   );
 }
