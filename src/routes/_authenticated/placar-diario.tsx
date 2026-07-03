@@ -38,7 +38,8 @@ function fmtScore(n: number) {
 }
 
 function PlacarDiario() {
-  useAuth();
+  const { roles } = useAuth();
+  const isAdmin = roles.includes("admin") || roles.includes("franqueado");
 
   const [period, setPeriod] = useState<Period>("hoje");
   const [now, setNow] = useState(new Date());
