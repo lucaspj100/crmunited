@@ -285,8 +285,10 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     qc.invalidateQueries({ queryKey: ["leads"] });
     qc.invalidateQueries({ queryKey: ["tasks"] });
     if (!contact) return;
+    const currentId = contact.id;
+    const wasFocused = !!focusedContact;
     // Recarrega o contato do banco
-    const { data } = await supabase.from("prospect_contacts").select("*").eq("id", contact.id).single();
+    const { data } = await supabase.from("prospect_contacts").select("*").eq("id", currentId).single();
     if (!data) return;
     const updated = data as ProspectContact;
     const shouldRemove =
@@ -294,6 +296,12 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
       updated.nao_chamar ||
       updated.telefone_invalido ||
       REMOVE_FROM_QUEUE_STATUSES.has(updated.status_prospeccao);
+
+    if (wasFocused) {
+      // Modo foco (veio de /hoje): não mexe na fila do dia; apenas sai do foco.
+      setFocusedContact(shouldRemove ? null : updated);
+      return;
+    }
 
     if (shouldRemove) {
       setQueue((q) => {
