@@ -308,6 +308,23 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
   return (
     <>
       <div className="mb-3"><ReturnsDebugCard contact={contact} /></div>
+      {retornoTask && contact && (
+        <div className="mb-3 rounded-lg border-2 border-amber-500/60 bg-amber-500/10 p-3 space-y-1.5">
+          <div className="flex items-center gap-2 text-sm font-semibold text-amber-800 dark:text-amber-300">
+            <Phone className="h-4 w-4" /> Retorno do Discador agendado
+          </div>
+          <div className="text-xs text-muted-foreground">
+            {new Date(retornoTask.due_date + "T00:00:00").toLocaleDateString("pt-BR")}
+            {retornoTask.due_time ? ` às ${retornoTask.due_time.slice(0, 5)}` : ""}
+          </div>
+          {retornoTask.observation && (
+            <div className="text-sm whitespace-pre-wrap"><strong>Motivo do retorno:</strong> {retornoTask.observation}</div>
+          )}
+          {contact.observacao && (
+            <div className="text-sm whitespace-pre-wrap"><strong>Histórico/obs. do contato:</strong> {contact.observacao}</div>
+          )}
+        </div>
+      )}
       {/* ============================== MOBILE (<768px) ============================== */}
       <div className="md:hidden w-full max-w-full overflow-x-hidden pb-[140px] space-y-3">
         <div className="text-[11px] text-muted-foreground leading-tight whitespace-nowrap overflow-x-auto max-w-full h-10 flex items-center px-1">
