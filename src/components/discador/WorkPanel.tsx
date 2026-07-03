@@ -84,6 +84,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
   const [lastAction, setLastAction] = useState<"ligacao" | "whatsapp" | undefined>();
   const [contextOpen, setContextOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [activeRetornoTaskId, setActiveRetornoTaskId] = useState<string | null>(null);
   const [retornoTask, setRetornoTask] = useState<RetornoTask | null>(null);
   const [focusedContact, setFocusedContact] = useState<ProspectContact | null>(null);
   const [loadingFocus, setLoadingFocus] = useState(false);
@@ -174,20 +175,25 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
   // acontece ao sair do foco / salvar, para não apagar quando a URL é limpa por onFocusConsumed.
   useEffect(() => {
     if (!focusTaskId) return;
+    setActiveRetornoTaskId(focusTaskId);
+    if (!user) return;
     let cancelled = false;
     (async () => {
       const { data } = await supabase
         .from("tasks")
         .select("id, observation, due_date, due_time")
         .eq("id", focusTaskId)
+        .eq("owner_id", user.id)
+        .eq("type", "retorno_ligacao")
         .maybeSingle();
       if (!cancelled && data) setRetornoTask(data as RetornoTask);
     })();
     return () => { cancelled = true; };
-  }, [focusTaskId]);
+  }, [focusTaskId, user?.id]);
 
   const exitFocus = () => {
     setFocusedContact(null);
+    setActiveRetornoTaskId(null);
     setRetornoTask(null);
   };
 
@@ -285,9 +291,11 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     qc.invalidateQueries({ queryKey: ["my_prospect_contacts"] });
     qc.invalidateQueries({ queryKey: ["leads"] });
     qc.invalidateQueries({ queryKey: ["tasks"] });
+    qc.invalidateQueries({ queryKey: ["hoje"] });
     if (!contact) return;
     const currentId = contact.id;
     const wasFocused = !!focusedContact;
+    const wasRetorno = !!activeRetornoTaskId || !!retornoTask;
     // Recarrega o contato do banco
     const { data } = await supabase.from("prospect_contacts").select("*").eq("id", currentId).single();
     if (!data) return;
@@ -297,6 +305,12 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
       updated.nao_chamar ||
       updated.telefone_invalido ||
       REMOVE_FROM_QUEUE_STATUSES.has(updated.status_prospeccao);
+
+    if (wasRetorno) {
+      exitFocus();
+      await loadQueue({ silent: true });
+      return;
+    }
 
     if (wasFocused) {
       // Modo foco (veio de /hoje): não mexe na fila do dia; apenas sai do foco.
@@ -610,14 +624,15 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
           contact={contact}
           vendedorId={user.id}
           initialAction={lastAction}
-          retornoTaskId={retornoTask?.id}
+          retornoTaskId={activeRetornoTaskId ?? retornoTask?.id ?? undefined}
+          completeRetornoFallback={!!activeRetornoTaskId || !!retornoTask}
           dialMeta={{
             telefone_para_discagem: dialNumber || null,
             ddd_origem_vendedor: settings.ddd_origem ?? null,
             prefixo_interurbano: settings.prefixo_interurbano ?? null,
             ddd_destino_contato: dddDestino ?? null,
           }}
-          onSaved={(goNext) => { setRetornoTask(null); return onResultSaved(goNext); }}
+          onSaved={onResultSaved}
         />
       )}
 
