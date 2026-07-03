@@ -52,6 +52,7 @@ export function TaskNotificationWatcher() {
   const qc = useQueryClient();
   const router = useRouter();
   const shownRef = useRef<Set<string>>(new Set());
+  const sessionStartRef = useRef<number>(Date.now());
   const [reschedule, setReschedule] = useState<LeadTask | null>(null);
 
   useEffect(() => { void ensureNotificationPermission(); }, []);
@@ -59,9 +60,11 @@ export function TaskNotificationWatcher() {
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
+    sessionStartRef.current = Date.now();
 
     const tick = async () => {
       const today = localToday();
+      // Only future/today activities not yet notified.
       const { data, error } = await supabase
         .from("tasks")
         .select("id, lead_id, type, due_date, due_time, observation, owner_id")
@@ -69,18 +72,29 @@ export function TaskNotificationWatcher() {
         .eq("status", "pendente")
         .not("lead_id", "is", null)
         .neq("type", "retorno_ligacao" as never)
-        .lte("due_date", today)
+        .is("notified_at", null)
+        .gte("due_date", today)
         .order("due_date", { ascending: true });
 
       if (cancelled || error) return;
-      const now = new Date();
+      const now = Date.now();
+      const sessionStart = sessionStartRef.current;
       const tasks = (data ?? []) as LeadTask[];
 
       for (const t of tasks) {
         if (shownRef.current.has(t.id)) continue;
         const time = t.due_time ?? "00:00:00";
-        const due = new Date(`${t.due_date}T${time}`);
-        if (due.getTime() > now.getTime()) continue;
+        const dueMs = new Date(`${t.due_date}T${time}`).getTime();
+        // Fire only when the clock crosses the scheduled time WHILE the user has
+        // the app open. Anything already overdue before this session started is
+        // shown as overdue in the UI but never triggers a pop-up.
+        if (dueMs > now) continue;
+        if (dueMs < sessionStart) {
+          // Silently mark as notified so it never pops up on a future reload.
+          shownRef.current.add(t.id);
+          void supabase.from("tasks").update({ notified_at: new Date().toISOString() }).eq("id", t.id).is("notified_at", null);
+          continue;
+        }
 
         const { data: leadRow } = await supabase
           .from("leads")
@@ -91,6 +105,16 @@ export function TaskNotificationWatcher() {
         if (!lead) continue;
 
         shownRef.current.add(t.id);
+        // Persist notified_at atomically; skip toast if another tab already claimed it.
+        const { data: claim } = await supabase
+          .from("tasks")
+          .update({ notified_at: new Date().toISOString() })
+          .eq("id", t.id)
+          .is("notified_at", null)
+          .select("id")
+          .maybeSingle();
+        if (!claim) continue;
+
         showTaskToast(t, lead, qc, router, setReschedule);
         fireBrowserNotification(
           `Atividade: ${labelFor(TASK_TYPES, t.type)}`,
