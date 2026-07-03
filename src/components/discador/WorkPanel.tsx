@@ -170,9 +170,10 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusContactId, autoOpenResult, user?.id]);
 
-  // Carrega a tarefa de retorno vinculada (quando aberto via /hoje)
+  // Carrega a tarefa de retorno vinculada (quando aberto via /hoje). Só carrega — a limpeza
+  // acontece ao sair do foco / salvar, para não apagar quando a URL é limpa por onFocusConsumed.
   useEffect(() => {
-    if (!focusTaskId) { setRetornoTask(null); return; }
+    if (!focusTaskId) return;
     let cancelled = false;
     (async () => {
       const { data } = await supabase
