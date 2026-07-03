@@ -85,8 +85,11 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
   const [contextOpen, setContextOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [retornoTask, setRetornoTask] = useState<RetornoTask | null>(null);
+  const [focusedContact, setFocusedContact] = useState<ProspectContact | null>(null);
+  const [loadingFocus, setLoadingFocus] = useState(false);
 
-  const contact = currentIndex >= 0 && currentIndex < queue.length ? queue[currentIndex] : null;
+  const contact: ProspectContact | null =
+    focusedContact ?? (currentIndex >= 0 && currentIndex < queue.length ? queue[currentIndex] : null);
 
   // Carrega a fila completa do vendedor
   const loadQueue = async (opts?: { keepContactId?: string; silent?: boolean }) => {
