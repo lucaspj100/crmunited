@@ -1,6 +1,7 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useLocation } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Card } from "@/components/ui/card";
@@ -98,11 +99,19 @@ function HojePage() {
   const qc = useQueryClient();
   const { user, roles } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const isAdmin = roles.includes("admin") || roles.includes("franqueado");
   const [vendor, setVendor] = useState<string>("me");
   const [filter, setFilter] = useState<string>("todos");
   const [working, setWorking] = useState<QueueItem | null>(null);
   const [detailsId, setDetailsId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.searchStr ?? "");
+    const leadParam = params.get("lead");
+    if (leadParam) setDetailsId(leadParam);
+  }, [location.searchStr]);
+
 
   const { data, isLoading } = useQuery({
     queryKey: ["hoje"],

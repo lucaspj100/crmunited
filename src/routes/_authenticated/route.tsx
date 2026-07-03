@@ -1,11 +1,15 @@
 import { createFileRoute, Outlet, useNavigate, useLocation, Link } from "@tanstack/react-router";
 import { useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth-context";
 import { useBrand } from "@/lib/brand";
 import { LayoutDashboard, Users, Kanban, RotateCw, BarChart3, LogOut, Settings, Upload, TrendingDown, Sparkles, Trophy, Calendar, PhoneCall, Link2, ClipboardCheck, Activity, Tv, User as UserIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 import { ReturnNotificationWatcher } from "@/components/ReturnNotificationWatcher";
+import { TaskNotificationWatcher } from "@/components/TaskNotificationWatcher";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -28,12 +32,36 @@ const BASE_NAV = [
   { to: "/meu-perfil", label: "Meu perfil", icon: UserIcon },
 ] as const;
 
+function localToday(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function useHojePendingCount(userId: string | undefined) {
+  return useQuery({
+    queryKey: ["tasks-pending-count", userId],
+    enabled: !!userId,
+    refetchInterval: 60_000,
+    queryFn: async () => {
+      const today = localToday();
+      const { count } = await supabase
+        .from("tasks")
+        .select("id", { count: "exact", head: true })
+        .eq("owner_id", userId!)
+        .eq("status", "pendente")
+        .lte("due_date", today);
+      return count ?? 0;
+    },
+  });
+}
+
 function AuthedLayout() {
   const { session, loading, signOut, user, roles } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { data: brand } = useBrand();
   const isAdmin = roles.includes("admin");
+  const { data: pendingCount = 0 } = useHojePendingCount(user?.id);
   const NAV = isAdmin
     ? [
         ...BASE_NAV,
@@ -74,6 +102,7 @@ function AuthedLayout() {
         <nav className="flex-1 space-y-1 p-3">
           {NAV.map((n) => {
             const active = location.pathname.startsWith(n.to);
+            const showBadge = n.to === "/hoje" && pendingCount > 0;
             return (
               <Link
                 key={n.to}
@@ -86,7 +115,12 @@ function AuthedLayout() {
                 )}
               >
                 <n.icon className="h-4 w-4" />
-                {n.label}
+                <span className="flex-1">{n.label}</span>
+                {showBadge && (
+                  <Badge className="h-5 min-w-5 px-1.5 text-[10px] bg-rose-500 text-white hover:bg-rose-500">
+                    {pendingCount > 99 ? "99+" : pendingCount}
+                  </Badge>
+                )}
               </Link>
             );
           })}
@@ -105,8 +139,13 @@ function AuthedLayout() {
         </header>
         <nav className="flex gap-1 overflow-x-auto border-b bg-card px-2 py-2 md:hidden">
           {NAV.map((n) => (
-            <Link key={n.to} to={n.to} className="whitespace-nowrap rounded-md px-3 py-1.5 text-xs hover:bg-accent" activeProps={{ className: "bg-primary text-primary-foreground" }}>
+            <Link key={n.to} to={n.to} className="whitespace-nowrap rounded-md px-3 py-1.5 text-xs hover:bg-accent relative" activeProps={{ className: "bg-primary text-primary-foreground" }}>
               {n.label}
+              {n.to === "/hoje" && pendingCount > 0 && (
+                <span className="ml-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-semibold text-white">
+                  {pendingCount > 99 ? "99+" : pendingCount}
+                </span>
+              )}
             </Link>
           ))}
         </nav>
@@ -115,6 +154,7 @@ function AuthedLayout() {
         </main>
       </div>
       <ReturnNotificationWatcher />
+      <TaskNotificationWatcher />
     </div>
   );
 }
