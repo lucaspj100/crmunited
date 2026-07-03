@@ -72,7 +72,7 @@ function sortQueue(list: ProspectContact[]): ProspectContact[] {
   });
 }
 
-export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: Props = {}) {
+export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocusConsumed }: Props = {}) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [queue, setQueue] = useState<ProspectContact[]>([]);
