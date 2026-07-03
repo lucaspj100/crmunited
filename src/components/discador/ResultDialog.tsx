@@ -27,10 +27,11 @@ type Props = {
   vendedorId: string;
   initialAction?: "ligacao" | "whatsapp";
   dialMeta?: DialMeta;
+  retornoTaskId?: string;
   onSaved: (goNext: boolean) => void;
 };
 
-export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialAction, dialMeta, onSaved }: Props) {
+export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialAction, dialMeta, retornoTaskId, onSaved }: Props) {
   const [result, setResult] = useState<ProspectResult | "">("");
   const [obs, setObs] = useState("");
   const [proxima, setProxima] = useState("");
