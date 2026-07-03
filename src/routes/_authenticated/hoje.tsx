@@ -266,7 +266,14 @@ function HojePage() {
 
   const openItem = (item: QueueItem) => {
     if (item.reason === "retorno_pendente" && item.prospect) {
-      navigate({ to: "/discador", search: { prospect_contact_id: item.prospect.id, open_result: 1 } });
+      navigate({
+        to: "/discador",
+        search: {
+          prospect_contact_id: item.prospect.id,
+          open_result: 1,
+          task_id: item.task?.id,
+        },
+      });
       return;
     }
     setWorking(item);
