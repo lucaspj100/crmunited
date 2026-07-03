@@ -185,17 +185,25 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     return () => { cancelled = true; };
   }, [focusTaskId]);
 
+  const exitFocus = () => {
+    setFocusedContact(null);
+    setRetornoTask(null);
+  };
+
   const goPrev = () => {
     if (queue.length === 0) return;
+    exitFocus();
     setCurrentIndex((i) => (i <= 0 ? queue.length - 1 : i - 1));
   };
   const goNext = () => {
     if (queue.length === 0) return;
+    exitFocus();
     setCurrentIndex((i) => (i >= queue.length - 1 ? 0 : i + 1));
   };
 
   const refreshQueue = async () => {
-    await loadQueue({ keepContactId: contact?.id });
+    await loadQueue({ keepContactId: focusedContact ? undefined : contact?.id });
+    exitFocus();
     toast.success("Fila atualizada");
   };
 
