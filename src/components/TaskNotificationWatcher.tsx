@@ -222,7 +222,7 @@ function RescheduleDialog({ task, onClose, onSaved }: { task: LeadTask | null; o
     setSaving(true);
     const { error } = await supabase
       .from("tasks")
-      .update({ due_date: date, due_time: time || null, status: "pendente" })
+      .update({ due_date: date, due_time: time || null, status: "pendente", notified_at: null })
       .eq("id", task.id);
     setSaving(false);
     if (error) { toast.error(error.message); return; }
