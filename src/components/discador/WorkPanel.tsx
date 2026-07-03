@@ -132,37 +132,34 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
-  // Foco vindo de URL — carrega contato externo mesmo se não estiver na fila
+  // Foco vindo de URL — busca sempre o contato pelo ID e só depois abre o modal.
   useEffect(() => {
     if (!focusContactId || !user) return;
     let cancelled = false;
+    setLoadingFocus(true);
+    setResultOpen(false);
+    setFocusedContact(null);
     (async () => {
-      const idx = queue.findIndex((c) => c.id === focusContactId);
-      if (idx >= 0) {
-        setCurrentIndex(idx);
-      } else {
-        const { data, error } = await supabase
-          .from("prospect_contacts")
-          .select("*")
-          .eq("id", focusContactId)
-          .maybeSingle();
-        if (cancelled) return;
-        if (error || !data) {
-          toast.error("Contato não encontrado");
-        } else {
-          // injeta temporariamente na fila para permitir registrar resultado
-          setQueue((q) => {
-            const exists = q.findIndex((c) => c.id === data.id);
-            if (exists >= 0) {
-              setCurrentIndex(exists);
-              return q;
-            }
-            const next = [data as ProspectContact, ...q];
-            setCurrentIndex(0);
-            return next;
-          });
-        }
+      const { data, error } = await supabase
+        .from("prospect_contacts")
+        .select("*")
+        .eq("id", focusContactId)
+        .maybeSingle();
+      if (cancelled) return;
+      setLoadingFocus(false);
+      if (error || !data) {
+        toast.error("Contato não encontrado");
+        onFocusConsumed?.();
+        return;
       }
+      const loaded = data as ProspectContact;
+      if (loaded.id !== focusContactId) {
+        toast.error("Contato incorreto carregado. Recarregue a tarefa.");
+        onFocusConsumed?.();
+        return;
+      }
+      setFocusedContact(loaded);
+      setCurrentIndex(-1);
       if (autoOpenResult) {
         setLastAction(undefined);
         setResultOpen(true);
@@ -171,7 +168,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [focusContactId, autoOpenResult, user?.id, queue.length]);
+  }, [focusContactId, autoOpenResult, user?.id]);
 
   // Carrega a tarefa de retorno vinculada (quando aberto via /hoje)
   useEffect(() => {
