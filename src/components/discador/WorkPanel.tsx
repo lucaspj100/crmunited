@@ -170,6 +170,21 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusContactId, autoOpenResult, user?.id, queue.length]);
 
+  // Carrega a tarefa de retorno vinculada (quando aberto via /hoje)
+  useEffect(() => {
+    if (!focusTaskId) { setRetornoTask(null); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("tasks")
+        .select("id, observation, due_date, due_time")
+        .eq("id", focusTaskId)
+        .maybeSingle();
+      if (!cancelled && data) setRetornoTask(data as RetornoTask);
+    })();
+    return () => { cancelled = true; };
+  }, [focusTaskId]);
+
   const goPrev = () => {
     if (queue.length === 0) return;
     setCurrentIndex((i) => (i <= 0 ? queue.length - 1 : i - 1));
