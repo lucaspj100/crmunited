@@ -28,10 +28,11 @@ type Props = {
   initialAction?: "ligacao" | "whatsapp";
   dialMeta?: DialMeta;
   retornoTaskId?: string;
+  completeRetornoFallback?: boolean;
   onSaved: (goNext: boolean) => void;
 };
 
-export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialAction, dialMeta, retornoTaskId, onSaved }: Props) {
+export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialAction, dialMeta, retornoTaskId, completeRetornoFallback, onSaved }: Props) {
   const [result, setResult] = useState<ProspectResult | "">("");
   const [obs, setObs] = useState("");
   const [proxima, setProxima] = useState("");
@@ -40,6 +41,46 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
 
   const contactId = contact.id;
   const telefone = contact.telefone_normalizado;
+
+  const completeRetornoTask = async () => {
+    const completionPatch = { status: "concluida" as const };
+
+    const finishTaskById = async (taskId: string) => {
+      const { data, error } = await supabase
+        .from("tasks")
+        .update(completionPatch)
+        .eq("id", taskId)
+        .eq("owner_id", vendedorId)
+        .eq("type", "retorno_ligacao")
+        .eq("status", "pendente")
+        .select("id")
+        .maybeSingle();
+      if (error) throw error;
+      return !!data;
+    };
+
+    if (retornoTaskId) return finishTaskById(retornoTaskId);
+
+    if (!completeRetornoFallback) return false;
+
+    const today = new Date().toISOString().slice(0, 10);
+    const { data: fallbackTask, error: findError } = await supabase
+      .from("tasks")
+      .select("id")
+      .eq("prospect_contact_id", contactId)
+      .eq("owner_id", vendedorId)
+      .eq("type", "retorno_ligacao")
+      .eq("status", "pendente")
+      .lte("due_date", today)
+      .order("due_date", { ascending: false })
+      .order("due_time", { ascending: false, nullsFirst: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (findError) throw findError;
+    if (!fallbackTask?.id) return false;
+    return finishTaskById(fallbackTask.id);
+  };
 
   const save = async (goNext: boolean) => {
     if (!result) { toast.error("Selecione o resultado"); return; }
@@ -96,6 +137,23 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
       if (eObs) console.warn("[ResultDialog] falha ao sincronizar observacao", eObs);
     }
 
+
+    // Se veio de uma tarefa de retorno do Discador, conclui a tarefa antiga antes
+    // de criar eventual novo retorno. Assim o fallback nunca fecha a tarefa nova.
+    let completedRetornoTask = false;
+    if (retornoTaskId || completeRetornoFallback) {
+      try {
+        completedRetornoTask = await completeRetornoTask();
+      } catch (err) {
+        console.warn("[ResultDialog] falha ao concluir tarefa de retorno", err);
+        toast.error("Resultado salvo, mas não foi possível concluir a tarefa de retorno.");
+      }
+      queryClient.invalidateQueries({ queryKey: ["hoje"] });
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["prospect_queue"] });
+      queryClient.invalidateQueries({ queryKey: ["my_prospect_contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["prospect_counts"] });
+    }
 
     // 1) Ligar depois → criar tarefa de retorno
     if (result === "Ligar depois" && due_date) {
@@ -158,21 +216,14 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
       }
     }
 
-    // 3) Se veio de uma tarefa de retorno do Discador, marcar como concluída
-    if (retornoTaskId) {
-      const { error: te } = await supabase
-        .from("tasks")
-        .update({ status: "concluida" as never })
-        .eq("id", retornoTaskId);
-      if (te) console.warn("[ResultDialog] falha ao concluir tarefa de retorno", te);
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      queryClient.invalidateQueries({ queryKey: ["hoje"] });
-    }
-
     setSaving(false);
     setResult(""); setObs(""); setProxima("");
     queryClient.invalidateQueries({ queryKey: ["my_prospect_contacts"] });
     queryClient.invalidateQueries({ queryKey: ["prospect_queue"] });
+    queryClient.invalidateQueries({ queryKey: ["prospect_counts"] });
+    queryClient.invalidateQueries({ queryKey: ["hoje"] });
+    queryClient.invalidateQueries({ queryKey: ["tasks"] });
+    if (completedRetornoTask) toast.success("Resultado salvo e tarefa concluída");
     onOpenChange(false);
     onSaved(goNext);
   };
