@@ -158,6 +158,17 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
       }
     }
 
+    // 3) Se veio de uma tarefa de retorno do Discador, marcar como concluída
+    if (retornoTaskId) {
+      const { error: te } = await supabase
+        .from("tasks")
+        .update({ status: "concluida" as never })
+        .eq("id", retornoTaskId);
+      if (te) console.warn("[ResultDialog] falha ao concluir tarefa de retorno", te);
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["hoje"] });
+    }
+
     setSaving(false);
     setResult(""); setObs(""); setProxima("");
     queryClient.invalidateQueries({ queryKey: ["my_prospect_contacts"] });
