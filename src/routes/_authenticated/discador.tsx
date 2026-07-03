@@ -14,6 +14,7 @@ import { MyContactsPanel } from "@/components/discador/MyContactsPanel";
 type DiscadorSearch = {
   prospect_contact_id?: string;
   open_result?: number;
+  task_id?: string;
 };
 
 export const Route = createFileRoute("/_authenticated/discador")({
@@ -21,9 +22,11 @@ export const Route = createFileRoute("/_authenticated/discador")({
     const id = typeof raw.prospect_contact_id === "string" ? raw.prospect_contact_id : undefined;
     const openRaw = raw.open_result;
     const open = typeof openRaw === "number" ? openRaw : typeof openRaw === "string" ? Number(openRaw) : undefined;
+    const taskId = typeof raw.task_id === "string" ? raw.task_id : undefined;
     return {
       prospect_contact_id: id,
       open_result: Number.isFinite(open) ? open : undefined,
+      task_id: taskId,
     };
   },
   component: DiscadorPage,
@@ -44,7 +47,7 @@ function DiscadorPage() {
   const clearFocus = () => {
     navigate({
       to: "/discador",
-      search: { prospect_contact_id: undefined, open_result: undefined },
+      search: { prospect_contact_id: undefined, open_result: undefined, task_id: undefined },
       replace: true,
     });
   };
@@ -84,6 +87,7 @@ function DiscadorPage() {
           <WorkPanel
             focusContactId={search.prospect_contact_id}
             autoOpenResult={search.open_result === 1}
+            focusTaskId={search.task_id}
             onFocusConsumed={clearFocus}
           />
         </TabsContent>

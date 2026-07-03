@@ -23,7 +23,15 @@ import { toast } from "sonner";
 type Props = {
   focusContactId?: string;
   autoOpenResult?: boolean;
+  focusTaskId?: string;
   onFocusConsumed?: () => void;
+};
+
+type RetornoTask = {
+  id: string;
+  observation: string | null;
+  due_date: string;
+  due_time: string | null;
 };
 
 const QUEUE_STATUSES = [
@@ -64,7 +72,7 @@ function sortQueue(list: ProspectContact[]): ProspectContact[] {
   });
 }
 
-export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: Props = {}) {
+export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocusConsumed }: Props = {}) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [queue, setQueue] = useState<ProspectContact[]>([]);
@@ -76,6 +84,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: P
   const [lastAction, setLastAction] = useState<"ligacao" | "whatsapp" | undefined>();
   const [contextOpen, setContextOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [retornoTask, setRetornoTask] = useState<RetornoTask | null>(null);
 
   const contact = currentIndex >= 0 && currentIndex < queue.length ? queue[currentIndex] : null;
 
@@ -160,6 +169,21 @@ export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: P
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusContactId, autoOpenResult, user?.id, queue.length]);
+
+  // Carrega a tarefa de retorno vinculada (quando aberto via /hoje)
+  useEffect(() => {
+    if (!focusTaskId) { setRetornoTask(null); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("tasks")
+        .select("id, observation, due_date, due_time")
+        .eq("id", focusTaskId)
+        .maybeSingle();
+      if (!cancelled && data) setRetornoTask(data as RetornoTask);
+    })();
+    return () => { cancelled = true; };
+  }, [focusTaskId]);
 
   const goPrev = () => {
     if (queue.length === 0) return;
@@ -284,6 +308,23 @@ export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: P
   return (
     <>
       <div className="mb-3"><ReturnsDebugCard contact={contact} /></div>
+      {retornoTask && contact && (
+        <div className="mb-3 rounded-lg border-2 border-amber-500/60 bg-amber-500/10 p-3 space-y-1.5">
+          <div className="flex items-center gap-2 text-sm font-semibold text-amber-800 dark:text-amber-300">
+            <Phone className="h-4 w-4" /> Retorno do Discador agendado
+          </div>
+          <div className="text-xs text-muted-foreground">
+            {new Date(retornoTask.due_date + "T00:00:00").toLocaleDateString("pt-BR")}
+            {retornoTask.due_time ? ` às ${retornoTask.due_time.slice(0, 5)}` : ""}
+          </div>
+          {retornoTask.observation && (
+            <div className="text-sm whitespace-pre-wrap"><strong>Motivo do retorno:</strong> {retornoTask.observation}</div>
+          )}
+          {contact.observacao && (
+            <div className="text-sm whitespace-pre-wrap"><strong>Histórico/obs. do contato:</strong> {contact.observacao}</div>
+          )}
+        </div>
+      )}
       {/* ============================== MOBILE (<768px) ============================== */}
       <div className="md:hidden w-full max-w-full overflow-x-hidden pb-[140px] space-y-3">
         <div className="text-[11px] text-muted-foreground leading-tight whitespace-nowrap overflow-x-auto max-w-full h-10 flex items-center px-1">
@@ -552,13 +593,14 @@ export function WorkPanel({ focusContactId, autoOpenResult, onFocusConsumed }: P
           contact={contact}
           vendedorId={user.id}
           initialAction={lastAction}
+          retornoTaskId={retornoTask?.id}
           dialMeta={{
             telefone_para_discagem: dialNumber || null,
             ddd_origem_vendedor: settings.ddd_origem ?? null,
             prefixo_interurbano: settings.prefixo_interurbano ?? null,
             ddd_destino_contato: dddDestino ?? null,
           }}
-          onSaved={onResultSaved}
+          onSaved={(goNext) => { setRetornoTask(null); return onResultSaved(goNext); }}
         />
       )}
 

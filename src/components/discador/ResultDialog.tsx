@@ -27,10 +27,11 @@ type Props = {
   vendedorId: string;
   initialAction?: "ligacao" | "whatsapp";
   dialMeta?: DialMeta;
+  retornoTaskId?: string;
   onSaved: (goNext: boolean) => void;
 };
 
-export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialAction, dialMeta, onSaved }: Props) {
+export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialAction, dialMeta, retornoTaskId, onSaved }: Props) {
   const [result, setResult] = useState<ProspectResult | "">("");
   const [obs, setObs] = useState("");
   const [proxima, setProxima] = useState("");
@@ -155,6 +156,17 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
         queryClient.invalidateQueries({ queryKey: ["leads"] });
         queryClient.invalidateQueries({ queryKey: ["tasks"] });
       }
+    }
+
+    // 3) Se veio de uma tarefa de retorno do Discador, marcar como concluída
+    if (retornoTaskId) {
+      const { error: te } = await supabase
+        .from("tasks")
+        .update({ status: "concluida" as never })
+        .eq("id", retornoTaskId);
+      if (te) console.warn("[ResultDialog] falha ao concluir tarefa de retorno", te);
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["hoje"] });
     }
 
     setSaving(false);
