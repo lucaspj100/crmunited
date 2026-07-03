@@ -438,14 +438,20 @@ function Row({ item, isAdmin, owner, onClick }: { item: QueueItem; isAdmin: bool
   const company = item.lead?.company ?? item.prospect?.empresa ?? null;
   const phone = item.lead?.phone ?? item.prospect?.telefone_original ?? (item.prospect?.telefone_normalizado ? `+${item.prospect.telefone_normalizado}` : null);
   const statusLabel = item.lead ? labelFor(LEAD_STATUSES, item.lead.status) : "Prospecção";
+  const isRetornoDiscador = item.reason === "retorno_pendente" && !!item.prospect;
 
   return (
-    <Card className="p-3 flex flex-wrap items-center gap-3 hover:bg-accent/30 transition-colors cursor-pointer" onClick={onClick}>
-      <div className="min-w-0 flex-1">
+    <Card className="p-3 flex flex-wrap items-start gap-3 hover:bg-accent/30 transition-colors cursor-pointer" onClick={onClick}>
+      <div className="min-w-0 flex-1 space-y-1">
         <div className="flex flex-wrap items-center gap-2">
           <span className="font-semibold">{name}</span>
           {item.lead && <Badge variant="outline" className={statusColor(item.lead.status)}>{statusLabel}</Badge>}
-          {!item.lead && <Badge variant="outline" className="bg-amber-500/15 text-amber-700 border-amber-500/30">Prospecção</Badge>}
+          {isRetornoDiscador && (
+            <Badge variant="outline" className="bg-amber-500/15 text-amber-700 border-amber-500/30">
+              <PhoneCall className="h-3 w-3 mr-1" />Retorno do Discador
+            </Badge>
+          )}
+          {!item.lead && !isRetornoDiscador && <Badge variant="outline" className="bg-amber-500/15 text-amber-700 border-amber-500/30">Prospecção</Badge>}
           {item.task && <Badge variant="secondary">{item.task.due_date}{item.task.due_time ? ` ${item.task.due_time.slice(0, 5)}` : ""}</Badge>}
           {item.lead?.interview_date && item.reason === "atualizar_resultado" && (
             <Badge className="bg-violet-500/15 text-violet-700 border-violet-500/30">
@@ -453,13 +459,30 @@ function Row({ item, isAdmin, owner, onClick }: { item: QueueItem; isAdmin: bool
             </Badge>
           )}
         </div>
-        <div className="text-xs text-muted-foreground mt-0.5 flex flex-wrap items-center gap-x-2">
+        <div className="text-xs text-muted-foreground flex flex-wrap items-center gap-x-2">
           {company && <span>{company}</span>}
+          {item.prospect?.cargo && <span>· {item.prospect.cargo}</span>}
           {phone && <span className="font-mono">{phone}</span>}
           {isAdmin && owner && <span className="flex items-center gap-1"><User className="h-3 w-3" />{owner.full_name || owner.email}</span>}
         </div>
+        {isRetornoDiscador && item.task?.observation && (
+          <div className="text-xs bg-amber-500/5 border border-amber-500/20 rounded px-2 py-1 whitespace-pre-wrap">
+            <strong>Motivo do retorno:</strong> {item.task.observation}
+          </div>
+        )}
+        {isRetornoDiscador && item.prospect?.observacao && (
+          <div className="text-xs bg-muted/40 border rounded px-2 py-1 whitespace-pre-wrap line-clamp-3">
+            <strong>Histórico/obs. do contato:</strong> {item.prospect.observacao}
+          </div>
+        )}
       </div>
-      <Button size="sm" variant="ghost"><ChevronRight className="h-4 w-4" /></Button>
+      {isRetornoDiscador ? (
+        <Button size="sm" variant="default" onClick={(e) => { e.stopPropagation(); onClick(); }}>
+          <PhoneCall className="h-4 w-4 mr-1" />Abrir no Discador
+        </Button>
+      ) : (
+        <Button size="sm" variant="ghost"><ChevronRight className="h-4 w-4" /></Button>
+      )}
     </Card>
   );
 }
