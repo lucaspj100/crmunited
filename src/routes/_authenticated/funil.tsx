@@ -198,7 +198,10 @@ function FunilPage() {
                   const owner = profileById.get(l.owner_id);
                   const ownerName = owner?.full_name || owner?.email || "—";
                   const next = nextByLead.get(l.id);
-                  const isOverdue = next ? next.due_date < todayStr : false;
+                  const nowMs = Date.now();
+                  const dueMs = next ? new Date(`${next.due_date}T${next.due_time ?? "23:59:59"}`).getTime() : 0;
+                  const isOverdue = next ? dueMs < nowMs : false;
+                  const isUrgent = next && !isOverdue ? (dueMs - nowMs) <= 30 * 60 * 1000 : false;
                   const noActivity = !next;
                   const temp = leadTemperature({
                     status: l.status, last_contact_at: l.last_contact_at,
@@ -216,7 +219,7 @@ function FunilPage() {
                       onDragStart={() => setDraggingId(l.id)}
                       onDragEnd={() => setDraggingId(null)}
                       onClick={() => setDetailsId(l.id)}
-                      className={`cursor-pointer p-3 active:cursor-grabbing hover:border-primary transition-colors ${noActivity ? "border-amber-500/50" : isOverdue ? "border-rose-500/50" : ""}`}
+                      className={`cursor-pointer p-3 active:cursor-grabbing hover:border-primary transition-colors ${noActivity ? "border-amber-500/50" : isOverdue ? "border-rose-500/70 bg-rose-500/5" : isUrgent ? "border-amber-500/70 bg-amber-500/5" : ""}`}
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
@@ -246,12 +249,16 @@ function FunilPage() {
                           <button
                             type="button"
                             onClick={() => setDetailsId(l.id)}
-                            className={`w-full flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] border transition-colors ${isOverdue ? "bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-300 hover:bg-rose-500/20" : "bg-primary/5 border-primary/20 hover:bg-primary/10"}`}
-                            title="Ver próxima atividade"
+                            className={`w-full flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] border transition-colors ${isOverdue ? "bg-rose-500/15 border-rose-500/40 text-rose-700 dark:text-rose-300 hover:bg-rose-500/25 font-semibold" : isUrgent ? "bg-amber-500/15 border-amber-500/40 text-amber-700 dark:text-amber-300 hover:bg-amber-500/25 font-semibold" : "bg-primary/5 border-primary/20 hover:bg-primary/10"}`}
+                            title={isOverdue ? "Atividade vencida" : isUrgent ? "Vence em até 30 min" : "Ver próxima atividade"}
                           >
-                            {isOverdue ? <AlertCircle className="h-3 w-3 shrink-0" /> : <CalendarClock className="h-3 w-3 shrink-0" />}
-                            <span className="truncate">{labelFor(TASK_TYPES, next.type)} • {next.due_date.split("-").reverse().slice(0,2).join("/")}{next.due_time ? ` ${next.due_time.slice(0,5)}` : ""}</span>
+                            {isOverdue ? <AlertCircle className="h-3 w-3 shrink-0" /> : isUrgent ? <AlertCircle className="h-3 w-3 shrink-0" /> : <CalendarClock className="h-3 w-3 shrink-0" />}
+                            <span className="truncate">
+                              {isOverdue ? "VENCIDA: " : isUrgent ? "AGORA: " : ""}
+                              {labelFor(TASK_TYPES, next.type)} • {next.due_date.split("-").reverse().slice(0,2).join("/")}{next.due_time ? ` ${next.due_time.slice(0,5)}` : ""}
+                            </span>
                           </button>
+
                         ) : (
                           <button
                             type="button"
