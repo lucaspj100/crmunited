@@ -85,8 +85,11 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
   const [contextOpen, setContextOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [retornoTask, setRetornoTask] = useState<RetornoTask | null>(null);
+  const [focusedContact, setFocusedContact] = useState<ProspectContact | null>(null);
+  const [loadingFocus, setLoadingFocus] = useState(false);
 
-  const contact = currentIndex >= 0 && currentIndex < queue.length ? queue[currentIndex] : null;
+  const contact: ProspectContact | null =
+    focusedContact ?? (currentIndex >= 0 && currentIndex < queue.length ? queue[currentIndex] : null);
 
   // Carrega a fila completa do vendedor
   const loadQueue = async (opts?: { keepContactId?: string; silent?: boolean }) => {
@@ -129,37 +132,34 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
-  // Foco vindo de URL — carrega contato externo mesmo se não estiver na fila
+  // Foco vindo de URL — busca sempre o contato pelo ID e só depois abre o modal.
   useEffect(() => {
     if (!focusContactId || !user) return;
     let cancelled = false;
+    setLoadingFocus(true);
+    setResultOpen(false);
+    setFocusedContact(null);
     (async () => {
-      const idx = queue.findIndex((c) => c.id === focusContactId);
-      if (idx >= 0) {
-        setCurrentIndex(idx);
-      } else {
-        const { data, error } = await supabase
-          .from("prospect_contacts")
-          .select("*")
-          .eq("id", focusContactId)
-          .maybeSingle();
-        if (cancelled) return;
-        if (error || !data) {
-          toast.error("Contato não encontrado");
-        } else {
-          // injeta temporariamente na fila para permitir registrar resultado
-          setQueue((q) => {
-            const exists = q.findIndex((c) => c.id === data.id);
-            if (exists >= 0) {
-              setCurrentIndex(exists);
-              return q;
-            }
-            const next = [data as ProspectContact, ...q];
-            setCurrentIndex(0);
-            return next;
-          });
-        }
+      const { data, error } = await supabase
+        .from("prospect_contacts")
+        .select("*")
+        .eq("id", focusContactId)
+        .maybeSingle();
+      if (cancelled) return;
+      setLoadingFocus(false);
+      if (error || !data) {
+        toast.error("Contato não encontrado");
+        onFocusConsumed?.();
+        return;
       }
+      const loaded = data as ProspectContact;
+      if (loaded.id !== focusContactId) {
+        toast.error("Contato incorreto carregado. Recarregue a tarefa.");
+        onFocusConsumed?.();
+        return;
+      }
+      setFocusedContact(loaded);
+      setCurrentIndex(-1);
       if (autoOpenResult) {
         setLastAction(undefined);
         setResultOpen(true);
@@ -168,11 +168,12 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [focusContactId, autoOpenResult, user?.id, queue.length]);
+  }, [focusContactId, autoOpenResult, user?.id]);
 
-  // Carrega a tarefa de retorno vinculada (quando aberto via /hoje)
+  // Carrega a tarefa de retorno vinculada (quando aberto via /hoje). Só carrega — a limpeza
+  // acontece ao sair do foco / salvar, para não apagar quando a URL é limpa por onFocusConsumed.
   useEffect(() => {
-    if (!focusTaskId) { setRetornoTask(null); return; }
+    if (!focusTaskId) return;
     let cancelled = false;
     (async () => {
       const { data } = await supabase
@@ -185,17 +186,25 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     return () => { cancelled = true; };
   }, [focusTaskId]);
 
+  const exitFocus = () => {
+    setFocusedContact(null);
+    setRetornoTask(null);
+  };
+
   const goPrev = () => {
     if (queue.length === 0) return;
+    exitFocus();
     setCurrentIndex((i) => (i <= 0 ? queue.length - 1 : i - 1));
   };
   const goNext = () => {
     if (queue.length === 0) return;
+    exitFocus();
     setCurrentIndex((i) => (i >= queue.length - 1 ? 0 : i + 1));
   };
 
   const refreshQueue = async () => {
-    await loadQueue({ keepContactId: contact?.id });
+    await loadQueue({ keepContactId: focusedContact ? undefined : contact?.id });
+    exitFocus();
     toast.success("Fila atualizada");
   };
 
@@ -277,8 +286,10 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     qc.invalidateQueries({ queryKey: ["leads"] });
     qc.invalidateQueries({ queryKey: ["tasks"] });
     if (!contact) return;
+    const currentId = contact.id;
+    const wasFocused = !!focusedContact;
     // Recarrega o contato do banco
-    const { data } = await supabase.from("prospect_contacts").select("*").eq("id", contact.id).single();
+    const { data } = await supabase.from("prospect_contacts").select("*").eq("id", currentId).single();
     if (!data) return;
     const updated = data as ProspectContact;
     const shouldRemove =
@@ -286,6 +297,12 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
       updated.nao_chamar ||
       updated.telefone_invalido ||
       REMOVE_FROM_QUEUE_STATUSES.has(updated.status_prospeccao);
+
+    if (wasFocused) {
+      // Modo foco (veio de /hoje): não mexe na fila do dia; apenas sai do foco.
+      setFocusedContact(shouldRemove ? null : updated);
+      return;
+    }
 
     if (shouldRemove) {
       setQueue((q) => {
