@@ -99,11 +99,19 @@ function HojePage() {
   const qc = useQueryClient();
   const { user, roles } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const isAdmin = roles.includes("admin") || roles.includes("franqueado");
   const [vendor, setVendor] = useState<string>("me");
   const [filter, setFilter] = useState<string>("todos");
   const [working, setWorking] = useState<QueueItem | null>(null);
   const [detailsId, setDetailsId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.searchStr ?? "");
+    const leadParam = params.get("lead");
+    if (leadParam) setDetailsId(leadParam);
+  }, [location.searchStr]);
+
 
   const { data, isLoading } = useQuery({
     queryKey: ["hoje"],
