@@ -171,17 +171,19 @@ function PlacarDiario() {
           </div>
         </div>
 
-        {/* Totais do time */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          <BigStat icon={<Phone className="h-5 w-5" />} label="Ligações" value={totals.ligacoes} color="from-sky-500/30 to-sky-700/10" />
-          <BigStat icon={<PhoneCall className="h-5 w-5" />} label="Atendidas" value={totals.atendidas} color="from-emerald-500/30 to-emerald-700/10" />
-          <BigStat icon={<Sparkles className="h-5 w-5" />} label="Interessados" value={totals.interessados} color="from-amber-500/30 to-amber-700/10" />
-          <BigStat icon={<CalendarCheck className="h-5 w-5" />} label="Entrevistas" value={totals.entrevistas} color="from-violet-500/30 to-violet-700/10" />
-          <BigStat icon={<GraduationCap className="h-5 w-5" />} label="Matrículas" value={totals.matriculas} color="from-rose-500/30 to-rose-700/10" />
-        </div>
+        {/* Totais do time — apenas ADM/Franqueado */}
+        {isAdmin && (
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <BigStat icon={<Phone className="h-5 w-5" />} label="Ligações" value={totals.ligacoes} color="from-sky-500/30 to-sky-700/10" />
+            <BigStat icon={<PhoneCall className="h-5 w-5" />} label="Atendidas" value={totals.atendidas} color="from-emerald-500/30 to-emerald-700/10" />
+            <BigStat icon={<Sparkles className="h-5 w-5" />} label="Interessados" value={totals.interessados} color="from-amber-500/30 to-amber-700/10" />
+            <BigStat icon={<CalendarCheck className="h-5 w-5" />} label="Entrevistas" value={totals.entrevistas} color="from-violet-500/30 to-violet-700/10" />
+            <BigStat icon={<GraduationCap className="h-5 w-5" />} label="Matrículas" value={totals.matriculas} color="from-rose-500/30 to-rose-700/10" />
+          </div>
+        )}
 
-        {/* Metas */}
-        {period === "hoje" && (
+        {/* Metas — apenas ADM/Franqueado (dados consolidados da equipe) */}
+        {isAdmin && period === "hoje" && (
           <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
             <div className="flex items-center gap-2 mb-4">
               <Target className="h-5 w-5 text-amber-400" />
@@ -191,6 +193,19 @@ function PlacarDiario() {
               <GoalBar label="Ligações" value={totals.ligacoes} goal={TEAM_GOALS.ligacoes} />
               <GoalBar label="Entrevistas marcadas" value={totals.entrevistas} goal={TEAM_GOALS.entrevistas} />
               <GoalBar label="Matrículas" value={totals.matriculas} goal={TEAM_GOALS.matriculas} />
+            </div>
+          </div>
+        )}
+
+        {/* Mensagem motivacional (todos) */}
+        {!isAdmin && (
+          <div className="rounded-2xl border border-white/10 bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-transparent p-5">
+            <div className="flex items-center gap-3">
+              <Flame className="h-6 w-6 text-orange-400" />
+              <div>
+                <div className="text-xs uppercase tracking-widest text-white/60">Foco do dia</div>
+                <div className="text-xl md:text-2xl font-bold">Cada ligação é uma nova chance. Bora fazer acontecer! 🚀</div>
+              </div>
             </div>
           </div>
         )}
