@@ -593,13 +593,14 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
           contact={contact}
           vendedorId={user.id}
           initialAction={lastAction}
+          retornoTaskId={retornoTask?.id}
           dialMeta={{
             telefone_para_discagem: dialNumber || null,
             ddd_origem_vendedor: settings.ddd_origem ?? null,
             prefixo_interurbano: settings.prefixo_interurbano ?? null,
             ddd_destino_contato: dddDestino ?? null,
           }}
-          onSaved={onResultSaved}
+          onSaved={(goNext) => { setRetornoTask(null); return onResultSaved(goNext); }}
         />
       )}
 
