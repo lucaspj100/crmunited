@@ -84,6 +84,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
   const [lastAction, setLastAction] = useState<"ligacao" | "whatsapp" | undefined>();
   const [contextOpen, setContextOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [retornoTask, setRetornoTask] = useState<RetornoTask | null>(null);
 
   const contact = currentIndex >= 0 && currentIndex < queue.length ? queue[currentIndex] : null;
 
