@@ -76,13 +76,22 @@ const REASON_META: Record<Reason, { label: string; icon: any; color: string }> =
 const FILTERS: { key: string; label: string; match: (it: QueueItem) => boolean }[] = [
   { key: "todos",        label: "Todos",              match: () => true },
   { key: "agora",        label: "Agora",              match: (i) => i.reason === "atrasada" || i.reason === "retorno_pendente" || i.reason === "atualizar_resultado" },
-  { key: "hoje",         label: "Hoje",               match: () => true },
+  { key: "hoje",         label: "Hoje",               match: (i) => i.reason !== "atrasada" },
   { key: "atrasadas",    label: "Atrasadas",          match: (i) => i.reason === "atrasada" },
   { key: "entrevistas",  label: "Atualizar entrev.",  match: (i) => i.reason === "atualizar_resultado" },
   { key: "retornos",     label: "Retornos",           match: (i) => i.reason === "retorno_pendente" },
   { key: "resgates",     label: "Resgates",           match: (i) => i.reason === "resgate_hoje" },
   { key: "sem_acao",     label: "Sem próxima ação",   match: (i) => i.reason === "sem_proxima_acao" || i.reason === "novo_sem_contato" },
 ];
+
+/** Data local no formato YYYY-MM-DD (evita bug de timezone do toISOString em UTC). */
+function localToday(): string {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
 
 
 function HojePage() {
