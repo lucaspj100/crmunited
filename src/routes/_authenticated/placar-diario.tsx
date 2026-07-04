@@ -5,8 +5,18 @@ import { useAuth } from "@/lib/auth-context";
 import { fetchProductivity, periodRange, type Period, type ProductivityRow } from "@/lib/productivity";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Phone, PhoneCall, Sparkles, CalendarCheck, GraduationCap, Trophy, Maximize2, X, Flame, Target, Crown } from "lucide-react";
+import { Phone, PhoneCall, Sparkles, CalendarCheck, GraduationCap, Trophy, Maximize2, X, Flame, Target, Crown, Users, MessageCircle, Linkedin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
+// Filtra usuários técnicos que não devem aparecer no placar/ranking
+function isRealSeller(nome: string | null | undefined): boolean {
+  if (!nome) return false;
+  const n = nome.trim().toLowerCase();
+  if (!n) return false;
+  const blocked = ["placar", "telão", "telao", "teste", "test", "sistema", "admin"];
+  return !blocked.some((b) => n === b || n.startsWith(b + " "));
+}
 
 export const Route = createFileRoute("/_authenticated/placar-diario")({
   component: PlacarDiario,
