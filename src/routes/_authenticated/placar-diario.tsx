@@ -96,13 +96,25 @@ function PlacarDiario() {
   }, [range.start, range.end]);
 
   const [live, setLive] = useState<ProductivityRow[] | null>(null);
-  const rows = (live ?? rowsRaw) as ProductivityRow[];
+  const rowsAll = (live ?? rowsRaw) as ProductivityRow[];
+  // Filtra usuários técnicos (Placar, teste etc.) e deduplica por vendedor_id
+  const rows = useMemo(() => {
+    const seen = new Set<string>();
+    return rowsAll.filter((r) => {
+      if (!isRealSeller(r.nome)) return false;
+      if (seen.has(r.vendedor_id)) return false;
+      seen.add(r.vendedor_id);
+      return true;
+    });
+  }, [rowsAll]);
 
   const ranked = useMemo(() => {
     return [...rows]
       .map((r) => ({ ...r, score: scoreOf(r) }))
       .sort((a, b) => b.score - a.score);
   }, [rows]);
+
+  const [selectedSeller, setSelectedSeller] = useState<(ProductivityRow & { score: number }) | null>(null);
 
   const totals = useMemo(() => rows.reduce(
     (acc, r) => ({
