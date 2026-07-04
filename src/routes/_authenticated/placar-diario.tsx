@@ -5,8 +5,18 @@ import { useAuth } from "@/lib/auth-context";
 import { fetchProductivity, periodRange, type Period, type ProductivityRow } from "@/lib/productivity";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Phone, PhoneCall, Sparkles, CalendarCheck, GraduationCap, Trophy, Maximize2, X, Flame, Target, Crown } from "lucide-react";
+import { Phone, PhoneCall, Sparkles, CalendarCheck, GraduationCap, Trophy, Maximize2, X, Flame, Target, Crown, Users, MessageCircle, Linkedin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
+// Filtra usuários técnicos que não devem aparecer no placar/ranking
+function isRealSeller(nome: string | null | undefined): boolean {
+  if (!nome) return false;
+  const n = nome.trim().toLowerCase();
+  if (!n) return false;
+  const blocked = ["placar", "telão", "telao", "teste", "test", "sistema", "admin"];
+  return !blocked.some((b) => n === b || n.startsWith(b + " "));
+}
 
 export const Route = createFileRoute("/_authenticated/placar-diario")({
   component: PlacarDiario,
@@ -86,13 +96,25 @@ function PlacarDiario() {
   }, [range.start, range.end]);
 
   const [live, setLive] = useState<ProductivityRow[] | null>(null);
-  const rows = (live ?? rowsRaw) as ProductivityRow[];
+  const rowsAll = (live ?? rowsRaw) as ProductivityRow[];
+  // Filtra usuários técnicos (Placar, teste etc.) e deduplica por vendedor_id
+  const rows = useMemo(() => {
+    const seen = new Set<string>();
+    return rowsAll.filter((r) => {
+      if (!isRealSeller(r.nome)) return false;
+      if (seen.has(r.vendedor_id)) return false;
+      seen.add(r.vendedor_id);
+      return true;
+    });
+  }, [rowsAll]);
 
   const ranked = useMemo(() => {
     return [...rows]
       .map((r) => ({ ...r, score: scoreOf(r) }))
       .sort((a, b) => b.score - a.score);
   }, [rows]);
+
+  const [selectedSeller, setSelectedSeller] = useState<(ProductivityRow & { score: number }) | null>(null);
 
   const totals = useMemo(() => rows.reduce(
     (acc, r) => ({
@@ -270,9 +292,20 @@ function PlacarDiario() {
           </div>
         </div>
 
+        {/* Ranking completo da equipe — apenas ADM/Franqueado */}
+        {isAdmin && (
+          <FullRanking ranked={ranked} onSelect={(r) => setSelectedSeller(r)} />
+        )}
+
         {/* Diagnóstico Comercial — apenas ADM/Franqueado */}
         {isAdmin && <AdmDiagnostic totals={totals} rows={rows} />}
       </div>
+
+      <SellerDetailDialog
+        seller={selectedSeller}
+        period={period}
+        onClose={() => setSelectedSeller(null)}
+      />
     </div>
   );
 }
@@ -384,6 +417,156 @@ function Highlight({ title, row, field }: { title: string; row: ProductivityRow 
         <div className="truncate font-semibold">{row?.nome ?? "—"}</div>
       </div>
       <div className="text-2xl font-black tabular-nums">{row ? (row[field] as number) : 0}</div>
+    </div>
+  );
+}
+
+type RankedRow = ProductivityRow & { score: number };
+
+function FullRanking({ ranked, onSelect }: { ranked: RankedRow[]; onSelect: (r: RankedRow) => void }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+      <div className="flex items-center gap-2 mb-4">
+        <Users className="h-5 w-5 text-sky-400" />
+        <h2 className="text-lg font-bold">Ranking completo da equipe</h2>
+        <span className="text-xs text-white/50 ml-2">Clique em um vendedor para ver os detalhes</span>
+      </div>
+      {ranked.length === 0 ? (
+        <p className="text-white/60 text-sm">Nenhum vendedor no período.</p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[900px] text-sm">
+            <thead>
+              <tr className="text-left text-[11px] uppercase tracking-wider text-white/50 border-b border-white/10">
+                <th className="py-2 pr-2 w-10">#</th>
+                <th className="py-2 pr-2">Vendedor</th>
+                <th className="py-2 px-2 text-right">Ligações</th>
+                <th className="py-2 px-2 text-right">Atend.</th>
+                <th className="py-2 px-2 text-right">Interes.</th>
+                <th className="py-2 px-2 text-right">Entrev.</th>
+                <th className="py-2 px-2 text-right">Matr.</th>
+                <th className="py-2 px-2 text-right">WA</th>
+                <th className="py-2 px-2 text-right">LI</th>
+                <th className="py-2 pl-2 text-right">Pontos</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ranked.map((r, idx) => (
+                <tr
+                  key={r.vendedor_id}
+                  onClick={() => onSelect(r)}
+                  className="border-b border-white/5 hover:bg-white/5 cursor-pointer transition-colors"
+                >
+                  <td className="py-3 pr-2 font-bold text-white/70">{idx + 1}</td>
+                  <td className="py-3 pr-2">
+                    <div className="flex items-center gap-3">
+                      <div className="h-9 w-9 shrink-0 overflow-hidden rounded-full border border-white/20 bg-gradient-to-br from-sky-500 to-violet-600 flex items-center justify-center font-bold text-xs">
+                        {r.avatar_url
+                          ? <img src={r.avatar_url} alt="" className="h-full w-full object-cover" />
+                          : <span>{initials(r.nome)}</span>}
+                      </div>
+                      <span className="font-semibold truncate">{r.nome}</span>
+                    </div>
+                  </td>
+                  <td className="py-3 px-2 text-right tabular-nums">{r.ligacoes_feitas}</td>
+                  <td className="py-3 px-2 text-right tabular-nums">{r.ligacoes_atendidas}</td>
+                  <td className="py-3 px-2 text-right tabular-nums">{r.interessados_gerados}</td>
+                  <td className="py-3 px-2 text-right tabular-nums">{r.entrevistas_marcadas}</td>
+                  <td className="py-3 px-2 text-right tabular-nums">{r.matriculas}</td>
+                  <td className="py-3 px-2 text-right tabular-nums">{r.whatsapps_checkout ?? 0}</td>
+                  <td className="py-3 px-2 text-right tabular-nums">{r.linkedins_checkout ?? 0}</td>
+                  <td className="py-3 pl-2 text-right font-black tabular-nums text-amber-300">{fmtScore(r.score)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SellerDetailDialog({
+  seller, period, onClose,
+}: {
+  seller: RankedRow | null;
+  period: Period;
+  onClose: () => void;
+}) {
+  const open = !!seller;
+  const periodLabel = period === "hoje" ? "hoje" : period === "semana" ? "na semana" : "no mês";
+  const pct = (n: number, d: number) => (d > 0 ? `${((n / d) * 100).toFixed(1)}%` : "—");
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+      <DialogContent className="sm:max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>
+            {seller ? `Resultados de ${seller.nome}` : ""}
+            <span className="ml-2 text-xs font-normal text-muted-foreground">({periodLabel})</span>
+          </DialogTitle>
+        </DialogHeader>
+        {seller && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="h-16 w-16 shrink-0 overflow-hidden rounded-full border-2 border-primary/30 bg-gradient-to-br from-sky-500 to-violet-600 flex items-center justify-center font-bold text-xl text-white">
+                {seller.avatar_url
+                  ? <img src={seller.avatar_url} alt="" className="h-full w-full object-cover" />
+                  : <span>{initials(seller.nome)}</span>}
+              </div>
+              <div>
+                <div className="text-lg font-bold">{seller.nome}</div>
+                <div className="text-sm text-muted-foreground">{seller.email}</div>
+              </div>
+              <div className="ml-auto text-right">
+                <div className="text-3xl font-black tabular-nums">{fmtScore(seller.score)}</div>
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">pontos</div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              <DetailStat icon={<Phone className="h-4 w-4" />} label="Ligações" value={seller.ligacoes_feitas} />
+              <DetailStat icon={<PhoneCall className="h-4 w-4" />} label="Atendidas" value={seller.ligacoes_atendidas} />
+              <DetailStat icon={<Sparkles className="h-4 w-4" />} label="Interessados" value={seller.interessados_gerados} />
+              <DetailStat icon={<CalendarCheck className="h-4 w-4" />} label="Entrevistas" value={seller.entrevistas_marcadas} />
+              <DetailStat icon={<GraduationCap className="h-4 w-4" />} label="Matrículas" value={seller.matriculas} />
+              <DetailStat icon={<MessageCircle className="h-4 w-4" />} label="WhatsApps" value={seller.whatsapps_checkout ?? 0} />
+              <DetailStat icon={<Linkedin className="h-4 w-4" />} label="LinkedIns" value={seller.linkedins_checkout ?? 0} />
+            </div>
+
+            <div>
+              <div className="text-sm font-semibold mb-2">Taxas de conversão</div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <ConvCard label="Atendimento" value={pct(seller.ligacoes_atendidas, seller.ligacoes_feitas)} hint="atend / lig" />
+                <ConvCard label="Lig → Interes." value={pct(seller.interessados_gerados, seller.ligacoes_feitas)} hint="interes / lig" />
+                <ConvCard label="Interes → Entrev." value={pct(seller.entrevistas_marcadas, seller.interessados_gerados)} hint="entrev / interes" />
+                <ConvCard label="Entrev → Matr." value={pct(seller.matriculas, seller.entrevistas_marcadas)} hint="matr / entrev" />
+              </div>
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function DetailStat({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {
+  return (
+    <div className="rounded-lg border bg-card p-3">
+      <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted-foreground">
+        {icon}{label}
+      </div>
+      <div className="mt-1 text-2xl font-black tabular-nums">{value}</div>
+    </div>
+  );
+}
+
+function ConvCard({ label, value, hint }: { label: string; value: string; hint: string }) {
+  return (
+    <div className="rounded-lg border bg-muted/30 p-3">
+      <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className="mt-1 text-xl font-black tabular-nums">{value}</div>
+      <div className="text-[10px] text-muted-foreground">{hint}</div>
     </div>
   );
 }
