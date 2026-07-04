@@ -292,9 +292,20 @@ function PlacarDiario() {
           </div>
         </div>
 
+        {/* Ranking completo da equipe — apenas ADM/Franqueado */}
+        {isAdmin && (
+          <FullRanking ranked={ranked} onSelect={(r) => setSelectedSeller(r)} />
+        )}
+
         {/* Diagnóstico Comercial — apenas ADM/Franqueado */}
         {isAdmin && <AdmDiagnostic totals={totals} rows={rows} />}
       </div>
+
+      <SellerDetailDialog
+        seller={selectedSeller}
+        period={period}
+        onClose={() => setSelectedSeller(null)}
+      />
     </div>
   );
 }
