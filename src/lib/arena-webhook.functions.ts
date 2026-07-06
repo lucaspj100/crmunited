@@ -86,6 +86,7 @@ export const dispatchArenaEvent = createServerFn({ method: "POST" })
       enrollment_value: lead.enrollment_value,
       monthly_fee: lead.monthly_fee,
       material_value: lead.material_value,
+      enrollment_date: (lead as any).enrollment_date ?? null,
       status: lead.status,
       occurred_at: occurredAt,
       ...(extra ?? {}),
