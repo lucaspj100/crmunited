@@ -697,13 +697,14 @@ function QuickCompleteDialog({
       } else if (action === "matricula") {
         await supabase.from("leads").update({
           status: "matricula" as any,
+          enrollment_date: enrollmentDate || new Date().toISOString().slice(0, 10),
           enrollment_value: valMat ? Number(valMat) : null,
           monthly_fee: valMen ? Number(valMen) : null,
           material_value: valMad ? Number(valMad) : null,
         } as any).eq("id", lead.id);
         await supabase.from("tasks").update({ status: "concluida" as any })
           .eq("lead_id", lead.id).eq("status", "pendente");
-        await logLeadEvent({ leadId: lead.id, type: "enrolled", description: `Matrícula registrada via Hoje` });
+        await logLeadEvent({ leadId: lead.id, type: "enrolled", description: `Matrícula registrada via Hoje (data ${enrollmentDate})` });
       } else if (action === "perdido") {
         await supabase.from("leads").update({
           status: "perdido" as any,
