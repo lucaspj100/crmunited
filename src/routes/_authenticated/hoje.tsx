@@ -636,6 +636,7 @@ function QuickCompleteDialog({
   const [valMat, setValMat] = useState("");
   const [valMen, setValMen] = useState("");
   const [valMad, setValMad] = useState("");
+  const [enrollmentDate, setEnrollmentDate] = useState<string>(() => new Date().toISOString().slice(0, 10));
   const [lostReason, setLostReason] = useState<string>("sem_resposta");
   const [saving, setSaving] = useState(false);
 
@@ -696,13 +697,14 @@ function QuickCompleteDialog({
       } else if (action === "matricula") {
         await supabase.from("leads").update({
           status: "matricula" as any,
+          enrollment_date: enrollmentDate || new Date().toISOString().slice(0, 10),
           enrollment_value: valMat ? Number(valMat) : null,
           monthly_fee: valMen ? Number(valMen) : null,
           material_value: valMad ? Number(valMad) : null,
         } as any).eq("id", lead.id);
         await supabase.from("tasks").update({ status: "concluida" as any })
           .eq("lead_id", lead.id).eq("status", "pendente");
-        await logLeadEvent({ leadId: lead.id, type: "enrolled", description: `Matrícula registrada via Hoje` });
+        await logLeadEvent({ leadId: lead.id, type: "enrolled", description: `Matrícula registrada via Hoje (data ${enrollmentDate})` });
       } else if (action === "perdido") {
         await supabase.from("leads").update({
           status: "perdido" as any,
@@ -746,10 +748,17 @@ function QuickCompleteDialog({
         )}
 
         {action === "matricula" && (
-          <div className="grid grid-cols-3 gap-2 border-t pt-3">
-            <div><Label>Matrícula</Label><Input type="number" step="0.01" value={valMat} onChange={(e) => setValMat(e.target.value)} /></div>
-            <div><Label>Mensalidade</Label><Input type="number" step="0.01" value={valMen} onChange={(e) => setValMen(e.target.value)} /></div>
-            <div><Label>Material</Label><Input type="number" step="0.01" value={valMad} onChange={(e) => setValMad(e.target.value)} /></div>
+          <div className="border-t pt-3 space-y-2">
+            <div>
+              <Label>Data da matrícula *</Label>
+              <Input type="date" value={enrollmentDate} onChange={(e) => setEnrollmentDate(e.target.value)} />
+              <p className="text-xs text-muted-foreground mt-1">Pode ser retroativa. A matrícula contará no período dessa data.</p>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <div><Label>Matrícula</Label><Input type="number" step="0.01" value={valMat} onChange={(e) => setValMat(e.target.value)} /></div>
+              <div><Label>Mensalidade</Label><Input type="number" step="0.01" value={valMen} onChange={(e) => setValMen(e.target.value)} /></div>
+              <div><Label>Material</Label><Input type="number" step="0.01" value={valMad} onChange={(e) => setValMad(e.target.value)} /></div>
+            </div>
           </div>
         )}
 

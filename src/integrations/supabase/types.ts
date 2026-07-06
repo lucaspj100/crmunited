@@ -256,6 +256,7 @@ export type Database = {
         Row: {
           company: string | null
           created_at: string
+          enrollment_date: string | null
           enrollment_value: number | null
           id: string
           in_rescue: boolean
@@ -290,6 +291,7 @@ export type Database = {
         Insert: {
           company?: string | null
           created_at?: string
+          enrollment_date?: string | null
           enrollment_value?: number | null
           id?: string
           in_rescue?: boolean
@@ -324,6 +326,7 @@ export type Database = {
         Update: {
           company?: string | null
           created_at?: string
+          enrollment_date?: string | null
           enrollment_value?: number | null
           id?: string
           in_rescue?: boolean

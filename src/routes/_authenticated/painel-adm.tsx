@@ -41,7 +41,7 @@ async function fetchPainel(range: { start: string; end: string }) {
 
   const [profR, leadsR, leadsCreatedR, tasksR] = await Promise.all([
     supabase.from("profiles").select("id, full_name, email"),
-    supabase.from("leads").select("id, owner_id, status, interview_date, lost_at, in_rescue, rescued_at, created_at, updated_at"),
+    supabase.from("leads").select("id, owner_id, status, interview_date, lost_at, in_rescue, rescued_at, created_at, updated_at, enrollment_date"),
     supabase.from("leads").select("id, owner_id, created_at").gte("created_at", startIso).lte("created_at", endIso).limit(20000),
     supabase.from("tasks").select("id, owner_id, due_date, status, type, updated_at").limit(20000),
   ]);
@@ -92,9 +92,11 @@ async function fetchPainel(range: { start: string; end: string }) {
           l.status === "entrevista_marcada",
       ).length;
 
-      const matriculasPeriodo = myLeads.filter(
-        (l) => l.status === "matricula" && l.updated_at?.slice(0, 10) >= range.start && l.updated_at?.slice(0, 10) <= range.end,
-      ).length;
+      const matriculasPeriodo = myLeads.filter((l) => {
+        if (l.status !== "matricula") return false;
+        const d = (l.enrollment_date as string | null) ?? (l.updated_at?.slice(0, 10) as string | undefined);
+        return !!d && d >= range.start && d <= range.end;
+      }).length;
       const perdidosPeriodo = myLeads.filter(
         (l) => l.lost_at && l.lost_at.slice(0, 10) >= range.start && l.lost_at.slice(0, 10) <= range.end,
       ).length;

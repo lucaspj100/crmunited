@@ -40,7 +40,7 @@ export const dispatchArenaEvent = createServerFn({ method: "POST" })
     const { data: lead, error: leadErr } = await context.supabase
       .from("leads")
       .select(
-        "id, name, phone, owner_id, status, interview_date, interview_time, interview_notes, enrollment_value, monthly_fee, material_value"
+        "id, name, phone, owner_id, status, interview_date, interview_time, interview_notes, enrollment_value, monthly_fee, material_value, enrollment_date"
       )
       .eq("id", leadId)
       .maybeSingle();
@@ -86,6 +86,7 @@ export const dispatchArenaEvent = createServerFn({ method: "POST" })
       enrollment_value: lead.enrollment_value,
       monthly_fee: lead.monthly_fee,
       material_value: lead.material_value,
+      enrollment_date: (lead as any).enrollment_date ?? null,
       status: lead.status,
       occurred_at: occurredAt,
       ...(extra ?? {}),
