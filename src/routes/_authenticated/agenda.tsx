@@ -205,14 +205,15 @@ function AgendaPage() {
     toast.success("Entrevista reagendada");
     setResched(null); refresh();
   }
-  async function doEnrol(l: Lead, valorMatricula: string, mensalidade: string, material: string) {
-    const updates: any = { status: "matricula" };
+  async function doEnrol(l: Lead, valorMatricula: string, mensalidade: string, material: string, enrollmentDate: string) {
+    const effectiveDate = enrollmentDate || new Date().toISOString().slice(0, 10);
+    const updates: any = { status: "matricula", enrollment_date: effectiveDate };
     if (valorMatricula) updates.enrollment_value = Number(valorMatricula.replace(",", "."));
     if (mensalidade) updates.monthly_fee = Number(mensalidade.replace(",", "."));
     if (material) updates.material_value = Number(material.replace(",", "."));
     const { error } = await supabase.from("leads").update(updates).eq("id", l.id);
     if (error) { toast.error("Erro ao matricular"); return; }
-    await logLeadEvent({ leadId: l.id, type: "enrolled", description: `Matrícula: ${valorMatricula || "—"} · Mensalidade: ${mensalidade || "—"}`, metadata: updates });
+    await logLeadEvent({ leadId: l.id, type: "enrolled", description: `Matrícula: ${valorMatricula || "—"} · Mensalidade: ${mensalidade || "—"} · Data ${effectiveDate}`, metadata: updates });
     notifyArena(l.id, "crm_enrollment_created");
     toast.success("Matrícula registrada 🎉");
     setEnrol(null); refresh();
