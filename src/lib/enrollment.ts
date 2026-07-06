@@ -26,8 +26,14 @@ export async function registerEnrollmentAndSyncArena(
   enrollmentValue: number | null,
   monthlyFee: number | null,
   materialValue: number | null,
+  enrollmentDate?: string | null,
 ): Promise<EnrollmentResult> {
-  const update: Record<string, unknown> = { status: "matricula" };
+  // Data real da matrícula: padrão = hoje. Pode ser retroativa.
+  const effectiveDate = enrollmentDate && enrollmentDate.length > 0
+    ? enrollmentDate
+    : new Date().toISOString().slice(0, 10);
+
+  const update: Record<string, unknown> = { status: "matricula", enrollment_date: effectiveDate };
   if (enrollmentValue != null) update.enrollment_value = enrollmentValue;
   if (monthlyFee != null) update.monthly_fee = monthlyFee;
   if (materialValue != null) update.material_value = materialValue;
@@ -40,8 +46,8 @@ export async function registerEnrollmentAndSyncArena(
   await logLeadEvent({
     leadId,
     type: "enrolled",
-    description: `Matrícula R$ ${enrollmentValue ?? "—"} · Mensalidade R$ ${monthlyFee ?? "—"} · Material R$ ${materialValue ?? "—"}`,
-    metadata: { enrollmentValue, monthlyFee, materialValue },
+    description: `Matrícula R$ ${enrollmentValue ?? "—"} · Mensalidade R$ ${monthlyFee ?? "—"} · Material R$ ${materialValue ?? "—"} · Data ${effectiveDate}`,
+    metadata: { enrollmentValue, monthlyFee, materialValue, enrollmentDate: effectiveDate },
   });
 
   // Dedupe: já existe um envio bem-sucedido?
