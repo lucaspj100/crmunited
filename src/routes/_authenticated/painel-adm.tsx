@@ -94,7 +94,7 @@ async function fetchPainel(range: { start: string; end: string }) {
 
       const matriculasPeriodo = myLeads.filter((l) => {
         if (l.status !== "matricula") return false;
-        const d = (l.enrollment_date as string | null) ?? (l.updated_at?.slice(0, 10) as string | undefined);
+        const d = l.enrollment_date as string | null;
         return !!d && d >= range.start && d <= range.end;
       }).length;
       const perdidosPeriodo = myLeads.filter(
