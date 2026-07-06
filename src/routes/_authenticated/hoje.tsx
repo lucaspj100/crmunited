@@ -150,12 +150,12 @@ function HojePage() {
   const queue = useMemo<QueueItem[]>(() => {
     if (!data) return [];
     const allLeads = data.leads.filter((l) => ownerFilter(l.owner_id) && l.status !== "perdido" && l.status !== "matricula");
+    const leadById = new Map(allLeads.map((l) => [l.id, l]));
     // Leads com entrevista já marcada são compromissos: ficam de fora da fila operacional
     // (aparecem na Agenda). Só entram aqui quando a entrevista já passou e o status
     // ainda não foi atualizado para "entrevista realizada".
     const scheduledLeads = allLeads.filter((l) => l.status === "entrevista_marcada");
     const leads = allLeads.filter((l) => l.status !== "entrevista_marcada");
-    const scheduledIds = new Set(scheduledLeads.map((l) => l.id));
 
     const tasksByLead = new Map<string, Task[]>();
     for (const t of data.tasks.filter((t) => ownerFilter(t.owner_id) && t.lead_id)) {
@@ -166,11 +166,11 @@ function HojePage() {
     const seenLeads = new Set<string>();
     const items: QueueItem[] = [];
 
-    // 1) Atrasadas — ignora tasks de leads com entrevista já marcada (compromisso agendado)
-    const overdue = data.tasks.filter((t) => ownerFilter(t.owner_id) && t.due_date < today && t.lead_id && !scheduledIds.has(t.lead_id!))
+    // 1) Atrasadas — inclui tasks de leads com entrevista marcada, desde que haja tarefa pendente
+    const overdue = data.tasks.filter((t) => ownerFilter(t.owner_id) && t.due_date < today && t.lead_id)
       .sort((a, b) => a.due_date.localeCompare(b.due_date));
     for (const t of overdue) {
-      const l = leads.find((x) => x.id === t.lead_id);
+      const l = leadById.get(t.lead_id!);
       if (l && !seenLeads.has(l.id)) {
         seenLeads.add(l.id);
         items.push({ reason: "atrasada", lead: l, task: t, priority: 1, sortKey: t.due_date, owner_id: t.owner_id });
@@ -209,11 +209,11 @@ function HojePage() {
       items.push({ reason: "retorno_pendente", task: t, prospect: p, priority: 3, sortKey: `${t.due_date} ${t.due_time ?? "00:00"}`, owner_id: t.owner_id });
     }
 
-    // 4) Follow-ups hoje (não-resgate) — ignora leads com entrevista já marcada
-    const todayTasks = data.tasks.filter((t) => ownerFilter(t.owner_id) && t.due_date === today && !t.is_rescue && t.lead_id && t.type !== "retorno_ligacao" && !scheduledIds.has(t.lead_id!))
+    // 4) Follow-ups hoje (não-resgate) — inclui leads com entrevista marcada se tiverem tarefa
+    const todayTasks = data.tasks.filter((t) => ownerFilter(t.owner_id) && t.due_date === today && !t.is_rescue && t.lead_id && t.type !== "retorno_ligacao")
       .sort((a, b) => (a.due_time ?? "").localeCompare(b.due_time ?? ""));
     for (const t of todayTasks) {
-      const l = leads.find((x) => x.id === t.lead_id);
+      const l = leadById.get(t.lead_id!);
       if (l && !seenLeads.has(l.id)) {
         seenLeads.add(l.id);
         items.push({ reason: "followup_hoje", lead: l, task: t, priority: 4, sortKey: t.due_time ?? "23:59", owner_id: t.owner_id });
@@ -221,9 +221,9 @@ function HojePage() {
     }
 
     // 5) Resgates hoje
-    const rescTasks = data.tasks.filter((t) => ownerFilter(t.owner_id) && t.due_date === today && t.is_rescue && t.lead_id && !scheduledIds.has(t.lead_id!));
+    const rescTasks = data.tasks.filter((t) => ownerFilter(t.owner_id) && t.due_date === today && t.is_rescue && t.lead_id);
     for (const t of rescTasks) {
-      const l = leads.find((x) => x.id === t.lead_id);
+      const l = leadById.get(t.lead_id!);
       if (l && !seenLeads.has(l.id)) {
         seenLeads.add(l.id);
         items.push({ reason: "resgate_hoje", lead: l, task: t, priority: 5, sortKey: t.due_time ?? "23:59", owner_id: t.owner_id });
