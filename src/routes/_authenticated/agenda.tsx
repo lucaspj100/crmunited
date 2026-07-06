@@ -317,7 +317,7 @@ function AgendaPage() {
       <RealizadaDialog open={!!interview} lead={interview} onClose={() => setInterview(null)} onSave={(notes) => interview && markRealizada(interview, notes)} />
 
       {/* Matrícula */}
-      <EnrolDialog open={!!enrol} lead={enrol} onClose={() => setEnrol(null)} onSave={(a, b, c) => enrol && doEnrol(enrol, a, b, c)} />
+      <EnrolDialog open={!!enrol} lead={enrol} onClose={() => setEnrol(null)} onSave={(a, b, c, d) => enrol && doEnrol(enrol, a, b, c, d)} />
 
       {/* Perdido */}
       <LostDialog open={!!lost} lead={lost} onClose={() => setLost(null)} onSave={(r) => lost && doLost(lost, r)} />
