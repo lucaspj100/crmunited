@@ -498,6 +498,7 @@ function MatriculaDialog({ lead, onClose, onSaved }: { lead: Lead | null; onClos
   const [enrollment, setEnrollment] = useState("");
   const [monthly, setMonthly] = useState("");
   const [material, setMaterial] = useState("");
+  const [enrollmentDate, setEnrollmentDate] = useState<string>(() => new Date().toISOString().slice(0, 10));
   const [followup, setFollowup] = useState<string>("none");
   const [followupDate, setFollowupDate] = useState<string>("");
   const [saving, setSaving] = useState(false);
@@ -511,11 +512,12 @@ function MatriculaDialog({ lead, onClose, onSaved }: { lead: Lead | null; onClos
     if (ev === null || isNaN(ev) || mv === null || isNaN(mv) || mt === null || isNaN(mt)) {
       toast.error("Informe os três valores"); return;
     }
+    if (!enrollmentDate) { toast.error("Informe a data da matrícula"); return; }
     setSaving(true);
 
     const fDate = computeFollowupDate(followup, followupDate);
 
-    const res = await registerEnrollmentAndSyncArena(lead.id, ev, mv, mt);
+    const res = await registerEnrollmentAndSyncArena(lead.id, ev, mv, mt, enrollmentDate);
 
     if (!res.saved) {
       setSaving(false);
@@ -552,6 +554,11 @@ function MatriculaDialog({ lead, onClose, onSaved }: { lead: Lead | null; onClos
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>Registrar matrícula — {lead.name}</DialogTitle></DialogHeader>
         <form onSubmit={onSubmit} className="space-y-3">
+          <div>
+            <Label>Data da matrícula *</Label>
+            <Input type="date" value={enrollmentDate} onChange={(e) => setEnrollmentDate(e.target.value)} required />
+            <p className="text-xs text-muted-foreground mt-1">A matrícula será contabilizada pelo período dessa data (pode ser retroativa).</p>
+          </div>
           <div><Label>Valor da matrícula (R$) *</Label><Input inputMode="decimal" value={enrollment} onChange={(e) => setEnrollment(e.target.value)} placeholder="0,00" required /></div>
           <div><Label>Valor da mensalidade (R$) *</Label><Input inputMode="decimal" value={monthly} onChange={(e) => setMonthly(e.target.value)} placeholder="0,00" required /></div>
           <div><Label>Valor do material (R$) *</Label><Input inputMode="decimal" value={material} onChange={(e) => setMaterial(e.target.value)} placeholder="0,00" required /></div>
