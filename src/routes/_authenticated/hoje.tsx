@@ -636,6 +636,7 @@ function QuickCompleteDialog({
   const [valMat, setValMat] = useState("");
   const [valMen, setValMen] = useState("");
   const [valMad, setValMad] = useState("");
+  const [enrollmentDate, setEnrollmentDate] = useState<string>(() => new Date().toISOString().slice(0, 10));
   const [lostReason, setLostReason] = useState<string>("sem_resposta");
   const [saving, setSaving] = useState(false);
 
