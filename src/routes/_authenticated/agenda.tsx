@@ -430,20 +430,28 @@ function RealizadaDialog({ open, lead, onClose, onSave }: { open: boolean; lead:
   );
 }
 
-function EnrolDialog({ open, lead, onClose, onSave }: { open: boolean; lead: Lead | null; onClose: () => void; onSave: (matricula: string, mensalidade: string, material: string) => void }) {
+function EnrolDialog({ open, lead, onClose, onSave }: { open: boolean; lead: Lead | null; onClose: () => void; onSave: (matricula: string, mensalidade: string, material: string, enrollmentDate: string) => void }) {
   const [m, setM] = useState(""); const [mensal, setMensal] = useState(""); const [mat, setMat] = useState("");
+  const [date, setDate] = useState<string>(() => new Date().toISOString().slice(0, 10));
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); else { setM(""); setMensal(""); setMat(""); } }}>
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); else { setM(""); setMensal(""); setMat(""); setDate(new Date().toISOString().slice(0, 10)); } }}>
       <DialogContent>
         <DialogHeader><DialogTitle>Matrícula — {lead?.name}</DialogTitle></DialogHeader>
-        <div className="grid grid-cols-3 gap-3">
-          <div><Label>Matrícula (R$)</Label><Input inputMode="decimal" value={m} onChange={(e) => setM(e.target.value)} /></div>
-          <div><Label>Mensalidade (R$)</Label><Input inputMode="decimal" value={mensal} onChange={(e) => setMensal(e.target.value)} /></div>
-          <div><Label>Material (R$)</Label><Input inputMode="decimal" value={mat} onChange={(e) => setMat(e.target.value)} /></div>
+        <div className="space-y-3">
+          <div>
+            <Label>Data da matrícula *</Label>
+            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            <p className="text-xs text-muted-foreground mt-1">Contabilizada pelo período dessa data (pode ser retroativa).</p>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div><Label>Matrícula (R$)</Label><Input inputMode="decimal" value={m} onChange={(e) => setM(e.target.value)} /></div>
+            <div><Label>Mensalidade (R$)</Label><Input inputMode="decimal" value={mensal} onChange={(e) => setMensal(e.target.value)} /></div>
+            <div><Label>Material (R$)</Label><Input inputMode="decimal" value={mat} onChange={(e) => setMat(e.target.value)} /></div>
+          </div>
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={onClose}>Cancelar</Button>
-          <Button onClick={() => onSave(m, mensal, mat)}>Registrar matrícula</Button>
+          <Button onClick={() => onSave(m, mensal, mat, date)}>Registrar matrícula</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
