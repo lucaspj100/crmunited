@@ -92,9 +92,11 @@ async function fetchPainel(range: { start: string; end: string }) {
           l.status === "entrevista_marcada",
       ).length;
 
-      const matriculasPeriodo = myLeads.filter(
-        (l) => l.status === "matricula" && l.updated_at?.slice(0, 10) >= range.start && l.updated_at?.slice(0, 10) <= range.end,
-      ).length;
+      const matriculasPeriodo = myLeads.filter((l) => {
+        if (l.status !== "matricula") return false;
+        const d = (l.enrollment_date as string | null) ?? (l.updated_at?.slice(0, 10) as string | undefined);
+        return !!d && d >= range.start && d <= range.end;
+      }).length;
       const perdidosPeriodo = myLeads.filter(
         (l) => l.lost_at && l.lost_at.slice(0, 10) >= range.start && l.lost_at.slice(0, 10) <= range.end,
       ).length;
