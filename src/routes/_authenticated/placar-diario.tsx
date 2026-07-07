@@ -23,7 +23,7 @@ export const Route = createFileRoute("/_authenticated/placar-diario")({
 });
 
 // Pontuação por ação
-const POINTS = { call: 1, answered: 2, interested: 30, interview: 60, enrollment: 300, whatsapp: 0.1, linkedin: 0.1 };
+const POINTS = { call: 1, answered: 2, interested: 30, interview: 60, interview_done: 100, enrollment: 300, whatsapp: 0.1, linkedin: 0.1 };
 // Metas diárias do time (somatório de todos os vendedores)
 const TEAM_GOALS = { ligacoes: 500, entrevistas: 20, matriculas: 5 };
 
@@ -33,6 +33,7 @@ function scoreOf(r: ProductivityRow) {
     r.ligacoes_atendidas * POINTS.answered +
     r.interessados_gerados * POINTS.interested +
     r.entrevistas_marcadas * POINTS.interview +
+    (r.entrevistas_realizadas ?? 0) * POINTS.interview_done +
     r.matriculas * POINTS.enrollment +
     (r.whatsapps_checkout ?? 0) * POINTS.whatsapp +
     (r.linkedins_checkout ?? 0) * POINTS.linkedin
@@ -240,7 +241,7 @@ function PlacarDiario() {
             <div className="flex items-center gap-2 mb-4">
               <Crown className="h-5 w-5 text-amber-400" />
               <h2 className="text-lg font-bold">Pódio de hoje — Top 3</h2>
-              <span className="text-xs text-white/50 ml-2">Pontuação: ligação 1 · atendida 2 · interessado 30 · entrevista 60 · matrícula 300 · WhatsApp 0,1 · LinkedIn 0,1</span>
+              <span className="text-xs text-white/50 ml-2">Pontuação: ligação 1 · atendida 2 · interessado 30 · entrev. marcada 60 · entrev. realizada 100 · matrícula 300 · WhatsApp 0,1 · LinkedIn 0,1</span>
             </div>
             <div className="space-y-3">
               {ranked.length === 0 && <p className="text-white/60 text-sm">Sem dados ainda.</p>}
