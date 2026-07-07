@@ -339,7 +339,7 @@ function AgendaPage() {
       )}
 
       {/* Reagendar */}
-      <RescheduleDialog open={!!resched} lead={resched} onClose={() => setResched(null)} onSave={(d, t) => resched && doReschedule(resched, d, t)} />
+      <RescheduleDialog open={!!resched} lead={resched} onClose={() => setResched(null)} onSave={(d, t, r) => resched && doReschedule(resched, d, t, r)} />
 
       {/* Marcar realizada */}
       <RealizadaDialog open={!!interview} lead={interview} onClose={() => setInterview(null)} onSave={(notes: string, doneDate: string) => { if (interview) void markRealizada(interview, notes, doneDate); }} />
