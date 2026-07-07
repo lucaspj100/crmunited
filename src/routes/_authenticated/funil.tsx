@@ -388,6 +388,83 @@ function InterviewDialog({ lead, onClose, onSaved }: { lead: Lead | null; onClos
   );
 }
 
+function RescheduleInterviewDialog({ lead, onClose, onSaved }: { lead: Lead | null; onClose: () => void; onSaved: () => void }) {
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+  const [reason, setReason] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  if (!lead) return null;
+
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!date) { toast.error("Informe a nova data"); return; }
+    setSaving(true);
+    const previousDate = lead.interview_date;
+    const previousTime = lead.interview_time;
+    const { data: cur } = await supabase.from("leads")
+      .select("interview_reschedule_count, interview_original_date")
+      .eq("id", lead.id).maybeSingle();
+    const nextCount = ((cur?.interview_reschedule_count as number | null) ?? 0) + 1;
+    const updates: any = {
+      interview_date: date,
+      interview_time: time || null,
+      interview_confirmed_at: null,
+      interview_reschedule_count: nextCount,
+    };
+    if (!cur?.interview_original_date && previousDate) {
+      updates.interview_original_date = previousDate;
+    }
+    const { error } = await supabase.from("leads").update(updates).eq("id", lead.id);
+    setSaving(false);
+    if (error) { toast.error(error.message); return; }
+    await supabase.from("tasks").update({ status: "concluida" as any })
+      .eq("lead_id", lead.id).eq("type", "reagendar_entrevista").eq("status", "pendente");
+    await logLeadEvent({
+      leadId: lead.id,
+      type: "interview_rescheduled",
+      description: `Reagendada de ${previousDate ?? "—"}${previousTime ? " " + previousTime.slice(0,5) : ""} para ${date}${time ? " às " + time : ""}${reason ? ` · Motivo: ${reason}` : ""}`,
+      metadata: {
+        previous_date: previousDate,
+        previous_time: previousTime,
+        new_date: date,
+        new_time: time || null,
+        reason: reason || null,
+        reschedule_count: nextCount,
+      },
+    });
+    notifyArena(lead.id, "crm_interview_rescheduled");
+    toast.success("Entrevista reagendada");
+    onSaved();
+    onClose();
+  };
+
+  return (
+    <Dialog open onOpenChange={(o) => { if (!o) onClose(); else { setDate(lead.interview_date ?? ""); setTime(lead.interview_time?.slice(0,5) ?? ""); setReason(""); } }}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>Reagendar entrevista — {lead.name}</DialogTitle></DialogHeader>
+        <form onSubmit={onSubmit} className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div><Label>Nova data *</Label><Input type="date" value={date} onChange={(e) => setDate(e.target.value)} required /></div>
+            <div><Label>Novo horário</Label><Input type="time" value={time} onChange={(e) => setTime(e.target.value)} /></div>
+          </div>
+          <div>
+            <Label>Motivo do reagendamento (opcional)</Label>
+            <Textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={2} placeholder="Ex.: Cliente solicitou nova data" />
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            O lead continua em "Entrevista marcada". A pontuação original é preservada — reagendar não gera novos pontos.
+          </p>
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={onClose}>Cancelar</Button>
+            <Button disabled={saving}>{saving ? "Salvando…" : "Salvar"}</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 const FOLLOWUP_OPTIONS = [
   { value: "none", label: "Não criar follow-up" },
   { value: "7", label: "Em 7 dias" },
