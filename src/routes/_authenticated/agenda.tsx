@@ -419,19 +419,28 @@ function InterviewCard({
   );
 }
 
-function RescheduleDialog({ open, lead, onClose, onSave }: { open: boolean; lead: Lead | null; onClose: () => void; onSave: (date: string, time: string) => void }) {
-  const [date, setDate] = useState(""); const [time, setTime] = useState("");
+function RescheduleDialog({ open, lead, onClose, onSave }: { open: boolean; lead: Lead | null; onClose: () => void; onSave: (date: string, time: string, reason: string) => void }) {
+  const [date, setDate] = useState(""); const [time, setTime] = useState(""); const [reason, setReason] = useState("");
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); else { setDate(lead?.interview_date ?? ""); setTime(lead?.interview_time?.slice(0,5) ?? ""); } }}>
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); else { setDate(lead?.interview_date ?? ""); setTime(lead?.interview_time?.slice(0,5) ?? ""); setReason(""); } }}>
       <DialogContent>
         <DialogHeader><DialogTitle>Reagendar entrevista — {lead?.name}</DialogTitle></DialogHeader>
-        <div className="grid grid-cols-2 gap-3">
-          <div><Label>Nova data</Label><Input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></div>
-          <div><Label>Horário</Label><Input type="time" value={time} onChange={(e) => setTime(e.target.value)} /></div>
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div><Label>Nova data</Label><Input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></div>
+            <div><Label>Horário</Label><Input type="time" value={time} onChange={(e) => setTime(e.target.value)} /></div>
+          </div>
+          <div>
+            <Label>Motivo do reagendamento (opcional)</Label>
+            <Textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={2} placeholder="Ex.: Cliente solicitou nova data" />
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            O reagendamento preserva a pontuação original — não gera novos pontos no placar.
+          </p>
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={onClose}>Cancelar</Button>
-          <Button onClick={() => onSave(date, time)}>Reagendar</Button>
+          <Button onClick={() => onSave(date, time, reason)}>Salvar</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
