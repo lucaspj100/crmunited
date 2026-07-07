@@ -23,7 +23,7 @@ export const Route = createFileRoute("/_authenticated/placar-diario")({
 });
 
 // Pontuação por ação
-const POINTS = { call: 1, answered: 2, interested: 30, interview: 60, enrollment: 300, whatsapp: 0.1, linkedin: 0.1 };
+const POINTS = { call: 1, answered: 2, interested: 30, interview: 60, interview_done: 100, enrollment: 300, whatsapp: 0.1, linkedin: 0.1 };
 // Metas diárias do time (somatório de todos os vendedores)
 const TEAM_GOALS = { ligacoes: 500, entrevistas: 20, matriculas: 5 };
 
@@ -33,6 +33,7 @@ function scoreOf(r: ProductivityRow) {
     r.ligacoes_atendidas * POINTS.answered +
     r.interessados_gerados * POINTS.interested +
     r.entrevistas_marcadas * POINTS.interview +
+    (r.entrevistas_realizadas ?? 0) * POINTS.interview_done +
     r.matriculas * POINTS.enrollment +
     (r.whatsapps_checkout ?? 0) * POINTS.whatsapp +
     (r.linkedins_checkout ?? 0) * POINTS.linkedin
