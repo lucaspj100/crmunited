@@ -287,6 +287,11 @@ function FunilPage() {
                         <Button size="icon" variant="ghost" className="h-7 w-7" title="Agendar atividade" onClick={(e) => { e.stopPropagation(); setQuickTaskLead(l); }}>
                           <CalendarPlus className="h-3.5 w-3.5" />
                         </Button>
+                        {l.status === "entrevista_marcada" && (
+                          <Button size="icon" variant="ghost" className="h-7 w-7 text-orange-700" title="Reagendar entrevista" onClick={(e) => { e.stopPropagation(); setRescheduleLead(l); }}>
+                            <RotateCw className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
                         <Select onValueChange={(v) => moveLead(l, v)}>
                           <SelectTrigger className="h-7 ml-auto w-[100px] text-xs" onClick={(e) => e.stopPropagation()}><SelectValue placeholder="Mover" /></SelectTrigger>
                           <SelectContent>
