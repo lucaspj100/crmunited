@@ -40,6 +40,7 @@ function FunilPage() {
   const qc = useQueryClient();
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [interviewLead, setInterviewLead] = useState<Lead | null>(null);
+  const [rescheduleLead, setRescheduleLead] = useState<Lead | null>(null);
   const [lostLead, setLostLead] = useState<Lead | null>(null);
   const [matriculaLead, setMatriculaLead] = useState<Lead | null>(null);
   const [detailsId, setDetailsId] = useState<string | null>(null);
