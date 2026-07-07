@@ -193,15 +193,42 @@ function AgendaPage() {
     toast.success("No-show registrado · tarefa de reagendar criada");
     refresh();
   }
-  async function doReschedule(l: Lead, date: string, time: string) {
+  async function doReschedule(l: Lead, date: string, time: string, reason: string) {
     if (!date) { toast.error("Informe a nova data"); return; }
-    const { error } = await supabase.from("leads").update({
-      interview_date: date, interview_time: time || null, interview_confirmed_at: null,
-    }).eq("id", l.id);
+    const previousDate = l.interview_date;
+    const previousTime = l.interview_time;
+    // Buscar contagem atual e original_date preservado
+    const { data: cur } = await supabase.from("leads")
+      .select("interview_reschedule_count, interview_original_date")
+      .eq("id", l.id).maybeSingle();
+    const nextCount = ((cur?.interview_reschedule_count as number | null) ?? 0) + 1;
+    const updates: any = {
+      interview_date: date,
+      interview_time: time || null,
+      interview_confirmed_at: null,
+      interview_reschedule_count: nextCount,
+    };
+    // Nunca sobrescreve a data original — garante pontuação única
+    if (!cur?.interview_original_date && previousDate) {
+      updates.interview_original_date = previousDate;
+    }
+    const { error } = await supabase.from("leads").update(updates).eq("id", l.id);
     if (error) { toast.error("Erro ao reagendar"); return; }
     await supabase.from("tasks").update({ status: "concluida" })
       .eq("lead_id", l.id).eq("type", "reagendar_entrevista").eq("status", "pendente");
-    await logLeadEvent({ leadId: l.id, type: "interview_rescheduled", description: `Reagendada para ${date}${time ? " às " + time : ""}` });
+    await logLeadEvent({
+      leadId: l.id,
+      type: "interview_rescheduled",
+      description: `Reagendada de ${previousDate ?? "—"}${previousTime ? " " + previousTime.slice(0,5) : ""} para ${date}${time ? " às " + time : ""}${reason ? ` · Motivo: ${reason}` : ""}`,
+      metadata: {
+        previous_date: previousDate,
+        previous_time: previousTime,
+        new_date: date,
+        new_time: time || null,
+        reason: reason || null,
+        reschedule_count: nextCount,
+      },
+    });
     notifyArena(l.id, "crm_interview_rescheduled");
     toast.success("Entrevista reagendada");
     setResched(null); refresh();
