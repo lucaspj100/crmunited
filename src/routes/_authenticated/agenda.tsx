@@ -162,8 +162,9 @@ function AgendaPage() {
     await logLeadEvent({ leadId: l.id, type: "interview_unconfirmed" });
     refresh();
   }
-  async function markRealizada(l: Lead, notes?: string) {
-    const updates: any = { status: "entrevista_realizada" };
+  async function markRealizada(l: Lead, notes?: string, doneDate?: string) {
+    const effectiveDate = doneDate || l.interview_date || new Date().toISOString().slice(0, 10);
+    const updates: any = { status: "entrevista_realizada", interview_done_date: effectiveDate };
     if (notes && notes.trim()) updates.interview_notes = notes.trim();
     const { error } = await supabase.from("leads").update(updates).eq("id", l.id);
     if (error) { toast.error("Erro ao marcar"); return; }
@@ -171,7 +172,7 @@ function AgendaPage() {
       lead_id: l.id, owner_id: l.owner_id, type: "followup_pos",
       due_date: isoPlus(1), status: "pendente", observation: "Follow-up pós-entrevista",
     });
-    await logLeadEvent({ leadId: l.id, type: "interview_done", description: notes?.trim() || undefined });
+    await logLeadEvent({ leadId: l.id, type: "interview_done", description: notes?.trim() || undefined, metadata: { done_date: effectiveDate } });
     notifyArena(l.id, "crm_interview_done");
     await logLeadEvent({ leadId: l.id, type: "task_created", description: "Follow-up pós-entrevista (amanhã)" });
     toast.success("Entrevista realizada · follow-up criado para amanhã");
