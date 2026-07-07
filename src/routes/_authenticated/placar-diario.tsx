@@ -288,7 +288,8 @@ function PlacarDiario() {
               <Highlight title="Mais ligações" row={top("ligacoes_feitas")} field="ligacoes_feitas" />
               <Highlight title="Mais atendidas" row={top("ligacoes_atendidas")} field="ligacoes_atendidas" />
               <Highlight title="Mais interessados" row={top("interessados_gerados")} field="interessados_gerados" />
-              <Highlight title="Mais entrevistas" row={top("entrevistas_marcadas")} field="entrevistas_marcadas" />
+              <Highlight title="Mais entrevistas marcadas" row={top("entrevistas_marcadas")} field="entrevistas_marcadas" />
+              <Highlight title="Mais entrevistas realizadas" row={top("entrevistas_realizadas")} field="entrevistas_realizadas" />
               <Highlight title="Mais matrículas" row={top("matriculas")} field="matriculas" />
             </div>
           </div>
