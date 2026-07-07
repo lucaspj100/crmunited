@@ -162,8 +162,9 @@ function AgendaPage() {
     await logLeadEvent({ leadId: l.id, type: "interview_unconfirmed" });
     refresh();
   }
-  async function markRealizada(l: Lead, notes?: string) {
-    const updates: any = { status: "entrevista_realizada" };
+  async function markRealizada(l: Lead, notes?: string, doneDate?: string) {
+    const effectiveDate = doneDate || l.interview_date || new Date().toISOString().slice(0, 10);
+    const updates: any = { status: "entrevista_realizada", interview_done_date: effectiveDate };
     if (notes && notes.trim()) updates.interview_notes = notes.trim();
     const { error } = await supabase.from("leads").update(updates).eq("id", l.id);
     if (error) { toast.error("Erro ao marcar"); return; }
@@ -171,7 +172,7 @@ function AgendaPage() {
       lead_id: l.id, owner_id: l.owner_id, type: "followup_pos",
       due_date: isoPlus(1), status: "pendente", observation: "Follow-up pós-entrevista",
     });
-    await logLeadEvent({ leadId: l.id, type: "interview_done", description: notes?.trim() || undefined });
+    await logLeadEvent({ leadId: l.id, type: "interview_done", description: notes?.trim() || undefined, metadata: { done_date: effectiveDate } });
     notifyArena(l.id, "crm_interview_done");
     await logLeadEvent({ leadId: l.id, type: "task_created", description: "Follow-up pós-entrevista (amanhã)" });
     toast.success("Entrevista realizada · follow-up criado para amanhã");
@@ -314,7 +315,7 @@ function AgendaPage() {
       <RescheduleDialog open={!!resched} lead={resched} onClose={() => setResched(null)} onSave={(d, t) => resched && doReschedule(resched, d, t)} />
 
       {/* Marcar realizada */}
-      <RealizadaDialog open={!!interview} lead={interview} onClose={() => setInterview(null)} onSave={(notes) => interview && markRealizada(interview, notes)} />
+      <RealizadaDialog open={!!interview} lead={interview} onClose={() => setInterview(null)} onSave={(notes: string, doneDate: string) => { if (interview) void markRealizada(interview, notes, doneDate); }} />
 
       {/* Matrícula */}
       <EnrolDialog open={!!enrol} lead={enrol} onClose={() => setEnrol(null)} onSave={(a, b, c, d) => enrol && doEnrol(enrol, a, b, c, d)} />
@@ -410,20 +411,34 @@ function RescheduleDialog({ open, lead, onClose, onSave }: { open: boolean; lead
   );
 }
 
-function RealizadaDialog({ open, lead, onClose, onSave }: { open: boolean; lead: Lead | null; onClose: () => void; onSave: (notes: string) => void }) {
+function RealizadaDialog({ open, lead, onClose, onSave }: { open: boolean; lead: Lead | null; onClose: () => void; onSave: (notes: string, doneDate: string) => void }) {
   const [notes, setNotes] = useState("");
+  const [doneDate, setDoneDate] = useState<string>("");
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); else setNotes(lead?.interview_notes ?? ""); }}>
+    <Dialog open={open} onOpenChange={(o) => {
+      if (!o) onClose();
+      else {
+        setNotes(lead?.interview_notes ?? "");
+        setDoneDate(lead?.interview_date ?? new Date().toISOString().slice(0, 10));
+      }
+    }}>
       <DialogContent>
         <DialogHeader><DialogTitle>Entrevista realizada — {lead?.name}</DialogTitle></DialogHeader>
-        <div>
-          <Label>Observações da entrevista (opcional)</Label>
-          <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={4} placeholder="Pontos discutidos, objeções, próximos passos…" />
-          <p className="text-xs text-muted-foreground mt-2">Será criado um follow-up automático para amanhã.</p>
+        <div className="space-y-3">
+          <div>
+            <Label>Data em que a entrevista aconteceu *</Label>
+            <Input type="date" value={doneDate} onChange={(e) => setDoneDate(e.target.value)} />
+            <p className="text-xs text-muted-foreground mt-1">Contabilizada pelo período dessa data (pode ser retroativa).</p>
+          </div>
+          <div>
+            <Label>Observações da entrevista (opcional)</Label>
+            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={4} placeholder="Pontos discutidos, objeções, próximos passos…" />
+            <p className="text-xs text-muted-foreground mt-2">Será criado um follow-up automático para amanhã.</p>
+          </div>
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={onClose}>Cancelar</Button>
-          <Button onClick={() => onSave(notes)}>Marcar como realizada</Button>
+          <Button onClick={() => onSave(notes, doneDate)} disabled={!doneDate}>Marcar como realizada</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
