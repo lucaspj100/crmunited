@@ -411,20 +411,34 @@ function RescheduleDialog({ open, lead, onClose, onSave }: { open: boolean; lead
   );
 }
 
-function RealizadaDialog({ open, lead, onClose, onSave }: { open: boolean; lead: Lead | null; onClose: () => void; onSave: (notes: string) => void }) {
+function RealizadaDialog({ open, lead, onClose, onSave }: { open: boolean; lead: Lead | null; onClose: () => void; onSave: (notes: string, doneDate: string) => void }) {
   const [notes, setNotes] = useState("");
+  const [doneDate, setDoneDate] = useState<string>("");
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); else setNotes(lead?.interview_notes ?? ""); }}>
+    <Dialog open={open} onOpenChange={(o) => {
+      if (!o) onClose();
+      else {
+        setNotes(lead?.interview_notes ?? "");
+        setDoneDate(lead?.interview_date ?? new Date().toISOString().slice(0, 10));
+      }
+    }}>
       <DialogContent>
         <DialogHeader><DialogTitle>Entrevista realizada — {lead?.name}</DialogTitle></DialogHeader>
-        <div>
-          <Label>Observações da entrevista (opcional)</Label>
-          <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={4} placeholder="Pontos discutidos, objeções, próximos passos…" />
-          <p className="text-xs text-muted-foreground mt-2">Será criado um follow-up automático para amanhã.</p>
+        <div className="space-y-3">
+          <div>
+            <Label>Data em que a entrevista aconteceu *</Label>
+            <Input type="date" value={doneDate} onChange={(e) => setDoneDate(e.target.value)} />
+            <p className="text-xs text-muted-foreground mt-1">Contabilizada pelo período dessa data (pode ser retroativa).</p>
+          </div>
+          <div>
+            <Label>Observações da entrevista (opcional)</Label>
+            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={4} placeholder="Pontos discutidos, objeções, próximos passos…" />
+            <p className="text-xs text-muted-foreground mt-2">Será criado um follow-up automático para amanhã.</p>
+          </div>
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={onClose}>Cancelar</Button>
-          <Button onClick={() => onSave(notes)}>Marcar como realizada</Button>
+          <Button onClick={() => onSave(notes, doneDate)} disabled={!doneDate}>Marcar como realizada</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
