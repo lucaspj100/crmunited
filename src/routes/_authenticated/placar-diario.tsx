@@ -318,7 +318,7 @@ function PlacarDiario() {
 function AdmDiagnostic({
   totals, rows,
 }: {
-  totals: { ligacoes: number; atendidas: number; interessados: number; entrevistas: number; matriculas: number };
+  totals: { ligacoes: number; atendidas: number; interessados: number; entrevistas: number; realizadas: number; matriculas: number; perdidos: number };
   rows: ProductivityRow[];
 }) {
   const pct = (n: number, d: number) => (d > 0 ? `${((n / d) * 100).toFixed(1)}%` : "—");
