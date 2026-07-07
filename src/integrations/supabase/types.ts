@@ -761,6 +761,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      debug_entrevistas_marcadas: {
+        Args: { _end: string; _start: string; _vendedor_id?: string }
+        Returns: {
+          interview_date: string
+          lead_id: string
+          nome: string
+          owner_id: string
+          status: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
