@@ -315,7 +315,7 @@ function AgendaPage() {
       <RescheduleDialog open={!!resched} lead={resched} onClose={() => setResched(null)} onSave={(d, t) => resched && doReschedule(resched, d, t)} />
 
       {/* Marcar realizada */}
-      <RealizadaDialog open={!!interview} lead={interview} onClose={() => setInterview(null)} onSave={(notes) => interview && markRealizada(interview, notes)} />
+      <RealizadaDialog open={!!interview} lead={interview} onClose={() => setInterview(null)} onSave={(notes, doneDate) => interview && markRealizada(interview, notes, doneDate)} />
 
       {/* Matrícula */}
       <EnrolDialog open={!!enrol} lead={enrol} onClose={() => setEnrol(null)} onSave={(a, b, c, d) => enrol && doEnrol(enrol, a, b, c, d)} />
