@@ -193,15 +193,42 @@ function AgendaPage() {
     toast.success("No-show registrado · tarefa de reagendar criada");
     refresh();
   }
-  async function doReschedule(l: Lead, date: string, time: string) {
+  async function doReschedule(l: Lead, date: string, time: string, reason: string) {
     if (!date) { toast.error("Informe a nova data"); return; }
-    const { error } = await supabase.from("leads").update({
-      interview_date: date, interview_time: time || null, interview_confirmed_at: null,
-    }).eq("id", l.id);
+    const previousDate = l.interview_date;
+    const previousTime = l.interview_time;
+    // Buscar contagem atual e original_date preservado
+    const { data: cur } = await supabase.from("leads")
+      .select("interview_reschedule_count, interview_original_date")
+      .eq("id", l.id).maybeSingle();
+    const nextCount = ((cur?.interview_reschedule_count as number | null) ?? 0) + 1;
+    const updates: any = {
+      interview_date: date,
+      interview_time: time || null,
+      interview_confirmed_at: null,
+      interview_reschedule_count: nextCount,
+    };
+    // Nunca sobrescreve a data original — garante pontuação única
+    if (!cur?.interview_original_date && previousDate) {
+      updates.interview_original_date = previousDate;
+    }
+    const { error } = await supabase.from("leads").update(updates).eq("id", l.id);
     if (error) { toast.error("Erro ao reagendar"); return; }
     await supabase.from("tasks").update({ status: "concluida" })
       .eq("lead_id", l.id).eq("type", "reagendar_entrevista").eq("status", "pendente");
-    await logLeadEvent({ leadId: l.id, type: "interview_rescheduled", description: `Reagendada para ${date}${time ? " às " + time : ""}` });
+    await logLeadEvent({
+      leadId: l.id,
+      type: "interview_rescheduled",
+      description: `Reagendada de ${previousDate ?? "—"}${previousTime ? " " + previousTime.slice(0,5) : ""} para ${date}${time ? " às " + time : ""}${reason ? ` · Motivo: ${reason}` : ""}`,
+      metadata: {
+        previous_date: previousDate,
+        previous_time: previousTime,
+        new_date: date,
+        new_time: time || null,
+        reason: reason || null,
+        reschedule_count: nextCount,
+      },
+    });
     notifyArena(l.id, "crm_interview_rescheduled");
     toast.success("Entrevista reagendada");
     setResched(null); refresh();
@@ -312,7 +339,7 @@ function AgendaPage() {
       )}
 
       {/* Reagendar */}
-      <RescheduleDialog open={!!resched} lead={resched} onClose={() => setResched(null)} onSave={(d, t) => resched && doReschedule(resched, d, t)} />
+      <RescheduleDialog open={!!resched} lead={resched} onClose={() => setResched(null)} onSave={(d, t, r) => resched && doReschedule(resched, d, t, r)} />
 
       {/* Marcar realizada */}
       <RealizadaDialog open={!!interview} lead={interview} onClose={() => setInterview(null)} onSave={(notes: string, doneDate: string) => { if (interview) void markRealizada(interview, notes, doneDate); }} />
@@ -392,19 +419,28 @@ function InterviewCard({
   );
 }
 
-function RescheduleDialog({ open, lead, onClose, onSave }: { open: boolean; lead: Lead | null; onClose: () => void; onSave: (date: string, time: string) => void }) {
-  const [date, setDate] = useState(""); const [time, setTime] = useState("");
+function RescheduleDialog({ open, lead, onClose, onSave }: { open: boolean; lead: Lead | null; onClose: () => void; onSave: (date: string, time: string, reason: string) => void }) {
+  const [date, setDate] = useState(""); const [time, setTime] = useState(""); const [reason, setReason] = useState("");
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); else { setDate(lead?.interview_date ?? ""); setTime(lead?.interview_time?.slice(0,5) ?? ""); } }}>
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); else { setDate(lead?.interview_date ?? ""); setTime(lead?.interview_time?.slice(0,5) ?? ""); setReason(""); } }}>
       <DialogContent>
         <DialogHeader><DialogTitle>Reagendar entrevista — {lead?.name}</DialogTitle></DialogHeader>
-        <div className="grid grid-cols-2 gap-3">
-          <div><Label>Nova data</Label><Input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></div>
-          <div><Label>Horário</Label><Input type="time" value={time} onChange={(e) => setTime(e.target.value)} /></div>
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div><Label>Nova data</Label><Input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></div>
+            <div><Label>Horário</Label><Input type="time" value={time} onChange={(e) => setTime(e.target.value)} /></div>
+          </div>
+          <div>
+            <Label>Motivo do reagendamento (opcional)</Label>
+            <Textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={2} placeholder="Ex.: Cliente solicitou nova data" />
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            O reagendamento preserva a pontuação original — não gera novos pontos no placar.
+          </p>
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={onClose}>Cancelar</Button>
-          <Button onClick={() => onSave(date, time)}>Reagendar</Button>
+          <Button onClick={() => onSave(date, time, reason)}>Salvar</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

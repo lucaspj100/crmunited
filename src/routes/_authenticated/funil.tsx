@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { LEAD_STATUSES, LOST_REASONS, RESCUE_OPTIONS, waLink } from "@/lib/constants";
-import { Kanban, MessageCircle, Linkedin, User, FileSpreadsheet, CalendarClock, CalendarPlus, AlertCircle, Clock } from "lucide-react";
+import { Kanban, MessageCircle, Linkedin, User, FileSpreadsheet, CalendarClock, CalendarPlus, AlertCircle, Clock, RotateCw } from "lucide-react";
 import { leadTemperature, TEMPERATURE_META, daysAgoLabel } from "@/lib/lead-temperature";
 import { exportRowsToXlsx } from "@/lib/xlsx-export";
 import { NewLeadDialog } from "@/components/NewLeadDialog";
@@ -40,6 +40,7 @@ function FunilPage() {
   const qc = useQueryClient();
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [interviewLead, setInterviewLead] = useState<Lead | null>(null);
+  const [rescheduleLead, setRescheduleLead] = useState<Lead | null>(null);
   const [lostLead, setLostLead] = useState<Lead | null>(null);
   const [matriculaLead, setMatriculaLead] = useState<Lead | null>(null);
   const [detailsId, setDetailsId] = useState<string | null>(null);
@@ -286,6 +287,11 @@ function FunilPage() {
                         <Button size="icon" variant="ghost" className="h-7 w-7" title="Agendar atividade" onClick={(e) => { e.stopPropagation(); setQuickTaskLead(l); }}>
                           <CalendarPlus className="h-3.5 w-3.5" />
                         </Button>
+                        {l.status === "entrevista_marcada" && (
+                          <Button size="icon" variant="ghost" className="h-7 w-7 text-orange-700" title="Reagendar entrevista" onClick={(e) => { e.stopPropagation(); setRescheduleLead(l); }}>
+                            <RotateCw className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
                         <Select onValueChange={(v) => moveLead(l, v)}>
                           <SelectTrigger className="h-7 ml-auto w-[100px] text-xs" onClick={(e) => e.stopPropagation()}><SelectValue placeholder="Mover" /></SelectTrigger>
                           <SelectContent>
@@ -305,6 +311,7 @@ function FunilPage() {
       </div>
 
       <InterviewDialog lead={interviewLead} onClose={() => setInterviewLead(null)} onSaved={() => qc.invalidateQueries()} />
+      <RescheduleInterviewDialog lead={rescheduleLead} onClose={() => setRescheduleLead(null)} onSaved={() => qc.invalidateQueries()} />
       <LostDialog lead={lostLead} onClose={() => setLostLead(null)} onSaved={() => qc.invalidateQueries()} />
       <MatriculaDialog lead={matriculaLead} onClose={() => setMatriculaLead(null)} onSaved={() => qc.invalidateQueries()} />
       <CancelEnrollmentDialog
@@ -337,12 +344,17 @@ function InterviewDialog({ lead, onClose, onSaved }: { lead: Lead | null; onClos
     const date = String(fd.get("date"));
     const time = String(fd.get("time") || "");
     const notes = String(fd.get("notes") || "");
-    const { error } = await supabase.from("leads").update({
+    const { data: cur } = await supabase.from("leads")
+      .select("interview_original_date").eq("id", lead.id).maybeSingle();
+    const updates: any = {
       status: "entrevista_marcada",
       interview_date: date,
       interview_time: time || null,
       interview_notes: notes || null,
-    }).eq("id", lead.id);
+    };
+    // Só define a data original na PRIMEIRA marcação (pontuação única)
+    if (!cur?.interview_original_date) updates.interview_original_date = date;
+    const { error } = await supabase.from("leads").update(updates).eq("id", lead.id);
     if (!error) {
       // Entrevista marcada é compromisso agendado — remove tarefas operacionais pendentes
       // do lead (primeiro contato, follow-ups, "trabalhar agora" etc.) da fila do dia.
@@ -370,6 +382,83 @@ function InterviewDialog({ lead, onClose, onSaved }: { lead: Lead | null; onClos
           </div>
           <div><Label>Observação</Label><Textarea name="notes" rows={3} /></div>
           <DialogFooter><Button type="button" variant="ghost" onClick={onClose}>Cancelar</Button><Button disabled={saving}>{saving ? "Salvando…" : "Marcar entrevista"}</Button></DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function RescheduleInterviewDialog({ lead, onClose, onSaved }: { lead: Lead | null; onClose: () => void; onSaved: () => void }) {
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+  const [reason, setReason] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  if (!lead) return null;
+
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!date) { toast.error("Informe a nova data"); return; }
+    setSaving(true);
+    const previousDate = lead.interview_date;
+    const previousTime = lead.interview_time;
+    const { data: cur } = await supabase.from("leads")
+      .select("interview_reschedule_count, interview_original_date")
+      .eq("id", lead.id).maybeSingle();
+    const nextCount = ((cur?.interview_reschedule_count as number | null) ?? 0) + 1;
+    const updates: any = {
+      interview_date: date,
+      interview_time: time || null,
+      interview_confirmed_at: null,
+      interview_reschedule_count: nextCount,
+    };
+    if (!cur?.interview_original_date && previousDate) {
+      updates.interview_original_date = previousDate;
+    }
+    const { error } = await supabase.from("leads").update(updates).eq("id", lead.id);
+    setSaving(false);
+    if (error) { toast.error(error.message); return; }
+    await supabase.from("tasks").update({ status: "concluida" as any })
+      .eq("lead_id", lead.id).eq("type", "reagendar_entrevista").eq("status", "pendente");
+    await logLeadEvent({
+      leadId: lead.id,
+      type: "interview_rescheduled",
+      description: `Reagendada de ${previousDate ?? "—"}${previousTime ? " " + previousTime.slice(0,5) : ""} para ${date}${time ? " às " + time : ""}${reason ? ` · Motivo: ${reason}` : ""}`,
+      metadata: {
+        previous_date: previousDate,
+        previous_time: previousTime,
+        new_date: date,
+        new_time: time || null,
+        reason: reason || null,
+        reschedule_count: nextCount,
+      },
+    });
+    notifyArena(lead.id, "crm_interview_rescheduled");
+    toast.success("Entrevista reagendada");
+    onSaved();
+    onClose();
+  };
+
+  return (
+    <Dialog open onOpenChange={(o) => { if (!o) onClose(); else { setDate(lead.interview_date ?? ""); setTime(lead.interview_time?.slice(0,5) ?? ""); setReason(""); } }}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>Reagendar entrevista — {lead.name}</DialogTitle></DialogHeader>
+        <form onSubmit={onSubmit} className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div><Label>Nova data *</Label><Input type="date" value={date} onChange={(e) => setDate(e.target.value)} required /></div>
+            <div><Label>Novo horário</Label><Input type="time" value={time} onChange={(e) => setTime(e.target.value)} /></div>
+          </div>
+          <div>
+            <Label>Motivo do reagendamento (opcional)</Label>
+            <Textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={2} placeholder="Ex.: Cliente solicitou nova data" />
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            O lead continua em "Entrevista marcada". A pontuação original é preservada — reagendar não gera novos pontos.
+          </p>
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={onClose}>Cancelar</Button>
+            <Button disabled={saving}>{saving ? "Salvando…" : "Salvar"}</Button>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>

@@ -264,6 +264,8 @@ export type Database = {
           interview_date: string | null
           interview_done_date: string | null
           interview_notes: string | null
+          interview_original_date: string | null
+          interview_reschedule_count: number
           interview_time: string | null
           last_contact_at: string | null
           last_source: string
@@ -300,6 +302,8 @@ export type Database = {
           interview_date?: string | null
           interview_done_date?: string | null
           interview_notes?: string | null
+          interview_original_date?: string | null
+          interview_reschedule_count?: number
           interview_time?: string | null
           last_contact_at?: string | null
           last_source?: string
@@ -336,6 +340,8 @@ export type Database = {
           interview_date?: string | null
           interview_done_date?: string | null
           interview_notes?: string | null
+          interview_original_date?: string | null
+          interview_reschedule_count?: number
           interview_time?: string | null
           last_contact_at?: string | null
           last_source?: string
