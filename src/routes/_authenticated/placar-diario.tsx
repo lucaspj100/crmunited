@@ -241,7 +241,7 @@ function PlacarDiario() {
             <div className="flex items-center gap-2 mb-4">
               <Crown className="h-5 w-5 text-amber-400" />
               <h2 className="text-lg font-bold">Pódio de hoje — Top 3</h2>
-              <span className="text-xs text-white/50 ml-2">Pontuação: ligação 1 · atendida 2 · interessado 30 · entrevista 60 · matrícula 300 · WhatsApp 0,1 · LinkedIn 0,1</span>
+              <span className="text-xs text-white/50 ml-2">Pontuação: ligação 1 · atendida 2 · interessado 30 · entrev. marcada 60 · entrev. realizada 100 · matrícula 300 · WhatsApp 0,1 · LinkedIn 0,1</span>
             </div>
             <div className="space-y-3">
               {ranked.length === 0 && <p className="text-white/60 text-sm">Sem dados ainda.</p>}
