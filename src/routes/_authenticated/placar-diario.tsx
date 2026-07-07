@@ -262,7 +262,9 @@ function PlacarDiario() {
                         <span>✅ {r.ligacoes_atendidas}</span>
                         <span>✨ {r.interessados_gerados}</span>
                         <span>📅 {r.entrevistas_marcadas}</span>
+                        <span>🎯 {r.entrevistas_realizadas}</span>
                         <span>🎓 {r.matriculas}</span>
+                        <span>❌ {r.perdidos}</span>
                       </div>
                     </div>
                     <div className="text-right">
