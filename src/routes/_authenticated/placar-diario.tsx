@@ -122,9 +122,11 @@ function PlacarDiario() {
       atendidas: acc.atendidas + r.ligacoes_atendidas,
       interessados: acc.interessados + r.interessados_gerados,
       entrevistas: acc.entrevistas + r.entrevistas_marcadas,
+      realizadas: acc.realizadas + (r.entrevistas_realizadas ?? 0),
       matriculas: acc.matriculas + r.matriculas,
+      perdidos: acc.perdidos + (r.perdidos ?? 0),
     }),
-    { ligacoes: 0, atendidas: 0, interessados: 0, entrevistas: 0, matriculas: 0 },
+    { ligacoes: 0, atendidas: 0, interessados: 0, entrevistas: 0, realizadas: 0, matriculas: 0, perdidos: 0 },
   ), [rows]);
 
   const top = (key: keyof ProductivityRow) => {
@@ -262,7 +264,9 @@ function PlacarDiario() {
                         <span>✅ {r.ligacoes_atendidas}</span>
                         <span>✨ {r.interessados_gerados}</span>
                         <span>📅 {r.entrevistas_marcadas}</span>
+                        <span>🎯 {r.entrevistas_realizadas}</span>
                         <span>🎓 {r.matriculas}</span>
+                        <span>❌ {r.perdidos}</span>
                       </div>
                     </div>
                     <div className="text-right">
@@ -286,7 +290,8 @@ function PlacarDiario() {
               <Highlight title="Mais ligações" row={top("ligacoes_feitas")} field="ligacoes_feitas" />
               <Highlight title="Mais atendidas" row={top("ligacoes_atendidas")} field="ligacoes_atendidas" />
               <Highlight title="Mais interessados" row={top("interessados_gerados")} field="interessados_gerados" />
-              <Highlight title="Mais entrevistas" row={top("entrevistas_marcadas")} field="entrevistas_marcadas" />
+              <Highlight title="Mais entrevistas marcadas" row={top("entrevistas_marcadas")} field="entrevistas_marcadas" />
+              <Highlight title="Mais entrevistas realizadas" row={top("entrevistas_realizadas")} field="entrevistas_realizadas" />
               <Highlight title="Mais matrículas" row={top("matriculas")} field="matriculas" />
             </div>
           </div>
@@ -313,7 +318,7 @@ function PlacarDiario() {
 function AdmDiagnostic({
   totals, rows,
 }: {
-  totals: { ligacoes: number; atendidas: number; interessados: number; entrevistas: number; matriculas: number };
+  totals: { ligacoes: number; atendidas: number; interessados: number; entrevistas: number; realizadas: number; matriculas: number; perdidos: number };
   rows: ProductivityRow[];
 }) {
   const pct = (n: number, d: number) => (d > 0 ? `${((n / d) * 100).toFixed(1)}%` : "—");

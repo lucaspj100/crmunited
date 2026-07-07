@@ -11,7 +11,9 @@ export type ProductivityRow = {
   ligacoes_atendidas: number;
   interessados_gerados: number;
   entrevistas_marcadas: number;
+  entrevistas_realizadas: number;
   matriculas: number;
+  perdidos: number;
   whatsapps_checkout: number;
   linkedins_checkout: number;
   checkout_today_done: boolean;
