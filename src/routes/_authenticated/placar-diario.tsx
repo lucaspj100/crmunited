@@ -305,6 +305,7 @@ function PlacarDiario() {
 
         {/* Diagnóstico Comercial — apenas ADM/Franqueado */}
         {isAdmin && <AdmDiagnostic totals={totals} rows={rows} />}
+        {isAdmin && <DebugEntrevistasMarcadas start={range.start} end={range.end} rows={rows} />}
       </div>
 
       <SellerDetailDialog
@@ -383,6 +384,91 @@ function KpiCard({ label, value, hint }: { label: string; value: string; hint: s
       <div className="text-[11px] uppercase tracking-wider text-white/60">{label}</div>
       <div className="mt-1 text-2xl md:text-3xl font-black tabular-nums">{value}</div>
       <div className="text-[10px] text-white/40">{hint}</div>
+    </div>
+  );
+}
+
+function DebugEntrevistasMarcadas({ start, end, rows }: { start: string; end: string; rows: ProductivityRow[] }) {
+  const [open, setOpen] = useState(false);
+  const { data, isLoading, refetch, isFetching } = useQuery({
+    enabled: open,
+    queryKey: ["debug_entrev_marcadas", start, end],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("debug_entrevistas_marcadas" as never, {
+        _start: start, _end: end, _vendedor_id: null,
+      } as never);
+      if (error) throw error;
+      return (data ?? []) as Array<{ lead_id: string; owner_id: string; nome: string; interview_date: string; status: string }>;
+    },
+  });
+
+  const nameById = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const r of rows) m.set(r.vendedor_id, r.nome);
+    return m;
+  }, [rows]);
+
+  const byOwner = useMemo(() => {
+    const g = new Map<string, typeof data extends undefined ? never : NonNullable<typeof data>>();
+    for (const l of data ?? []) {
+      const arr = (g.get(l.owner_id) as any) ?? [];
+      arr.push(l);
+      g.set(l.owner_id, arr as any);
+    }
+    return g;
+  }, [data]);
+
+  return (
+    <div className="rounded-2xl border border-sky-400/30 bg-sky-500/5 p-5 space-y-3">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div>
+          <div className="text-lg font-bold">🐛 Debug — Entrevistas Marcadas</div>
+          <div className="text-xs text-white/60">Lista os leads considerados na contagem, por vendedor, no período {start} → {end}.</div>
+        </div>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => { setOpen(true); void refetch(); }}>
+            {open ? (isFetching ? "Recarregando…" : "Recarregar") : "Carregar"}
+          </Button>
+          {open && <Button size="sm" variant="ghost" onClick={() => setOpen(false)}>Ocultar</Button>}
+        </div>
+      </div>
+
+      {open && (
+        isLoading ? (
+          <div className="text-sm text-white/60">Carregando…</div>
+        ) : (data?.length ?? 0) === 0 ? (
+          <div className="text-sm text-white/60">Nenhum lead encontrado no período.</div>
+        ) : (
+          <div className="space-y-3">
+            <div className="text-sm">Total no período: <b>{data!.length}</b> lead(s)</div>
+            {Array.from(byOwner.entries()).map(([owner, leads]) => {
+              const list = leads as Array<{ lead_id: string; nome: string; interview_date: string; status: string }>;
+              return (
+                <div key={owner} className="rounded-lg border border-white/10 bg-white/5 p-3">
+                  <div className="font-semibold mb-2">{nameById.get(owner) ?? owner} — <span className="tabular-nums">{list.length}</span></div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead className="text-white/50">
+                        <tr><th className="text-left py-1 pr-3">Lead</th><th className="text-left py-1 pr-3">Data entrevista</th><th className="text-left py-1 pr-3">Status</th><th className="text-left py-1">Lead ID</th></tr>
+                      </thead>
+                      <tbody>
+                        {list.map((l) => (
+                          <tr key={l.lead_id} className="border-t border-white/5">
+                            <td className="py-1 pr-3">{l.nome}</td>
+                            <td className="py-1 pr-3 tabular-nums">{l.interview_date}</td>
+                            <td className="py-1 pr-3">{l.status}</td>
+                            <td className="py-1 font-mono text-white/60">{l.lead_id}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )
+      )}
     </div>
   );
 }
