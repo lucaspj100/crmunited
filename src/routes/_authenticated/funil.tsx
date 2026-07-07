@@ -311,6 +311,7 @@ function FunilPage() {
       </div>
 
       <InterviewDialog lead={interviewLead} onClose={() => setInterviewLead(null)} onSaved={() => qc.invalidateQueries()} />
+      <RescheduleInterviewDialog lead={rescheduleLead} onClose={() => setRescheduleLead(null)} onSaved={() => qc.invalidateQueries()} />
       <LostDialog lead={lostLead} onClose={() => setLostLead(null)} onSaved={() => qc.invalidateQueries()} />
       <MatriculaDialog lead={matriculaLead} onClose={() => setMatriculaLead(null)} onSaved={() => qc.invalidateQueries()} />
       <CancelEnrollmentDialog
