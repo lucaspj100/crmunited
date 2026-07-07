@@ -122,9 +122,11 @@ function PlacarDiario() {
       atendidas: acc.atendidas + r.ligacoes_atendidas,
       interessados: acc.interessados + r.interessados_gerados,
       entrevistas: acc.entrevistas + r.entrevistas_marcadas,
+      realizadas: acc.realizadas + (r.entrevistas_realizadas ?? 0),
       matriculas: acc.matriculas + r.matriculas,
+      perdidos: acc.perdidos + (r.perdidos ?? 0),
     }),
-    { ligacoes: 0, atendidas: 0, interessados: 0, entrevistas: 0, matriculas: 0 },
+    { ligacoes: 0, atendidas: 0, interessados: 0, entrevistas: 0, realizadas: 0, matriculas: 0, perdidos: 0 },
   ), [rows]);
 
   const top = (key: keyof ProductivityRow) => {
