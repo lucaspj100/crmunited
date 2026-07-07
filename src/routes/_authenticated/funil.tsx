@@ -338,12 +338,17 @@ function InterviewDialog({ lead, onClose, onSaved }: { lead: Lead | null; onClos
     const date = String(fd.get("date"));
     const time = String(fd.get("time") || "");
     const notes = String(fd.get("notes") || "");
-    const { error } = await supabase.from("leads").update({
+    const { data: cur } = await supabase.from("leads")
+      .select("interview_original_date").eq("id", lead.id).maybeSingle();
+    const updates: any = {
       status: "entrevista_marcada",
       interview_date: date,
       interview_time: time || null,
       interview_notes: notes || null,
-    }).eq("id", lead.id);
+    };
+    // Só define a data original na PRIMEIRA marcação (pontuação única)
+    if (!cur?.interview_original_date) updates.interview_original_date = date;
+    const { error } = await supabase.from("leads").update(updates).eq("id", lead.id);
     if (!error) {
       // Entrevista marcada é compromisso agendado — remove tarefas operacionais pendentes
       // do lead (primeiro contato, follow-ups, "trabalhar agora" etc.) da fila do dia.
