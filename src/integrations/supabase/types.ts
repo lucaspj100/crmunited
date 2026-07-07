@@ -262,6 +262,7 @@ export type Database = {
           in_rescue: boolean
           interview_confirmed_at: string | null
           interview_date: string | null
+          interview_done_date: string | null
           interview_notes: string | null
           interview_time: string | null
           last_contact_at: string | null
@@ -297,6 +298,7 @@ export type Database = {
           in_rescue?: boolean
           interview_confirmed_at?: string | null
           interview_date?: string | null
+          interview_done_date?: string | null
           interview_notes?: string | null
           interview_time?: string | null
           last_contact_at?: string | null
@@ -332,6 +334,7 @@ export type Database = {
           in_rescue?: boolean
           interview_confirmed_at?: string | null
           interview_date?: string | null
+          interview_done_date?: string | null
           interview_notes?: string | null
           interview_time?: string | null
           last_contact_at?: string | null
