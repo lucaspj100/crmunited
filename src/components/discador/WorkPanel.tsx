@@ -285,6 +285,26 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     setResultOpen(true);
   };
 
+  const addToWhatsapp = async () => {
+    if (!contact || !user) return;
+    try {
+      const res = await addToWhatsappList({
+        prospectContactId: contact.id,
+        ownerId: user.id,
+        reason: "manual",
+      });
+      if (res.created) {
+        toast.success("Adicionado à Lista de WhatsApp");
+      } else {
+        toast.message("Este lead já está na Lista de WhatsApp.");
+      }
+      qc.invalidateQueries({ queryKey: ["whatsapp_list"] });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao adicionar à lista");
+    }
+  };
+
+
 
   const onResultSaved = async (_goNext: boolean) => {
     qc.invalidateQueries({ queryKey: ["prospect_counts"] });
