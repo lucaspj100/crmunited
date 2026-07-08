@@ -42,6 +42,7 @@ function rhythmMessage(calls: number, goal: number): string {
 type DailyStats = {
   calls: number;
   whats: number;
+  whatsStarted: number;
   worked: number;
   interested: number;
   interviews: number;
