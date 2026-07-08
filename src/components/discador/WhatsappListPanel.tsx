@@ -522,7 +522,23 @@ export function WhatsappListPanel() {
     },
     hasActiveTemplate,
     onNoTemplate: () => setShowNoTemplateDialog(true),
+    bulkMode,
   };
+
+  const openNextAwaiting = async () => {
+    if (!hasActiveTemplate) {
+      setShowNoTemplateDialog(true);
+      return;
+    }
+    const next = filtered.find((r) => r.status === "aguardando");
+    if (!next) {
+      toast.info("Nenhum contato aguardando WhatsApp.");
+      return;
+    }
+    await openWhatsapp(next);
+  };
+  const awaitingCount = summary.aguardando;
+
 
 
   return (
