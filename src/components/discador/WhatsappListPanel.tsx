@@ -1,5 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
+
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -129,6 +131,9 @@ export function WhatsappListPanel() {
   >({});
   const [viewMessageRow, setViewMessageRow] = useState<Row | null>(null);
   const [followupRow, setFollowupRow] = useState<Row | null>(null);
+  const [showNoTemplateDialog, setShowNoTemplateDialog] = useState(false);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
+
 
   const { data: sellers = [] } = useQuery({
     enabled: isAdmin,
@@ -278,12 +283,15 @@ export function WhatsappListPanel() {
     }
   };
 
+  const hasActiveTemplate = templates.length > 0;
+
   const openWhatsapp = async (row: Row) => {
     if (!row.contact) return;
-    if (templates.length === 0) {
-      toast.error("Nenhum modelo ativo. Peça ao ADM para cadastrar em Configurações.");
+    if (!hasActiveTemplate) {
+      setShowNoTemplateDialog(true);
       return;
     }
+
     const built = buildMessageFor(row) ?? buildMessageFor(row, true);
     const norm = normalizePhoneForWhatsapp(row.contact.telefone_normalizado || row.contact.telefone_original);
     if (!norm.ok) {
@@ -441,6 +449,10 @@ export function WhatsappListPanel() {
   // -------- Sequência --------
   const rowsById = useMemo(() => new Map(filtered.map((r) => [r.id, r])), [filtered]);
   const startSequence = async () => {
+    if (!hasActiveTemplate) {
+      setShowNoTemplateDialog(true);
+      return;
+    }
     const ids = selectedInView;
     if (ids.length === 0) {
       toast.info("Selecione contatos para iniciar a sequência.");
@@ -451,6 +463,7 @@ export function WhatsappListPanel() {
     const first = rowsById.get(ids[0]);
     if (first) await openWhatsapp(first);
   };
+
   const nextInSequence = async () => {
     const nextIdx = sequenceIndex + 1;
     if (nextIdx >= sequence.length) {
@@ -505,7 +518,10 @@ export function WhatsappListPanel() {
       buildMessageFor(r);
       setViewMessageRow(r);
     },
+    hasActiveTemplate,
+    onNoTemplate: () => setShowNoTemplateDialog(true),
   };
+
 
   return (
     <div className="space-y-4 pb-24">
@@ -516,19 +532,76 @@ export function WhatsappListPanel() {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
-        <SummaryCard label="Na lista" value={summary.total} />
-        <SummaryCard label="Aguardando" value={summary.aguardando} />
-        <SummaryCard label="Iniciados hoje" value={summary.iniciadosHoje} />
-        <SummaryCard label="Respondidos hoje" value={summary.respondidosHoje} />
-        <SummaryCard label="Sem resposta" value={summary.semResposta} />
-        <SummaryCard label="Inválidos" value={summary.invalidos} />
+
+      {!hasActiveTemplate && (
+        <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm">
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
+            <div className="min-w-0 flex-1">
+              <div className="font-medium text-destructive">Nenhum modelo de mensagem ativo</div>
+              <div className="text-xs text-muted-foreground mt-0.5">
+                {isAdmin
+                  ? "Cadastre ou ative um modelo em Configurações > Modelos de WhatsApp para liberar o envio."
+                  : "Peça ao administrador para cadastrar ou ativar um modelo de mensagem."}
+              </div>
+              {isAdmin && (
+                <Link
+                  to="/discador"
+                  search={{ tab: "config" }}
+                  className="mt-2 inline-flex items-center gap-1 rounded-md bg-destructive px-2.5 py-1 text-xs font-medium text-destructive-foreground hover:bg-destructive/90"
+                >
+                  Cadastrar modelo agora
+                </Link>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cards de resumo — carrossel horizontal no mobile */}
+      <div className="-mx-1 overflow-x-auto md:mx-0 md:overflow-visible">
+        <div className="flex gap-2 px-1 md:grid md:grid-cols-6 md:px-0">
+          <SummaryCard label="Na lista" value={summary.total} />
+          <SummaryCard label="Aguardando" value={summary.aguardando} />
+          <SummaryCard label="Iniciados hoje" value={summary.iniciadosHoje} />
+          <SummaryCard label="Respondidos hoje" value={summary.respondidosHoje} />
+          <SummaryCard label="Sem resposta" value={summary.semResposta} />
+          <SummaryCard label="Inválidos" value={summary.invalidos} />
+        </div>
       </div>
 
       <Card>
         <CardContent className="p-3 space-y-3">
-          <div className="grid gap-2 md:grid-cols-4">
-            <div>
+          {/* Linha rápida mobile: busca + status + botão Filtros */}
+          <div className="grid gap-2 md:hidden grid-cols-[minmax(0,1fr)_auto]">
+            <Input
+              placeholder="Buscar nome, empresa ou telefone…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="h-9"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-9 shrink-0"
+              onClick={() => setShowMobileFilters((v) => !v)}
+            >
+              Filtros
+            </Button>
+            <Select value={statusFilter} onValueChange={setStatusFilter} disabled={onlyAwaiting}>
+              <SelectTrigger className="col-span-2 h-9"><SelectValue placeholder="Status" /></SelectTrigger>
+              <SelectContent>
+                {STATUS_FILTER_OPTIONS.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Filtros completos: sempre no desktop, expansível no mobile */}
+          <div className={`${showMobileFilters ? "grid" : "hidden md:grid"} gap-2 md:grid-cols-4`}>
+            <div className="hidden md:block">
               <Label className="text-xs">Status</Label>
               <Select value={statusFilter} onValueChange={setStatusFilter} disabled={onlyAwaiting}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
@@ -576,7 +649,7 @@ export function WhatsappListPanel() {
                 </Select>
               </div>
             )}
-            <div>
+            <div className="hidden md:block">
               <Label className="text-xs">Busca</Label>
               <Input
                 placeholder="Nome, empresa ou telefone…"
@@ -584,9 +657,13 @@ export function WhatsappListPanel() {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
+            <label className="flex items-center gap-2 text-xs md:hidden">
+              <Switch checked={onlyAwaiting} onCheckedChange={setOnlyAwaiting} />
+              Somente aguardando WhatsApp
+            </label>
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="hidden md:flex flex-wrap items-center justify-between gap-2">
             <div className="flex flex-wrap items-center gap-3">
               <label className="flex items-center gap-2 text-xs">
                 <Switch checked={onlyAwaiting} onCheckedChange={setOnlyAwaiting} />
@@ -625,6 +702,7 @@ export function WhatsappListPanel() {
           </div>
         </CardContent>
       </Card>
+
 
       {/* Barra de ações em massa */}
       {selectedInView.length > 0 && (
@@ -712,20 +790,49 @@ export function WhatsappListPanel() {
           onSaved={() => { invalidateAll(); setFollowupRow(null); }}
         />
       )}
+
+      {/* Modal: sem modelo ativo */}
+      <Dialog open={showNoTemplateDialog} onOpenChange={setShowNoTemplateDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Nenhum modelo ativo</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Não existe nenhum modelo ativo de mensagem.{" "}
+            {isAdmin
+              ? "Cadastre ou ative um modelo em Configurações > Modelos de WhatsApp."
+              : "Peça ao administrador para cadastrar ou ativar um modelo de mensagem."}
+          </p>
+          <DialogFooter className="gap-2 sm:justify-end">
+            <Button variant="outline" onClick={() => setShowNoTemplateDialog(false)}>Fechar</Button>
+            {isAdmin && (
+              <Link
+                to="/discador"
+                search={{ tab: "config" }}
+                onClick={() => setShowNoTemplateDialog(false)}
+                className="inline-flex items-center justify-center rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+              >
+                Cadastrar modelo agora
+              </Link>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
 function SummaryCard({ label, value }: { label: string; value: number }) {
   return (
-    <Card>
-      <CardContent className="p-3">
-        <div className="text-[10px] uppercase text-muted-foreground">{label}</div>
-        <div className="text-xl font-bold">{value}</div>
+    <Card className="shrink-0 min-w-[110px] md:min-w-0">
+      <CardContent className="p-2 md:p-3">
+        <div className="text-[10px] uppercase text-muted-foreground whitespace-nowrap">{label}</div>
+        <div className="text-lg md:text-xl font-bold">{value}</div>
       </CardContent>
     </Card>
   );
 }
+
 
 type RowActions = {
   openWhatsapp: (r: Row) => Promise<void>;
@@ -737,7 +844,10 @@ type RowActions = {
   removeRow: (r: Row) => Promise<void>;
   convertRow: (r: Row) => Promise<void>;
   onViewMessage: (r: Row) => void;
+  hasActiveTemplate: boolean;
+  onNoTemplate: () => void;
 };
+
 
 function RowMoreMenu({ row, actions }: { row: Row; actions: RowActions }) {
   return (
@@ -839,7 +949,6 @@ function CompactList({
           <tbody>
             {rows.map((row) => {
               const c = row.contact;
-              const msg = generated[row.id]?.message ?? "";
               return (
                 <tr key={row.id} className="border-t align-middle hover:bg-muted/30">
                   <td className="p-2">
@@ -849,14 +958,6 @@ function CompactList({
                     <div className="font-medium truncate max-w-[220px]">
                       {c?.nome || <span className="italic text-muted-foreground">sem nome</span>}
                     </div>
-                    {msg && (
-                      <button
-                        className="text-[10px] text-primary hover:underline truncate max-w-[220px] block text-left"
-                        onClick={() => actions.onViewMessage(row)}
-                      >
-                        Mensagem pronta: {msg.slice(0, 40)}…
-                      </button>
-                    )}
                   </td>
                   <td className="p-2 max-w-[180px] truncate">{c?.empresa || <span className="text-muted-foreground">—</span>}</td>
                   <td className="p-2 font-mono whitespace-nowrap">+{c?.telefone_normalizado ?? ""}</td>
@@ -869,13 +970,24 @@ function CompactList({
                   </td>
                   <td className="p-2 text-right">
                     <div className="inline-flex gap-1">
-                      <Button
-                        size="sm"
-                        onClick={() => actions.openWhatsapp(row)}
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white h-8"
-                      >
-                        <Send className="h-3.5 w-3.5 mr-1" /> WhatsApp
-                      </Button>
+                      {actions.hasActiveTemplate ? (
+                        <Button
+                          size="sm"
+                          onClick={() => actions.openWhatsapp(row)}
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white h-8 px-2.5"
+                        >
+                          <MessageCircle className="h-3.5 w-3.5 mr-1" /> WhatsApp
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={actions.onNoTemplate}
+                          className="h-8 px-2 text-[11px] border-destructive/40 text-destructive"
+                        >
+                          Sem modelo
+                        </Button>
+                      )}
                       <Button size="sm" variant="outline" onClick={() => actions.copyMessage(row)} className="h-8 px-2">
                         <Copy className="h-3.5 w-3.5" />
                       </Button>
@@ -885,6 +997,7 @@ function CompactList({
                 </tr>
               );
             })}
+
           </tbody>
         </table>
       </div>
@@ -908,45 +1021,56 @@ function CompactMiniCard({
   const c = row.contact;
   if (!c) return null;
   return (
-    <div className="rounded-md border p-2.5">
-      <div className="flex items-start gap-2">
-        <Checkbox className="mt-0.5" checked={checked} onCheckedChange={(v) => onCheck(!!v)} />
+    <div className="rounded-md border px-2.5 py-2">
+      <div className="flex items-center gap-2">
+        <Checkbox className="shrink-0" checked={checked} onCheckedChange={(v) => onCheck(!!v)} />
         <div className="min-w-0 flex-1">
-          <div className="font-semibold truncate">{c.nome || <span className="italic text-muted-foreground font-normal">sem nome</span>}</div>
-          <div className="text-xs text-muted-foreground truncate">
+          <div className="flex items-center gap-2">
+            <div className="font-semibold text-sm truncate flex-1">
+              {c.nome || <span className="italic text-muted-foreground font-normal">sem nome</span>}
+            </div>
+            <Badge className={`${STATUS_BADGE_CLASS[row.status] ?? ""} h-4 px-1.5 text-[10px] shrink-0`}>{STATUS_LABEL[row.status] ?? row.status}</Badge>
+          </div>
+          <div className="text-[11px] text-muted-foreground truncate">
             {c.empresa || "—"} <span className="text-muted-foreground/60">•</span> <span className="font-mono">+{c.telefone_normalizado}</span>
           </div>
-          <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
+          <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[10px] text-muted-foreground">
             <span>Tent.: {c.quantidade_tentativas}</span>
             {c.ultima_tentativa && <span>Última: {format(new Date(c.ultima_tentativa), "dd/MM HH:mm", { locale: ptBR })}</span>}
-            <Badge className={`${STATUS_BADGE_CLASS[row.status] ?? ""} h-4 px-1.5 text-[10px]`}>{STATUS_LABEL[row.status] ?? row.status}</Badge>
           </div>
-          {message && (
-            <button
-              className="mt-1 block truncate text-left text-[11px] text-primary hover:underline"
-              onClick={() => actions.onViewMessage(row)}
-            >
-              Mensagem pronta: {message.slice(0, 48)}…
-            </button>
-          )}
         </div>
-      </div>
-      <div className="mt-2 flex items-center gap-1.5">
-        <Button
-          size="sm"
-          onClick={() => actions.openWhatsapp(row)}
-          className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white h-8"
-        >
-          <Send className="h-3.5 w-3.5 mr-1" /> WhatsApp
-        </Button>
-        <Button size="sm" variant="outline" onClick={() => actions.copyMessage(row)} className="h-8 px-2">
-          <Copy className="h-3.5 w-3.5" />
-        </Button>
-        <RowMoreMenu row={row} actions={actions} />
+        <div className="flex items-center gap-1 shrink-0">
+          {actions.hasActiveTemplate ? (
+            <Button
+              size="sm"
+              onClick={() => actions.openWhatsapp(row)}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white h-8 px-2.5"
+              title="Abrir WhatsApp"
+            >
+              <MessageCircle className="h-4 w-4" />
+              <span className="ml-1 hidden xs:inline">WhatsApp</span>
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={actions.onNoTemplate}
+              className="h-8 px-2 text-[11px] border-destructive/40 text-destructive"
+              title="Sem modelo ativo"
+            >
+              Sem modelo
+            </Button>
+          )}
+          <Button size="sm" variant="outline" onClick={() => actions.copyMessage(row)} className="h-8 px-2" title="Copiar">
+            <Copy className="h-3.5 w-3.5" />
+          </Button>
+          <RowMoreMenu row={row} actions={actions} />
+        </div>
       </div>
     </div>
   );
 }
+
 
 function DetailedRowCard({
   row,
