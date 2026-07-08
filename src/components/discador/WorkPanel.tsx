@@ -462,6 +462,8 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
               </Button>
             </div>
 
+            <WhatsappComposer contact={contact} />
+
             <Collapsible open={historyOpen} onOpenChange={setHistoryOpen} className="w-full max-w-full rounded-lg border overflow-hidden">
               <CollapsibleTrigger className="flex w-full items-center justify-between p-3 text-sm font-medium">
                 {historyOpen ? "Ocultar histórico" : "Ver histórico"}
