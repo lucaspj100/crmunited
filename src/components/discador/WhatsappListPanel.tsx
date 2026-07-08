@@ -994,11 +994,13 @@ function CompactList({
   return (
     <div className="space-y-3">
       {/* Mobile: mini-cards */}
-      <div className="md:hidden space-y-1.5">
-        <label className="flex items-center gap-2 px-1 text-xs text-muted-foreground">
-          <Checkbox checked={allSelected} onCheckedChange={(v) => onToggleAll(!!v)} />
-          Selecionar todos visíveis
-        </label>
+      <div className="md:hidden space-y-1">
+        {actions.bulkMode && (
+          <label className="flex items-center gap-2 px-1 text-xs text-muted-foreground">
+            <Checkbox checked={allSelected} onCheckedChange={(v) => onToggleAll(!!v)} />
+            Selecionar todos visíveis
+          </label>
+        )}
         {rows.map((row) => (
           <CompactMiniCard
             key={row.id}
@@ -1010,6 +1012,7 @@ function CompactList({
           />
         ))}
       </div>
+
 
       {/* Desktop: tabela compacta */}
       <div className="hidden md:block overflow-x-auto rounded-md border">
