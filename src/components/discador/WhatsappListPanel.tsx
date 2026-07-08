@@ -513,7 +513,10 @@ export function WhatsappListPanel() {
       buildMessageFor(r);
       setViewMessageRow(r);
     },
+    hasActiveTemplate,
+    onNoTemplate: () => setShowNoTemplateDialog(true),
   };
+
 
   return (
     <div className="space-y-4 pb-24">
