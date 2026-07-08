@@ -119,6 +119,7 @@ function FunilPage() {
       return;
     }
     if (newStatus === "entrevista_marcada") { setInterviewLead(lead); return; }
+    if (newStatus === "entrevista_realizada") { setInterviewDoneLead(lead); return; }
     if (newStatus === "perdido") { setLostLead(lead); return; }
     if (newStatus === "matricula") { setMatriculaLead(lead); return; }
     const { error } = await supabase.from("leads").update({ status: newStatus as any }).eq("id", lead.id);
