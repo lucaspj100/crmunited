@@ -283,12 +283,15 @@ export function WhatsappListPanel() {
     }
   };
 
+  const hasActiveTemplate = templates.length > 0;
+
   const openWhatsapp = async (row: Row) => {
     if (!row.contact) return;
-    if (templates.length === 0) {
-      toast.error("Nenhum modelo ativo. Peça ao ADM para cadastrar em Configurações.");
+    if (!hasActiveTemplate) {
+      setShowNoTemplateDialog(true);
       return;
     }
+
     const built = buildMessageFor(row) ?? buildMessageFor(row, true);
     const norm = normalizePhoneForWhatsapp(row.contact.telefone_normalizado || row.contact.telefone_original);
     if (!norm.ok) {
