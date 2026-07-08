@@ -587,6 +587,10 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
                   </Button>
                 </div>
 
+                <WhatsappComposer contact={contact} />
+
+
+
                 <div className="flex flex-wrap items-center gap-2">
                   <Button variant="outline" onClick={() => setEditOpen(true)}>
                     <Pencil className="h-4 w-4 mr-2" />Editar contato
