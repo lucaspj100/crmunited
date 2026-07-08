@@ -527,19 +527,76 @@ export function WhatsappListPanel() {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
-        <SummaryCard label="Na lista" value={summary.total} />
-        <SummaryCard label="Aguardando" value={summary.aguardando} />
-        <SummaryCard label="Iniciados hoje" value={summary.iniciadosHoje} />
-        <SummaryCard label="Respondidos hoje" value={summary.respondidosHoje} />
-        <SummaryCard label="Sem resposta" value={summary.semResposta} />
-        <SummaryCard label="Inválidos" value={summary.invalidos} />
+
+      {!hasActiveTemplate && (
+        <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm">
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
+            <div className="min-w-0 flex-1">
+              <div className="font-medium text-destructive">Nenhum modelo de mensagem ativo</div>
+              <div className="text-xs text-muted-foreground mt-0.5">
+                {isAdmin
+                  ? "Cadastre ou ative um modelo em Configurações > Modelos de WhatsApp para liberar o envio."
+                  : "Peça ao administrador para cadastrar ou ativar um modelo de mensagem."}
+              </div>
+              {isAdmin && (
+                <Link
+                  to="/discador"
+                  search={{ tab: "config" }}
+                  className="mt-2 inline-flex items-center gap-1 rounded-md bg-destructive px-2.5 py-1 text-xs font-medium text-destructive-foreground hover:bg-destructive/90"
+                >
+                  Cadastrar modelo agora
+                </Link>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cards de resumo — carrossel horizontal no mobile */}
+      <div className="-mx-1 overflow-x-auto md:mx-0 md:overflow-visible">
+        <div className="flex gap-2 px-1 md:grid md:grid-cols-6 md:px-0">
+          <SummaryCard label="Na lista" value={summary.total} />
+          <SummaryCard label="Aguardando" value={summary.aguardando} />
+          <SummaryCard label="Iniciados hoje" value={summary.iniciadosHoje} />
+          <SummaryCard label="Respondidos hoje" value={summary.respondidosHoje} />
+          <SummaryCard label="Sem resposta" value={summary.semResposta} />
+          <SummaryCard label="Inválidos" value={summary.invalidos} />
+        </div>
       </div>
 
       <Card>
         <CardContent className="p-3 space-y-3">
-          <div className="grid gap-2 md:grid-cols-4">
-            <div>
+          {/* Linha rápida mobile: busca + status + botão Filtros */}
+          <div className="grid gap-2 md:hidden grid-cols-[minmax(0,1fr)_auto]">
+            <Input
+              placeholder="Buscar nome, empresa ou telefone…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="h-9"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-9 shrink-0"
+              onClick={() => setShowMobileFilters((v) => !v)}
+            >
+              Filtros
+            </Button>
+            <Select value={statusFilter} onValueChange={setStatusFilter} disabled={onlyAwaiting}>
+              <SelectTrigger className="col-span-2 h-9"><SelectValue placeholder="Status" /></SelectTrigger>
+              <SelectContent>
+                {STATUS_FILTER_OPTIONS.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Filtros completos: sempre no desktop, expansível no mobile */}
+          <div className={`${showMobileFilters ? "grid" : "hidden md:grid"} gap-2 md:grid-cols-4`}>
+            <div className="hidden md:block">
               <Label className="text-xs">Status</Label>
               <Select value={statusFilter} onValueChange={setStatusFilter} disabled={onlyAwaiting}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
@@ -587,7 +644,7 @@ export function WhatsappListPanel() {
                 </Select>
               </div>
             )}
-            <div>
+            <div className="hidden md:block">
               <Label className="text-xs">Busca</Label>
               <Input
                 placeholder="Nome, empresa ou telefone…"
@@ -595,9 +652,13 @@ export function WhatsappListPanel() {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
+            <label className="flex items-center gap-2 text-xs md:hidden">
+              <Switch checked={onlyAwaiting} onCheckedChange={setOnlyAwaiting} />
+              Somente aguardando WhatsApp
+            </label>
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="hidden md:flex flex-wrap items-center justify-between gap-2">
             <div className="flex flex-wrap items-center gap-3">
               <label className="flex items-center gap-2 text-xs">
                 <Switch checked={onlyAwaiting} onCheckedChange={setOnlyAwaiting} />
@@ -636,6 +697,7 @@ export function WhatsappListPanel() {
           </div>
         </CardContent>
       </Card>
+
 
       {/* Barra de ações em massa */}
       {selectedInView.length > 0 && (
