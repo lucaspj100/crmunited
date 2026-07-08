@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_logs: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          email: string | null
+          event_type: string
+          id: string
+          ip: string | null
+          metadata: Json
+          reason: string | null
+          status: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          email?: string | null
+          event_type: string
+          id?: string
+          ip?: string | null
+          metadata?: Json
+          reason?: string | null
+          status?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          email?: string | null
+          event_type?: string
+          id?: string
+          ip?: string | null
+          metadata?: Json
+          reason?: string | null
+          status?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           brand_name: string
@@ -373,23 +415,38 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          deactivated_at: string | null
           email: string | null
           full_name: string
           id: string
+          last_sign_in_at: string | null
+          must_change_password: boolean
+          sign_in_count: number
+          status: string
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          deactivated_at?: string | null
           email?: string | null
           full_name?: string
           id: string
+          last_sign_in_at?: string | null
+          must_change_password?: boolean
+          sign_in_count?: number
+          status?: string
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
+          deactivated_at?: string | null
           email?: string | null
           full_name?: string
           id?: string
+          last_sign_in_at?: string | null
+          must_change_password?: boolean
+          sign_in_count?: number
+          status?: string
         }
         Relationships: []
       }
