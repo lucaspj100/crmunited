@@ -131,7 +131,7 @@ export function DailyScoreboard({
     return () => clearInterval(t);
   }, []);
 
-  const stats = data ?? { calls: 0, whats: 0, whatsStarted: 0, worked: 0, interested: 0, interviews: 0, lastActionAt: null };
+  const stats = data ?? { calls: 0, whats: 0, whatsStarted: 0, whatsReplied: 0, worked: 0, interested: 0, interviews: 0, lastActionAt: null };
   const lastDate = useMemo(() => (stats.lastActionAt ? new Date(stats.lastActionAt) : null), [stats.lastActionAt]);
   const goalProgress = Math.min(100, (stats.calls / callGoal) * 100);
   const message = rhythmMessage(stats.calls, callGoal);
@@ -149,14 +149,16 @@ export function DailyScoreboard({
           </div>
         </div>
 
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+        <div className="grid grid-cols-3 md:grid-cols-7 gap-2">
           <Metric icon={<Phone className="h-3.5 w-3.5" />} label="Ligações" value={stats.calls} />
           <Metric icon={<MessageCircle className="h-3.5 w-3.5" />} label="WhatsApp" value={stats.whats} />
           <Metric icon={<Send className="h-3.5 w-3.5" />} label="Wpp iniciados" value={stats.whatsStarted} />
+          <Metric icon={<MessageCircle className="h-3.5 w-3.5" />} label="Wpp respond." value={stats.whatsReplied} />
           <Metric icon={<Users className="h-3.5 w-3.5" />} label="Trabalhados" value={stats.worked} />
           <Metric icon={<Sparkles className="h-3.5 w-3.5" />} label="Interessados" value={stats.interested} />
           <Metric icon={<CalendarCheck className="h-3.5 w-3.5" />} label="Entrevistas" value={stats.interviews} />
         </div>
+
 
         <div className="rounded-md border bg-muted/40 p-3 space-y-2">
           <div className="flex items-center justify-between gap-2 text-xs">
