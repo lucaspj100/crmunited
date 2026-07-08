@@ -16,7 +16,6 @@ import {
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
-  fetchActiveTemplates,
   renderTemplate,
   TEMPLATE_CATEGORY_LABELS,
   type WhatsappTemplate,
