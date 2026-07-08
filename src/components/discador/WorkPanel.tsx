@@ -616,6 +616,9 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
                   <Button variant="outline" onClick={() => setEditOpen(true)}>
                     <Pencil className="h-4 w-4 mr-2" />Editar contato
                   </Button>
+                  <Button variant="outline" onClick={addToWhatsapp}>
+                    <MessageCircle className="h-4 w-4 mr-2" />Adicionar à Lista WhatsApp
+                  </Button>
                   <Button variant="outline" onClick={goPrev} disabled={queue.length < 2}>
                     <ArrowLeft className="h-4 w-4 mr-2" />Anterior
                   </Button>
