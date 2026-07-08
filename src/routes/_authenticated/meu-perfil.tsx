@@ -112,6 +112,19 @@ function MeuPerfil() {
         </div>
         <p className="text-xs text-muted-foreground">PNG ou JPG. A foto é redimensionada automaticamente.</p>
       </Card>
+
+      <Card className="p-5 space-y-3">
+        <div>
+          <h2 className="font-semibold">Segurança</h2>
+          <p className="text-sm text-muted-foreground">Altere sua senha de acesso ao CRM.</p>
+        </div>
+        <Button variant="outline" onClick={() => setPwOpen(true)}>
+          <KeyRound className="h-4 w-4 mr-2" /> Alterar senha
+        </Button>
+      </Card>
+
+      <ChangePasswordDialog open={pwOpen} onOpenChange={setPwOpen} />
     </div>
   );
 }
+
