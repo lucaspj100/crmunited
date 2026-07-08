@@ -76,6 +76,7 @@ function DiscadorPage() {
         <div className="-mx-1 overflow-x-auto max-w-full">
           <TabsList className="inline-flex w-max whitespace-nowrap">
             <TabsTrigger value="trabalhar">Trabalhar</TabsTrigger>
+            <TabsTrigger value="whatsapp">WhatsApp</TabsTrigger>
             <TabsTrigger value="minha-lista">Minha lista</TabsTrigger>
             {isAdmin && <TabsTrigger value="base">Base</TabsTrigger>}
             <TabsTrigger value="importar">Importar</TabsTrigger>
@@ -83,6 +84,16 @@ function DiscadorPage() {
             <TabsTrigger value="config">Configurações</TabsTrigger>
           </TabsList>
         </div>
+
+        <TabsContent value="trabalhar" className="mt-4">
+          <WorkPanel
+            focusContactId={search.prospect_contact_id}
+            autoOpenResult={search.open_result === 1}
+            focusTaskId={search.task_id}
+            onFocusConsumed={clearFocus}
+          />
+        </TabsContent>
+        <TabsContent value="whatsapp" className="mt-4"><WhatsappListPanel /></TabsContent>
 
         <TabsContent value="trabalhar" className="mt-4">
           <WorkPanel
