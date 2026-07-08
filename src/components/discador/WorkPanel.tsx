@@ -18,6 +18,7 @@ import { EditContactDialog } from "./EditContactDialog";
 import { AttemptHistory } from "./AttemptHistory";
 import { ReturnsDebugCard } from "./ReturnsDebugCard";
 import { DailyScoreboard } from "./DailyScoreboard";
+import { WhatsappComposer } from "./WhatsappComposer";
 import { toast } from "sonner";
 
 type Props = {
