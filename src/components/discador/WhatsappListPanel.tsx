@@ -790,20 +790,49 @@ export function WhatsappListPanel() {
           onSaved={() => { invalidateAll(); setFollowupRow(null); }}
         />
       )}
+
+      {/* Modal: sem modelo ativo */}
+      <Dialog open={showNoTemplateDialog} onOpenChange={setShowNoTemplateDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Nenhum modelo ativo</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Não existe nenhum modelo ativo de mensagem.{" "}
+            {isAdmin
+              ? "Cadastre ou ative um modelo em Configurações > Modelos de WhatsApp."
+              : "Peça ao administrador para cadastrar ou ativar um modelo de mensagem."}
+          </p>
+          <DialogFooter className="gap-2 sm:justify-end">
+            <Button variant="outline" onClick={() => setShowNoTemplateDialog(false)}>Fechar</Button>
+            {isAdmin && (
+              <Link
+                to="/discador"
+                search={{ tab: "config" }}
+                onClick={() => setShowNoTemplateDialog(false)}
+                className="inline-flex items-center justify-center rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+              >
+                Cadastrar modelo agora
+              </Link>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
 function SummaryCard({ label, value }: { label: string; value: number }) {
   return (
-    <Card>
-      <CardContent className="p-3">
-        <div className="text-[10px] uppercase text-muted-foreground">{label}</div>
-        <div className="text-xl font-bold">{value}</div>
+    <Card className="shrink-0 min-w-[110px] md:min-w-0">
+      <CardContent className="p-2 md:p-3">
+        <div className="text-[10px] uppercase text-muted-foreground whitespace-nowrap">{label}</div>
+        <div className="text-lg md:text-xl font-bold">{value}</div>
       </CardContent>
     </Card>
   );
 }
+
 
 type RowActions = {
   openWhatsapp: (r: Row) => Promise<void>;
