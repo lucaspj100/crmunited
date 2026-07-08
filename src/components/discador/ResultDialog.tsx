@@ -232,8 +232,25 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
       }
     }
 
+    // 3) Se marcado, adiciona à Lista de WhatsApp
+    if (whatsappReason && addToWppList) {
+      try {
+        const res = await addToWhatsappList({
+          prospectContactId: contactId,
+          ownerId: vendedorId,
+          reason: whatsappReason,
+          notes: obs.trim() || undefined,
+        });
+        toast.success(res.created ? "Adicionado à Lista de WhatsApp" : "Atualizado na Lista de WhatsApp");
+        queryClient.invalidateQueries({ queryKey: ["whatsapp_list"] });
+      } catch (err) {
+        console.warn("[ResultDialog] falha ao adicionar à Lista de WhatsApp", err);
+        toast.error("Resultado salvo, mas não foi possível adicionar à Lista de WhatsApp.");
+      }
+    }
+
     setSaving(false);
-    setResult(""); setObs(""); setProxima("");
+    setResult(""); setObs(""); setProxima(""); setAddToWppList(false);
     queryClient.invalidateQueries({ queryKey: ["my_prospect_contacts"] });
     queryClient.invalidateQueries({ queryKey: ["prospect_queue"] });
     queryClient.invalidateQueries({ queryKey: ["prospect_counts"] });
@@ -243,6 +260,7 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
     onOpenChange(false);
     onSaved(goNext);
   };
+
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!saving) onOpenChange(v); }}>
