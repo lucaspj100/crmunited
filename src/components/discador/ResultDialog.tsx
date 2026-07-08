@@ -282,6 +282,11 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
               <Input type="datetime-local" value={proxima} onChange={(e) => setProxima(e.target.value)} />
             </div>
           )}
+          {(result === "Interessado" || result === "Pediu WhatsApp") && (
+            <div className="rounded-md border border-emerald-500/40 bg-emerald-500/10 p-2 text-xs text-emerald-700 dark:text-emerald-300">
+              Ao salvar, este contato será convertido automaticamente em lead no funil (coluna Interessado).
+            </div>
+          )}
           {whatsappReason && (
             <label className="flex items-start gap-2 rounded-md border border-emerald-500/40 bg-emerald-500/5 p-2 text-xs cursor-pointer">
               <Checkbox
