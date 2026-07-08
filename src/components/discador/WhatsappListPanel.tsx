@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
@@ -8,8 +8,17 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   MessageCircle,
   Copy,
@@ -22,6 +31,10 @@ import {
   Clock,
   AlertTriangle,
   Trash2,
+  MoreHorizontal,
+  Eye,
+  ChevronRight,
+  PlayCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -48,6 +61,9 @@ type Row = WhatsappListEntry & {
   seller_name: string | null;
 };
 
+type ViewMode = "compact" | "detailed";
+type SortKey = "oldest_in_list" | "oldest_attempt" | "fewest_attempts" | "empresa" | "nome";
+
 const STATUS_FILTER_OPTIONS: { value: string; label: string }[] = [
   { value: "ativos", label: "Ativos (não removidos)" },
   { value: "todos", label: "Todos" },
@@ -59,17 +75,32 @@ const REASON_FILTER_OPTIONS: { value: string; label: string }[] = [
   ...Object.entries(REASON_LABEL).map(([value, label]) => ({ value, label })),
 ];
 
-function priorityScore(row: Row): number {
-  const c = row.contact;
-  if (!c) return 999;
-  let score = c.quantidade_tentativas * 10;
-  const last = c.ultima_tentativa ? new Date(c.ultima_tentativa) : null;
-  if (last && last.toDateString() === new Date().toDateString()) score -= 5;
-  if (row.reason === "caixa_postal") score -= 3;
-  if (c.empresa) score -= 2;
-  if (c.cargo) score -= 1;
-  if (c.telefone_normalizado?.length >= 12) score -= 1;
-  return score;
+const SORT_OPTIONS: { value: SortKey; label: string }[] = [
+  { value: "oldest_in_list", label: "Mais antigos na lista" },
+  { value: "oldest_attempt", label: "Última tentativa mais antiga" },
+  { value: "fewest_attempts", label: "Menos tentativas" },
+  { value: "empresa", label: "Empresa (A→Z)" },
+  { value: "nome", label: "Nome (A→Z)" },
+];
+
+function sortRows(rows: Row[], key: SortKey): Row[] {
+  const list = [...rows];
+  switch (key) {
+    case "oldest_in_list":
+      return list.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    case "oldest_attempt":
+      return list.sort((a, b) => {
+        const av = a.contact?.ultima_tentativa ? new Date(a.contact.ultima_tentativa).getTime() : 0;
+        const bv = b.contact?.ultima_tentativa ? new Date(b.contact.ultima_tentativa).getTime() : 0;
+        return av - bv;
+      });
+    case "fewest_attempts":
+      return list.sort((a, b) => (a.contact?.quantidade_tentativas ?? 0) - (b.contact?.quantidade_tentativas ?? 0));
+    case "empresa":
+      return list.sort((a, b) => (a.contact?.empresa ?? "").localeCompare(b.contact?.empresa ?? "", "pt-BR"));
+    case "nome":
+      return list.sort((a, b) => (a.contact?.nome ?? "").localeCompare(b.contact?.nome ?? "", "pt-BR"));
+  }
 }
 
 export function WhatsappListPanel() {
@@ -81,6 +112,23 @@ export function WhatsappListPanel() {
   const [reasonFilter, setReasonFilter] = useState<string>("todos");
   const [sellerFilter, setSellerFilter] = useState<string>("todos");
   const [search, setSearch] = useState("");
+  const [onlyAwaiting, setOnlyAwaiting] = useState(false);
+  const [sortKey, setSortKey] = useState<SortKey>("oldest_in_list");
+  const [viewMode, setViewMode] = useState<ViewMode>("compact");
+
+  // Seleção em massa
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  // Sequência de WhatsApp
+  const [sequence, setSequence] = useState<string[]>([]);
+  const [sequenceIndex, setSequenceIndex] = useState<number>(0);
+
+  // Cache de mensagens geradas por row.id
+  const [messages, setMessages] = useState<
+    Record<string, { templateIndex: number; message: string; template: WhatsappTemplate | null }>
+  >({});
+  const [viewMessageRow, setViewMessageRow] = useState<Row | null>(null);
+  const [followupRow, setFollowupRow] = useState<Row | null>(null);
 
   const { data: sellers = [] } = useQuery({
     enabled: isAdmin,
@@ -95,6 +143,24 @@ export function WhatsappListPanel() {
         name: p.full_name?.trim() || p.email || "Sem nome",
       }));
     },
+  });
+
+  const { data: templates = [] } = useQuery({
+    queryKey: ["wpp_templates", "primeira_abordagem"],
+    queryFn: () => fetchActiveTemplates("primeira_abordagem"),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: sellerFirstName = "" } = useQuery({
+    enabled: !!user,
+    queryKey: ["seller_name", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.from("profiles").select("full_name, email").eq("id", user!.id).maybeSingle();
+      const full = (data?.full_name ?? "").trim();
+      if (full) return full.split(/\s+/)[0];
+      return (data?.email ?? "").split("@")[0] || "";
+    },
+    staleTime: 10 * 60 * 1000,
   });
 
   const { data: rows = [], isLoading } = useQuery<Row[]>({
@@ -131,7 +197,9 @@ export function WhatsappListPanel() {
 
   const filtered = useMemo(() => {
     let list = rows;
-    if (statusFilter === "ativos") {
+    if (onlyAwaiting) {
+      list = list.filter((r) => r.status === "aguardando");
+    } else if (statusFilter === "ativos") {
       list = list.filter((r) => r.status !== "removido");
     } else if (statusFilter !== "todos") {
       list = list.filter((r) => r.status === statusFilter);
@@ -150,8 +218,8 @@ export function WhatsappListPanel() {
         );
       });
     }
-    return [...list].sort((a, b) => priorityScore(a) - priorityScore(b));
-  }, [rows, statusFilter, reasonFilter, search]);
+    return sortRows(list, sortKey);
+  }, [rows, statusFilter, reasonFilter, search, onlyAwaiting, sortKey]);
 
   const summary = useMemo(() => {
     const today = new Date().toDateString();
@@ -165,17 +233,286 @@ export function WhatsappListPanel() {
     };
   }, [rows]);
 
-  const invalidateAll = () => {
+  const invalidateAll = useCallback(() => {
     qc.invalidateQueries({ queryKey: ["whatsapp_list"] });
     qc.invalidateQueries({ queryKey: ["daily_scoreboard"] });
+    qc.invalidateQueries({ queryKey: ["my_whatsapp_list_ids"] });
+  }, [qc]);
+
+  // -------- Ações compartilhadas --------
+  const buildMessageFor = useCallback(
+    (row: Row, forceNew = false) => {
+      const cached = messages[row.id];
+      if (cached && !forceNew) return cached;
+      if (!row.contact || templates.length === 0) return null;
+      const idx = pickRandomIndex(templates.length, cached?.templateIndex);
+      const tpl = templates[idx] ?? null;
+      const body = tpl
+        ? renderTemplate(tpl.body, {
+            nome: row.contact.nome,
+            empresa: row.contact.empresa,
+            cargo: row.contact.cargo,
+            vendedor: sellerFirstName,
+          })
+        : "";
+      const entry = { templateIndex: idx, message: body, template: tpl };
+      setMessages((prev) => ({ ...prev, [row.id]: entry }));
+      return entry;
+    },
+    [messages, templates, sellerFirstName],
+  );
+
+  const logAttempt = async (row: Row, resultado: string, tpl?: WhatsappTemplate | null) => {
+    if (!user || !row.contact) return;
+    try {
+      await supabase.from("prospect_attempts").insert({
+        prospect_contact_id: row.contact.id,
+        vendedor_id: user.id,
+        tipo_acao: "whatsapp",
+        telefone_normalizado: row.contact.telefone_normalizado,
+        resultado,
+        observacao: tpl ? `Modelo: ${tpl.name}` : null,
+      });
+    } catch {
+      /* silencioso */
+    }
+  };
+
+  const openWhatsapp = async (row: Row) => {
+    if (!row.contact) return;
+    if (templates.length === 0) {
+      toast.error("Nenhum modelo ativo. Peça ao ADM para cadastrar em Configurações.");
+      return;
+    }
+    const built = buildMessageFor(row) ?? buildMessageFor(row, true);
+    const norm = normalizePhoneForWhatsapp(row.contact.telefone_normalizado || row.contact.telefone_original);
+    if (!norm.ok) {
+      const marcar = confirm(
+        "Este telefone parece inválido. Deseja marcar como número inválido?\n\nOK = marcar como inválido / Cancelar = manter",
+      );
+      if (marcar) {
+        await updateEntry(row.id, { status: "numero_invalido" as never });
+        await supabase.from("prospect_contacts").update({ telefone_invalido: true }).eq("id", row.contact.id);
+        toast.success("Marcado como número inválido");
+        invalidateAll();
+      }
+      return;
+    }
+    const msg = built?.message ?? "";
+    const url = msg
+      ? `https://wa.me/${norm.phone}?text=${encodeURIComponent(msg)}`
+      : `https://wa.me/${norm.phone}`;
+    window.open(url, "_blank");
+
+    // Registrar 1x por lead por dia (baseado em whatsapp_opened_at)
+    const todayStr = new Date().toDateString();
+    const alreadyToday =
+      row.whatsapp_opened_at && new Date(row.whatsapp_opened_at).toDateString() === todayStr;
+    await updateEntry(row.id, {
+      status: "whatsapp_aberto" as never,
+      whatsapp_opened_at: new Date().toISOString(),
+      last_template_id: built?.template?.id ?? row.last_template_id,
+      last_template_name: built?.template?.name ?? row.last_template_name,
+      last_message_body: msg || row.last_message_body,
+    });
+    if (!alreadyToday) {
+      void logAttempt(row, "WhatsApp iniciado", built?.template ?? null);
+    }
+    invalidateAll();
+  };
+
+  const copyMessage = async (row: Row) => {
+    const built = buildMessageFor(row) ?? buildMessageFor(row, true);
+    if (!built?.message) return;
+    try {
+      await navigator.clipboard.writeText(built.message);
+      toast.success("Mensagem copiada");
+      await updateEntry(row.id, {
+        status: "mensagem_copiada" as never,
+        message_copied_at: new Date().toISOString(),
+        last_template_id: built.template?.id ?? null,
+        last_template_name: built.template?.name ?? null,
+        last_message_body: built.message,
+      });
+      void logAttempt(row, "Mensagem copiada", built.template);
+      invalidateAll();
+    } catch {
+      toast.error("Não foi possível copiar");
+    }
+  };
+
+  const changeVariation = (row: Row) => {
+    if (templates.length < 2) {
+      toast.info("Apenas 1 modelo ativo.");
+      return;
+    }
+    buildMessageFor(row, true);
+    toast.success("Nova variação gerada");
+  };
+
+  const markSent = async (row: Row) => {
+    await updateEntry(row.id, {
+      status: "mensagem_enviada" as never,
+      message_sent_at: new Date().toISOString(),
+    });
+    void logAttempt(row, "Mensagem enviada");
+    toast.success("Marcado como enviado");
+    invalidateAll();
+  };
+
+  const markResponded = async (row: Row) => {
+    await updateEntry(row.id, {
+      status: "respondeu" as never,
+      responded_at: new Date().toISOString(),
+    });
+    void logAttempt(row, "Respondeu no WhatsApp");
+    toast.success("Marcado como respondeu");
+    invalidateAll();
+  };
+
+  const markNoResponse = async (row: Row) => {
+    await updateEntry(row.id, {
+      status: "sem_resposta" as never,
+      no_response_at: new Date().toISOString(),
+    });
+    void logAttempt(row, "Sem resposta");
+    toast.success("Marcado como sem resposta");
+    invalidateAll();
+    setFollowupRow(row);
+  };
+
+  const removeRow = async (row: Row) => {
+    if (!confirm("Remover este lead da Lista de WhatsApp?")) return;
+    await updateEntry(row.id, {
+      status: "removido" as never,
+      removed_at: new Date().toISOString(),
+    });
+    toast.success("Removido da lista");
+    invalidateAll();
+  };
+
+  const convertRow = async (row: Row) => {
+    if (!row.contact || !user) return;
+    const conv = await autoConvertProspectToLead({
+      contact: row.contact,
+      vendedorId: user.id,
+      resultLabel: "Interessado",
+      latestObservation: "Convertido via Lista de WhatsApp",
+    });
+    if (!conv.ok) {
+      toast.error(`Não foi possível criar lead. ${conv.error}`);
+      return;
+    }
+    await updateEntry(row.id, {
+      status: "removido" as never,
+      removed_at: new Date().toISOString(),
+    });
+    toast.success(conv.created ? "Lead criado no funil" : "Contato vinculado a lead existente");
+    invalidateAll();
+  };
+
+  // -------- Seleção --------
+  const visibleIds = useMemo(() => filtered.map((r) => r.id), [filtered]);
+  const selectedInView = useMemo(
+    () => Array.from(selected).filter((id) => visibleIds.includes(id)),
+    [selected, visibleIds],
+  );
+  const allSelected = visibleIds.length > 0 && visibleIds.every((id) => selected.has(id));
+  const toggleOne = (id: string, v: boolean) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (v) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  };
+  const toggleAllVisible = (v: boolean) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      for (const id of visibleIds) {
+        if (v) next.add(id);
+        else next.delete(id);
+      }
+      return next;
+    });
+  };
+  const clearSelection = () => setSelected(new Set());
+
+  // -------- Sequência --------
+  const rowsById = useMemo(() => new Map(filtered.map((r) => [r.id, r])), [filtered]);
+  const startSequence = async () => {
+    const ids = selectedInView;
+    if (ids.length === 0) {
+      toast.info("Selecione contatos para iniciar a sequência.");
+      return;
+    }
+    setSequence(ids);
+    setSequenceIndex(0);
+    const first = rowsById.get(ids[0]);
+    if (first) await openWhatsapp(first);
+  };
+  const nextInSequence = async () => {
+    const nextIdx = sequenceIndex + 1;
+    if (nextIdx >= sequence.length) {
+      toast.success("Fim da sequência.");
+      setSequence([]);
+      setSequenceIndex(0);
+      return;
+    }
+    setSequenceIndex(nextIdx);
+    const row = rowsById.get(sequence[nextIdx]);
+    if (row) await openWhatsapp(row);
+    else toast.info("Contato não visível — pulando.");
+  };
+  const stopSequence = () => {
+    setSequence([]);
+    setSequenceIndex(0);
+  };
+
+  // Ações em massa
+  const bulkMarkSent = async () => {
+    const ids = selectedInView;
+    if (ids.length === 0) return;
+    await Promise.all(ids.map(async (id) => {
+      const r = rowsById.get(id);
+      if (r) await markSent(r);
+    }));
+    clearSelection();
+  };
+  const bulkRemove = async () => {
+    const ids = selectedInView;
+    if (ids.length === 0) return;
+    if (!confirm(`Remover ${ids.length} contato(s) da lista?`)) return;
+    await Promise.all(ids.map((id) => updateEntry(id, {
+      status: "removido" as never,
+      removed_at: new Date().toISOString(),
+    })));
+    toast.success("Contatos removidos");
+    clearSelection();
+    invalidateAll();
+  };
+
+  const actions = {
+    openWhatsapp,
+    copyMessage,
+    changeVariation,
+    markSent,
+    markResponded,
+    markNoResponse,
+    removeRow,
+    convertRow,
+    onViewMessage: (r: Row) => {
+      buildMessageFor(r);
+      setViewMessageRow(r);
+    },
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-24">
       <div>
         <h2 className="text-lg font-semibold">Lista de WhatsApp</h2>
         <p className="text-sm text-muted-foreground">
-          Organize leads que não atenderam ligação e faça a abordagem pelo WhatsApp com mensagens personalizadas.
+          Fila de trabalho compacta: abra o WhatsApp com a mensagem pronta e trabalhe muitos contatos em sequência.
         </p>
       </div>
 
@@ -189,53 +526,126 @@ export function WhatsappListPanel() {
       </div>
 
       <Card>
-        <CardContent className="p-3 grid gap-2 md:grid-cols-4">
-          <div>
-            <Label className="text-xs">Status</Label>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {STATUS_FILTER_OPTIONS.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label className="text-xs">Motivo</Label>
-            <Select value={reasonFilter} onValueChange={setReasonFilter}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {REASON_FILTER_OPTIONS.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          {isAdmin && (
+        <CardContent className="p-3 space-y-3">
+          <div className="grid gap-2 md:grid-cols-4">
             <div>
-              <Label className="text-xs">Vendedor</Label>
-              <Select value={sellerFilter} onValueChange={setSellerFilter}>
+              <Label className="text-xs">Status</Label>
+              <Select value={statusFilter} onValueChange={setStatusFilter} disabled={onlyAwaiting}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="todos">Todos os vendedores</SelectItem>
-                  {sellers.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                  {STATUS_FILTER_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-          )}
-          <div>
-            <Label className="text-xs">Busca</Label>
-            <Input
-              placeholder="Nome, empresa ou telefone…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+            <div>
+              <Label className="text-xs">Motivo</Label>
+              <Select value={reasonFilter} onValueChange={setReasonFilter}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {REASON_FILTER_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {isAdmin ? (
+              <div>
+                <Label className="text-xs">Vendedor</Label>
+                <Select value={sellerFilter} onValueChange={setSellerFilter}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos os vendedores</SelectItem>
+                    {sellers.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : (
+              <div>
+                <Label className="text-xs">Ordenar por</Label>
+                <Select value={sortKey} onValueChange={(v) => setSortKey(v as SortKey)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {SORT_OPTIONS.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            <div>
+              <Label className="text-xs">Busca</Label>
+              <Input
+                placeholder="Nome, empresa ou telefone…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-3">
+              <label className="flex items-center gap-2 text-xs">
+                <Switch checked={onlyAwaiting} onCheckedChange={setOnlyAwaiting} />
+                Somente aguardando WhatsApp
+              </label>
+              {isAdmin && (
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="text-muted-foreground">Ordenar:</span>
+                  <Select value={sortKey} onValueChange={(v) => setSortKey(v as SortKey)}>
+                    <SelectTrigger className="h-8 w-[220px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {SORT_OPTIONS.map((o) => (
+                        <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-1 rounded-md border p-0.5">
+              <button
+                type="button"
+                onClick={() => setViewMode("compact")}
+                className={`px-2 py-1 text-xs rounded ${viewMode === "compact" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}
+              >
+                Lista compacta
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("detailed")}
+                className={`px-2 py-1 text-xs rounded ${viewMode === "detailed" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}
+              >
+                Cards detalhados
+              </button>
+            </div>
           </div>
         </CardContent>
       </Card>
+
+      {/* Barra de ações em massa */}
+      {selectedInView.length > 0 && (
+        <div className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-2 rounded-md border border-primary/40 bg-primary/5 px-3 py-2 backdrop-blur">
+          <div className="text-sm font-medium">{selectedInView.length} contato(s) selecionado(s)</div>
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" onClick={startSequence} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+              <PlayCircle className="h-4 w-4 mr-1" /> Abrir sequência WhatsApp
+            </Button>
+            <Button size="sm" variant="outline" onClick={bulkMarkSent}>
+              <Check className="h-4 w-4 mr-1" /> Marcar como enviado
+            </Button>
+            <Button size="sm" variant="outline" onClick={bulkRemove}>
+              <Trash2 className="h-4 w-4 mr-1" /> Remover
+            </Button>
+            <Button size="sm" variant="ghost" onClick={clearSelection}>
+              <X className="h-4 w-4 mr-1" /> Limpar
+            </Button>
+          </div>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="text-sm text-muted-foreground">Carregando…</div>
@@ -245,12 +655,62 @@ export function WhatsappListPanel() {
             Nenhum lead na Lista de WhatsApp com os filtros atuais.
           </CardContent>
         </Card>
-      ) : (
+      ) : viewMode === "detailed" ? (
         <div className="grid gap-3 lg:grid-cols-2">
           {filtered.map((row) => (
-            <WhatsappRowCard key={row.id} row={row} onChanged={invalidateAll} />
+            <DetailedRowCard
+              key={row.id}
+              row={row}
+              generatedMessage={messages[row.id]?.message ?? ""}
+              actions={actions}
+            />
           ))}
         </div>
+      ) : (
+        <CompactList
+          rows={filtered}
+          selected={selected}
+          allSelected={allSelected}
+          onToggleOne={toggleOne}
+          onToggleAll={toggleAllVisible}
+          generated={messages}
+          actions={actions}
+        />
+      )}
+
+      {/* Barra Próximo WhatsApp */}
+      {sequence.length > 0 && (
+        <div className="fixed inset-x-0 bottom-3 z-30 mx-auto flex w-fit max-w-[95vw] items-center gap-2 rounded-full border bg-background/95 px-3 py-2 shadow-lg backdrop-blur">
+          <div className="text-xs">
+            Sequência WhatsApp: <strong>{Math.min(sequenceIndex + 1, sequence.length)}</strong>/{sequence.length}
+          </div>
+          <Button size="sm" onClick={nextInSequence} className="bg-emerald-600 hover:bg-emerald-700 text-white h-8">
+            <ChevronRight className="h-4 w-4 mr-1" /> Próximo WhatsApp
+          </Button>
+          <Button size="sm" variant="ghost" onClick={stopSequence} className="h-8">
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+
+      {/* Modal Ver mensagem */}
+      <ViewMessageDialog
+        row={viewMessageRow}
+        message={viewMessageRow ? messages[viewMessageRow.id]?.message ?? "" : ""}
+        onOpenChange={(v) => { if (!v) setViewMessageRow(null); }}
+        onCopy={() => viewMessageRow && copyMessage(viewMessageRow)}
+        onChangeVariation={() => viewMessageRow && changeVariation(viewMessageRow)}
+        onOpenWhatsapp={() => viewMessageRow && openWhatsapp(viewMessageRow)}
+      />
+
+      {followupRow && followupRow.contact && (
+        <FollowupDialog
+          open={!!followupRow}
+          onOpenChange={(v) => { if (!v) setFollowupRow(null); }}
+          entry={followupRow}
+          contact={followupRow.contact}
+          onSaved={() => { invalidateAll(); setFollowupRow(null); }}
+        />
       )}
     </div>
   );
@@ -267,212 +727,237 @@ function SummaryCard({ label, value }: { label: string; value: number }) {
   );
 }
 
-function WhatsappRowCard({ row, onChanged }: { row: Row; onChanged: () => void }) {
-  const { user } = useAuth();
+type RowActions = {
+  openWhatsapp: (r: Row) => Promise<void>;
+  copyMessage: (r: Row) => Promise<void>;
+  changeVariation: (r: Row) => void;
+  markSent: (r: Row) => Promise<void>;
+  markResponded: (r: Row) => Promise<void>;
+  markNoResponse: (r: Row) => Promise<void>;
+  removeRow: (r: Row) => Promise<void>;
+  convertRow: (r: Row) => Promise<void>;
+  onViewMessage: (r: Row) => void;
+};
+
+function RowMoreMenu({ row, actions }: { row: Row; actions: RowActions }) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button size="sm" variant="outline" className="h-8 px-2">
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuItem onSelect={() => actions.changeVariation(row)}>
+          <Sparkles className="h-4 w-4 mr-2" /> Gerar nova mensagem
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => actions.changeVariation(row)}>
+          <RefreshCw className="h-4 w-4 mr-2" /> Trocar variação
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => actions.copyMessage(row)}>
+          <Copy className="h-4 w-4 mr-2" /> Copiar mensagem
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => actions.onViewMessage(row)}>
+          <Eye className="h-4 w-4 mr-2" /> Ver mensagem
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onSelect={() => actions.markSent(row)}>
+          <Check className="h-4 w-4 mr-2" /> Marcar como enviado
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => actions.markResponded(row)}>
+          <MessageCircle className="h-4 w-4 mr-2" /> Marcar como respondeu
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => actions.markNoResponse(row)}>
+          <Clock className="h-4 w-4 mr-2" /> Marcar como sem resposta
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onSelect={() => actions.convertRow(row)}>
+          <UserCheck className="h-4 w-4 mr-2" /> Converter para interessado
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => actions.removeRow(row)} className="text-destructive focus:text-destructive">
+          <Trash2 className="h-4 w-4 mr-2" /> Remover da lista
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+function CompactList({
+  rows,
+  selected,
+  allSelected,
+  onToggleOne,
+  onToggleAll,
+  generated,
+  actions,
+}: {
+  rows: Row[];
+  selected: Set<string>;
+  allSelected: boolean;
+  onToggleOne: (id: string, v: boolean) => void;
+  onToggleAll: (v: boolean) => void;
+  generated: Record<string, { message: string }>;
+  actions: RowActions;
+}) {
+  return (
+    <div className="space-y-3">
+      {/* Mobile: mini-cards */}
+      <div className="md:hidden space-y-1.5">
+        <label className="flex items-center gap-2 px-1 text-xs text-muted-foreground">
+          <Checkbox checked={allSelected} onCheckedChange={(v) => onToggleAll(!!v)} />
+          Selecionar todos visíveis
+        </label>
+        {rows.map((row) => (
+          <CompactMiniCard
+            key={row.id}
+            row={row}
+            checked={selected.has(row.id)}
+            onCheck={(v) => onToggleOne(row.id, v)}
+            message={generated[row.id]?.message ?? ""}
+            actions={actions}
+          />
+        ))}
+      </div>
+
+      {/* Desktop: tabela compacta */}
+      <div className="hidden md:block overflow-x-auto rounded-md border">
+        <table className="w-full text-sm">
+          <thead className="bg-muted/40 text-left">
+            <tr>
+              <th className="p-2 w-8">
+                <Checkbox checked={allSelected} onCheckedChange={(v) => onToggleAll(!!v)} />
+              </th>
+              <th className="p-2">Nome</th>
+              <th className="p-2">Empresa</th>
+              <th className="p-2">Telefone</th>
+              <th className="p-2">Status</th>
+              <th className="p-2 text-center">Tent.</th>
+              <th className="p-2">Última</th>
+              <th className="p-2 text-right">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => {
+              const c = row.contact;
+              const msg = generated[row.id]?.message ?? "";
+              return (
+                <tr key={row.id} className="border-t align-middle hover:bg-muted/30">
+                  <td className="p-2">
+                    <Checkbox checked={selected.has(row.id)} onCheckedChange={(v) => onToggleOne(row.id, !!v)} />
+                  </td>
+                  <td className="p-2">
+                    <div className="font-medium truncate max-w-[220px]">
+                      {c?.nome || <span className="italic text-muted-foreground">sem nome</span>}
+                    </div>
+                    {msg && (
+                      <button
+                        className="text-[10px] text-primary hover:underline truncate max-w-[220px] block text-left"
+                        onClick={() => actions.onViewMessage(row)}
+                      >
+                        Mensagem pronta: {msg.slice(0, 40)}…
+                      </button>
+                    )}
+                  </td>
+                  <td className="p-2 max-w-[180px] truncate">{c?.empresa || <span className="text-muted-foreground">—</span>}</td>
+                  <td className="p-2 font-mono whitespace-nowrap">+{c?.telefone_normalizado ?? ""}</td>
+                  <td className="p-2">
+                    <Badge className={STATUS_BADGE_CLASS[row.status] ?? ""}>{STATUS_LABEL[row.status] ?? row.status}</Badge>
+                  </td>
+                  <td className="p-2 text-center">{c?.quantidade_tentativas ?? 0}</td>
+                  <td className="p-2 whitespace-nowrap text-xs text-muted-foreground">
+                    {c?.ultima_tentativa ? format(new Date(c.ultima_tentativa), "dd/MM HH:mm", { locale: ptBR }) : "—"}
+                  </td>
+                  <td className="p-2 text-right">
+                    <div className="inline-flex gap-1">
+                      <Button
+                        size="sm"
+                        onClick={() => actions.openWhatsapp(row)}
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white h-8"
+                      >
+                        <Send className="h-3.5 w-3.5 mr-1" /> WhatsApp
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => actions.copyMessage(row)} className="h-8 px-2">
+                        <Copy className="h-3.5 w-3.5" />
+                      </Button>
+                      <RowMoreMenu row={row} actions={actions} />
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function CompactMiniCard({
+  row,
+  checked,
+  onCheck,
+  message,
+  actions,
+}: {
+  row: Row;
+  checked: boolean;
+  onCheck: (v: boolean) => void;
+  message: string;
+  actions: RowActions;
+}) {
   const c = row.contact;
-  const [templateIndex, setTemplateIndex] = useState<number>(-1);
-  const [showMsg, setShowMsg] = useState(false);
-  const [followupOpen, setFollowupOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [converting, setConverting] = useState(false);
+  if (!c) return null;
+  return (
+    <div className="rounded-md border p-2.5">
+      <div className="flex items-start gap-2">
+        <Checkbox className="mt-0.5" checked={checked} onCheckedChange={(v) => onCheck(!!v)} />
+        <div className="min-w-0 flex-1">
+          <div className="font-semibold truncate">{c.nome || <span className="italic text-muted-foreground font-normal">sem nome</span>}</div>
+          <div className="text-xs text-muted-foreground truncate">
+            {c.empresa || "—"} <span className="text-muted-foreground/60">•</span> <span className="font-mono">+{c.telefone_normalizado}</span>
+          </div>
+          <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
+            <span>Tent.: {c.quantidade_tentativas}</span>
+            {c.ultima_tentativa && <span>Última: {format(new Date(c.ultima_tentativa), "dd/MM HH:mm", { locale: ptBR })}</span>}
+            <Badge className={`${STATUS_BADGE_CLASS[row.status] ?? ""} h-4 px-1.5 text-[10px]`}>{STATUS_LABEL[row.status] ?? row.status}</Badge>
+          </div>
+          {message && (
+            <button
+              className="mt-1 block truncate text-left text-[11px] text-primary hover:underline"
+              onClick={() => actions.onViewMessage(row)}
+            >
+              Mensagem pronta: {message.slice(0, 48)}…
+            </button>
+          )}
+        </div>
+      </div>
+      <div className="mt-2 flex items-center gap-1.5">
+        <Button
+          size="sm"
+          onClick={() => actions.openWhatsapp(row)}
+          className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white h-8"
+        >
+          <Send className="h-3.5 w-3.5 mr-1" /> WhatsApp
+        </Button>
+        <Button size="sm" variant="outline" onClick={() => actions.copyMessage(row)} className="h-8 px-2">
+          <Copy className="h-3.5 w-3.5" />
+        </Button>
+        <RowMoreMenu row={row} actions={actions} />
+      </div>
+    </div>
+  );
+}
 
-  const { data: templates = [] } = useQuery({
-    queryKey: ["wpp_templates", "primeira_abordagem"],
-    queryFn: () => fetchActiveTemplates("primeira_abordagem"),
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const { data: sellerFirstName } = useQuery({
-    enabled: !!user,
-    queryKey: ["seller_name", user?.id],
-    queryFn: async () => {
-      const { data } = await supabase.from("profiles").select("full_name, email").eq("id", user!.id).maybeSingle();
-      const full = (data?.full_name ?? "").trim();
-      if (full) return full.split(/\s+/)[0];
-      return (data?.email ?? "").split("@")[0] || "";
-    },
-    staleTime: 10 * 60 * 1000,
-  });
-
-  const current: WhatsappTemplate | null =
-    templateIndex >= 0 && templateIndex < templates.length ? templates[templateIndex] : null;
-
-  const message = useMemo(() => {
-    if (!current || !c) return "";
-    return renderTemplate(current.body, {
-      nome: c.nome,
-      empresa: c.empresa,
-      cargo: c.cargo,
-      vendedor: sellerFirstName ?? "",
-    });
-  }, [current, c, sellerFirstName]);
-
-  const logAttempt = async (resultado: string) => {
-    if (!user || !c) return;
-    try {
-      await supabase.from("prospect_attempts").insert({
-        prospect_contact_id: c.id,
-        vendedor_id: user.id,
-        tipo_acao: "whatsapp",
-        telefone_normalizado: c.telefone_normalizado,
-        resultado,
-        observacao: current ? `Modelo: ${current.name}` : null,
-      });
-    } catch {
-      /* silencioso */
-    }
-  };
-
-  const gerar = () => {
-    if (templates.length === 0) {
-      toast.error("Nenhum modelo ativo. Peça ao ADM para cadastrar em Configurações.");
-      return;
-    }
-    setTemplateIndex(pickRandomIndex(templates.length));
-    setShowMsg(true);
-    void updateEntry(row.id, { status: "mensagem_gerada" as never }).then(onChanged).catch(() => {});
-  };
-
-  const trocar = () => {
-    if (templates.length < 2) return;
-    setTemplateIndex((prev) => pickRandomIndex(templates.length, prev));
-  };
-
-  const copiar = async () => {
-    if (!message) return;
-    try {
-      await navigator.clipboard.writeText(message);
-      toast.success("Mensagem copiada");
-      await updateEntry(row.id, {
-        status: "mensagem_copiada" as never,
-        message_copied_at: new Date().toISOString(),
-        last_template_id: current?.id ?? null,
-        last_template_name: current?.name ?? null,
-        last_message_body: message,
-      });
-      void logAttempt("Mensagem copiada");
-      onChanged();
-    } catch {
-      toast.error("Não foi possível copiar");
-    }
-  };
-
-  const abrirWhatsapp = async () => {
-    if (!c) return;
-    const norm = normalizePhoneForWhatsapp(c.telefone_normalizado || c.telefone_original);
-    if (!norm.ok) {
-      const marcar = confirm(
-        "Este telefone parece inválido. Deseja marcar como número inválido?\n\nOK = marcar como inválido / Cancelar = manter",
-      );
-      if (marcar) {
-        await updateEntry(row.id, { status: "numero_invalido" as never });
-        await supabase.from("prospect_contacts").update({ telefone_invalido: true }).eq("id", c.id);
-        toast.success("Marcado como número inválido");
-        onChanged();
-      }
-      return;
-    }
-    const url = message
-      ? `https://wa.me/${norm.phone}?text=${encodeURIComponent(message)}`
-      : `https://wa.me/${norm.phone}`;
-    window.open(url, "_blank");
-    await updateEntry(row.id, {
-      status: "whatsapp_aberto" as never,
-      whatsapp_opened_at: new Date().toISOString(),
-      last_template_id: current?.id ?? null,
-      last_template_name: current?.name ?? null,
-      last_message_body: message || row.last_message_body,
-    });
-    void logAttempt("WhatsApp iniciado");
-    onChanged();
-  };
-
-  const marcarEnviado = async () => {
-    setSaving(true);
-    try {
-      await updateEntry(row.id, {
-        status: "mensagem_enviada" as never,
-        message_sent_at: new Date().toISOString(),
-      });
-      void logAttempt("Mensagem enviada");
-      toast.success("Marcado como enviado");
-      onChanged();
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const marcarRespondeu = async () => {
-    setSaving(true);
-    try {
-      await updateEntry(row.id, {
-        status: "respondeu" as never,
-        responded_at: new Date().toISOString(),
-      });
-      void logAttempt("Respondeu no WhatsApp");
-      toast.success("Marcado como respondeu");
-      onChanged();
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const marcarSemResposta = async () => {
-    setSaving(true);
-    try {
-      await updateEntry(row.id, {
-        status: "sem_resposta" as never,
-        no_response_at: new Date().toISOString(),
-      });
-      void logAttempt("Sem resposta");
-      toast.success("Marcado como sem resposta");
-      onChanged();
-      setFollowupOpen(true);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const remover = async () => {
-    if (!confirm("Remover este lead da Lista de WhatsApp?")) return;
-    setSaving(true);
-    try {
-      await updateEntry(row.id, {
-        status: "removido" as never,
-        removed_at: new Date().toISOString(),
-      });
-      toast.success("Removido da lista");
-      onChanged();
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const converter = async () => {
-    if (!c || !user) return;
-    setConverting(true);
-    try {
-      const conv = await autoConvertProspectToLead({
-        contact: c,
-        vendedorId: user.id,
-        resultLabel: "Interessado",
-        latestObservation: "Convertido via Lista de WhatsApp",
-      });
-      if (!conv.ok) {
-        toast.error(`Não foi possível criar lead. ${conv.error}`);
-        return;
-      }
-      await updateEntry(row.id, {
-        status: "removido" as never,
-        removed_at: new Date().toISOString(),
-      });
-      toast.success(conv.created ? "Lead criado no funil" : "Contato vinculado a lead existente");
-      onChanged();
-    } finally {
-      setConverting(false);
-    }
-  };
-
+function DetailedRowCard({
+  row,
+  generatedMessage,
+  actions,
+}: {
+  row: Row;
+  generatedMessage: string;
+  actions: RowActions;
+}) {
+  const c = row.contact;
   if (!c) {
     return (
       <Card>
@@ -480,99 +965,107 @@ function WhatsappRowCard({ row, onChanged }: { row: Row; onChanged: () => void }
       </Card>
     );
   }
-
   return (
-    <>
-      <Card className="border-2">
-        <CardHeader className="pb-2">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <CardTitle className="text-base truncate">
-                {c.nome || <span className="italic text-muted-foreground">Sem nome</span>}
-              </CardTitle>
-              <div className="text-xs text-muted-foreground truncate">
-                {c.empresa || "—"}{c.cargo ? ` · ${c.cargo}` : ""}
-              </div>
-              <div className="text-xs font-mono mt-0.5">+{c.telefone_normalizado}</div>
+    <Card className="border-2">
+      <CardHeader className="pb-2">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <CardTitle className="text-base truncate">
+              {c.nome || <span className="italic text-muted-foreground">Sem nome</span>}
+            </CardTitle>
+            <div className="text-xs text-muted-foreground truncate">
+              {c.empresa || "—"}{c.cargo ? ` · ${c.cargo}` : ""}
             </div>
-            <div className="shrink-0 text-right space-y-1">
-              <Badge className={STATUS_BADGE_CLASS[row.status] ?? ""}>{STATUS_LABEL[row.status] ?? row.status}</Badge>
-              <div className="text-[10px] text-muted-foreground">{REASON_LABEL[row.reason] ?? row.reason}</div>
-            </div>
+            <div className="text-xs font-mono mt-0.5">+{c.telefone_normalizado}</div>
           </div>
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground pt-1">
-            <span>Vendedor: <strong className="text-foreground">{row.seller_name ?? "—"}</strong></span>
-            <span>Tent.: {c.quantidade_tentativas}</span>
-            {c.ultima_tentativa && (
-              <span>Última: {format(new Date(c.ultima_tentativa), "dd/MM HH:mm", { locale: ptBR })}</span>
-            )}
+          <div className="shrink-0 text-right space-y-1">
+            <Badge className={STATUS_BADGE_CLASS[row.status] ?? ""}>{STATUS_LABEL[row.status] ?? row.status}</Badge>
+            <div className="text-[10px] text-muted-foreground">{REASON_LABEL[row.reason] ?? row.reason}</div>
           </div>
-        </CardHeader>
-        <CardContent className="pt-0 space-y-2">
-          {!showMsg ? (
-            <Button variant="outline" size="sm" onClick={gerar} className="w-full">
-              <Sparkles className="h-4 w-4 mr-2" /> Gerar mensagem WhatsApp
-            </Button>
-          ) : (
-            <div className="space-y-2">
-              <div className="rounded-md border bg-muted/40 p-3 text-sm whitespace-pre-wrap break-words min-h-[100px]">
-                {message || <span className="italic text-muted-foreground">Modelo vazio.</span>}
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                <Button size="sm" variant="outline" onClick={trocar} disabled={templates.length < 2}>
-                  <RefreshCw className="h-3.5 w-3.5 mr-1" /> Trocar
-                </Button>
-                <Button size="sm" variant="outline" onClick={copiar} disabled={!message}>
-                  <Copy className="h-3.5 w-3.5 mr-1" /> Copiar
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={abrirWhatsapp}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                >
-                  <Send className="h-3.5 w-3.5 mr-1" /> Abrir
-                </Button>
-              </div>
-            </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground pt-1">
+          <span>Vendedor: <strong className="text-foreground">{row.seller_name ?? "—"}</strong></span>
+          <span>Tent.: {c.quantidade_tentativas}</span>
+          {c.ultima_tentativa && (
+            <span>Última: {format(new Date(c.ultima_tentativa), "dd/MM HH:mm", { locale: ptBR })}</span>
           )}
+        </div>
+      </CardHeader>
+      <CardContent className="pt-0 space-y-2">
+        {generatedMessage && (
+          <div className="rounded-md border bg-muted/40 p-2 text-xs whitespace-pre-wrap break-words max-h-24 overflow-hidden">
+            {generatedMessage}
+          </div>
+        )}
+        <div className="grid grid-cols-4 gap-2">
+          <Button
+            size="sm"
+            onClick={() => actions.openWhatsapp(row)}
+            className="col-span-2 bg-emerald-600 hover:bg-emerald-700 text-white"
+          >
+            <Send className="h-3.5 w-3.5 mr-1" /> Abrir WhatsApp
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => actions.copyMessage(row)}>
+            <Copy className="h-3.5 w-3.5 mr-1" /> Copiar
+          </Button>
+          <RowMoreMenu row={row} actions={actions} />
+        </div>
+        {row.status === "respondeu" && (
+          <Button
+            size="sm"
+            onClick={() => actions.convertRow(row)}
+            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+          >
+            <UserCheck className="h-3.5 w-3.5 mr-2" /> Converter para Interessado
+          </Button>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 pt-1">
-            <Button size="sm" variant="outline" onClick={marcarEnviado} disabled={saving}>
-              <Check className="h-3.5 w-3.5 mr-1" /> Enviado
+function ViewMessageDialog({
+  row,
+  message,
+  onOpenChange,
+  onCopy,
+  onChangeVariation,
+  onOpenWhatsapp,
+}: {
+  row: Row | null;
+  message: string;
+  onOpenChange: (v: boolean) => void;
+  onCopy: () => void;
+  onChangeVariation: () => void;
+  onOpenWhatsapp: () => void;
+}) {
+  const open = !!row;
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>
+            Mensagem para {row?.contact?.nome || "contato"}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="rounded-md border bg-muted/40 p-3 text-sm whitespace-pre-wrap break-words min-h-[120px]">
+          {message || <span className="italic text-muted-foreground">Mensagem ainda não gerada.</span>}
+        </div>
+        <DialogFooter className="gap-2 sm:justify-between">
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={onChangeVariation}>
+              <RefreshCw className="h-4 w-4 mr-1" /> Trocar variação
             </Button>
-            <Button size="sm" variant="outline" onClick={marcarRespondeu} disabled={saving}>
-              <MessageCircle className="h-3.5 w-3.5 mr-1" /> Respondeu
-            </Button>
-            <Button size="sm" variant="outline" onClick={marcarSemResposta} disabled={saving}>
-              <Clock className="h-3.5 w-3.5 mr-1" /> Sem resposta
-            </Button>
-            <Button size="sm" variant="outline" onClick={remover} disabled={saving}>
-              <Trash2 className="h-3.5 w-3.5 mr-1" /> Remover
+            <Button variant="outline" onClick={onCopy} disabled={!message}>
+              <Copy className="h-4 w-4 mr-1" /> Copiar
             </Button>
           </div>
-
-          {row.status === "respondeu" && (
-            <Button
-              size="sm"
-              onClick={converter}
-              disabled={converting}
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
-            >
-              <UserCheck className="h-3.5 w-3.5 mr-2" />
-              {converting ? "Convertendo…" : "Converter para Interessado"}
-            </Button>
-          )}
-        </CardContent>
-      </Card>
-
-      <FollowupDialog
-        open={followupOpen}
-        onOpenChange={setFollowupOpen}
-        entry={row}
-        contact={c}
-        onSaved={onChanged}
-      />
-    </>
+          <Button onClick={onOpenWhatsapp} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+            <Send className="h-4 w-4 mr-1" /> Abrir WhatsApp
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
