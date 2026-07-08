@@ -19,6 +19,7 @@ import { AttemptHistory } from "./AttemptHistory";
 import { ReturnsDebugCard } from "./ReturnsDebugCard";
 import { DailyScoreboard } from "./DailyScoreboard";
 import { WhatsappComposer } from "./WhatsappComposer";
+import { addToWhatsappList } from "@/lib/whatsapp-list";
 import { toast } from "sonner";
 
 type Props = {
@@ -283,6 +284,26 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     window.open(`https://wa.me/${contact.telefone_normalizado}?text=${encodeURIComponent(message)}`, "_blank");
     setResultOpen(true);
   };
+
+  const addToWhatsapp = async () => {
+    if (!contact || !user) return;
+    try {
+      const res = await addToWhatsappList({
+        prospectContactId: contact.id,
+        ownerId: user.id,
+        reason: "manual",
+      });
+      if (res.created) {
+        toast.success("Adicionado à Lista de WhatsApp");
+      } else {
+        toast.message("Este lead já está na Lista de WhatsApp.");
+      }
+      qc.invalidateQueries({ queryKey: ["whatsapp_list"] });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao adicionar à lista");
+    }
+  };
+
 
 
   const onResultSaved = async (_goNext: boolean) => {
@@ -594,6 +615,9 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
                 <div className="flex flex-wrap items-center gap-2">
                   <Button variant="outline" onClick={() => setEditOpen(true)}>
                     <Pencil className="h-4 w-4 mr-2" />Editar contato
+                  </Button>
+                  <Button variant="outline" onClick={addToWhatsapp}>
+                    <MessageCircle className="h-4 w-4 mr-2" />Adicionar à Lista WhatsApp
                   </Button>
                   <Button variant="outline" onClick={goPrev} disabled={queue.length < 2}>
                     <ArrowLeft className="h-4 w-4 mr-2" />Anterior

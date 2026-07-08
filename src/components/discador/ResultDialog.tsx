@@ -1,17 +1,25 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PROSPECT_RESULTS, type ProspectResult, applyResultToFields } from "@/lib/prospect-status";
 import { supabase } from "@/integrations/supabase/client";
 import { autoConvertProspectToLead } from "@/lib/prospect-auto-convert";
+import { addToWhatsappList, type WhatsappListReason } from "@/lib/whatsapp-list";
 import type { ProspectContact } from "@/lib/prospect-queue";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
+
+const RESULT_TO_WHATSAPP_REASON: Partial<Record<ProspectResult, WhatsappListReason>> = {
+  "Não atendeu": "nao_atendeu",
+  "Caixa postal": "caixa_postal",
+  "Ocupado": "chamou_nao_respondeu",
+};
 
 type DialMeta = {
   telefone_para_discagem: string | null;
@@ -36,11 +44,19 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
   const [result, setResult] = useState<ProspectResult | "">("");
   const [obs, setObs] = useState("");
   const [proxima, setProxima] = useState("");
+  const [addToWppList, setAddToWppList] = useState(false);
   const [saving, setSaving] = useState(false);
   const queryClient = useQueryClient();
 
   const contactId = contact.id;
   const telefone = contact.telefone_normalizado;
+
+  const whatsappReason = result ? RESULT_TO_WHATSAPP_REASON[result as ProspectResult] : undefined;
+  useEffect(() => {
+    // Marca sugestão automática ao escolher um resultado elegível
+    if (whatsappReason) setAddToWppList(true);
+    else setAddToWppList(false);
+  }, [whatsappReason]);
 
   const completeRetornoTask = async () => {
     const completionPatch = { status: "concluida" as const };
@@ -216,8 +232,25 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
       }
     }
 
+    // 3) Se marcado, adiciona à Lista de WhatsApp
+    if (whatsappReason && addToWppList) {
+      try {
+        const res = await addToWhatsappList({
+          prospectContactId: contactId,
+          ownerId: vendedorId,
+          reason: whatsappReason,
+          notes: obs.trim() || undefined,
+        });
+        toast.success(res.created ? "Adicionado à Lista de WhatsApp" : "Atualizado na Lista de WhatsApp");
+        queryClient.invalidateQueries({ queryKey: ["whatsapp_list"] });
+      } catch (err) {
+        console.warn("[ResultDialog] falha ao adicionar à Lista de WhatsApp", err);
+        toast.error("Resultado salvo, mas não foi possível adicionar à Lista de WhatsApp.");
+      }
+    }
+
     setSaving(false);
-    setResult(""); setObs(""); setProxima("");
+    setResult(""); setObs(""); setProxima(""); setAddToWppList(false);
     queryClient.invalidateQueries({ queryKey: ["my_prospect_contacts"] });
     queryClient.invalidateQueries({ queryKey: ["prospect_queue"] });
     queryClient.invalidateQueries({ queryKey: ["prospect_counts"] });
@@ -227,6 +260,7 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
     onOpenChange(false);
     onSaved(goNext);
   };
+
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!saving) onOpenChange(v); }}>
@@ -253,11 +287,24 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
               Ao salvar, este contato será convertido automaticamente em lead no funil (coluna Interessado).
             </div>
           )}
+          {whatsappReason && (
+            <label className="flex items-start gap-2 rounded-md border border-emerald-500/40 bg-emerald-500/5 p-2 text-xs cursor-pointer">
+              <Checkbox
+                checked={addToWppList}
+                onCheckedChange={(v) => setAddToWppList(v === true)}
+                className="mt-0.5"
+              />
+              <span>
+                <strong>Adicionar à Lista de WhatsApp?</strong> Este lead não avançou por ligação — separe para abordagem via WhatsApp.
+              </span>
+            </label>
+          )}
           <div>
             <Label>Observação</Label>
             <Textarea rows={3} value={obs} onChange={(e) => setObs(e.target.value)} maxLength={500} />
           </div>
         </div>
+
         <DialogFooter className="gap-2">
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={saving}>Cancelar</Button>
           <Button variant="outline" onClick={() => save(false)} disabled={saving}>Salvar</Button>

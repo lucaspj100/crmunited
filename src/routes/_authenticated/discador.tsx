@@ -10,6 +10,7 @@ import { ImportPanel } from "@/components/discador/ImportPanel";
 import { DashboardPanel } from "@/components/discador/DashboardPanel";
 import { ConfigPanel } from "@/components/discador/ConfigPanel";
 import { MyContactsPanel } from "@/components/discador/MyContactsPanel";
+import { WhatsappListPanel } from "@/components/discador/WhatsappListPanel";
 
 type DiscadorSearch = {
   prospect_contact_id?: string;
@@ -75,6 +76,7 @@ function DiscadorPage() {
         <div className="-mx-1 overflow-x-auto max-w-full">
           <TabsList className="inline-flex w-max whitespace-nowrap">
             <TabsTrigger value="trabalhar">Trabalhar</TabsTrigger>
+            <TabsTrigger value="whatsapp">WhatsApp</TabsTrigger>
             <TabsTrigger value="minha-lista">Minha lista</TabsTrigger>
             {isAdmin && <TabsTrigger value="base">Base</TabsTrigger>}
             <TabsTrigger value="importar">Importar</TabsTrigger>
@@ -91,6 +93,7 @@ function DiscadorPage() {
             onFocusConsumed={clearFocus}
           />
         </TabsContent>
+        <TabsContent value="whatsapp" className="mt-4"><WhatsappListPanel /></TabsContent>
         <TabsContent value="minha-lista" className="mt-4"><MyContactsPanel /></TabsContent>
         {isAdmin && <TabsContent value="base" className="mt-4"><BasePanel sellers={sellers} /></TabsContent>}
         <TabsContent value="importar" className="mt-4"><ImportPanel sellers={sellers} isAdmin={isAdmin} /></TabsContent>

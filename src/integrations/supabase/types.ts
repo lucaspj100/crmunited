@@ -762,6 +762,91 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_list_entries: {
+        Row: {
+          created_at: string
+          followup_task_id: string | null
+          id: string
+          last_message_body: string | null
+          last_template_id: string | null
+          last_template_name: string | null
+          message_copied_at: string | null
+          message_sent_at: string | null
+          no_response_at: string | null
+          notes: string | null
+          owner_id: string
+          prospect_contact_id: string
+          reason: string
+          removed_at: string | null
+          responded_at: string | null
+          status: string
+          updated_at: string
+          whatsapp_opened_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          followup_task_id?: string | null
+          id?: string
+          last_message_body?: string | null
+          last_template_id?: string | null
+          last_template_name?: string | null
+          message_copied_at?: string | null
+          message_sent_at?: string | null
+          no_response_at?: string | null
+          notes?: string | null
+          owner_id: string
+          prospect_contact_id: string
+          reason?: string
+          removed_at?: string | null
+          responded_at?: string | null
+          status?: string
+          updated_at?: string
+          whatsapp_opened_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          followup_task_id?: string | null
+          id?: string
+          last_message_body?: string | null
+          last_template_id?: string | null
+          last_template_name?: string | null
+          message_copied_at?: string | null
+          message_sent_at?: string | null
+          no_response_at?: string | null
+          notes?: string | null
+          owner_id?: string
+          prospect_contact_id?: string
+          reason?: string
+          removed_at?: string | null
+          responded_at?: string | null
+          status?: string
+          updated_at?: string
+          whatsapp_opened_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_list_entries_followup_task_id_fkey"
+            columns: ["followup_task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_list_entries_last_template_id_fkey"
+            columns: ["last_template_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_list_entries_prospect_contact_id_fkey"
+            columns: ["prospect_contact_id"]
+            isOneToOne: false
+            referencedRelation: "prospect_contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       whatsapp_templates: {
         Row: {
           active: boolean
