@@ -24,13 +24,26 @@ function AuthPage() {
     e.preventDefault();
     setLoading(true);
     const fd = new FormData(e.currentTarget);
+    const email = String(fd.get("email"));
     const { error } = await supabase.auth.signInWithPassword({
-      email: String(fd.get("email")),
+      email,
       password: String(fd.get("password")),
     });
     setLoading(false);
-    if (error) toast.error(error.message);
-    else toast.success("Bem-vindo!");
+    if (error) {
+      // Registra tentativa falha (política permite anon inserir com user_id null e event login_failed)
+      try {
+        await supabase.from("access_logs").insert({
+          user_id: null,
+          email,
+          event_type: "login_failed",
+          status: "failed",
+          reason: error.message,
+          user_agent: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 400) : null,
+        });
+      } catch { /* ignore */ }
+      toast.error(error.message);
+    } else toast.success("Bem-vindo!");
   };
 
   const onSignup = async (e: React.FormEvent<HTMLFormElement>) => {
