@@ -34,6 +34,7 @@ function MeuPerfil() {
   const qc = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
+  const [pwOpen, setPwOpen] = useState(false);
 
   const { data: profile } = useQuery({
     enabled: !!user,
