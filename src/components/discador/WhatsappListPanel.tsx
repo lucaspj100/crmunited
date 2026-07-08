@@ -133,6 +133,8 @@ export function WhatsappListPanel() {
   const [followupRow, setFollowupRow] = useState<Row | null>(null);
   const [showNoTemplateDialog, setShowNoTemplateDialog] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [bulkMode, setBulkMode] = useState(false);
+
 
 
   const { data: sellers = [] } = useQuery({
@@ -520,18 +522,44 @@ export function WhatsappListPanel() {
     },
     hasActiveTemplate,
     onNoTemplate: () => setShowNoTemplateDialog(true),
+    bulkMode,
   };
+
+  const openNextAwaiting = async () => {
+    if (!hasActiveTemplate) {
+      setShowNoTemplateDialog(true);
+      return;
+    }
+    const next = filtered.find((r) => r.status === "aguardando");
+    if (!next) {
+      toast.info("Nenhum contato aguardando WhatsApp.");
+      return;
+    }
+    await openWhatsapp(next);
+  };
+  const awaitingCount = summary.aguardando;
+
 
 
   return (
-    <div className="space-y-4 pb-24">
-      <div>
+    <div className="space-y-3 md:space-y-4 pb-24">
+      {/* Header: reduzido no mobile */}
+      <div className="hidden md:block">
         <h2 className="text-lg font-semibold">Lista de WhatsApp</h2>
         <p className="text-sm text-muted-foreground">
           Fila de trabalho compacta: abra o WhatsApp com a mensagem pronta e trabalhe muitos contatos em sequência.
         </p>
       </div>
-
+      <div className="md:hidden flex items-center justify-between">
+        <h2 className="text-base font-semibold">WhatsApp</h2>
+        <button
+          type="button"
+          onClick={() => { setBulkMode((v) => !v); if (bulkMode) clearSelection(); }}
+          className={`text-xs rounded-md border px-2 py-1 ${bulkMode ? "bg-primary text-primary-foreground border-primary" : "text-muted-foreground"}`}
+        >
+          {bulkMode ? "Sair da seleção" : "Selecionar em massa"}
+        </button>
+      </div>
 
       {!hasActiveTemplate && (
         <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm">
@@ -558,50 +586,90 @@ export function WhatsappListPanel() {
         </div>
       )}
 
-      {/* Cards de resumo — carrossel horizontal no mobile */}
-      <div className="-mx-1 overflow-x-auto md:mx-0 md:overflow-visible">
-        <div className="flex gap-2 px-1 md:grid md:grid-cols-6 md:px-0">
-          <SummaryCard label="Na lista" value={summary.total} />
-          <SummaryCard label="Aguardando" value={summary.aguardando} />
-          <SummaryCard label="Iniciados hoje" value={summary.iniciadosHoje} />
-          <SummaryCard label="Respondidos hoje" value={summary.respondidosHoje} />
-          <SummaryCard label="Sem resposta" value={summary.semResposta} />
-          <SummaryCard label="Inválidos" value={summary.invalidos} />
-        </div>
+      {/* Métricas: linha compacta no mobile, cards no desktop */}
+      <div className="md:hidden rounded-md border bg-muted/30 px-3 py-1.5 text-xs text-muted-foreground flex items-center gap-3 overflow-x-auto whitespace-nowrap">
+        <span>Na lista: <strong className="text-foreground">{summary.total}</strong></span>
+        <span className="text-muted-foreground/40">|</span>
+        <span>Aguardando: <strong className="text-foreground">{summary.aguardando}</strong></span>
+        <span className="text-muted-foreground/40">|</span>
+        <span>Iniciados hoje: <strong className="text-foreground">{summary.iniciadosHoje}</strong></span>
+      </div>
+      <div className="hidden md:grid md:grid-cols-6 gap-2">
+        <SummaryCard label="Na lista" value={summary.total} />
+        <SummaryCard label="Aguardando" value={summary.aguardando} />
+        <SummaryCard label="Iniciados hoje" value={summary.iniciadosHoje} />
+        <SummaryCard label="Respondidos hoje" value={summary.respondidosHoje} />
+        <SummaryCard label="Sem resposta" value={summary.semResposta} />
+        <SummaryCard label="Inválidos" value={summary.invalidos} />
       </div>
 
-      <Card>
-        <CardContent className="p-3 space-y-3">
-          {/* Linha rápida mobile: busca + status + botão Filtros */}
-          <div className="grid gap-2 md:hidden grid-cols-[minmax(0,1fr)_auto]">
-            <Input
-              placeholder="Buscar nome, empresa ou telefone…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="h-9"
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-9 shrink-0"
-              onClick={() => setShowMobileFilters((v) => !v)}
-            >
-              Filtros
-            </Button>
-            <Select value={statusFilter} onValueChange={setStatusFilter} disabled={onlyAwaiting}>
-              <SelectTrigger className="col-span-2 h-9"><SelectValue placeholder="Status" /></SelectTrigger>
-              <SelectContent>
-                {STATUS_FILTER_OPTIONS.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+      {/* Filtros mobile: só busca + botão Filtros */}
+      <div className="md:hidden">
+        <div className="grid gap-2 grid-cols-[minmax(0,1fr)_auto]">
+          <Input
+            placeholder="Buscar…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="h-9"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-9 shrink-0"
+            onClick={() => setShowMobileFilters((v) => !v)}
+          >
+            Filtros
+          </Button>
+        </div>
+        {showMobileFilters && (
+          <div className="mt-2 grid gap-2 rounded-md border bg-card p-2">
+            <div>
+              <Label className="text-[11px] text-muted-foreground">Status</Label>
+              <Select value={statusFilter} onValueChange={setStatusFilter} disabled={onlyAwaiting}>
+                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {STATUS_FILTER_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-[11px] text-muted-foreground">Motivo</Label>
+              <Select value={reasonFilter} onValueChange={setReasonFilter}>
+                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {REASON_FILTER_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-[11px] text-muted-foreground">Ordenar por</Label>
+              <Select value={sortKey} onValueChange={(v) => setSortKey(v as SortKey)}>
+                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {SORT_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <label className="flex items-center gap-2 text-xs">
+              <Switch checked={onlyAwaiting} onCheckedChange={setOnlyAwaiting} />
+              Somente aguardando WhatsApp
+            </label>
           </div>
+        )}
+      </div>
 
-          {/* Filtros completos: sempre no desktop, expansível no mobile */}
-          <div className={`${showMobileFilters ? "grid" : "hidden md:grid"} gap-2 md:grid-cols-4`}>
-            <div className="hidden md:block">
+      {/* Filtros desktop */}
+      <Card className="hidden md:block">
+        <CardContent className="p-3 space-y-3">
+          <div className="grid gap-2 md:grid-cols-4">
+            <div>
               <Label className="text-xs">Status</Label>
               <Select value={statusFilter} onValueChange={setStatusFilter} disabled={onlyAwaiting}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
@@ -649,7 +717,7 @@ export function WhatsappListPanel() {
                 </Select>
               </div>
             )}
-            <div className="hidden md:block">
+            <div>
               <Label className="text-xs">Busca</Label>
               <Input
                 placeholder="Nome, empresa ou telefone…"
@@ -657,13 +725,9 @@ export function WhatsappListPanel() {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-            <label className="flex items-center gap-2 text-xs md:hidden">
-              <Switch checked={onlyAwaiting} onCheckedChange={setOnlyAwaiting} />
-              Somente aguardando WhatsApp
-            </label>
           </div>
 
-          <div className="hidden md:flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex flex-wrap items-center gap-3">
               <label className="flex items-center gap-2 text-xs">
                 <Switch checked={onlyAwaiting} onCheckedChange={setOnlyAwaiting} />
@@ -703,7 +767,6 @@ export function WhatsappListPanel() {
         </CardContent>
       </Card>
 
-
       {/* Barra de ações em massa */}
       {selectedInView.length > 0 && (
         <div className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-2 rounded-md border border-primary/40 bg-primary/5 px-3 py-2 backdrop-blur">
@@ -718,6 +781,7 @@ export function WhatsappListPanel() {
             <Button size="sm" variant="outline" onClick={bulkRemove}>
               <Trash2 className="h-4 w-4 mr-1" /> Remover
             </Button>
+
             <Button size="sm" variant="ghost" onClick={clearSelection}>
               <X className="h-4 w-4 mr-1" /> Limpar
             </Button>
@@ -756,7 +820,7 @@ export function WhatsappListPanel() {
         />
       )}
 
-      {/* Barra Próximo WhatsApp */}
+      {/* Barra Próximo WhatsApp — sequência ativa */}
       {sequence.length > 0 && (
         <div className="fixed inset-x-0 bottom-3 z-30 mx-auto flex w-fit max-w-[95vw] items-center gap-2 rounded-full border bg-background/95 px-3 py-2 shadow-lg backdrop-blur">
           <div className="text-xs">
@@ -770,6 +834,22 @@ export function WhatsappListPanel() {
           </Button>
         </div>
       )}
+
+      {/* Botão fixo mobile: Próximo WhatsApp (fora de sequência) */}
+      {sequence.length === 0 && awaitingCount > 0 && (
+        <div className="md:hidden fixed inset-x-0 bottom-3 z-30 flex justify-center px-4 pointer-events-none">
+          <Button
+            size="lg"
+            onClick={openNextAwaiting}
+            className="pointer-events-auto bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg rounded-full h-11 px-5"
+          >
+            <MessageCircle className="h-4 w-4 mr-2" />
+            Próximo WhatsApp
+            <span className="ml-2 rounded-full bg-white/20 px-2 py-0.5 text-[11px]">{awaitingCount}</span>
+          </Button>
+        </div>
+      )}
+
 
       {/* Modal Ver mensagem */}
       <ViewMessageDialog
@@ -846,6 +926,8 @@ type RowActions = {
   onViewMessage: (r: Row) => void;
   hasActiveTemplate: boolean;
   onNoTemplate: () => void;
+  bulkMode: boolean;
+
 };
 
 
@@ -912,11 +994,13 @@ function CompactList({
   return (
     <div className="space-y-3">
       {/* Mobile: mini-cards */}
-      <div className="md:hidden space-y-1.5">
-        <label className="flex items-center gap-2 px-1 text-xs text-muted-foreground">
-          <Checkbox checked={allSelected} onCheckedChange={(v) => onToggleAll(!!v)} />
-          Selecionar todos visíveis
-        </label>
+      <div className="md:hidden space-y-1">
+        {actions.bulkMode && (
+          <label className="flex items-center gap-2 px-1 text-xs text-muted-foreground">
+            <Checkbox checked={allSelected} onCheckedChange={(v) => onToggleAll(!!v)} />
+            Selecionar todos visíveis
+          </label>
+        )}
         {rows.map((row) => (
           <CompactMiniCard
             key={row.id}
@@ -928,6 +1012,7 @@ function CompactList({
           />
         ))}
       </div>
+
 
       {/* Desktop: tabela compacta */}
       <div className="hidden md:block overflow-x-auto rounded-md border">
@@ -1021,55 +1106,55 @@ function CompactMiniCard({
   const c = row.contact;
   if (!c) return null;
   return (
-    <div className="rounded-md border px-2.5 py-2">
+    <div className="rounded-md border bg-card px-2.5 py-1.5">
       <div className="flex items-center gap-2">
-        <Checkbox className="shrink-0" checked={checked} onCheckedChange={(v) => onCheck(!!v)} />
+        {actions.bulkMode && (
+          <Checkbox className="shrink-0" checked={checked} onCheckedChange={(v) => onCheck(!!v)} />
+        )}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <div className="font-semibold text-sm truncate flex-1">
+            <div className="font-semibold text-[13px] leading-tight truncate flex-1">
               {c.nome || <span className="italic text-muted-foreground font-normal">sem nome</span>}
             </div>
-            <Badge className={`${STATUS_BADGE_CLASS[row.status] ?? ""} h-4 px-1.5 text-[10px] shrink-0`}>{STATUS_LABEL[row.status] ?? row.status}</Badge>
+            {actions.hasActiveTemplate ? (
+              <Button
+                size="sm"
+                onClick={() => actions.openWhatsapp(row)}
+                className="shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white h-7 px-2.5 text-xs rounded-full"
+              >
+                <MessageCircle className="h-3.5 w-3.5 mr-1" /> WhatsApp
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={actions.onNoTemplate}
+                className="shrink-0 h-7 px-2 text-[11px] border-destructive/40 text-destructive rounded-full"
+              >
+                Sem modelo
+              </Button>
+            )}
           </div>
-          <div className="text-[11px] text-muted-foreground truncate">
-            {c.empresa || "—"} <span className="text-muted-foreground/60">•</span> <span className="font-mono">+{c.telefone_normalizado}</span>
+          <div className="text-[11px] text-muted-foreground truncate leading-tight">
+            {c.empresa || "—"}
           </div>
-          <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[10px] text-muted-foreground">
-            <span>Tent.: {c.quantidade_tentativas}</span>
-            {c.ultima_tentativa && <span>Última: {format(new Date(c.ultima_tentativa), "dd/MM HH:mm", { locale: ptBR })}</span>}
+          <div className="mt-0.5 flex items-center justify-between gap-2 text-[10px] text-muted-foreground leading-tight">
+            <div className="truncate">
+              Tent. {c.quantidade_tentativas}
+              {c.ultima_tentativa && ` • Última ${format(new Date(c.ultima_tentativa), "dd/MM HH:mm", { locale: ptBR })}`}
+              {" • "}
+              <span>{STATUS_LABEL[row.status] ?? row.status}</span>
+            </div>
+            <div className="shrink-0">
+              <RowMoreMenu row={row} actions={actions} />
+            </div>
           </div>
-        </div>
-        <div className="flex items-center gap-1 shrink-0">
-          {actions.hasActiveTemplate ? (
-            <Button
-              size="sm"
-              onClick={() => actions.openWhatsapp(row)}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white h-8 px-2.5"
-              title="Abrir WhatsApp"
-            >
-              <MessageCircle className="h-4 w-4" />
-              <span className="ml-1 hidden xs:inline">WhatsApp</span>
-            </Button>
-          ) : (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={actions.onNoTemplate}
-              className="h-8 px-2 text-[11px] border-destructive/40 text-destructive"
-              title="Sem modelo ativo"
-            >
-              Sem modelo
-            </Button>
-          )}
-          <Button size="sm" variant="outline" onClick={() => actions.copyMessage(row)} className="h-8 px-2" title="Copiar">
-            <Copy className="h-3.5 w-3.5" />
-          </Button>
-          <RowMoreMenu row={row} actions={actions} />
         </div>
       </div>
     </div>
   );
 }
+
 
 
 function DetailedRowCard({
