@@ -157,6 +157,7 @@ function AuthedLayout() {
       </div>
       <ReturnNotificationWatcher />
       <TaskNotificationWatcher />
+      <ChangePasswordDialog open={mustChangePassword} onOpenChange={() => {}} forced />
     </div>
   );
 }
