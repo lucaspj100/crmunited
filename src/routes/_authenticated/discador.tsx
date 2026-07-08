@@ -10,6 +10,7 @@ import { ImportPanel } from "@/components/discador/ImportPanel";
 import { DashboardPanel } from "@/components/discador/DashboardPanel";
 import { ConfigPanel } from "@/components/discador/ConfigPanel";
 import { MyContactsPanel } from "@/components/discador/MyContactsPanel";
+import { WhatsappListPanel } from "@/components/discador/WhatsappListPanel";
 
 type DiscadorSearch = {
   prospect_contact_id?: string;
