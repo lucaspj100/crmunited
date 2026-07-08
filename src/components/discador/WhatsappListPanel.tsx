@@ -1106,55 +1106,55 @@ function CompactMiniCard({
   const c = row.contact;
   if (!c) return null;
   return (
-    <div className="rounded-md border px-2.5 py-2">
+    <div className="rounded-md border bg-card px-2.5 py-1.5">
       <div className="flex items-center gap-2">
-        <Checkbox className="shrink-0" checked={checked} onCheckedChange={(v) => onCheck(!!v)} />
+        {actions.bulkMode && (
+          <Checkbox className="shrink-0" checked={checked} onCheckedChange={(v) => onCheck(!!v)} />
+        )}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <div className="font-semibold text-sm truncate flex-1">
+            <div className="font-semibold text-[13px] leading-tight truncate flex-1">
               {c.nome || <span className="italic text-muted-foreground font-normal">sem nome</span>}
             </div>
-            <Badge className={`${STATUS_BADGE_CLASS[row.status] ?? ""} h-4 px-1.5 text-[10px] shrink-0`}>{STATUS_LABEL[row.status] ?? row.status}</Badge>
+            {actions.hasActiveTemplate ? (
+              <Button
+                size="sm"
+                onClick={() => actions.openWhatsapp(row)}
+                className="shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white h-7 px-2.5 text-xs rounded-full"
+              >
+                <MessageCircle className="h-3.5 w-3.5 mr-1" /> WhatsApp
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={actions.onNoTemplate}
+                className="shrink-0 h-7 px-2 text-[11px] border-destructive/40 text-destructive rounded-full"
+              >
+                Sem modelo
+              </Button>
+            )}
           </div>
-          <div className="text-[11px] text-muted-foreground truncate">
-            {c.empresa || "—"} <span className="text-muted-foreground/60">•</span> <span className="font-mono">+{c.telefone_normalizado}</span>
+          <div className="text-[11px] text-muted-foreground truncate leading-tight">
+            {c.empresa || "—"}
           </div>
-          <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[10px] text-muted-foreground">
-            <span>Tent.: {c.quantidade_tentativas}</span>
-            {c.ultima_tentativa && <span>Última: {format(new Date(c.ultima_tentativa), "dd/MM HH:mm", { locale: ptBR })}</span>}
+          <div className="mt-0.5 flex items-center justify-between gap-2 text-[10px] text-muted-foreground leading-tight">
+            <div className="truncate">
+              Tent. {c.quantidade_tentativas}
+              {c.ultima_tentativa && ` • Última ${format(new Date(c.ultima_tentativa), "dd/MM HH:mm", { locale: ptBR })}`}
+              {" • "}
+              <span>{STATUS_LABEL[row.status] ?? row.status}</span>
+            </div>
+            <div className="shrink-0">
+              <RowMoreMenu row={row} actions={actions} />
+            </div>
           </div>
-        </div>
-        <div className="flex items-center gap-1 shrink-0">
-          {actions.hasActiveTemplate ? (
-            <Button
-              size="sm"
-              onClick={() => actions.openWhatsapp(row)}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white h-8 px-2.5"
-              title="Abrir WhatsApp"
-            >
-              <MessageCircle className="h-4 w-4" />
-              <span className="ml-1 hidden xs:inline">WhatsApp</span>
-            </Button>
-          ) : (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={actions.onNoTemplate}
-              className="h-8 px-2 text-[11px] border-destructive/40 text-destructive"
-              title="Sem modelo ativo"
-            >
-              Sem modelo
-            </Button>
-          )}
-          <Button size="sm" variant="outline" onClick={() => actions.copyMessage(row)} className="h-8 px-2" title="Copiar">
-            <Copy className="h-3.5 w-3.5" />
-          </Button>
-          <RowMoreMenu row={row} actions={actions} />
         </div>
       </div>
     </div>
   );
 }
+
 
 
 function DetailedRowCard({
