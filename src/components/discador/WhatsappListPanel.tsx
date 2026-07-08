@@ -949,7 +949,6 @@ function CompactList({
           <tbody>
             {rows.map((row) => {
               const c = row.contact;
-              const msg = generated[row.id]?.message ?? "";
               return (
                 <tr key={row.id} className="border-t align-middle hover:bg-muted/30">
                   <td className="p-2">
@@ -959,14 +958,6 @@ function CompactList({
                     <div className="font-medium truncate max-w-[220px]">
                       {c?.nome || <span className="italic text-muted-foreground">sem nome</span>}
                     </div>
-                    {msg && (
-                      <button
-                        className="text-[10px] text-primary hover:underline truncate max-w-[220px] block text-left"
-                        onClick={() => actions.onViewMessage(row)}
-                      >
-                        Mensagem pronta: {msg.slice(0, 40)}…
-                      </button>
-                    )}
                   </td>
                   <td className="p-2 max-w-[180px] truncate">{c?.empresa || <span className="text-muted-foreground">—</span>}</td>
                   <td className="p-2 font-mono whitespace-nowrap">+{c?.telefone_normalizado ?? ""}</td>
@@ -979,13 +970,24 @@ function CompactList({
                   </td>
                   <td className="p-2 text-right">
                     <div className="inline-flex gap-1">
-                      <Button
-                        size="sm"
-                        onClick={() => actions.openWhatsapp(row)}
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white h-8"
-                      >
-                        <Send className="h-3.5 w-3.5 mr-1" /> WhatsApp
-                      </Button>
+                      {actions.hasActiveTemplate ? (
+                        <Button
+                          size="sm"
+                          onClick={() => actions.openWhatsapp(row)}
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white h-8 px-2.5"
+                        >
+                          <MessageCircle className="h-3.5 w-3.5 mr-1" /> WhatsApp
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={actions.onNoTemplate}
+                          className="h-8 px-2 text-[11px] border-destructive/40 text-destructive"
+                        >
+                          Sem modelo
+                        </Button>
+                      )}
                       <Button size="sm" variant="outline" onClick={() => actions.copyMessage(row)} className="h-8 px-2">
                         <Copy className="h-3.5 w-3.5" />
                       </Button>
@@ -995,6 +997,7 @@ function CompactList({
                 </tr>
               );
             })}
+
           </tbody>
         </table>
       </div>
