@@ -391,6 +391,61 @@ function InterviewDialog({ lead, onClose, onSaved }: { lead: Lead | null; onClos
   );
 }
 
+function InterviewDoneDialog({ lead, onClose, onSaved }: { lead: Lead | null; onClose: () => void; onSaved: () => void }) {
+  const [saving, setSaving] = useState(false);
+  const [date, setDate] = useState<string>("");
+  useEffect(() => {
+    if (lead) {
+      const today = new Date().toISOString().slice(0, 10);
+      setDate(lead.interview_date ?? today);
+    }
+  }, [lead]);
+  if (!lead) return null;
+  const alreadyDone = lead.status === "entrevista_realizada";
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!date) { toast.error("Informe a data da realização"); return; }
+    setSaving(true);
+    const { error } = await supabase.from("leads")
+      .update({ status: "entrevista_realizada" as any, interview_done_date: date })
+      .eq("id", lead.id);
+    setSaving(false);
+    if (error) { toast.error(error.message); return; }
+    await ensureTaskForStatus({ leadId: lead.id, ownerId: lead.owner_id, status: "entrevista_realizada" });
+    await logLeadEvent({
+      leadId: lead.id, type: "interview_done",
+      description: `Entrevista realizada em ${date}`,
+      metadata: { from: lead.status, to: "entrevista_realizada", interview_done_date: date },
+    });
+    if (!alreadyDone) {
+      notifyArena(lead.id, "crm_interview_done", { interview_done_date: date });
+      toast.success("Entrevista realizada enviada para a Arena.");
+    } else {
+      toast.success("Data atualizada");
+    }
+    onSaved(); onClose();
+  };
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>Entrevista realizada — {lead.name}</DialogTitle></DialogHeader>
+        <form onSubmit={onSubmit} className="space-y-3">
+          <div>
+            <Label>Data da realização *</Label>
+            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
+            <p className="text-xs text-muted-foreground mt-1">A Arena contabiliza pela data real da realização.</p>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={onClose}>Cancelar</Button>
+            <Button disabled={saving}>{saving ? "Salvando…" : "Confirmar realização"}</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+
 function RescheduleInterviewDialog({ lead, onClose, onSaved }: { lead: Lead | null; onClose: () => void; onSaved: () => void }) {
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
