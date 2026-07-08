@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Phone, MessageCircle, Users, Sparkles, CalendarCheck, Clock, Flame, Settings2, AlertTriangle } from "lucide-react";
+import { Phone, MessageCircle, Users, Sparkles, CalendarCheck, Clock, Flame, Settings2, AlertTriangle, Send } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,6 +42,7 @@ function rhythmMessage(calls: number, goal: number): string {
 type DailyStats = {
   calls: number;
   whats: number;
+  whatsStarted: number;
   worked: number;
   interested: number;
   interviews: number;
@@ -79,7 +80,7 @@ export function DailyScoreboard({
     enabled: !!user,
     queryKey: ["daily_scoreboard", user?.id, todayISO],
     refetchInterval: 30_000,
-    queryFn: async () => {
+    queryFn: async (): Promise<DailyStats> => {
       const [attemptsRes, interviewsRes] = await Promise.all([
         supabase
           .from("prospect_attempts")
@@ -98,15 +99,18 @@ export function DailyScoreboard({
       const attempts = (attemptsRes.data ?? []) as Array<{
         tipo_acao: string; resultado: string | null; prospect_contact_id: string; created_at: string;
       }>;
-      // Conta apenas tentativas com resultado preenchido (evita duplicatas legadas sem resultado).
       const withResult = attempts.filter((a) => !!a.resultado);
       const calls = withResult.filter((a) => a.tipo_acao === "ligacao").length;
       const whats = withResult.filter((a) => a.tipo_acao === "whatsapp").length;
       const worked = new Set(withResult.map((a) => a.prospect_contact_id)).size;
       const interested = withResult.filter((a) => a.resultado && INTERESTED_RESULTS.includes(a.resultado)).length;
+      const whatsStartedIds = new Set(
+        attempts.filter((a) => a.tipo_acao === "whatsapp" && a.resultado === "WhatsApp iniciado").map((a) => a.prospect_contact_id),
+      );
+      const whatsStarted = whatsStartedIds.size;
       const lastActionAt = attempts[0]?.created_at ?? null;
       return {
-        calls, whats, worked, interested,
+        calls, whats, whatsStarted, worked, interested,
         interviews: interviewsRes.count ?? 0,
         lastActionAt,
       };
@@ -120,7 +124,7 @@ export function DailyScoreboard({
     return () => clearInterval(t);
   }, []);
 
-  const stats = data ?? { calls: 0, whats: 0, worked: 0, interested: 0, interviews: 0, lastActionAt: null };
+  const stats = data ?? { calls: 0, whats: 0, whatsStarted: 0, worked: 0, interested: 0, interviews: 0, lastActionAt: null };
   const lastDate = useMemo(() => (stats.lastActionAt ? new Date(stats.lastActionAt) : null), [stats.lastActionAt]);
   const goalProgress = Math.min(100, (stats.calls / callGoal) * 100);
   const message = rhythmMessage(stats.calls, callGoal);
@@ -138,9 +142,10 @@ export function DailyScoreboard({
           </div>
         </div>
 
-        <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
+        <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
           <Metric icon={<Phone className="h-3.5 w-3.5" />} label="Ligações" value={stats.calls} />
           <Metric icon={<MessageCircle className="h-3.5 w-3.5" />} label="WhatsApp" value={stats.whats} />
+          <Metric icon={<Send className="h-3.5 w-3.5" />} label="Wpp iniciados" value={stats.whatsStarted} />
           <Metric icon={<Users className="h-3.5 w-3.5" />} label="Trabalhados" value={stats.worked} />
           <Metric icon={<Sparkles className="h-3.5 w-3.5" />} label="Interessados" value={stats.interested} />
           <Metric icon={<CalendarCheck className="h-3.5 w-3.5" />} label="Entrevistas" value={stats.interviews} />

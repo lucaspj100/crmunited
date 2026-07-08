@@ -18,6 +18,7 @@ import { EditContactDialog } from "./EditContactDialog";
 import { AttemptHistory } from "./AttemptHistory";
 import { ReturnsDebugCard } from "./ReturnsDebugCard";
 import { DailyScoreboard } from "./DailyScoreboard";
+import { WhatsappComposer } from "./WhatsappComposer";
 import { toast } from "sonner";
 
 type Props = {
@@ -461,6 +462,8 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
               </Button>
             </div>
 
+            <WhatsappComposer contact={contact} />
+
             <Collapsible open={historyOpen} onOpenChange={setHistoryOpen} className="w-full max-w-full rounded-lg border overflow-hidden">
               <CollapsibleTrigger className="flex w-full items-center justify-between p-3 text-sm font-medium">
                 {historyOpen ? "Ocultar histórico" : "Ver histórico"}
@@ -583,6 +586,10 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
                     <UserPlus className="h-5 w-5 mr-2" />Converter
                   </Button>
                 </div>
+
+                <WhatsappComposer contact={contact} />
+
+
 
                 <div className="flex flex-wrap items-center gap-2">
                   <Button variant="outline" onClick={() => setEditOpen(true)}>

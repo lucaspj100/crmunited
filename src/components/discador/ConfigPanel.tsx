@@ -15,6 +15,7 @@ import {
   WHATSAPP_TEMPLATE_VARS,
 } from "@/lib/prospect-status";
 import { DEFAULT_DIALER_SETTINGS, validateDialerSettings, type DialerSettings } from "@/lib/prospect-dial";
+import { WhatsappTemplatesAdmin } from "./WhatsappTemplatesAdmin";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -135,6 +136,8 @@ export function ConfigPanel() {
       </Card>
 
       {isAdmin && <AdminDialerTable />}
+
+      {isAdmin && <WhatsappTemplatesAdmin />}
 
       <Card>
         <CardHeader><CardTitle>Mensagem padrão de WhatsApp</CardTitle></CardHeader>
