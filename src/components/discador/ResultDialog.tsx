@@ -282,16 +282,24 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
               <Input type="datetime-local" value={proxima} onChange={(e) => setProxima(e.target.value)} />
             </div>
           )}
-          {(result === "Interessado" || result === "Pediu WhatsApp") && (
-            <div className="rounded-md border border-emerald-500/40 bg-emerald-500/10 p-2 text-xs text-emerald-700 dark:text-emerald-300">
-              Ao salvar, este contato será convertido automaticamente em lead no funil (coluna Interessado).
-            </div>
+          {whatsappReason && (
+            <label className="flex items-start gap-2 rounded-md border border-emerald-500/40 bg-emerald-500/5 p-2 text-xs cursor-pointer">
+              <Checkbox
+                checked={addToWppList}
+                onCheckedChange={(v) => setAddToWppList(v === true)}
+                className="mt-0.5"
+              />
+              <span>
+                <strong>Adicionar à Lista de WhatsApp?</strong> Este lead não avançou por ligação — separe para abordagem via WhatsApp.
+              </span>
+            </label>
           )}
           <div>
             <Label>Observação</Label>
             <Textarea rows={3} value={obs} onChange={(e) => setObs(e.target.value)} maxLength={500} />
           </div>
         </div>
+
         <DialogFooter className="gap-2">
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={saving}>Cancelar</Button>
           <Button variant="outline" onClick={() => save(false)} disabled={saving}>Salvar</Button>
