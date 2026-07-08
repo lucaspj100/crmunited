@@ -80,7 +80,7 @@ export function DailyScoreboard({
     enabled: !!user,
     queryKey: ["daily_scoreboard", user?.id, todayISO],
     refetchInterval: 30_000,
-    queryFn: async () => {
+    queryFn: async (): Promise<DailyStats> => {
       const [attemptsRes, interviewsRes] = await Promise.all([
         supabase
           .from("prospect_attempts")
@@ -99,15 +99,18 @@ export function DailyScoreboard({
       const attempts = (attemptsRes.data ?? []) as Array<{
         tipo_acao: string; resultado: string | null; prospect_contact_id: string; created_at: string;
       }>;
-      // Conta apenas tentativas com resultado preenchido (evita duplicatas legadas sem resultado).
       const withResult = attempts.filter((a) => !!a.resultado);
       const calls = withResult.filter((a) => a.tipo_acao === "ligacao").length;
       const whats = withResult.filter((a) => a.tipo_acao === "whatsapp").length;
       const worked = new Set(withResult.map((a) => a.prospect_contact_id)).size;
       const interested = withResult.filter((a) => a.resultado && INTERESTED_RESULTS.includes(a.resultado)).length;
+      const whatsStartedIds = new Set(
+        attempts.filter((a) => a.tipo_acao === "whatsapp" && a.resultado === "WhatsApp iniciado").map((a) => a.prospect_contact_id),
+      );
+      const whatsStarted = whatsStartedIds.size;
       const lastActionAt = attempts[0]?.created_at ?? null;
       return {
-        calls, whats, worked, interested,
+        calls, whats, whatsStarted, worked, interested,
         interviews: interviewsRes.count ?? 0,
         lastActionAt,
       };
