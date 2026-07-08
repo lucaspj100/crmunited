@@ -44,11 +44,19 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
   const [result, setResult] = useState<ProspectResult | "">("");
   const [obs, setObs] = useState("");
   const [proxima, setProxima] = useState("");
+  const [addToWppList, setAddToWppList] = useState(false);
   const [saving, setSaving] = useState(false);
   const queryClient = useQueryClient();
 
   const contactId = contact.id;
   const telefone = contact.telefone_normalizado;
+
+  const whatsappReason = result ? RESULT_TO_WHATSAPP_REASON[result as ProspectResult] : undefined;
+  useEffect(() => {
+    // Marca sugestão automática ao escolher um resultado elegível
+    if (whatsappReason) setAddToWppList(true);
+    else setAddToWppList(false);
+  }, [whatsappReason]);
 
   const completeRetornoTask = async () => {
     const completionPatch = { status: "concluida" as const };
