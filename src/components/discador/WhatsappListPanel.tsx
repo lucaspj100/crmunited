@@ -864,6 +864,8 @@ type RowActions = {
   onViewMessage: (r: Row) => void;
   hasActiveTemplate: boolean;
   onNoTemplate: () => void;
+  bulkMode: boolean;
+
 };
 
 
