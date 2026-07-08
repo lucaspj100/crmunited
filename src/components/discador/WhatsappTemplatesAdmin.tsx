@@ -50,7 +50,6 @@ export function WhatsappTemplatesAdmin() {
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ["wpp_templates_all"] });
     qc.invalidateQueries({ queryKey: ["wpp_templates", "primeira_abordagem"] });
-    void fetchActiveTemplates; // keep import
   };
 
   const toggleActive = async (t: WhatsappTemplate) => {
