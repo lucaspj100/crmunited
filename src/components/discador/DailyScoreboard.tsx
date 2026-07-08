@@ -82,7 +82,7 @@ export function DailyScoreboard({
     queryKey: ["daily_scoreboard", user?.id, todayISO],
     refetchInterval: 30_000,
     queryFn: async (): Promise<DailyStats> => {
-      const [attemptsRes, interviewsRes] = await Promise.all([
+      const [attemptsRes, interviewsRes, repliedRes] = await Promise.all([
         supabase
           .from("prospect_attempts")
           .select("tipo_acao, resultado, prospect_contact_id, created_at")
@@ -96,6 +96,11 @@ export function DailyScoreboard({
           .eq("owner_id", user!.id)
           .eq("status", "entrevista_marcada")
           .gte("updated_at", todayISO),
+        supabase
+          .from("whatsapp_list_entries")
+          .select("id", { count: "exact", head: true })
+          .eq("owner_id", user!.id)
+          .gte("responded_at", todayISO),
       ]);
       const attempts = (attemptsRes.data ?? []) as Array<{
         tipo_acao: string; resultado: string | null; prospect_contact_id: string; created_at: string;
@@ -112,6 +117,7 @@ export function DailyScoreboard({
       const lastActionAt = attempts[0]?.created_at ?? null;
       return {
         calls, whats, whatsStarted, worked, interested,
+        whatsReplied: repliedRes.count ?? 0,
         interviews: interviewsRes.count ?? 0,
         lastActionAt,
       };
