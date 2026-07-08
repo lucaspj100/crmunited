@@ -43,6 +43,7 @@ type DailyStats = {
   calls: number;
   whats: number;
   whatsStarted: number;
+  whatsReplied: number;
   worked: number;
   interested: number;
   interviews: number;
