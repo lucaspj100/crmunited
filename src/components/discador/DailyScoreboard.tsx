@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Phone, MessageCircle, Users, Sparkles, CalendarCheck, Clock, Flame, Settings2, AlertTriangle } from "lucide-react";
+import { Phone, MessageCircle, Users, Sparkles, CalendarCheck, Clock, Flame, Settings2, AlertTriangle, Send } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
