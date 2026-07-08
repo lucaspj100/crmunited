@@ -57,7 +57,7 @@ function useHojePendingCount(userId: string | undefined) {
 }
 
 function AuthedLayout() {
-  const { session, loading, signOut, user, roles } = useAuth();
+  const { session, loading, signOut, user, roles, mustChangePassword } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { data: brand } = useBrand();
@@ -69,6 +69,7 @@ function AuthedLayout() {
         { to: "/painel-adm", label: "Painel ADM", icon: Trophy } as const,
         { to: "/processos-comerciais", label: "Processos", icon: Activity } as const,
         { to: "/integracao-arena", label: "Integração Arena", icon: Link2 } as const,
+        { to: "/usuarios-acessos", label: "Usuários e Acessos", icon: Shield } as const,
         { to: "/configuracoes", label: "Configurações", icon: Settings } as const,
       ]
     : BASE_NAV;
