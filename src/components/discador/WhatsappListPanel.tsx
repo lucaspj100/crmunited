@@ -449,6 +449,10 @@ export function WhatsappListPanel() {
   // -------- Sequência --------
   const rowsById = useMemo(() => new Map(filtered.map((r) => [r.id, r])), [filtered]);
   const startSequence = async () => {
+    if (!hasActiveTemplate) {
+      setShowNoTemplateDialog(true);
+      return;
+    }
     const ids = selectedInView;
     if (ids.length === 0) {
       toast.info("Selecione contatos para iniciar a sequência.");
@@ -459,6 +463,7 @@ export function WhatsappListPanel() {
     const first = rowsById.get(ids[0]);
     if (first) await openWhatsapp(first);
   };
+
   const nextInSequence = async () => {
     const nextIdx = sequenceIndex + 1;
     if (nextIdx >= sequence.length) {
