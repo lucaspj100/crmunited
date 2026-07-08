@@ -19,6 +19,7 @@ import { AttemptHistory } from "./AttemptHistory";
 import { ReturnsDebugCard } from "./ReturnsDebugCard";
 import { DailyScoreboard } from "./DailyScoreboard";
 import { WhatsappComposer } from "./WhatsappComposer";
+import { addToWhatsappList } from "@/lib/whatsapp-list";
 import { toast } from "sonner";
 
 type Props = {
