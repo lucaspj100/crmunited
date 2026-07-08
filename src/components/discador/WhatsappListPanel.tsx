@@ -133,6 +133,8 @@ export function WhatsappListPanel() {
   const [followupRow, setFollowupRow] = useState<Row | null>(null);
   const [showNoTemplateDialog, setShowNoTemplateDialog] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [bulkMode, setBulkMode] = useState(false);
+
 
 
   const { data: sellers = [] } = useQuery({
