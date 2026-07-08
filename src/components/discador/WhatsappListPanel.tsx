@@ -542,14 +542,24 @@ export function WhatsappListPanel() {
 
 
   return (
-    <div className="space-y-4 pb-24">
-      <div>
+    <div className="space-y-3 md:space-y-4 pb-24">
+      {/* Header: reduzido no mobile */}
+      <div className="hidden md:block">
         <h2 className="text-lg font-semibold">Lista de WhatsApp</h2>
         <p className="text-sm text-muted-foreground">
           Fila de trabalho compacta: abra o WhatsApp com a mensagem pronta e trabalhe muitos contatos em sequência.
         </p>
       </div>
-
+      <div className="md:hidden flex items-center justify-between">
+        <h2 className="text-base font-semibold">WhatsApp</h2>
+        <button
+          type="button"
+          onClick={() => { setBulkMode((v) => !v); if (bulkMode) clearSelection(); }}
+          className={`text-xs rounded-md border px-2 py-1 ${bulkMode ? "bg-primary text-primary-foreground border-primary" : "text-muted-foreground"}`}
+        >
+          {bulkMode ? "Sair da seleção" : "Selecionar em massa"}
+        </button>
+      </div>
 
       {!hasActiveTemplate && (
         <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm">
@@ -576,50 +586,90 @@ export function WhatsappListPanel() {
         </div>
       )}
 
-      {/* Cards de resumo — carrossel horizontal no mobile */}
-      <div className="-mx-1 overflow-x-auto md:mx-0 md:overflow-visible">
-        <div className="flex gap-2 px-1 md:grid md:grid-cols-6 md:px-0">
-          <SummaryCard label="Na lista" value={summary.total} />
-          <SummaryCard label="Aguardando" value={summary.aguardando} />
-          <SummaryCard label="Iniciados hoje" value={summary.iniciadosHoje} />
-          <SummaryCard label="Respondidos hoje" value={summary.respondidosHoje} />
-          <SummaryCard label="Sem resposta" value={summary.semResposta} />
-          <SummaryCard label="Inválidos" value={summary.invalidos} />
-        </div>
+      {/* Métricas: linha compacta no mobile, cards no desktop */}
+      <div className="md:hidden rounded-md border bg-muted/30 px-3 py-1.5 text-xs text-muted-foreground flex items-center gap-3 overflow-x-auto whitespace-nowrap">
+        <span>Na lista: <strong className="text-foreground">{summary.total}</strong></span>
+        <span className="text-muted-foreground/40">|</span>
+        <span>Aguardando: <strong className="text-foreground">{summary.aguardando}</strong></span>
+        <span className="text-muted-foreground/40">|</span>
+        <span>Iniciados hoje: <strong className="text-foreground">{summary.iniciadosHoje}</strong></span>
+      </div>
+      <div className="hidden md:grid md:grid-cols-6 gap-2">
+        <SummaryCard label="Na lista" value={summary.total} />
+        <SummaryCard label="Aguardando" value={summary.aguardando} />
+        <SummaryCard label="Iniciados hoje" value={summary.iniciadosHoje} />
+        <SummaryCard label="Respondidos hoje" value={summary.respondidosHoje} />
+        <SummaryCard label="Sem resposta" value={summary.semResposta} />
+        <SummaryCard label="Inválidos" value={summary.invalidos} />
       </div>
 
-      <Card>
-        <CardContent className="p-3 space-y-3">
-          {/* Linha rápida mobile: busca + status + botão Filtros */}
-          <div className="grid gap-2 md:hidden grid-cols-[minmax(0,1fr)_auto]">
-            <Input
-              placeholder="Buscar nome, empresa ou telefone…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="h-9"
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-9 shrink-0"
-              onClick={() => setShowMobileFilters((v) => !v)}
-            >
-              Filtros
-            </Button>
-            <Select value={statusFilter} onValueChange={setStatusFilter} disabled={onlyAwaiting}>
-              <SelectTrigger className="col-span-2 h-9"><SelectValue placeholder="Status" /></SelectTrigger>
-              <SelectContent>
-                {STATUS_FILTER_OPTIONS.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+      {/* Filtros mobile: só busca + botão Filtros */}
+      <div className="md:hidden">
+        <div className="grid gap-2 grid-cols-[minmax(0,1fr)_auto]">
+          <Input
+            placeholder="Buscar…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="h-9"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-9 shrink-0"
+            onClick={() => setShowMobileFilters((v) => !v)}
+          >
+            Filtros
+          </Button>
+        </div>
+        {showMobileFilters && (
+          <div className="mt-2 grid gap-2 rounded-md border bg-card p-2">
+            <div>
+              <Label className="text-[11px] text-muted-foreground">Status</Label>
+              <Select value={statusFilter} onValueChange={setStatusFilter} disabled={onlyAwaiting}>
+                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {STATUS_FILTER_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-[11px] text-muted-foreground">Motivo</Label>
+              <Select value={reasonFilter} onValueChange={setReasonFilter}>
+                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {REASON_FILTER_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-[11px] text-muted-foreground">Ordenar por</Label>
+              <Select value={sortKey} onValueChange={(v) => setSortKey(v as SortKey)}>
+                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {SORT_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <label className="flex items-center gap-2 text-xs">
+              <Switch checked={onlyAwaiting} onCheckedChange={setOnlyAwaiting} />
+              Somente aguardando WhatsApp
+            </label>
           </div>
+        )}
+      </div>
 
-          {/* Filtros completos: sempre no desktop, expansível no mobile */}
-          <div className={`${showMobileFilters ? "grid" : "hidden md:grid"} gap-2 md:grid-cols-4`}>
-            <div className="hidden md:block">
+      {/* Filtros desktop */}
+      <Card className="hidden md:block">
+        <CardContent className="p-3 space-y-3">
+          <div className="grid gap-2 md:grid-cols-4">
+            <div>
               <Label className="text-xs">Status</Label>
               <Select value={statusFilter} onValueChange={setStatusFilter} disabled={onlyAwaiting}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
@@ -667,7 +717,7 @@ export function WhatsappListPanel() {
                 </Select>
               </div>
             )}
-            <div className="hidden md:block">
+            <div>
               <Label className="text-xs">Busca</Label>
               <Input
                 placeholder="Nome, empresa ou telefone…"
@@ -675,13 +725,9 @@ export function WhatsappListPanel() {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-            <label className="flex items-center gap-2 text-xs md:hidden">
-              <Switch checked={onlyAwaiting} onCheckedChange={setOnlyAwaiting} />
-              Somente aguardando WhatsApp
-            </label>
           </div>
 
-          <div className="hidden md:flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex flex-wrap items-center gap-3">
               <label className="flex items-center gap-2 text-xs">
                 <Switch checked={onlyAwaiting} onCheckedChange={setOnlyAwaiting} />
@@ -721,7 +767,6 @@ export function WhatsappListPanel() {
         </CardContent>
       </Card>
 
-
       {/* Barra de ações em massa */}
       {selectedInView.length > 0 && (
         <div className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-2 rounded-md border border-primary/40 bg-primary/5 px-3 py-2 backdrop-blur">
@@ -736,6 +781,7 @@ export function WhatsappListPanel() {
             <Button size="sm" variant="outline" onClick={bulkRemove}>
               <Trash2 className="h-4 w-4 mr-1" /> Remover
             </Button>
+
             <Button size="sm" variant="ghost" onClick={clearSelection}>
               <X className="h-4 w-4 mr-1" /> Limpar
             </Button>
