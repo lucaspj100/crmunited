@@ -1,17 +1,25 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PROSPECT_RESULTS, type ProspectResult, applyResultToFields } from "@/lib/prospect-status";
 import { supabase } from "@/integrations/supabase/client";
 import { autoConvertProspectToLead } from "@/lib/prospect-auto-convert";
+import { addToWhatsappList, type WhatsappListReason } from "@/lib/whatsapp-list";
 import type { ProspectContact } from "@/lib/prospect-queue";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
+
+const RESULT_TO_WHATSAPP_REASON: Partial<Record<ProspectResult, WhatsappListReason>> = {
+  "Não atendeu": "nao_atendeu",
+  "Caixa postal": "caixa_postal",
+  "Ocupado": "chamou_nao_respondeu",
+};
 
 type DialMeta = {
   telefone_para_discagem: string | null;
