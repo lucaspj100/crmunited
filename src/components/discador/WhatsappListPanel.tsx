@@ -131,6 +131,9 @@ export function WhatsappListPanel() {
   >({});
   const [viewMessageRow, setViewMessageRow] = useState<Row | null>(null);
   const [followupRow, setFollowupRow] = useState<Row | null>(null);
+  const [showNoTemplateDialog, setShowNoTemplateDialog] = useState(false);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
+
 
   const { data: sellers = [] } = useQuery({
     enabled: isAdmin,
