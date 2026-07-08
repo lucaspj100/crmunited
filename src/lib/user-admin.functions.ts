@@ -158,12 +158,12 @@ export const adminSetUserStatus = createServerFn({ method: "POST" })
     });
     if (banErr) throw new Error(banErr.message);
 
-    const patch: Record<string, unknown> = { status: data.status };
-    patch.deactivated_at = data.status === "ativo" ? null : new Date().toISOString();
-
     const { error: pErr } = await supabaseAdmin
       .from("profiles")
-      .update(patch)
+      .update({
+        status: data.status,
+        deactivated_at: data.status === "ativo" ? null : new Date().toISOString(),
+      })
       .eq("id", data.userId);
     if (pErr) throw new Error(pErr.message);
 
