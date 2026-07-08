@@ -748,7 +748,10 @@ type RowActions = {
   removeRow: (r: Row) => Promise<void>;
   convertRow: (r: Row) => Promise<void>;
   onViewMessage: (r: Row) => void;
+  hasActiveTemplate: boolean;
+  onNoTemplate: () => void;
 };
+
 
 function RowMoreMenu({ row, actions }: { row: Row; actions: RowActions }) {
   return (
