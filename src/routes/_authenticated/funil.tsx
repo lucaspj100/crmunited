@@ -43,6 +43,7 @@ function FunilPage() {
   const [rescheduleLead, setRescheduleLead] = useState<Lead | null>(null);
   const [lostLead, setLostLead] = useState<Lead | null>(null);
   const [matriculaLead, setMatriculaLead] = useState<Lead | null>(null);
+  const [interviewDoneLead, setInterviewDoneLead] = useState<Lead | null>(null);
   const [detailsId, setDetailsId] = useState<string | null>(null);
   const [vendorFilter, setVendorFilter] = useState<string>("all");
   const [tempFilter, setTempFilter] = useState<string>("all");
