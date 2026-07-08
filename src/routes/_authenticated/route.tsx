@@ -3,8 +3,9 @@ import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth-context";
 import { useBrand } from "@/lib/brand";
-import { LayoutDashboard, Users, Kanban, RotateCw, BarChart3, LogOut, Settings, Upload, TrendingDown, Sparkles, Trophy, Calendar, PhoneCall, Link2, ClipboardCheck, Activity, Tv, User as UserIcon } from "lucide-react";
+import { LayoutDashboard, Users, Kanban, RotateCw, BarChart3, LogOut, Settings, Upload, TrendingDown, Sparkles, Trophy, Calendar, PhoneCall, Link2, ClipboardCheck, Activity, Tv, User as UserIcon, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ChangePasswordDialog } from "@/components/ChangePasswordDialog";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -56,7 +57,7 @@ function useHojePendingCount(userId: string | undefined) {
 }
 
 function AuthedLayout() {
-  const { session, loading, signOut, user, roles } = useAuth();
+  const { session, loading, signOut, user, roles, mustChangePassword } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { data: brand } = useBrand();
@@ -68,6 +69,7 @@ function AuthedLayout() {
         { to: "/painel-adm", label: "Painel ADM", icon: Trophy } as const,
         { to: "/processos-comerciais", label: "Processos", icon: Activity } as const,
         { to: "/integracao-arena", label: "Integração Arena", icon: Link2 } as const,
+        { to: "/usuarios-acessos", label: "Usuários e Acessos", icon: Shield } as const,
         { to: "/configuracoes", label: "Configurações", icon: Settings } as const,
       ]
     : BASE_NAV;
@@ -155,6 +157,7 @@ function AuthedLayout() {
       </div>
       <ReturnNotificationWatcher />
       <TaskNotificationWatcher />
+      <ChangePasswordDialog open={mustChangePassword} onOpenChange={() => {}} forced />
     </div>
   );
 }

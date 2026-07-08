@@ -6,7 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Upload, User, Trash2 } from "lucide-react";
+import { Upload, User, Trash2, KeyRound } from "lucide-react";
+import { ChangePasswordDialog } from "@/components/ChangePasswordDialog";
 
 export const Route = createFileRoute("/_authenticated/meu-perfil")({ component: MeuPerfil });
 
@@ -33,6 +34,7 @@ function MeuPerfil() {
   const qc = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
+  const [pwOpen, setPwOpen] = useState(false);
 
   const { data: profile } = useQuery({
     enabled: !!user,
@@ -110,6 +112,19 @@ function MeuPerfil() {
         </div>
         <p className="text-xs text-muted-foreground">PNG ou JPG. A foto é redimensionada automaticamente.</p>
       </Card>
+
+      <Card className="p-5 space-y-3">
+        <div>
+          <h2 className="font-semibold">Segurança</h2>
+          <p className="text-sm text-muted-foreground">Altere sua senha de acesso ao CRM.</p>
+        </div>
+        <Button variant="outline" onClick={() => setPwOpen(true)}>
+          <KeyRound className="h-4 w-4 mr-2" /> Alterar senha
+        </Button>
+      </Card>
+
+      <ChangePasswordDialog open={pwOpen} onOpenChange={setPwOpen} />
     </div>
   );
 }
+
