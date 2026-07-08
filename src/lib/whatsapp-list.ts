@@ -147,7 +147,65 @@ export async function addToWhatsappList(input: {
   return { entry: data as WhatsappListEntry, created: true };
 }
 
+export async function bulkAddToWhatsappList(input: {
+  prospectContactIds: string[];
+  ownerId: string;
+  reason: WhatsappListReason;
+  notes?: string;
+}): Promise<{ added: number; alreadyIn: number; entries: WhatsappListEntry[] }> {
+  const ids = Array.from(new Set(input.prospectContactIds));
+  if (ids.length === 0) return { added: 0, alreadyIn: 0, entries: [] };
+
+  const { data: existingRows, error: exErr } = await supabase
+    .from("whatsapp_list_entries")
+    .select("*")
+    .eq("owner_id", input.ownerId)
+    .in("prospect_contact_id", ids);
+  if (exErr) throw exErr;
+
+  const existingById = new Map((existingRows ?? []).map((r) => [r.prospect_contact_id, r as WhatsappListEntry]));
+  const missingIds = ids.filter((id) => !existingById.has(id));
+
+  // Reativa os "removidos"
+  const toReactivate = (existingRows ?? []).filter((r) => r.status === "removido") as WhatsappListEntry[];
+  if (toReactivate.length > 0) {
+    const { error } = await supabase
+      .from("whatsapp_list_entries")
+      .update({
+        status: "aguardando",
+        reason: input.reason,
+        removed_at: null,
+        notes: input.notes ?? null,
+      })
+      .in("id", toReactivate.map((r) => r.id));
+    if (error) throw error;
+  }
+
+  let inserted: WhatsappListEntry[] = [];
+  if (missingIds.length > 0) {
+    const { data, error } = await supabase
+      .from("whatsapp_list_entries")
+      .insert(
+        missingIds.map((pcid) => ({
+          prospect_contact_id: pcid,
+          owner_id: input.ownerId,
+          reason: input.reason,
+          status: "aguardando" as const,
+          notes: input.notes ?? null,
+        })),
+      )
+      .select("*");
+    if (error) throw error;
+    inserted = (data ?? []) as WhatsappListEntry[];
+  }
+
+  const addedCount = inserted.length + toReactivate.length;
+  const alreadyIn = ids.length - addedCount;
+  return { added: addedCount, alreadyIn, entries: [...inserted, ...toReactivate] };
+}
+
 export async function updateEntry(
+
   entryId: string,
   patch: Partial<WhatsappListEntry>,
 ): Promise<WhatsappListEntry> {
