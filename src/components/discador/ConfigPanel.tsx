@@ -137,6 +137,8 @@ export function ConfigPanel() {
 
       {isAdmin && <AdminDialerTable />}
 
+      {isAdmin && <WhatsappTemplatesAdmin />}
+
       <Card>
         <CardHeader><CardTitle>Mensagem padrão de WhatsApp</CardTitle></CardHeader>
         <CardContent className="space-y-3">
