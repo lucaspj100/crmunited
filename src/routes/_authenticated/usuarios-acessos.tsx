@@ -192,7 +192,7 @@ function UsersAdmin() {
                   <td className="px-2 py-2 font-medium">{u.full_name || "—"}</td>
                   <td className="px-2 py-2 text-muted-foreground">{u.email}</td>
                   <td className="px-2 py-2">
-                    {u.roles.length === 0 ? <span className="text-muted-foreground">—</span> : u.roles.map((r) => (
+                    {u.roles.length === 0 ? <span className="text-muted-foreground">—</span> : u.roles.map((r: string) => (
                       <Badge key={r} variant="outline" className="mr-1 uppercase text-[10px]">{r === "admin" ? "ADM" : r}</Badge>
                     ))}
                   </td>

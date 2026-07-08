@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedUsuariosAcessosRouteImport } from './routes/_authenticated/usuarios-acessos'
 import { Route as AuthenticatedTarefasRouteImport } from './routes/_authenticated/tarefas'
 import { Route as AuthenticatedResgatesRouteImport } from './routes/_authenticated/resgates'
 import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authenticated/relatorios'
@@ -46,6 +47,12 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedUsuariosAcessosRoute =
+  AuthenticatedUsuariosAcessosRouteImport.update({
+    id: '/usuarios-acessos',
+    path: '/usuarios-acessos',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedTarefasRoute = AuthenticatedTarefasRouteImport.update({
   id: '/tarefas',
   path: '/tarefas',
@@ -169,6 +176,7 @@ export interface FileRoutesByFullPath {
   '/relatorios': typeof AuthenticatedRelatoriosRoute
   '/resgates': typeof AuthenticatedResgatesRoute
   '/tarefas': typeof AuthenticatedTarefasRoute
+  '/usuarios-acessos': typeof AuthenticatedUsuariosAcessosRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -192,6 +200,7 @@ export interface FileRoutesByTo {
   '/relatorios': typeof AuthenticatedRelatoriosRoute
   '/resgates': typeof AuthenticatedResgatesRoute
   '/tarefas': typeof AuthenticatedTarefasRoute
+  '/usuarios-acessos': typeof AuthenticatedUsuariosAcessosRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -217,6 +226,7 @@ export interface FileRoutesById {
   '/_authenticated/relatorios': typeof AuthenticatedRelatoriosRoute
   '/_authenticated/resgates': typeof AuthenticatedResgatesRoute
   '/_authenticated/tarefas': typeof AuthenticatedTarefasRoute
+  '/_authenticated/usuarios-acessos': typeof AuthenticatedUsuariosAcessosRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -242,6 +252,7 @@ export interface FileRouteTypes {
     | '/relatorios'
     | '/resgates'
     | '/tarefas'
+    | '/usuarios-acessos'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -265,6 +276,7 @@ export interface FileRouteTypes {
     | '/relatorios'
     | '/resgates'
     | '/tarefas'
+    | '/usuarios-acessos'
   id:
     | '__root__'
     | '/'
@@ -289,6 +301,7 @@ export interface FileRouteTypes {
     | '/_authenticated/relatorios'
     | '/_authenticated/resgates'
     | '/_authenticated/tarefas'
+    | '/_authenticated/usuarios-acessos'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -319,6 +332,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/usuarios-acessos': {
+      id: '/_authenticated/usuarios-acessos'
+      path: '/usuarios-acessos'
+      fullPath: '/usuarios-acessos'
+      preLoaderRoute: typeof AuthenticatedUsuariosAcessosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/tarefas': {
       id: '/_authenticated/tarefas'
@@ -476,6 +496,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedRelatoriosRoute: typeof AuthenticatedRelatoriosRoute
   AuthenticatedResgatesRoute: typeof AuthenticatedResgatesRoute
   AuthenticatedTarefasRoute: typeof AuthenticatedTarefasRoute
+  AuthenticatedUsuariosAcessosRoute: typeof AuthenticatedUsuariosAcessosRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -498,6 +519,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedRelatoriosRoute: AuthenticatedRelatoriosRoute,
   AuthenticatedResgatesRoute: AuthenticatedResgatesRoute,
   AuthenticatedTarefasRoute: AuthenticatedTarefasRoute,
+  AuthenticatedUsuariosAcessosRoute: AuthenticatedUsuariosAcessosRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
