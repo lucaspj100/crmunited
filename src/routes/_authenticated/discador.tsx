@@ -94,15 +94,6 @@ function DiscadorPage() {
           />
         </TabsContent>
         <TabsContent value="whatsapp" className="mt-4"><WhatsappListPanel /></TabsContent>
-
-        <TabsContent value="trabalhar" className="mt-4">
-          <WorkPanel
-            focusContactId={search.prospect_contact_id}
-            autoOpenResult={search.open_result === 1}
-            focusTaskId={search.task_id}
-            onFocusConsumed={clearFocus}
-          />
-        </TabsContent>
         <TabsContent value="minha-lista" className="mt-4"><MyContactsPanel /></TabsContent>
         {isAdmin && <TabsContent value="base" className="mt-4"><BasePanel sellers={sellers} /></TabsContent>}
         <TabsContent value="importar" className="mt-4"><ImportPanel sellers={sellers} isAdmin={isAdmin} /></TabsContent>
