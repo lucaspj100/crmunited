@@ -820,7 +820,7 @@ export function WhatsappListPanel() {
         />
       )}
 
-      {/* Barra Próximo WhatsApp */}
+      {/* Barra Próximo WhatsApp — sequência ativa */}
       {sequence.length > 0 && (
         <div className="fixed inset-x-0 bottom-3 z-30 mx-auto flex w-fit max-w-[95vw] items-center gap-2 rounded-full border bg-background/95 px-3 py-2 shadow-lg backdrop-blur">
           <div className="text-xs">
@@ -834,6 +834,22 @@ export function WhatsappListPanel() {
           </Button>
         </div>
       )}
+
+      {/* Botão fixo mobile: Próximo WhatsApp (fora de sequência) */}
+      {sequence.length === 0 && awaitingCount > 0 && (
+        <div className="md:hidden fixed inset-x-0 bottom-3 z-30 flex justify-center px-4 pointer-events-none">
+          <Button
+            size="lg"
+            onClick={openNextAwaiting}
+            className="pointer-events-auto bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg rounded-full h-11 px-5"
+          >
+            <MessageCircle className="h-4 w-4 mr-2" />
+            Próximo WhatsApp
+            <span className="ml-2 rounded-full bg-white/20 px-2 py-0.5 text-[11px]">{awaitingCount}</span>
+          </Button>
+        </div>
+      )}
+
 
       {/* Modal Ver mensagem */}
       <ViewMessageDialog
