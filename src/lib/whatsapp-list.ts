@@ -16,8 +16,10 @@ export type WhatsappListReason =
   | "caixa_postal"
   | "chamou_nao_respondeu"
   | "numero_invalido"
+  | "muitas_tentativas"
   | "tentar_whatsapp"
-  | "manual";
+  | "manual"
+  | "outro";
 
 export type WhatsappListEntry = {
   id: string;
@@ -45,9 +47,12 @@ export const REASON_LABEL: Record<string, string> = {
   caixa_postal: "Caixa postal",
   chamou_nao_respondeu: "Chamou e não respondeu",
   numero_invalido: "Número inválido",
-  tentar_whatsapp: "Tentar WhatsApp",
-  manual: "Adicionado manualmente",
+  muitas_tentativas: "Muitas tentativas de ligação",
+  tentar_whatsapp: "Melhor abordar por WhatsApp",
+  manual: "Lista manual",
+  outro: "Outro",
 };
+
 
 export const STATUS_LABEL: Record<string, string> = {
   aguardando: "Aguardando WhatsApp",
