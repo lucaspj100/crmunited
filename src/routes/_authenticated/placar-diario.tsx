@@ -289,13 +289,17 @@ function PlacarDiario() {
 
         {/* Totais do time — apenas ADM/Franqueado */}
         {isAdmin && (
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-            <BigStat icon={<Phone className="h-5 w-5" />} label="Ligações" value={totals.ligacoes} prev={compareEnabled ? totalsPrev.ligacoes : undefined} color="from-sky-500/30 to-sky-700/10" />
-            <BigStat icon={<PhoneCall className="h-5 w-5" />} label="Atendidas" value={totals.atendidas} prev={compareEnabled ? totalsPrev.atendidas : undefined} color="from-emerald-500/30 to-emerald-700/10" />
-            <BigStat icon={<Sparkles className="h-5 w-5" />} label="Interessados" value={totals.interessados} prev={compareEnabled ? totalsPrev.interessados : undefined} color="from-amber-500/30 to-amber-700/10" />
-            <BigStat icon={<CalendarCheck className="h-5 w-5" />} label="Entrevistas" value={totals.entrevistas} prev={compareEnabled ? totalsPrev.entrevistas : undefined} color="from-violet-500/30 to-violet-700/10" />
-            <BigStat icon={<GraduationCap className="h-5 w-5" />} label="Matrículas" value={totals.matriculas} prev={compareEnabled ? totalsPrev.matriculas : undefined} color="from-rose-500/30 to-rose-700/10" />
-          </div>
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+              <BigStat icon={<Phone className="h-5 w-5" />} label="Ligações" value={totals.ligacoes} prev={compareEnabled ? totalsPrev.ligacoes : undefined} color="from-sky-500/30 to-sky-700/10" />
+              <BigStat icon={<PhoneCall className="h-5 w-5" />} label="Atendidas" value={totals.atendidas} prev={compareEnabled ? totalsPrev.atendidas : undefined} color="from-emerald-500/30 to-emerald-700/10" />
+              <BigStat icon={<Sparkles className="h-5 w-5" />} label="Interessados" value={totals.interessados} prev={compareEnabled ? totalsPrev.interessados : undefined} color="from-amber-500/30 to-amber-700/10" />
+              <BigStat icon={<CalendarCheck className="h-5 w-5" />} label="Agendadas" value={totals.entrevistas} prev={compareEnabled ? totalsPrev.entrevistas : undefined} color="from-violet-500/30 to-violet-700/10" />
+              <BigStat icon={<CalendarCheck className="h-5 w-5" />} label="Realizadas" value={totals.realizadas} prev={compareEnabled ? totalsPrev.realizadas : undefined} color="from-fuchsia-500/30 to-fuchsia-700/10" />
+              <BigStat icon={<GraduationCap className="h-5 w-5" />} label="Matrículas" value={totals.matriculas} prev={compareEnabled ? totalsPrev.matriculas : undefined} color="from-rose-500/30 to-rose-700/10" />
+            </div>
+            <RatesPanel totals={totals} prev={compareEnabled ? totalsPrev : undefined} />
+          </>
         )}
 
 
