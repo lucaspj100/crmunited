@@ -177,7 +177,7 @@ function PainelAdm() {
               <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="hoje">Hoje</SelectItem>
-                <SelectItem value="semana">Últimos 7 dias</SelectItem>
+                <SelectItem value="semana">Semana (dom–sáb)</SelectItem>
                 <SelectItem value="mes">Este mês</SelectItem>
                 <SelectItem value="custom">Personalizado</SelectItem>
               </SelectContent>
