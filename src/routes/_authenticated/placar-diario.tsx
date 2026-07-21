@@ -67,6 +67,9 @@ function PlacarDiario() {
   const isAdmin = roles.includes("admin") || roles.includes("franqueado");
 
   const [period, setPeriod] = useState<Period>("hoje");
+  const [customStart, setCustomStart] = useState<string>(todayIso());
+  const [customEnd, setCustomEnd] = useState<string>(todayIso());
+  const [compareEnabled, setCompareEnabled] = useState(false);
   const [now, setNow] = useState(new Date());
   const [fullscreen, setFullscreen] = useState(false);
 
@@ -75,14 +78,28 @@ function PlacarDiario() {
     return () => clearInterval(id);
   }, []);
 
-  const range = useMemo(() => periodRange(period), [period]);
+  const range = useMemo(
+    () => periodRange(period, customStart, customEnd),
+    [period, customStart, customEnd],
+  );
+  const prevRange = useMemo(() => previousPeriodRange(period, range), [period, range]);
+  const rangeLabel = useMemo(() => formatRangeLabel(range), [range]);
+  const prevRangeLabel = useMemo(() => formatRangeLabel(prevRange), [prevRange]);
+  const customInvalid = period === "custom" && customEnd < customStart;
 
   const { data: rowsRaw = [], dataUpdatedAt } = useQuery({
-    enabled: true,
+    enabled: !customInvalid,
     queryKey: ["placar_diario", range.start, range.end],
     queryFn: () => fetchProductivity({ start: range.start, end: range.end, vendedorId: null }),
     refetchInterval: 30_000,
   });
+
+  const { data: rowsPrev = [] } = useQuery({
+    enabled: compareEnabled && !customInvalid,
+    queryKey: ["placar_diario_prev", prevRange.start, prevRange.end],
+    queryFn: () => fetchProductivity({ start: prevRange.start, end: prevRange.end, vendedorId: null }),
+  });
+
 
   // Realtime: atualiza assim que houver nova tentativa ou mudança de lead
   const qc = (useQuery as unknown as { getClient?: () => unknown }) && undefined; // no-op marker
