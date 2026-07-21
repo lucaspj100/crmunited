@@ -201,29 +201,77 @@ function PlacarDiario() {
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
       {/* Top bar */}
-      <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 border-b border-white/10 bg-slate-950/80 px-6 py-3 backdrop-blur">
-        <div className="flex items-center gap-3">
-          <Trophy className="h-6 w-6 text-amber-400" />
-          <div>
-            <div className="text-xs uppercase tracking-widest text-white/60">Telão Comercial</div>
-            <div className="text-lg font-bold leading-tight">Placar Comercial — {period === "hoje" ? "Hoje" : period === "semana" ? "Semana" : "Mês"}</div>
+      <div className="sticky top-0 z-10 border-b border-white/10 bg-slate-950/80 px-6 py-3 backdrop-blur">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <Trophy className="h-6 w-6 text-amber-400" />
+            <div>
+              <div className="text-xs uppercase tracking-widest text-white/60">Telão Comercial</div>
+              <div className="text-lg font-bold leading-tight">Placar Comercial — {PERIOD_LABELS[period]}</div>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
+              <SelectTrigger className="h-9 w-[200px] border-white/20 bg-transparent text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {(Object.keys(PERIOD_LABELS) as Period[]).map((p) => (
+                  <SelectItem key={p} value={p}>{PERIOD_LABELS[p]}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {period === "custom" && (
+              <div className="flex items-end gap-2">
+                <div>
+                  <Label className="text-[10px] uppercase tracking-wider text-white/60">De</Label>
+                  <Input
+                    type="date"
+                    value={customStart}
+                    max={customEnd}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setCustomStart(v);
+                      if (customEnd < v) setCustomEnd(v);
+                    }}
+                    className="h-9 w-[150px] border-white/20 bg-transparent text-white"
+                  />
+                </div>
+                <div>
+                  <Label className="text-[10px] uppercase tracking-wider text-white/60">Até</Label>
+                  <Input
+                    type="date"
+                    value={customEnd}
+                    min={customStart}
+                    onChange={(e) => setCustomEnd(e.target.value)}
+                    className="h-9 w-[150px] border-white/20 bg-transparent text-white"
+                  />
+                </div>
+              </div>
+            )}
+            <label className="flex items-center gap-2 rounded-md border border-white/20 px-3 py-1.5 text-xs text-white/80">
+              <Switch checked={compareEnabled} onCheckedChange={setCompareEnabled} />
+              Comparar com período anterior
+            </label>
+            <Button size="sm" variant="outline" className="border-white/20 bg-transparent text-white hover:bg-white/10" onClick={toggleFullscreen}>
+              {fullscreen ? <X className="h-4 w-4 mr-1" /> : <Maximize2 className="h-4 w-4 mr-1" />}
+              {fullscreen ? "Sair" : "Modo Telão"}
+            </Button>
+            <Link to="/dashboard">
+              <Button size="sm" variant="ghost" className="text-white hover:bg-white/10">Voltar</Button>
+            </Link>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          {(["hoje", "semana", "mes"] as const).map((p) => (
-            <Button key={p} size="sm" variant={period === p ? "default" : "outline"}
-              className={period === p ? "" : "border-white/20 bg-transparent text-white hover:bg-white/10"}
-              onClick={() => setPeriod(p)}>
-              {p === "hoje" ? "Hoje" : p === "semana" ? "Semana" : "Mês"}
-            </Button>
-          ))}
-          <Button size="sm" variant="outline" className="border-white/20 bg-transparent text-white hover:bg-white/10" onClick={toggleFullscreen}>
-            {fullscreen ? <X className="h-4 w-4 mr-1" /> : <Maximize2 className="h-4 w-4 mr-1" />}
-            {fullscreen ? "Sair" : "Modo Telão"}
-          </Button>
-          <Link to="/dashboard">
-            <Button size="sm" variant="ghost" className="text-white hover:bg-white/10">Voltar</Button>
-          </Link>
+        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/70">
+          <span>
+            Período consultado: <b className="text-white">{PERIOD_LABELS[period]}</b> — {rangeLabel}
+          </span>
+          {compareEnabled && (
+            <span className="text-white/50">vs. período anterior: {prevRangeLabel}</span>
+          )}
+          {customInvalid && (
+            <span className="text-rose-400">A data final não pode ser menor que a inicial.</span>
+          )}
         </div>
       </div>
 
@@ -242,13 +290,14 @@ function PlacarDiario() {
         {/* Totais do time — apenas ADM/Franqueado */}
         {isAdmin && (
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-            <BigStat icon={<Phone className="h-5 w-5" />} label="Ligações" value={totals.ligacoes} color="from-sky-500/30 to-sky-700/10" />
-            <BigStat icon={<PhoneCall className="h-5 w-5" />} label="Atendidas" value={totals.atendidas} color="from-emerald-500/30 to-emerald-700/10" />
-            <BigStat icon={<Sparkles className="h-5 w-5" />} label="Interessados" value={totals.interessados} color="from-amber-500/30 to-amber-700/10" />
-            <BigStat icon={<CalendarCheck className="h-5 w-5" />} label="Entrevistas" value={totals.entrevistas} color="from-violet-500/30 to-violet-700/10" />
-            <BigStat icon={<GraduationCap className="h-5 w-5" />} label="Matrículas" value={totals.matriculas} color="from-rose-500/30 to-rose-700/10" />
+            <BigStat icon={<Phone className="h-5 w-5" />} label="Ligações" value={totals.ligacoes} prev={compareEnabled ? totalsPrev.ligacoes : undefined} color="from-sky-500/30 to-sky-700/10" />
+            <BigStat icon={<PhoneCall className="h-5 w-5" />} label="Atendidas" value={totals.atendidas} prev={compareEnabled ? totalsPrev.atendidas : undefined} color="from-emerald-500/30 to-emerald-700/10" />
+            <BigStat icon={<Sparkles className="h-5 w-5" />} label="Interessados" value={totals.interessados} prev={compareEnabled ? totalsPrev.interessados : undefined} color="from-amber-500/30 to-amber-700/10" />
+            <BigStat icon={<CalendarCheck className="h-5 w-5" />} label="Entrevistas" value={totals.entrevistas} prev={compareEnabled ? totalsPrev.entrevistas : undefined} color="from-violet-500/30 to-violet-700/10" />
+            <BigStat icon={<GraduationCap className="h-5 w-5" />} label="Matrículas" value={totals.matriculas} prev={compareEnabled ? totalsPrev.matriculas : undefined} color="from-rose-500/30 to-rose-700/10" />
           </div>
         )}
+
 
         {/* Metas — apenas ADM/Franqueado (dados consolidados da equipe) */}
         {isAdmin && period === "hoje" && (
