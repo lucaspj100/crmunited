@@ -10,34 +10,26 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Trophy, AlertTriangle, Users, Filter } from "lucide-react";
+import { periodRange as sharedPeriodRange, weekRange } from "@/lib/productivity";
 
 export const Route = createFileRoute("/_authenticated/painel-adm")({ component: PainelAdm });
 
 type Period = "hoje" | "semana" | "mes" | "custom";
 
-function periodRange(p: Period, customStart?: string, customEnd?: string): { start: string; end: string } {
-  const today = new Date();
-  const iso = (d: Date) => d.toISOString().slice(0, 10);
-  const end = iso(today);
-  if (p === "hoje") return { start: end, end };
-  if (p === "semana") {
-    const d = new Date(); d.setDate(d.getDate() - 6);
-    return { start: iso(d), end };
-  }
-  if (p === "mes") {
-    const d = new Date(today.getFullYear(), today.getMonth(), 1);
-    return { start: iso(d), end };
-  }
-  return { start: customStart || end, end: customEnd || end };
+function periodRange(p: Period, customStart?: string, customEnd?: string) {
+  return sharedPeriodRange(p as never, customStart, customEnd);
 }
 
 async function fetchPainel(range: { start: string; end: string }) {
-  const today = new Date().toISOString().slice(0, 10);
-  const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 6);
-  const weekAgoIso = weekAgo.toISOString().slice(0, 10);
+  const today = new Date();
+  const todayIso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+  void todayIso;
+  const weekAgoIso = weekRange(today).start;
 
   const startIso = `${range.start}T00:00:00`;
   const endIso = `${range.end}T23:59:59`;
+
+
 
   const [profR, leadsR, leadsCreatedR, tasksR] = await Promise.all([
     supabase.from("profiles").select("id, full_name, email"),
@@ -185,7 +177,7 @@ function PainelAdm() {
               <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="hoje">Hoje</SelectItem>
-                <SelectItem value="semana">Últimos 7 dias</SelectItem>
+                <SelectItem value="semana">Semana (dom–sáb)</SelectItem>
                 <SelectItem value="mes">Este mês</SelectItem>
                 <SelectItem value="custom">Personalizado</SelectItem>
               </SelectContent>

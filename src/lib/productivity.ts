@@ -22,19 +22,33 @@ export type ProductivityRow = {
 
 export type Period = "hoje" | "semana" | "mes" | "custom";
 
+// Local-date ISO (YYYY-MM-DD) to avoid UTC drift when using toISOString().
+function localIso(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+// Semana comercial: domingo 00:00 até sábado 23:59 (horário local).
+export function weekRange(reference: Date = new Date()): { start: string; end: string } {
+  const ref = new Date(reference.getFullYear(), reference.getMonth(), reference.getDate());
+  const dow = ref.getDay(); // 0 = domingo ... 6 = sábado
+  const sunday = new Date(ref);
+  sunday.setDate(ref.getDate() - dow);
+  const saturday = new Date(sunday);
+  saturday.setDate(sunday.getDate() + 6);
+  return { start: localIso(sunday), end: localIso(saturday) };
+}
+
 export function periodRange(p: Period, customStart?: string, customEnd?: string): { start: string; end: string } {
-  const iso = (d: Date) => d.toISOString().slice(0, 10);
   const today = new Date();
-  const endIso = iso(today);
+  const endIso = localIso(today);
   if (p === "hoje") return { start: endIso, end: endIso };
-  if (p === "semana") {
-    const d = new Date();
-    d.setDate(d.getDate() - 6);
-    return { start: iso(d), end: endIso };
-  }
+  if (p === "semana") return weekRange(today);
   if (p === "mes") {
     const d = new Date(today.getFullYear(), today.getMonth(), 1);
-    return { start: iso(d), end: endIso };
+    return { start: localIso(d), end: endIso };
   }
   return { start: customStart || endIso, end: customEnd || endIso };
 }
