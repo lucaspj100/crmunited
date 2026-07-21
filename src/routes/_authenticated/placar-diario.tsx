@@ -565,14 +565,27 @@ function DebugEntrevistasMarcadas({ start, end, rows }: { start: string; end: st
   );
 }
 
-function BigStat({ icon, label, value, color }: { icon: React.ReactNode; label: string; value: number; color: string }) {
+function BigStat({ icon, label, value, prev, color }: { icon: React.ReactNode; label: string; value: number; prev?: number; color: string }) {
+  const showDelta = typeof prev === "number";
+  const delta = showDelta ? value - (prev as number) : 0;
+  const pct = showDelta ? ((prev as number) === 0 ? (value > 0 ? 100 : 0) : (delta / (prev as number)) * 100) : 0;
+  const trendIcon = delta > 0 ? <TrendingUp className="h-3 w-3" /> : delta < 0 ? <TrendingDown className="h-3 w-3" /> : <Minus className="h-3 w-3" />;
+  const trendColor = delta > 0 ? "text-emerald-300" : delta < 0 ? "text-rose-300" : "text-white/50";
   return (
     <div className={`rounded-2xl border border-white/10 bg-gradient-to-br ${color} p-4`}>
       <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-white/70">{icon}{label}</div>
       <div className="mt-2 text-4xl md:text-5xl font-black tabular-nums">{value}</div>
+      {showDelta && (
+        <div className={`mt-1 flex items-center gap-1 text-[11px] tabular-nums ${trendColor}`}>
+          {trendIcon}
+          <span>{delta >= 0 ? "+" : ""}{delta} ({pct >= 0 ? "+" : ""}{pct.toFixed(0)}%)</span>
+          <span className="text-white/40">vs. anterior ({prev})</span>
+        </div>
+      )}
     </div>
   );
 }
+
 
 function GoalBar({ label, value, goal }: { label: string; value: number; goal: number }) {
   const pct = Math.min(100, (value / Math.max(1, goal)) * 100);
