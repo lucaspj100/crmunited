@@ -148,7 +148,7 @@ function PlacarDiario() {
 
   const [selectedSeller, setSelectedSeller] = useState<(ProductivityRow & { score: number }) | null>(null);
 
-  const totals = useMemo(() => rows.reduce(
+  const sumTotals = (list: ProductivityRow[]) => list.reduce(
     (acc, r) => ({
       ligacoes: acc.ligacoes + r.ligacoes_feitas,
       atendidas: acc.atendidas + r.ligacoes_atendidas,
@@ -159,7 +159,19 @@ function PlacarDiario() {
       perdidos: acc.perdidos + (r.perdidos ?? 0),
     }),
     { ligacoes: 0, atendidas: 0, interessados: 0, entrevistas: 0, realizadas: 0, matriculas: 0, perdidos: 0 },
-  ), [rows]);
+  );
+  const totals = useMemo(() => sumTotals(rows), [rows]);
+  const prevRows = useMemo(() => {
+    const seen = new Set<string>();
+    return (rowsPrev as ProductivityRow[]).filter((r) => {
+      if (!isRealSeller(r.nome)) return false;
+      if (seen.has(r.vendedor_id)) return false;
+      seen.add(r.vendedor_id);
+      return true;
+    });
+  }, [rowsPrev]);
+  const totalsPrev = useMemo(() => sumTotals(prevRows), [prevRows]);
+
 
   const top = (key: keyof ProductivityRow) => {
     let best: ProductivityRow | null = null;
