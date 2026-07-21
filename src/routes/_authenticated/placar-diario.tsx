@@ -2,12 +2,26 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { fetchProductivity, periodRange, type Period, type ProductivityRow } from "@/lib/productivity";
+import {
+  fetchProductivity,
+  periodRange,
+  previousPeriodRange,
+  formatRangeLabel,
+  PERIOD_LABELS,
+  todayIso,
+  type Period,
+  type ProductivityRow,
+} from "@/lib/productivity";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Phone, PhoneCall, Sparkles, CalendarCheck, GraduationCap, Trophy, Maximize2, X, Flame, Target, Crown, Users, MessageCircle, Linkedin } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Phone, PhoneCall, Sparkles, CalendarCheck, GraduationCap, Trophy, Maximize2, X, Flame, Target, Crown, Users, MessageCircle, Linkedin, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
 
 // Filtra usuários técnicos que não devem aparecer no placar/ranking
 function isRealSeller(nome: string | null | undefined): boolean {
@@ -53,6 +67,9 @@ function PlacarDiario() {
   const isAdmin = roles.includes("admin") || roles.includes("franqueado");
 
   const [period, setPeriod] = useState<Period>("hoje");
+  const [customStart, setCustomStart] = useState<string>(todayIso());
+  const [customEnd, setCustomEnd] = useState<string>(todayIso());
+  const [compareEnabled, setCompareEnabled] = useState(false);
   const [now, setNow] = useState(new Date());
   const [fullscreen, setFullscreen] = useState(false);
 
@@ -61,14 +78,28 @@ function PlacarDiario() {
     return () => clearInterval(id);
   }, []);
 
-  const range = useMemo(() => periodRange(period), [period]);
+  const range = useMemo(
+    () => periodRange(period, customStart, customEnd),
+    [period, customStart, customEnd],
+  );
+  const prevRange = useMemo(() => previousPeriodRange(period, range), [period, range]);
+  const rangeLabel = useMemo(() => formatRangeLabel(range), [range]);
+  const prevRangeLabel = useMemo(() => formatRangeLabel(prevRange), [prevRange]);
+  const customInvalid = period === "custom" && customEnd < customStart;
 
   const { data: rowsRaw = [], dataUpdatedAt } = useQuery({
-    enabled: true,
+    enabled: !customInvalid,
     queryKey: ["placar_diario", range.start, range.end],
     queryFn: () => fetchProductivity({ start: range.start, end: range.end, vendedorId: null }),
     refetchInterval: 30_000,
   });
+
+  const { data: rowsPrev = [] } = useQuery({
+    enabled: compareEnabled && !customInvalid,
+    queryKey: ["placar_diario_prev", prevRange.start, prevRange.end],
+    queryFn: () => fetchProductivity({ start: prevRange.start, end: prevRange.end, vendedorId: null }),
+  });
+
 
   // Realtime: atualiza assim que houver nova tentativa ou mudança de lead
   const qc = (useQuery as unknown as { getClient?: () => unknown }) && undefined; // no-op marker
@@ -117,7 +148,7 @@ function PlacarDiario() {
 
   const [selectedSeller, setSelectedSeller] = useState<(ProductivityRow & { score: number }) | null>(null);
 
-  const totals = useMemo(() => rows.reduce(
+  const sumTotals = (list: ProductivityRow[]) => list.reduce(
     (acc, r) => ({
       ligacoes: acc.ligacoes + r.ligacoes_feitas,
       atendidas: acc.atendidas + r.ligacoes_atendidas,
@@ -128,7 +159,19 @@ function PlacarDiario() {
       perdidos: acc.perdidos + (r.perdidos ?? 0),
     }),
     { ligacoes: 0, atendidas: 0, interessados: 0, entrevistas: 0, realizadas: 0, matriculas: 0, perdidos: 0 },
-  ), [rows]);
+  );
+  const totals = useMemo(() => sumTotals(rows), [rows]);
+  const prevRows = useMemo(() => {
+    const seen = new Set<string>();
+    return (rowsPrev as ProductivityRow[]).filter((r) => {
+      if (!isRealSeller(r.nome)) return false;
+      if (seen.has(r.vendedor_id)) return false;
+      seen.add(r.vendedor_id);
+      return true;
+    });
+  }, [rowsPrev]);
+  const totalsPrev = useMemo(() => sumTotals(prevRows), [prevRows]);
+
 
   const top = (key: keyof ProductivityRow) => {
     let best: ProductivityRow | null = null;
@@ -158,29 +201,77 @@ function PlacarDiario() {
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
       {/* Top bar */}
-      <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 border-b border-white/10 bg-slate-950/80 px-6 py-3 backdrop-blur">
-        <div className="flex items-center gap-3">
-          <Trophy className="h-6 w-6 text-amber-400" />
-          <div>
-            <div className="text-xs uppercase tracking-widest text-white/60">Telão Comercial</div>
-            <div className="text-lg font-bold leading-tight">Placar Comercial — {period === "hoje" ? "Hoje" : period === "semana" ? "Semana" : "Mês"}</div>
+      <div className="sticky top-0 z-10 border-b border-white/10 bg-slate-950/80 px-6 py-3 backdrop-blur">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <Trophy className="h-6 w-6 text-amber-400" />
+            <div>
+              <div className="text-xs uppercase tracking-widest text-white/60">Telão Comercial</div>
+              <div className="text-lg font-bold leading-tight">Placar Comercial — {PERIOD_LABELS[period]}</div>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
+              <SelectTrigger className="h-9 w-[200px] border-white/20 bg-transparent text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {(Object.keys(PERIOD_LABELS) as Period[]).map((p) => (
+                  <SelectItem key={p} value={p}>{PERIOD_LABELS[p]}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {period === "custom" && (
+              <div className="flex items-end gap-2">
+                <div>
+                  <Label className="text-[10px] uppercase tracking-wider text-white/60">De</Label>
+                  <Input
+                    type="date"
+                    value={customStart}
+                    max={customEnd}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setCustomStart(v);
+                      if (customEnd < v) setCustomEnd(v);
+                    }}
+                    className="h-9 w-[150px] border-white/20 bg-transparent text-white"
+                  />
+                </div>
+                <div>
+                  <Label className="text-[10px] uppercase tracking-wider text-white/60">Até</Label>
+                  <Input
+                    type="date"
+                    value={customEnd}
+                    min={customStart}
+                    onChange={(e) => setCustomEnd(e.target.value)}
+                    className="h-9 w-[150px] border-white/20 bg-transparent text-white"
+                  />
+                </div>
+              </div>
+            )}
+            <label className="flex items-center gap-2 rounded-md border border-white/20 px-3 py-1.5 text-xs text-white/80">
+              <Switch checked={compareEnabled} onCheckedChange={setCompareEnabled} />
+              Comparar com período anterior
+            </label>
+            <Button size="sm" variant="outline" className="border-white/20 bg-transparent text-white hover:bg-white/10" onClick={toggleFullscreen}>
+              {fullscreen ? <X className="h-4 w-4 mr-1" /> : <Maximize2 className="h-4 w-4 mr-1" />}
+              {fullscreen ? "Sair" : "Modo Telão"}
+            </Button>
+            <Link to="/dashboard">
+              <Button size="sm" variant="ghost" className="text-white hover:bg-white/10">Voltar</Button>
+            </Link>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          {(["hoje", "semana", "mes"] as const).map((p) => (
-            <Button key={p} size="sm" variant={period === p ? "default" : "outline"}
-              className={period === p ? "" : "border-white/20 bg-transparent text-white hover:bg-white/10"}
-              onClick={() => setPeriod(p)}>
-              {p === "hoje" ? "Hoje" : p === "semana" ? "Semana" : "Mês"}
-            </Button>
-          ))}
-          <Button size="sm" variant="outline" className="border-white/20 bg-transparent text-white hover:bg-white/10" onClick={toggleFullscreen}>
-            {fullscreen ? <X className="h-4 w-4 mr-1" /> : <Maximize2 className="h-4 w-4 mr-1" />}
-            {fullscreen ? "Sair" : "Modo Telão"}
-          </Button>
-          <Link to="/dashboard">
-            <Button size="sm" variant="ghost" className="text-white hover:bg-white/10">Voltar</Button>
-          </Link>
+        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/70">
+          <span>
+            Período consultado: <b className="text-white">{PERIOD_LABELS[period]}</b> — {rangeLabel}
+          </span>
+          {compareEnabled && (
+            <span className="text-white/50">vs. período anterior: {prevRangeLabel}</span>
+          )}
+          {customInvalid && (
+            <span className="text-rose-400">A data final não pode ser menor que a inicial.</span>
+          )}
         </div>
       </div>
 
@@ -199,13 +290,14 @@ function PlacarDiario() {
         {/* Totais do time — apenas ADM/Franqueado */}
         {isAdmin && (
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-            <BigStat icon={<Phone className="h-5 w-5" />} label="Ligações" value={totals.ligacoes} color="from-sky-500/30 to-sky-700/10" />
-            <BigStat icon={<PhoneCall className="h-5 w-5" />} label="Atendidas" value={totals.atendidas} color="from-emerald-500/30 to-emerald-700/10" />
-            <BigStat icon={<Sparkles className="h-5 w-5" />} label="Interessados" value={totals.interessados} color="from-amber-500/30 to-amber-700/10" />
-            <BigStat icon={<CalendarCheck className="h-5 w-5" />} label="Entrevistas" value={totals.entrevistas} color="from-violet-500/30 to-violet-700/10" />
-            <BigStat icon={<GraduationCap className="h-5 w-5" />} label="Matrículas" value={totals.matriculas} color="from-rose-500/30 to-rose-700/10" />
+            <BigStat icon={<Phone className="h-5 w-5" />} label="Ligações" value={totals.ligacoes} prev={compareEnabled ? totalsPrev.ligacoes : undefined} color="from-sky-500/30 to-sky-700/10" />
+            <BigStat icon={<PhoneCall className="h-5 w-5" />} label="Atendidas" value={totals.atendidas} prev={compareEnabled ? totalsPrev.atendidas : undefined} color="from-emerald-500/30 to-emerald-700/10" />
+            <BigStat icon={<Sparkles className="h-5 w-5" />} label="Interessados" value={totals.interessados} prev={compareEnabled ? totalsPrev.interessados : undefined} color="from-amber-500/30 to-amber-700/10" />
+            <BigStat icon={<CalendarCheck className="h-5 w-5" />} label="Entrevistas" value={totals.entrevistas} prev={compareEnabled ? totalsPrev.entrevistas : undefined} color="from-violet-500/30 to-violet-700/10" />
+            <BigStat icon={<GraduationCap className="h-5 w-5" />} label="Matrículas" value={totals.matriculas} prev={compareEnabled ? totalsPrev.matriculas : undefined} color="from-rose-500/30 to-rose-700/10" />
           </div>
         )}
+
 
         {/* Metas — apenas ADM/Franqueado (dados consolidados da equipe) */}
         {isAdmin && period === "hoje" && (
@@ -473,14 +565,27 @@ function DebugEntrevistasMarcadas({ start, end, rows }: { start: string; end: st
   );
 }
 
-function BigStat({ icon, label, value, color }: { icon: React.ReactNode; label: string; value: number; color: string }) {
+function BigStat({ icon, label, value, prev, color }: { icon: React.ReactNode; label: string; value: number; prev?: number; color: string }) {
+  const showDelta = typeof prev === "number";
+  const delta = showDelta ? value - (prev as number) : 0;
+  const pct = showDelta ? ((prev as number) === 0 ? (value > 0 ? 100 : 0) : (delta / (prev as number)) * 100) : 0;
+  const trendIcon = delta > 0 ? <TrendingUp className="h-3 w-3" /> : delta < 0 ? <TrendingDown className="h-3 w-3" /> : <Minus className="h-3 w-3" />;
+  const trendColor = delta > 0 ? "text-emerald-300" : delta < 0 ? "text-rose-300" : "text-white/50";
   return (
     <div className={`rounded-2xl border border-white/10 bg-gradient-to-br ${color} p-4`}>
       <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-white/70">{icon}{label}</div>
       <div className="mt-2 text-4xl md:text-5xl font-black tabular-nums">{value}</div>
+      {showDelta && (
+        <div className={`mt-1 flex items-center gap-1 text-[11px] tabular-nums ${trendColor}`}>
+          {trendIcon}
+          <span>{delta >= 0 ? "+" : ""}{delta} ({pct >= 0 ? "+" : ""}{pct.toFixed(0)}%)</span>
+          <span className="text-white/40">vs. anterior ({prev})</span>
+        </div>
+      )}
     </div>
   );
 }
+
 
 function GoalBar({ label, value, goal }: { label: string; value: number; goal: number }) {
   const pct = Math.min(100, (value / Math.max(1, goal)) * 100);
