@@ -30,8 +30,6 @@ async function fetchPainel(range: { start: string; end: string }) {
   const endIso = `${range.end}T23:59:59`;
 
 
-  const startIso = `${range.start}T00:00:00`;
-  const endIso = `${range.end}T23:59:59`;
 
   const [profR, leadsR, leadsCreatedR, tasksR] = await Promise.all([
     supabase.from("profiles").select("id, full_name, email"),
