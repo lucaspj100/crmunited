@@ -289,13 +289,17 @@ function PlacarDiario() {
 
         {/* Totais do time — apenas ADM/Franqueado */}
         {isAdmin && (
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-            <BigStat icon={<Phone className="h-5 w-5" />} label="Ligações" value={totals.ligacoes} prev={compareEnabled ? totalsPrev.ligacoes : undefined} color="from-sky-500/30 to-sky-700/10" />
-            <BigStat icon={<PhoneCall className="h-5 w-5" />} label="Atendidas" value={totals.atendidas} prev={compareEnabled ? totalsPrev.atendidas : undefined} color="from-emerald-500/30 to-emerald-700/10" />
-            <BigStat icon={<Sparkles className="h-5 w-5" />} label="Interessados" value={totals.interessados} prev={compareEnabled ? totalsPrev.interessados : undefined} color="from-amber-500/30 to-amber-700/10" />
-            <BigStat icon={<CalendarCheck className="h-5 w-5" />} label="Entrevistas" value={totals.entrevistas} prev={compareEnabled ? totalsPrev.entrevistas : undefined} color="from-violet-500/30 to-violet-700/10" />
-            <BigStat icon={<GraduationCap className="h-5 w-5" />} label="Matrículas" value={totals.matriculas} prev={compareEnabled ? totalsPrev.matriculas : undefined} color="from-rose-500/30 to-rose-700/10" />
-          </div>
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+              <BigStat icon={<Phone className="h-5 w-5" />} label="Ligações" value={totals.ligacoes} prev={compareEnabled ? totalsPrev.ligacoes : undefined} color="from-sky-500/30 to-sky-700/10" />
+              <BigStat icon={<PhoneCall className="h-5 w-5" />} label="Atendidas" value={totals.atendidas} prev={compareEnabled ? totalsPrev.atendidas : undefined} color="from-emerald-500/30 to-emerald-700/10" />
+              <BigStat icon={<Sparkles className="h-5 w-5" />} label="Interessados" value={totals.interessados} prev={compareEnabled ? totalsPrev.interessados : undefined} color="from-amber-500/30 to-amber-700/10" />
+              <BigStat icon={<CalendarCheck className="h-5 w-5" />} label="Agendadas" value={totals.entrevistas} prev={compareEnabled ? totalsPrev.entrevistas : undefined} color="from-violet-500/30 to-violet-700/10" />
+              <BigStat icon={<CalendarCheck className="h-5 w-5" />} label="Realizadas" value={totals.realizadas} prev={compareEnabled ? totalsPrev.realizadas : undefined} color="from-fuchsia-500/30 to-fuchsia-700/10" />
+              <BigStat icon={<GraduationCap className="h-5 w-5" />} label="Matrículas" value={totals.matriculas} prev={compareEnabled ? totalsPrev.matriculas : undefined} color="from-rose-500/30 to-rose-700/10" />
+            </div>
+            <RatesPanel totals={totals} prev={compareEnabled ? totalsPrev : undefined} />
+          </>
         )}
 
 
@@ -764,6 +768,55 @@ function ConvCard({ label, value, hint }: { label: string; value: string; hint: 
       <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</div>
       <div className="mt-1 text-xl font-black tabular-nums">{value}</div>
       <div className="text-[10px] text-muted-foreground">{hint}</div>
+    </div>
+  );
+}
+
+type TotalsShape = {
+  ligacoes: number; atendidas: number; interessados: number;
+  entrevistas: number; realizadas: number; matriculas: number; perdidos: number;
+};
+
+function safePct(num: number, den: number): number {
+  if (!den || den <= 0) return 0;
+  return (num / den) * 100;
+}
+
+function fmtPct(v: number): string {
+  return `${v.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`;
+}
+
+function RatesPanel({ totals, prev }: { totals: TotalsShape; prev?: TotalsShape }) {
+  const rates = [
+    { key: "agendamento", label: "Taxa de agendamento", hint: "agendadas ÷ interessados", value: safePct(totals.entrevistas, totals.interessados), prev: prev ? safePct(prev.entrevistas, prev.interessados) : undefined },
+    { key: "comparecimento", label: "Taxa de comparecimento", hint: "realizadas ÷ agendadas", value: safePct(totals.realizadas, totals.entrevistas), prev: prev ? safePct(prev.realizadas, prev.entrevistas) : undefined },
+    { key: "fechamento", label: "Taxa de fechamento", hint: "matrículas ÷ realizadas", value: safePct(totals.matriculas, totals.realizadas), prev: prev ? safePct(prev.matriculas, prev.realizadas) : undefined },
+    { key: "geral", label: "Conversão geral", hint: "matrículas ÷ interessados", value: safePct(totals.matriculas, totals.interessados), prev: prev ? safePct(prev.matriculas, prev.interessados) : undefined },
+  ];
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+      <div className="flex items-center gap-2 mb-4">
+        <TrendingUp className="h-5 w-5 text-emerald-400" />
+        <h2 className="text-lg font-bold">Taxas de conversão do período</h2>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {rates.map((r) => {
+          const delta = r.prev !== undefined ? r.value - r.prev : null;
+          return (
+            <div key={r.key} className="rounded-xl border border-white/10 bg-white/5 p-4">
+              <div className="text-[11px] uppercase tracking-wider text-white/60">{r.label}</div>
+              <div className="mt-1 text-3xl font-black tabular-nums">{fmtPct(r.value)}</div>
+              <div className="text-[10px] text-white/50">{r.hint}</div>
+              {delta !== null && (
+                <div className={`mt-1 flex items-center gap-1 text-xs ${delta > 0.05 ? "text-emerald-300" : delta < -0.05 ? "text-rose-300" : "text-white/50"}`}>
+                  {delta > 0.05 ? <TrendingUp className="h-3 w-3" /> : delta < -0.05 ? <TrendingDown className="h-3 w-3" /> : <Minus className="h-3 w-3" />}
+                  <span>{delta > 0 ? "+" : ""}{delta.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} p.p. vs anterior</span>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
