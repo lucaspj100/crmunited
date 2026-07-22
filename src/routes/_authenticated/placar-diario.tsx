@@ -729,7 +729,8 @@ function SellerDetailDialog({
               <DetailStat icon={<Phone className="h-4 w-4" />} label="Ligações" value={seller.ligacoes_feitas} />
               <DetailStat icon={<PhoneCall className="h-4 w-4" />} label="Atendidas" value={seller.ligacoes_atendidas} />
               <DetailStat icon={<Sparkles className="h-4 w-4" />} label="Interessados" value={seller.interessados_gerados} />
-              <DetailStat icon={<CalendarCheck className="h-4 w-4" />} label="Entrevistas" value={seller.entrevistas_marcadas} />
+              <DetailStat icon={<CalendarCheck className="h-4 w-4" />} label="Agendadas" value={seller.entrevistas_marcadas} />
+              <DetailStat icon={<CalendarCheck className="h-4 w-4" />} label="Realizadas" value={seller.entrevistas_realizadas ?? 0} />
               <DetailStat icon={<GraduationCap className="h-4 w-4" />} label="Matrículas" value={seller.matriculas} />
               <DetailStat icon={<MessageCircle className="h-4 w-4" />} label="WhatsApps" value={seller.whatsapps_checkout ?? 0} />
               <DetailStat icon={<Linkedin className="h-4 w-4" />} label="LinkedIns" value={seller.linkedins_checkout ?? 0} />
@@ -740,8 +741,9 @@ function SellerDetailDialog({
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                 <ConvCard label="Atendimento" value={pct(seller.ligacoes_atendidas, seller.ligacoes_feitas)} hint="atend / lig" />
                 <ConvCard label="Lig → Interes." value={pct(seller.interessados_gerados, seller.ligacoes_feitas)} hint="interes / lig" />
-                <ConvCard label="Interes → Entrev." value={pct(seller.entrevistas_marcadas, seller.interessados_gerados)} hint="entrev / interes" />
-                <ConvCard label="Entrev → Matr." value={pct(seller.matriculas, seller.entrevistas_marcadas)} hint="matr / entrev" />
+                <ConvCard label="Interes. → Agend." value={pct(seller.entrevistas_marcadas, seller.interessados_gerados)} hint="agend / interes" />
+                <ConvCard label="Comparecimento" value={pct(seller.entrevistas_realizadas ?? 0, seller.entrevistas_marcadas)} hint="realiz / agend" />
+                <ConvCard label="Fechamento" value={pct(seller.matriculas, seller.entrevistas_realizadas ?? 0)} hint="matr / realiz" />
               </div>
             </div>
           </div>
