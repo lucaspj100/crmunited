@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Trophy, AlertTriangle, Users, Filter } from "lucide-react";
 import { periodRange as sharedPeriodRange, weekRange } from "@/lib/productivity";
+import { useTeams, primaryTeamId, teamParam, ALL_TEAMS } from "@/lib/teams";
 
 export const Route = createFileRoute("/_authenticated/painel-adm")({ component: PainelAdm });
 
