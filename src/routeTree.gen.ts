@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedUsuariosAcessosRouteImport } from './routes/_authenticated/usuarios-acessos'
 import { Route as AuthenticatedTarefasRouteImport } from './routes/_authenticated/tarefas'
+import { Route as AuthenticatedScriptsRouteImport } from './routes/_authenticated/scripts'
 import { Route as AuthenticatedResgatesRouteImport } from './routes/_authenticated/resgates'
 import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authenticated/relatorios'
 import { Route as AuthenticatedProcessosComerciaisRouteImport } from './routes/_authenticated/processos-comerciais'
@@ -57,6 +58,11 @@ const AuthenticatedUsuariosAcessosRoute =
 const AuthenticatedTarefasRoute = AuthenticatedTarefasRouteImport.update({
   id: '/tarefas',
   path: '/tarefas',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedScriptsRoute = AuthenticatedScriptsRouteImport.update({
+  id: '/scripts',
+  path: '/scripts',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedResgatesRoute = AuthenticatedResgatesRouteImport.update({
@@ -182,6 +188,7 @@ export interface FileRoutesByFullPath {
   '/processos-comerciais': typeof AuthenticatedProcessosComerciaisRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
   '/resgates': typeof AuthenticatedResgatesRoute
+  '/scripts': typeof AuthenticatedScriptsRoute
   '/tarefas': typeof AuthenticatedTarefasRoute
   '/usuarios-acessos': typeof AuthenticatedUsuariosAcessosRoute
 }
@@ -207,6 +214,7 @@ export interface FileRoutesByTo {
   '/processos-comerciais': typeof AuthenticatedProcessosComerciaisRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
   '/resgates': typeof AuthenticatedResgatesRoute
+  '/scripts': typeof AuthenticatedScriptsRoute
   '/tarefas': typeof AuthenticatedTarefasRoute
   '/usuarios-acessos': typeof AuthenticatedUsuariosAcessosRoute
 }
@@ -234,6 +242,7 @@ export interface FileRoutesById {
   '/_authenticated/processos-comerciais': typeof AuthenticatedProcessosComerciaisRoute
   '/_authenticated/relatorios': typeof AuthenticatedRelatoriosRoute
   '/_authenticated/resgates': typeof AuthenticatedResgatesRoute
+  '/_authenticated/scripts': typeof AuthenticatedScriptsRoute
   '/_authenticated/tarefas': typeof AuthenticatedTarefasRoute
   '/_authenticated/usuarios-acessos': typeof AuthenticatedUsuariosAcessosRoute
 }
@@ -261,6 +270,7 @@ export interface FileRouteTypes {
     | '/processos-comerciais'
     | '/relatorios'
     | '/resgates'
+    | '/scripts'
     | '/tarefas'
     | '/usuarios-acessos'
   fileRoutesByTo: FileRoutesByTo
@@ -286,6 +296,7 @@ export interface FileRouteTypes {
     | '/processos-comerciais'
     | '/relatorios'
     | '/resgates'
+    | '/scripts'
     | '/tarefas'
     | '/usuarios-acessos'
   id:
@@ -312,6 +323,7 @@ export interface FileRouteTypes {
     | '/_authenticated/processos-comerciais'
     | '/_authenticated/relatorios'
     | '/_authenticated/resgates'
+    | '/_authenticated/scripts'
     | '/_authenticated/tarefas'
     | '/_authenticated/usuarios-acessos'
   fileRoutesById: FileRoutesById
@@ -357,6 +369,13 @@ declare module '@tanstack/react-router' {
       path: '/tarefas'
       fullPath: '/tarefas'
       preLoaderRoute: typeof AuthenticatedTarefasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/scripts': {
+      id: '/_authenticated/scripts'
+      path: '/scripts'
+      fullPath: '/scripts'
+      preLoaderRoute: typeof AuthenticatedScriptsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/resgates': {
@@ -515,6 +534,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProcessosComerciaisRoute: typeof AuthenticatedProcessosComerciaisRoute
   AuthenticatedRelatoriosRoute: typeof AuthenticatedRelatoriosRoute
   AuthenticatedResgatesRoute: typeof AuthenticatedResgatesRoute
+  AuthenticatedScriptsRoute: typeof AuthenticatedScriptsRoute
   AuthenticatedTarefasRoute: typeof AuthenticatedTarefasRoute
   AuthenticatedUsuariosAcessosRoute: typeof AuthenticatedUsuariosAcessosRoute
 }
@@ -539,6 +559,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProcessosComerciaisRoute: AuthenticatedProcessosComerciaisRoute,
   AuthenticatedRelatoriosRoute: AuthenticatedRelatoriosRoute,
   AuthenticatedResgatesRoute: AuthenticatedResgatesRoute,
+  AuthenticatedScriptsRoute: AuthenticatedScriptsRoute,
   AuthenticatedTarefasRoute: AuthenticatedTarefasRoute,
   AuthenticatedUsuariosAcessosRoute: AuthenticatedUsuariosAcessosRoute,
 }
