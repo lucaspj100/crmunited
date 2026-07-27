@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LEAD_STATUSES, LOST_REASONS, labelFor, statusColor } from "@/lib/constants";
 import { BarChart3 } from "lucide-react";
+import { useTeams, primaryTeamId, ALL_TEAMS } from "@/lib/teams";
 
 export const Route = createFileRoute("/_authenticated/relatorios")({ component: RelatoriosPage });
 
@@ -19,7 +20,7 @@ async function fetchData() {
   const [leadsR, tasksR, profilesR] = await Promise.all([
     supabase.from("leads").select("id,status,company,source,owner_id,lost_reason,created_at").limit(10000),
     supabase.from("tasks").select("id,owner_id,status,due_date,is_rescue").limit(10000),
-    supabase.from("profiles").select("id,full_name,email").limit(2000),
+    supabase.from("profiles").select("id,full_name,email,team_id").limit(2000),
   ]);
   return {
     leads: (leadsR.data ?? []) as Lead[],
@@ -40,6 +41,9 @@ function group<T>(arr: T[], key: (t: T) => string) {
 function RelatoriosPage() {
   const { data, isLoading } = useQuery({ queryKey: ["relatorios"], queryFn: fetchData });
   const [vendor, setVendor] = useState("all");
+  const { data: teams = [] } = useTeams();
+  const [teamSel, setTeamSel] = useState<string>("");
+  const effectiveTeam = teamSel || primaryTeamId(teams) || ALL_TEAMS;
   const [status, setStatus] = useState("all");
   const [source, setSource] = useState("all");
   const [reason, setReason] = useState("all");
@@ -48,9 +52,15 @@ function RelatoriosPage() {
 
   const profileMap = useMemo(() => new Map((data?.profiles ?? []).map((p) => [p.id, p.full_name || p.email || "—"])), [data]);
 
+  const teamOwnerIds = useMemo(() => {
+    if (effectiveTeam === ALL_TEAMS) return null;
+    return new Set((data?.profiles ?? []).filter((p) => p.team_id === effectiveTeam).map((p) => p.id));
+  }, [data, effectiveTeam]);
+
   const filteredLeads = useMemo(() => {
     if (!data) return [];
     return data.leads.filter((l) => {
+      if (teamOwnerIds && !teamOwnerIds.has(l.owner_id)) return false;
       if (vendor !== "all" && l.owner_id !== vendor) return false;
       if (status !== "all" && l.status !== status) return false;
       if (source !== "all" && (l.source || "—") !== source) return false;
@@ -124,6 +134,16 @@ function RelatoriosPage() {
 
       <Card className="p-4">
         <div className="grid grid-cols-1 gap-3 md:grid-cols-3 lg:grid-cols-6">
+          <div>
+            <Label className="text-xs">Equipe</Label>
+            <Select value={effectiveTeam} onValueChange={setTeamSel}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {teams.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                <SelectItem value={ALL_TEAMS}>Todas as equipes</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div>
             <Label className="text-xs">Vendedor</Label>
             <Select value={vendor} onValueChange={setVendor}>
