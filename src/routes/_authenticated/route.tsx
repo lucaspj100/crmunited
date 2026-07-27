@@ -70,6 +70,7 @@ function AuthedLayout() {
         { to: "/processos-comerciais", label: "Processos", icon: Activity } as const,
         { to: "/integracao-arena", label: "Integração Arena", icon: Link2 } as const,
         { to: "/usuarios-acessos", label: "Usuários e Acessos", icon: Shield } as const,
+        { to: "/equipes", label: "Equipes", icon: Users } as const,
         { to: "/configuracoes", label: "Configurações", icon: Settings } as const,
       ]
     : BASE_NAV;
