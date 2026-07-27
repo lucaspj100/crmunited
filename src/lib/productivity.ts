@@ -5,6 +5,7 @@ export type ProductivityRow = {
   nome: string;
   email: string;
   avatar_url: string | null;
+  team_id?: string | null;
   leads_novos_atribuidos: number;
   leads_trabalhados: number;
   ligacoes_feitas: number;
