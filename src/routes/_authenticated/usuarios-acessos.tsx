@@ -190,6 +190,13 @@ function UsersAdmin() {
               <SelectItem value="vendedor">Vendedores</SelectItem>
             </SelectContent>
           </Select>
+          <Select value={teamFilter} onValueChange={setTeamFilter}>
+            <SelectTrigger className="w-[200px]"><SelectValue placeholder="Equipe" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL_TEAMS}>Todas as equipes</SelectItem>
+              {teams.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="overflow-x-auto">
@@ -199,6 +206,7 @@ function UsersAdmin() {
                 <th className="px-2 py-2">Nome</th>
                 <th className="px-2 py-2">E-mail</th>
                 <th className="px-2 py-2">Perfil</th>
+                <th className="px-2 py-2">Equipe</th>
                 <th className="px-2 py-2">Status</th>
                 <th className="px-2 py-2">Último acesso</th>
                 <th className="px-2 py-2">Criado em</th>
@@ -207,8 +215,8 @@ function UsersAdmin() {
               </tr>
             </thead>
             <tbody>
-              {isLoading && <tr><td colSpan={8} className="p-6 text-center text-muted-foreground">Carregando…</td></tr>}
-              {!isLoading && filtered.length === 0 && <tr><td colSpan={8} className="p-6 text-center text-muted-foreground">Nenhum usuário encontrado.</td></tr>}
+              {isLoading && <tr><td colSpan={9} className="p-6 text-center text-muted-foreground">Carregando…</td></tr>}
+              {!isLoading && filtered.length === 0 && <tr><td colSpan={9} className="p-6 text-center text-muted-foreground">Nenhum usuário encontrado.</td></tr>}
               {filtered.map((u) => (
                 <tr key={u.id} className="border-b hover:bg-muted/40">
                   <td className="px-2 py-2 font-medium">{u.full_name || "—"}</td>
@@ -218,6 +226,7 @@ function UsersAdmin() {
                       <Badge key={r} variant="outline" className="mr-1 uppercase text-[10px]">{r === "admin" ? "ADM" : r}</Badge>
                     ))}
                   </td>
+                  <td className="px-2 py-2 text-muted-foreground">{teamName((u as any).team_id)}</td>
                   <td className="px-2 py-2">{statusBadge(u.status)}</td>
                   <td className="px-2 py-2 text-muted-foreground">{fmtDate(u.last_sign_in_at)}</td>
                   <td className="px-2 py-2 text-muted-foreground">{fmtDate(u.created_at)}</td>
@@ -226,6 +235,7 @@ function UsersAdmin() {
                     <div className="flex justify-end gap-1">
                       <Button size="sm" variant="ghost" onClick={() => setLogsUser(u)} title="Ver acessos"><History className="h-4 w-4" /></Button>
                       <Button size="sm" variant="ghost" onClick={() => { setResetUser(u); setTempPassword(null); }} title="Redefinir senha"><KeyRound className="h-4 w-4" /></Button>
+                      <Button size="sm" variant="ghost" onClick={() => { setMoveUser(u); setMoveTarget(""); }} title="Mover para outra equipe"><ArrowRightLeft className="h-4 w-4" /></Button>
                       {u.status === "ativo"
                         ? <Button size="sm" variant="ghost" onClick={() => setStatusUser({ user: u, to: "inativo" })} title="Inativar"><Ban className="h-4 w-4" /></Button>
                         : <Button size="sm" variant="ghost" onClick={() => setStatusUser({ user: u, to: "ativo" })} title="Ativar"><CheckCircle2 className="h-4 w-4" /></Button>}
@@ -238,6 +248,31 @@ function UsersAdmin() {
           </table>
         </div>
       </Card>
+
+      <Dialog open={!!moveUser} onOpenChange={(v) => !v && setMoveUser(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Mover para outra equipe</DialogTitle>
+            <DialogDescription>
+              {moveUser?.full_name || moveUser?.email} — equipe atual: {teamName((moveUser as any)?.team_id)}.
+              Os registros continuam vinculados ao usuário.
+            </DialogDescription>
+          </DialogHeader>
+          <Select value={moveTarget} onValueChange={setMoveTarget}>
+            <SelectTrigger><SelectValue placeholder="Selecionar equipe" /></SelectTrigger>
+            <SelectContent>
+              {teams.filter((t) => t.id !== (moveUser as any)?.team_id).map((t) => (
+                <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMoveUser(null)}>Cancelar</Button>
+            <Button disabled={!moveTarget} onClick={doMove}>Mover</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
 
       {/* Access logs modal */}
       <Dialog open={!!logsUser} onOpenChange={(v) => !v && setLogsUser(null)}>
