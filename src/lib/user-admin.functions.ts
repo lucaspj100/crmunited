@@ -35,7 +35,7 @@ export const adminListUsers = createServerFn({ method: "GET" })
 
     const { data: profiles, error: pErr } = await context.supabase
       .from("profiles")
-      .select("id, full_name, email, avatar_url, status, last_sign_in_at, sign_in_count, must_change_password, deactivated_at, created_at")
+      .select("id, full_name, email, avatar_url, status, last_sign_in_at, sign_in_count, must_change_password, deactivated_at, created_at, team_id")
       .order("full_name", { ascending: true });
     if (pErr) throw new Error(pErr.message);
 
