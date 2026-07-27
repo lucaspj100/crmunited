@@ -56,6 +56,39 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_assistant_settings: {
+        Row: {
+          course_information: string
+          id: boolean
+          instructions: string
+          objection_rules: string
+          pricing_rules: string
+          prohibited_claims: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          course_information?: string
+          id?: boolean
+          instructions?: string
+          objection_rules?: string
+          pricing_rules?: string
+          prohibited_claims?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          course_information?: string
+          id?: boolean
+          instructions?: string
+          objection_rules?: string
+          pricing_rules?: string
+          prohibited_claims?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           brand_name: string
@@ -641,6 +674,42 @@ export type Database = {
           prefixo_interurbano?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      sales_scripts: {
+        Row: {
+          category: string
+          content: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          sort_order: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          content: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }
