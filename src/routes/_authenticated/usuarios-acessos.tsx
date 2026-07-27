@@ -88,12 +88,13 @@ function UsersAdmin() {
     const q = search.trim().toLowerCase();
     return users.filter((u) => {
       if (q && !`${u.full_name ?? ""} ${u.email ?? ""}`.toLowerCase().includes(q)) return false;
+      if (teamFilter !== ALL_TEAMS && (u as any).team_id !== teamFilter) return false;
       if (filter === "all") return true;
       if (filter === "admin") return u.roles.includes("admin");
       if (filter === "vendedor") return u.roles.includes("vendedor");
       return u.status === filter;
     });
-  }, [users, search, filter]);
+  }, [users, search, filter, teamFilter]);
 
   const stats = useMemo(() => {
     const today = new Date(); today.setHours(0, 0, 0, 0);
