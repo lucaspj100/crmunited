@@ -178,6 +178,16 @@ function PainelAdm() {
         <div className="flex flex-wrap items-end gap-3">
           <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground"><Filter className="h-4 w-4" />Filtros</div>
           <div className="flex flex-col">
+            <label className="text-xs text-muted-foreground mb-1">Equipe</label>
+            <Select value={effectiveTeam} onValueChange={setTeamSel}>
+              <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {teams.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                <SelectItem value={ALL_TEAMS}>Todas as equipes</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col">
             <label className="text-xs text-muted-foreground mb-1">Período</label>
             <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
               <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
