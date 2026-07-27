@@ -423,6 +423,7 @@ export type Database = {
           must_change_password: boolean
           sign_in_count: number
           status: string
+          team_id: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -435,6 +436,7 @@ export type Database = {
           must_change_password?: boolean
           sign_in_count?: number
           status?: string
+          team_id?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -447,8 +449,17 @@ export type Database = {
           must_change_password?: boolean
           sign_in_count?: number
           status?: string
+          team_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       prospect_attempts: {
         Row: {
@@ -801,6 +812,130 @@ export type Database = {
           },
         ]
       }
+      team_goals: {
+        Row: {
+          created_at: string
+          daily_calls_goal: number
+          daily_enrollments_goal: number
+          daily_interviews_goal: number
+          id: string
+          team_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          daily_calls_goal?: number
+          daily_enrollments_goal?: number
+          daily_interviews_goal?: number
+          id?: string
+          team_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          daily_calls_goal?: number
+          daily_enrollments_goal?: number
+          daily_interviews_goal?: number
+          id?: string
+          team_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_goals_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_membership_history: {
+        Row: {
+          changed_at: string
+          changed_by: string
+          id: string
+          new_team_id: string
+          previous_team_id: string | null
+          user_id: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by: string
+          id?: string
+          new_team_id: string
+          previous_team_id?: string | null
+          user_id: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string
+          id?: string
+          new_team_id?: string
+          previous_team_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_membership_history_new_team_id_fkey"
+            columns: ["new_team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_membership_history_previous_team_id_fkey"
+            columns: ["previous_team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teams: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          include_in_main_dashboard: boolean
+          is_active: boolean
+          is_primary: boolean
+          manager_id: string | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          include_in_main_dashboard?: boolean
+          is_active?: boolean
+          is_primary?: boolean
+          manager_id?: string | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          include_in_main_dashboard?: boolean
+          is_active?: boolean
+          is_primary?: boolean
+          manager_id?: string | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teams_manager_id_fkey"
+            columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
@@ -963,10 +1098,15 @@ export type Database = {
         }[]
       }
       productivity_summary: {
-        Args: { _end: string; _start: string; _vendedor_id?: string }
+        Args: {
+          _end: string
+          _start: string
+          _team_id?: string
+          _vendedor_id?: string
+        }
         Returns: Json
       }
-      prospect_dashboard: { Args: never; Returns: Json }
+      prospect_dashboard: { Args: { _team_id?: string }; Returns: Json }
       prospect_phones_lookup: {
         Args: { _phones: string[] }
         Returns: {
@@ -982,6 +1122,7 @@ export type Database = {
           vendedor_responsavel_id: string
         }[]
       }
+      teams_overview: { Args: never; Returns: Json }
     }
     Enums: {
       app_role: "admin" | "franqueado" | "vendedor"
