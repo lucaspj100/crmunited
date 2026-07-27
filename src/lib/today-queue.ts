@@ -74,6 +74,8 @@ export function useHojeData() {
         prospects: (prospectsR.data ?? []) as ProspectMini[],
       };
     },
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: true,
   });
 }
 
