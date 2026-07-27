@@ -14,7 +14,9 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Users, Shield, Search, KeyRound, History, Ban, CheckCircle2, Copy, Mail } from "lucide-react";
+import { Users, Shield, Search, KeyRound, History, Ban, CheckCircle2, Copy, Mail, ArrowRightLeft } from "lucide-react";
+import { useTeams, ALL_TEAMS } from "@/lib/teams";
+import { adminMoveUsersToTeam } from "@/lib/team-admin.functions";
 
 export const Route = createFileRoute("/_authenticated/usuarios-acessos")({ component: UsersAdmin });
 
