@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { ReturnNotificationWatcher } from "@/components/ReturnNotificationWatcher";
 import { TaskNotificationWatcher } from "@/components/TaskNotificationWatcher";
+import { useTodayActionsCount } from "@/lib/today-queue";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -33,36 +34,13 @@ const BASE_NAV = [
   { to: "/meu-perfil", label: "Meu perfil", icon: UserIcon },
 ] as const;
 
-function localToday(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-
-function useHojePendingCount(userId: string | undefined) {
-  return useQuery({
-    queryKey: ["tasks-pending-count", userId],
-    enabled: !!userId,
-    refetchInterval: 60_000,
-    queryFn: async () => {
-      const today = localToday();
-      const { count } = await supabase
-        .from("tasks")
-        .select("id", { count: "exact", head: true })
-        .eq("owner_id", userId!)
-        .eq("status", "pendente")
-        .lte("due_date", today);
-      return count ?? 0;
-    },
-  });
-}
-
 function AuthedLayout() {
   const { session, loading, signOut, user, roles, mustChangePassword } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { data: brand } = useBrand();
   const isAdmin = roles.includes("admin");
-  const { data: pendingCount = 0 } = useHojePendingCount(user?.id);
+  const pendingCount = useTodayActionsCount();
   const NAV = isAdmin
     ? [
         ...BASE_NAV,
