@@ -227,6 +227,17 @@ function PlacarDiario() {
                 ))}
               </SelectContent>
             </Select>
+            {isAdmin && teams.length > 1 && (
+              <Select value={effectiveTeam} onValueChange={setTeamSel}>
+                <SelectTrigger className="h-9 w-[200px] border-white/20 bg-transparent text-white">
+                  <SelectValue placeholder="Equipe" />
+                </SelectTrigger>
+                <SelectContent>
+                  {teams.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                  <SelectItem value={ALL_TEAMS}>Todas as equipes</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
             {period === "custom" && (
               <div className="flex items-end gap-2">
                 <div>
