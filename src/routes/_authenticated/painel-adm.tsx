@@ -128,10 +128,14 @@ function PainelAdm() {
   const [sellerFilter, setSellerFilter] = useState<string>("all");
   const [sortKey, setSortKey] = useState<string>("matriculasPeriodo");
 
+  const { data: teams = [] } = useTeams();
+  const [teamSel, setTeamSel] = useState<string>("");
+  const effectiveTeam = teamSel || primaryTeamId(teams) || ALL_TEAMS;
+
   const range = useMemo(() => periodRange(period, customStart, customEnd), [period, customStart, customEnd]);
   const { data: rows, isLoading } = useQuery({
-    queryKey: ["painel-adm", range.start, range.end],
-    queryFn: () => fetchPainel(range),
+    queryKey: ["painel-adm", range.start, range.end, effectiveTeam],
+    queryFn: () => fetchPainel(range, teamParam(effectiveTeam)),
     enabled: isAdmin,
   });
 
