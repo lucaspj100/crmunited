@@ -27,6 +27,7 @@ import { Route as AuthenticatedImportarRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedHojeRouteImport } from './routes/_authenticated/hoje'
 import { Route as AuthenticatedFunilRouteImport } from './routes/_authenticated/funil'
 import { Route as AuthenticatedFilaRouteImport } from './routes/_authenticated/fila'
+import { Route as AuthenticatedEquipesRouteImport } from './routes/_authenticated/equipes'
 import { Route as AuthenticatedDiscadorRouteImport } from './routes/_authenticated/discador'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
@@ -126,6 +127,11 @@ const AuthenticatedFilaRoute = AuthenticatedFilaRouteImport.update({
   path: '/fila',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedEquipesRoute = AuthenticatedEquipesRouteImport.update({
+  id: '/equipes',
+  path: '/equipes',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedDiscadorRoute = AuthenticatedDiscadorRouteImport.update({
   id: '/discador',
   path: '/discador',
@@ -162,6 +168,7 @@ export interface FileRoutesByFullPath {
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/discador': typeof AuthenticatedDiscadorRoute
+  '/equipes': typeof AuthenticatedEquipesRoute
   '/fila': typeof AuthenticatedFilaRoute
   '/funil': typeof AuthenticatedFunilRoute
   '/hoje': typeof AuthenticatedHojeRoute
@@ -186,6 +193,7 @@ export interface FileRoutesByTo {
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/discador': typeof AuthenticatedDiscadorRoute
+  '/equipes': typeof AuthenticatedEquipesRoute
   '/fila': typeof AuthenticatedFilaRoute
   '/funil': typeof AuthenticatedFunilRoute
   '/hoje': typeof AuthenticatedHojeRoute
@@ -212,6 +220,7 @@ export interface FileRoutesById {
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/discador': typeof AuthenticatedDiscadorRoute
+  '/_authenticated/equipes': typeof AuthenticatedEquipesRoute
   '/_authenticated/fila': typeof AuthenticatedFilaRoute
   '/_authenticated/funil': typeof AuthenticatedFunilRoute
   '/_authenticated/hoje': typeof AuthenticatedHojeRoute
@@ -238,6 +247,7 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/dashboard'
     | '/discador'
+    | '/equipes'
     | '/fila'
     | '/funil'
     | '/hoje'
@@ -262,6 +272,7 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/dashboard'
     | '/discador'
+    | '/equipes'
     | '/fila'
     | '/funil'
     | '/hoje'
@@ -287,6 +298,7 @@ export interface FileRouteTypes {
     | '/_authenticated/configuracoes'
     | '/_authenticated/dashboard'
     | '/_authenticated/discador'
+    | '/_authenticated/equipes'
     | '/_authenticated/fila'
     | '/_authenticated/funil'
     | '/_authenticated/hoje'
@@ -438,6 +450,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFilaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/equipes': {
+      id: '/_authenticated/equipes'
+      path: '/equipes'
+      fullPath: '/equipes'
+      preLoaderRoute: typeof AuthenticatedEquipesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/discador': {
       id: '/_authenticated/discador'
       path: '/discador'
@@ -482,6 +501,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDiscadorRoute: typeof AuthenticatedDiscadorRoute
+  AuthenticatedEquipesRoute: typeof AuthenticatedEquipesRoute
   AuthenticatedFilaRoute: typeof AuthenticatedFilaRoute
   AuthenticatedFunilRoute: typeof AuthenticatedFunilRoute
   AuthenticatedHojeRoute: typeof AuthenticatedHojeRoute
@@ -505,6 +525,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDiscadorRoute: AuthenticatedDiscadorRoute,
+  AuthenticatedEquipesRoute: AuthenticatedEquipesRoute,
   AuthenticatedFilaRoute: AuthenticatedFilaRoute,
   AuthenticatedFunilRoute: AuthenticatedFunilRoute,
   AuthenticatedHojeRoute: AuthenticatedHojeRoute,

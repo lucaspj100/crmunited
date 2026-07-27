@@ -5,6 +5,7 @@ export type ProductivityRow = {
   nome: string;
   email: string;
   avatar_url: string | null;
+  team_id?: string | null;
   leads_novos_atribuidos: number;
   leads_trabalhados: number;
   ligacoes_feitas: number;
@@ -159,11 +160,13 @@ export async function fetchProductivity(args: {
   start: string;
   end: string;
   vendedorId?: string | null;
+  teamId?: string | null;
 }): Promise<ProductivityRow[]> {
   const { data, error } = await supabase.rpc("productivity_summary" as never, {
     _start: args.start,
     _end: args.end,
     _vendedor_id: args.vendedorId ?? null,
+    _team_id: args.teamId ?? null,
   } as never);
   if (error) throw error;
   return (data ?? []) as unknown as ProductivityRow[];

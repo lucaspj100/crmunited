@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Trophy, AlertTriangle, Users, Filter } from "lucide-react";
 import { periodRange as sharedPeriodRange, weekRange } from "@/lib/productivity";
+import { useTeams, primaryTeamId, teamParam, ALL_TEAMS } from "@/lib/teams";
 
 export const Route = createFileRoute("/_authenticated/painel-adm")({ component: PainelAdm });
 
@@ -20,7 +21,7 @@ function periodRange(p: Period, customStart?: string, customEnd?: string) {
   return sharedPeriodRange(p as never, customStart, customEnd);
 }
 
-async function fetchPainel(range: { start: string; end: string }) {
+async function fetchPainel(range: { start: string; end: string }, teamId: string | null) {
   const today = new Date();
   const todayIso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
   void todayIso;
@@ -32,13 +33,14 @@ async function fetchPainel(range: { start: string; end: string }) {
 
 
   const [profR, leadsR, leadsCreatedR, tasksR] = await Promise.all([
-    supabase.from("profiles").select("id, full_name, email"),
+    supabase.from("profiles").select("id, full_name, email, team_id"),
     supabase.from("leads").select("id, owner_id, status, interview_date, lost_at, in_rescue, rescued_at, created_at, updated_at, enrollment_date"),
     supabase.from("leads").select("id, owner_id, created_at").gte("created_at", startIso).lte("created_at", endIso).limit(20000),
     supabase.from("tasks").select("id, owner_id, due_date, status, type, updated_at").limit(20000),
   ]);
 
-  const profiles = (profR.data ?? []) as { id: string; full_name: string | null; email: string }[];
+  const profiles = ((profR.data ?? []) as { id: string; full_name: string | null; email: string; team_id: string | null }[])
+    .filter((p) => (teamId ? p.team_id === teamId : true));
   const leads = (leadsR.data ?? []) as any[];
   const leadsCreated = (leadsCreatedR.data ?? []) as any[];
   const tasks = (tasksR.data ?? []) as any[];
@@ -127,10 +129,14 @@ function PainelAdm() {
   const [sellerFilter, setSellerFilter] = useState<string>("all");
   const [sortKey, setSortKey] = useState<string>("matriculasPeriodo");
 
+  const { data: teams = [] } = useTeams();
+  const [teamSel, setTeamSel] = useState<string>("");
+  const effectiveTeam = teamSel || primaryTeamId(teams) || ALL_TEAMS;
+
   const range = useMemo(() => periodRange(period, customStart, customEnd), [period, customStart, customEnd]);
   const { data: rows, isLoading } = useQuery({
-    queryKey: ["painel-adm", range.start, range.end],
-    queryFn: () => fetchPainel(range),
+    queryKey: ["painel-adm", range.start, range.end, effectiveTeam],
+    queryFn: () => fetchPainel(range, teamParam(effectiveTeam)),
     enabled: isAdmin,
   });
 
@@ -171,6 +177,16 @@ function PainelAdm() {
       <Card className="p-4">
         <div className="flex flex-wrap items-end gap-3">
           <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground"><Filter className="h-4 w-4" />Filtros</div>
+          <div className="flex flex-col">
+            <label className="text-xs text-muted-foreground mb-1">Equipe</label>
+            <Select value={effectiveTeam} onValueChange={setTeamSel}>
+              <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {teams.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                <SelectItem value={ALL_TEAMS}>Todas as equipes</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div className="flex flex-col">
             <label className="text-xs text-muted-foreground mb-1">Período</label>
             <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
