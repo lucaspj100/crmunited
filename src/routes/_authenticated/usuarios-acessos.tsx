@@ -58,6 +58,25 @@ function UsersAdmin() {
   const [tempPassword, setTempPassword] = useState<string | null>(null);
   const [statusUser, setStatusUser] = useState<{ user: UserRow; to: "ativo" | "inativo" | "bloqueado" } | null>(null);
   const [editUser, setEditUser] = useState<UserRow | null>(null);
+  const [teamFilter, setTeamFilter] = useState<string>(ALL_TEAMS);
+  const [moveUser, setMoveUser] = useState<UserRow | null>(null);
+  const [moveTarget, setMoveTarget] = useState<string>("");
+
+  const { data: teams = [] } = useTeams();
+  const teamName = (id: string | null | undefined) => teams.find((t) => t.id === id)?.name ?? "—";
+  const moveFn = useServerFn(adminMoveUsersToTeam);
+
+  const doMove = async () => {
+    if (!moveUser || !moveTarget) return;
+    try {
+      await moveFn({ data: { userIds: [moveUser.id], teamId: moveTarget } });
+      toast.success("Usuário movido de equipe");
+      qc.invalidateQueries({ queryKey: ["admin-users"] });
+      qc.invalidateQueries({ queryKey: ["admin-teams"] });
+      setMoveUser(null);
+      setMoveTarget("");
+    } catch (e) { toast.error((e as Error).message); }
+  };
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["admin-users"],
