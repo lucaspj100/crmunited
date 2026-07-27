@@ -12,6 +12,7 @@ import {
   type Period,
   type ProductivityRow,
 } from "@/lib/productivity";
+import { useTeams, primaryTeamId, teamParam, ALL_TEAMS } from "@/lib/teams";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
@@ -78,6 +79,11 @@ function PlacarDiario() {
     return () => clearInterval(id);
   }, []);
 
+  const { data: teams = [] } = useTeams();
+  const [teamSel, setTeamSel] = useState<string>("");
+  const effectiveTeam = teamSel || primaryTeamId(teams) || ALL_TEAMS;
+  const teamId = teamParam(effectiveTeam);
+
   const range = useMemo(
     () => periodRange(period, customStart, customEnd),
     [period, customStart, customEnd],
@@ -89,15 +95,15 @@ function PlacarDiario() {
 
   const { data: rowsRaw = [], dataUpdatedAt } = useQuery({
     enabled: !customInvalid,
-    queryKey: ["placar_diario", range.start, range.end],
-    queryFn: () => fetchProductivity({ start: range.start, end: range.end, vendedorId: null }),
+    queryKey: ["placar_diario", range.start, range.end, effectiveTeam],
+    queryFn: () => fetchProductivity({ start: range.start, end: range.end, vendedorId: null, teamId }),
     refetchInterval: 30_000,
   });
 
   const { data: rowsPrev = [] } = useQuery({
     enabled: compareEnabled && !customInvalid,
-    queryKey: ["placar_diario_prev", prevRange.start, prevRange.end],
-    queryFn: () => fetchProductivity({ start: prevRange.start, end: prevRange.end, vendedorId: null }),
+    queryKey: ["placar_diario_prev", prevRange.start, prevRange.end, effectiveTeam],
+    queryFn: () => fetchProductivity({ start: prevRange.start, end: prevRange.end, vendedorId: null, teamId }),
   });
 
 
@@ -110,7 +116,7 @@ function PlacarDiario() {
       .on("postgres_changes", { event: "*", schema: "public", table: "prospect_attempts" }, () => {
         void (async () => {
           const { data } = await supabase.rpc("productivity_summary" as never, {
-            _start: range.start, _end: range.end, _vendedor_id: null,
+            _start: range.start, _end: range.end, _vendedor_id: null, _team_id: teamId,
           } as never);
           if (Array.isArray(data)) setLive(data as unknown as ProductivityRow[]);
         })();
@@ -118,14 +124,14 @@ function PlacarDiario() {
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "leads" }, () => {
         void (async () => {
           const { data } = await supabase.rpc("productivity_summary" as never, {
-            _start: range.start, _end: range.end, _vendedor_id: null,
+            _start: range.start, _end: range.end, _vendedor_id: null, _team_id: teamId,
           } as never);
           if (Array.isArray(data)) setLive(data as unknown as ProductivityRow[]);
         })();
       })
       .subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, [range.start, range.end]);
+  }, [range.start, range.end, teamId]);
 
   const [live, setLive] = useState<ProductivityRow[] | null>(null);
   const rowsAll = (live ?? rowsRaw) as ProductivityRow[];
