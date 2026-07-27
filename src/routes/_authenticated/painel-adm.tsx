@@ -20,7 +20,7 @@ function periodRange(p: Period, customStart?: string, customEnd?: string) {
   return sharedPeriodRange(p as never, customStart, customEnd);
 }
 
-async function fetchPainel(range: { start: string; end: string }) {
+async function fetchPainel(range: { start: string; end: string }, teamId: string | null) {
   const today = new Date();
   const todayIso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
   void todayIso;
@@ -32,13 +32,14 @@ async function fetchPainel(range: { start: string; end: string }) {
 
 
   const [profR, leadsR, leadsCreatedR, tasksR] = await Promise.all([
-    supabase.from("profiles").select("id, full_name, email"),
+    supabase.from("profiles").select("id, full_name, email, team_id"),
     supabase.from("leads").select("id, owner_id, status, interview_date, lost_at, in_rescue, rescued_at, created_at, updated_at, enrollment_date"),
     supabase.from("leads").select("id, owner_id, created_at").gte("created_at", startIso).lte("created_at", endIso).limit(20000),
     supabase.from("tasks").select("id, owner_id, due_date, status, type, updated_at").limit(20000),
   ]);
 
-  const profiles = (profR.data ?? []) as { id: string; full_name: string | null; email: string }[];
+  const profiles = ((profR.data ?? []) as { id: string; full_name: string | null; email: string; team_id: string | null }[])
+    .filter((p) => (teamId ? p.team_id === teamId : true));
   const leads = (leadsR.data ?? []) as any[];
   const leadsCreated = (leadsCreatedR.data ?? []) as any[];
   const tasks = (tasksR.data ?? []) as any[];
