@@ -69,17 +69,18 @@ function RelatoriosPage() {
       if (to && l.created_at.slice(0, 10) > to) return false;
       return true;
     });
-  }, [data, vendor, status, source, reason, from, to]);
+  }, [data, teamOwnerIds, vendor, status, source, reason, from, to]);
 
   const filteredTasks = useMemo(() => {
     if (!data) return [];
     return data.tasks.filter((t) => {
+      if (teamOwnerIds && !teamOwnerIds.has(t.owner_id)) return false;
       if (vendor !== "all" && t.owner_id !== vendor) return false;
       if (from && t.due_date < from) return false;
       if (to && t.due_date > to) return false;
       return true;
     });
-  }, [data, vendor, from, to]);
+  }, [data, teamOwnerIds, vendor, from, to]);
 
   if (isLoading || !data) return <div className="text-muted-foreground">Carregando…</div>;
 
