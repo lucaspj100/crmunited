@@ -18,6 +18,8 @@ import { exportRowsToXlsx } from "@/lib/xlsx-export";
 import { NewLeadDialog } from "@/components/NewLeadDialog";
 import { LeadDetailsDialog } from "@/components/LeadDetailsDialog";
 import { QuickTaskDialog } from "@/components/QuickTaskDialog";
+import { MaterialFormFields, emptyMaterialForm, parseValue, type MaterialFormState } from "@/components/materiais/MaterialFormFields";
+import { fetchBonusRules, saveMaterialSale } from "@/lib/materials";
 import { ensureTaskForStatus } from "@/lib/task-automation";
 import { logLeadEvent } from "@/lib/lead-events";
 import { notifyArena } from "@/lib/arena-dispatch";
@@ -644,20 +646,21 @@ function LostDialog({ lead, onClose, onSaved }: { lead: Lead | null; onClose: ()
 function MatriculaDialog({ lead, onClose, onSaved }: { lead: Lead | null; onClose: () => void; onSaved: () => void }) {
   const [enrollment, setEnrollment] = useState("");
   const [monthly, setMonthly] = useState("");
-  const [material, setMaterial] = useState("");
+  const [materialForm, setMaterialForm] = useState<MaterialFormState>(emptyMaterialForm);
   const [enrollmentDate, setEnrollmentDate] = useState<string>(() => new Date().toISOString().slice(0, 10));
   const [followup, setFollowup] = useState<string>("none");
   const [followupDate, setFollowupDate] = useState<string>("");
   const [saving, setSaving] = useState(false);
+  const { data: materialRules } = useQuery({ queryKey: ["material-rules"], queryFn: fetchBonusRules });
   if (!lead) return null;
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const ev = enrollment ? Number(enrollment.replace(",", ".")) : null;
     const mv = monthly ? Number(monthly.replace(",", ".")) : null;
-    const mt = material ? Number(material.replace(",", ".")) : null;
-    if (ev === null || isNaN(ev) || mv === null || isNaN(mv) || mt === null || isNaN(mt)) {
-      toast.error("Informe os três valores"); return;
+    const mt = materialForm.hasMaterial ? parseValue(materialForm.saleValue) : null;
+    if (ev === null || isNaN(ev) || mv === null || isNaN(mv)) {
+      toast.error("Informe o valor da matrícula e da mensalidade"); return;
     }
     if (!enrollmentDate) { toast.error("Informe a data da matrícula"); return; }
     setSaving(true);
@@ -670,6 +673,26 @@ function MatriculaDialog({ lead, onClose, onSaved }: { lead: Lead | null; onClos
       setSaving(false);
       toast.error(res.error ?? "Não foi possível salvar a matrícula");
       return;
+    }
+
+    try {
+      await saveMaterialSale(
+        {
+          leadId: lead.id,
+          enrollmentDate,
+          materialType: materialForm.hasMaterial ? materialForm.materialType : null,
+          saleValue: mt,
+          paymentStatus: materialForm.hasMaterial ? materialForm.paymentStatus : "exempt",
+          paymentDate: materialForm.paymentDate || null,
+          paymentCondition: materialForm.paymentCondition,
+          paymentMethod: materialForm.paymentMethod,
+          installmentCount: parseValue(materialForm.installmentCount),
+          notes: materialForm.notes,
+        },
+        lead.owner_id,
+      );
+    } catch (err) {
+      toast.warning(`Matrícula salva, mas o controle de material falhou: ${(err as Error).message}`);
     }
 
     if (fDate) {
@@ -708,7 +731,13 @@ function MatriculaDialog({ lead, onClose, onSaved }: { lead: Lead | null; onClos
           </div>
           <div><Label>Valor da matrícula (R$) *</Label><Input inputMode="decimal" value={enrollment} onChange={(e) => setEnrollment(e.target.value)} placeholder="0,00" required /></div>
           <div><Label>Valor da mensalidade (R$) *</Label><Input inputMode="decimal" value={monthly} onChange={(e) => setMonthly(e.target.value)} placeholder="0,00" required /></div>
-          <div><Label>Valor do material (R$) *</Label><Input inputMode="decimal" value={material} onChange={(e) => setMaterial(e.target.value)} placeholder="0,00" required /></div>
+
+          <MaterialFormFields
+            state={materialForm}
+            onChange={setMaterialForm}
+            enrollmentDate={enrollmentDate}
+            rules={materialRules}
+          />
 
           <div>
             <Label>Criar follow-up nas suas tarefas?</Label>
@@ -725,6 +754,7 @@ function MatriculaDialog({ lead, onClose, onSaved }: { lead: Lead | null; onClos
     </Dialog>
   );
 }
+
 
 function CancelEnrollmentDialog({
   data,

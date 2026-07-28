@@ -14,6 +14,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { LeadTimeline } from "@/components/LeadTimeline";
 import { logLeadEvent } from "@/lib/lead-events";
 import { ensureEnrollmentSentToArena } from "@/lib/enrollment";
+import { LeadMaterialSection } from "@/components/materiais/LeadMaterialSection";
 
 type LeadDetails = {
   id: string;
@@ -170,6 +171,10 @@ export function LeadDetailsDialog({
                 {lead.material_value != null && <div className="text-sm">Material: R$ {Number(lead.material_value).toFixed(2)}</div>}
               </div>
             )}
+
+            {lead.status === "matricula" && <LeadMaterialSection leadId={lead.id} leadName={lead.name} />}
+
+
 
             {lead.status === "matricula" && arenaSent === false && (
               <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3 space-y-2">
