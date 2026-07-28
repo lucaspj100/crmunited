@@ -444,6 +444,326 @@ export type Database = {
         }
         Relationships: []
       }
+      material_bonus_closings: {
+        Row: {
+          closed_at: string | null
+          closed_by: string | null
+          considered_ids: Json
+          created_at: string
+          id: string
+          notes: string | null
+          per_seller: Json
+          reference_month: number
+          reference_year: number
+          team_bonus_status: string
+          team_goal: number | null
+          team_id: string | null
+          team_valid_total: number
+          updated_at: string
+        }
+        Insert: {
+          closed_at?: string | null
+          closed_by?: string | null
+          considered_ids?: Json
+          created_at?: string
+          id?: string
+          notes?: string | null
+          per_seller?: Json
+          reference_month: number
+          reference_year: number
+          team_bonus_status?: string
+          team_goal?: number | null
+          team_id?: string | null
+          team_valid_total?: number
+          updated_at?: string
+        }
+        Update: {
+          closed_at?: string | null
+          closed_by?: string | null
+          considered_ids?: Json
+          created_at?: string
+          id?: string
+          notes?: string | null
+          per_seller?: Json
+          reference_month?: number
+          reference_year?: number
+          team_bonus_status?: string
+          team_goal?: number | null
+          team_id?: string | null
+          team_valid_total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "material_bonus_closings_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      material_bonus_goals: {
+        Row: {
+          bonus_amount: number | null
+          created_at: string
+          effective_from: string
+          effective_until: string | null
+          goal_type: Database["public"]["Enums"]["material_goal_type"]
+          id: string
+          is_active: boolean
+          minimum_amount: number
+          seller_id: string | null
+          team_id: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          bonus_amount?: number | null
+          created_at?: string
+          effective_from?: string
+          effective_until?: string | null
+          goal_type: Database["public"]["Enums"]["material_goal_type"]
+          id?: string
+          is_active?: boolean
+          minimum_amount: number
+          seller_id?: string | null
+          team_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          bonus_amount?: number | null
+          created_at?: string
+          effective_from?: string
+          effective_until?: string | null
+          goal_type?: Database["public"]["Enums"]["material_goal_type"]
+          id?: string
+          is_active?: boolean
+          minimum_amount?: number
+          seller_id?: string | null
+          team_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "material_bonus_goals_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      material_bonus_rules: {
+        Row: {
+          cash_discount_reference: number
+          cash_minimum_value: number
+          created_at: string
+          credit_single_installment_is_cash: boolean
+          effective_from: string
+          effective_until: string | null
+          id: string
+          is_active: boolean
+          material_type: Database["public"]["Enums"]["material_type"]
+          regular_minimum_value: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          cash_discount_reference?: number
+          cash_minimum_value: number
+          created_at?: string
+          credit_single_installment_is_cash?: boolean
+          effective_from?: string
+          effective_until?: string | null
+          id?: string
+          is_active?: boolean
+          material_type: Database["public"]["Enums"]["material_type"]
+          regular_minimum_value: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          cash_discount_reference?: number
+          cash_minimum_value?: number
+          created_at?: string
+          credit_single_installment_is_cash?: boolean
+          effective_from?: string
+          effective_until?: string | null
+          id?: string
+          is_active?: boolean
+          material_type?: Database["public"]["Enums"]["material_type"]
+          regular_minimum_value?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      material_sales: {
+        Row: {
+          bonus_eligibility_reason: Database["public"]["Enums"]["material_bonus_reason"]
+          cancelled_at: string | null
+          cancelled_by: string | null
+          cash_discount_percentage_snapshot: number | null
+          created_at: string
+          created_by: string | null
+          eligible_for_bonus: boolean
+          enrollment_date: string | null
+          id: string
+          installment_count: number | null
+          lead_id: string
+          material_type: Database["public"]["Enums"]["material_type"] | null
+          minimum_allowed_value_snapshot: number | null
+          notes: string | null
+          payment_condition:
+            | Database["public"]["Enums"]["material_payment_condition"]
+            | null
+          payment_confirmed_at: string | null
+          payment_confirmed_by: string | null
+          payment_date: string | null
+          payment_method:
+            | Database["public"]["Enums"]["material_payment_method"]
+            | null
+          payment_status: Database["public"]["Enums"]["material_payment_status"]
+          price_rule_valid: boolean
+          refunded_at: string | null
+          refunded_by: string | null
+          retroactive_adjustment: boolean
+          rule_id_snapshot: string | null
+          sale_value: number | null
+          seller_id: string
+          table_value_snapshot: number | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          bonus_eligibility_reason?: Database["public"]["Enums"]["material_bonus_reason"]
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          cash_discount_percentage_snapshot?: number | null
+          created_at?: string
+          created_by?: string | null
+          eligible_for_bonus?: boolean
+          enrollment_date?: string | null
+          id?: string
+          installment_count?: number | null
+          lead_id: string
+          material_type?: Database["public"]["Enums"]["material_type"] | null
+          minimum_allowed_value_snapshot?: number | null
+          notes?: string | null
+          payment_condition?:
+            | Database["public"]["Enums"]["material_payment_condition"]
+            | null
+          payment_confirmed_at?: string | null
+          payment_confirmed_by?: string | null
+          payment_date?: string | null
+          payment_method?:
+            | Database["public"]["Enums"]["material_payment_method"]
+            | null
+          payment_status?: Database["public"]["Enums"]["material_payment_status"]
+          price_rule_valid?: boolean
+          refunded_at?: string | null
+          refunded_by?: string | null
+          retroactive_adjustment?: boolean
+          rule_id_snapshot?: string | null
+          sale_value?: number | null
+          seller_id: string
+          table_value_snapshot?: number | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          bonus_eligibility_reason?: Database["public"]["Enums"]["material_bonus_reason"]
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          cash_discount_percentage_snapshot?: number | null
+          created_at?: string
+          created_by?: string | null
+          eligible_for_bonus?: boolean
+          enrollment_date?: string | null
+          id?: string
+          installment_count?: number | null
+          lead_id?: string
+          material_type?: Database["public"]["Enums"]["material_type"] | null
+          minimum_allowed_value_snapshot?: number | null
+          notes?: string | null
+          payment_condition?:
+            | Database["public"]["Enums"]["material_payment_condition"]
+            | null
+          payment_confirmed_at?: string | null
+          payment_confirmed_by?: string | null
+          payment_date?: string | null
+          payment_method?:
+            | Database["public"]["Enums"]["material_payment_method"]
+            | null
+          payment_status?: Database["public"]["Enums"]["material_payment_status"]
+          price_rule_valid?: boolean
+          refunded_at?: string | null
+          refunded_by?: string | null
+          retroactive_adjustment?: boolean
+          rule_id_snapshot?: string | null
+          sale_value?: number | null
+          seller_id?: string
+          table_value_snapshot?: number | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "material_sales_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      material_sales_history: {
+        Row: {
+          change_reason: string | null
+          changed_by: string | null
+          created_at: string
+          event_type: string
+          id: string
+          lead_id: string | null
+          material_sale_id: string
+          new_values: Json | null
+          old_values: Json | null
+        }
+        Insert: {
+          change_reason?: string | null
+          changed_by?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          lead_id?: string | null
+          material_sale_id: string
+          new_values?: Json | null
+          old_values?: Json | null
+        }
+        Update: {
+          change_reason?: string | null
+          changed_by?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          lead_id?: string | null
+          material_sale_id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "material_sales_history_material_sale_id_fkey"
+            columns: ["material_sale_id"]
+            isOneToOne: false
+            referencedRelation: "material_sales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -1215,6 +1535,34 @@ export type Database = {
         | "nao_chamar"
         | "outro"
       lost_type: "definitivo" | "com_resgate"
+      material_bonus_reason:
+        | "eligible"
+        | "pending_payment"
+        | "paid_outside_enrollment_month"
+        | "below_minimum_price"
+        | "invalid_payment_condition"
+        | "cancelled"
+        | "refunded"
+        | "exempt"
+        | "missing_information"
+        | "duplicate_record"
+      material_goal_type: "individual" | "team"
+      material_payment_condition: "cash" | "installment"
+      material_payment_method:
+        | "pix"
+        | "dinheiro"
+        | "debito"
+        | "credito"
+        | "boleto"
+        | "transferencia"
+        | "outro"
+      material_payment_status:
+        | "pending"
+        | "paid"
+        | "exempt"
+        | "cancelled"
+        | "refunded"
+      material_type: "digital" | "physical"
       task_status: "pendente" | "concluida" | "remarcada" | "cancelada"
       task_type:
         | "enviar_mensagem"
@@ -1379,6 +1727,37 @@ export const Constants = {
         "outro",
       ],
       lost_type: ["definitivo", "com_resgate"],
+      material_bonus_reason: [
+        "eligible",
+        "pending_payment",
+        "paid_outside_enrollment_month",
+        "below_minimum_price",
+        "invalid_payment_condition",
+        "cancelled",
+        "refunded",
+        "exempt",
+        "missing_information",
+        "duplicate_record",
+      ],
+      material_goal_type: ["individual", "team"],
+      material_payment_condition: ["cash", "installment"],
+      material_payment_method: [
+        "pix",
+        "dinheiro",
+        "debito",
+        "credito",
+        "boleto",
+        "transferencia",
+        "outro",
+      ],
+      material_payment_status: [
+        "pending",
+        "paid",
+        "exempt",
+        "cancelled",
+        "refunded",
+      ],
+      material_type: ["digital", "physical"],
       task_status: ["pendente", "concluida", "remarcada", "cancelada"],
       task_type: [
         "enviar_mensagem",
