@@ -14,6 +14,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { LeadTimeline } from "@/components/LeadTimeline";
 import { logLeadEvent } from "@/lib/lead-events";
 import { ensureEnrollmentSentToArena } from "@/lib/enrollment";
+import { LeadMaterialSection } from "@/components/materiais/LeadMaterialSection";
 
 type LeadDetails = {
   id: string;
