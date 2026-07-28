@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.material_sales_audit() FROM PUBLIC, anon, authenticated;
