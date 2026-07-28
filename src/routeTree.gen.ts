@@ -22,6 +22,7 @@ import { Route as AuthenticatedPlacarDiarioRouteImport } from './routes/_authent
 import { Route as AuthenticatedPerdidosRouteImport } from './routes/_authenticated/perdidos'
 import { Route as AuthenticatedPainelAdmRouteImport } from './routes/_authenticated/painel-adm'
 import { Route as AuthenticatedMeuPerfilRouteImport } from './routes/_authenticated/meu-perfil'
+import { Route as AuthenticatedMateriaisRouteImport } from './routes/_authenticated/materiais'
 import { Route as AuthenticatedLeadsRouteImport } from './routes/_authenticated/leads'
 import { Route as AuthenticatedIntegracaoArenaRouteImport } from './routes/_authenticated/integracao-arena'
 import { Route as AuthenticatedImportarRouteImport } from './routes/_authenticated/importar'
@@ -100,6 +101,11 @@ const AuthenticatedPainelAdmRoute = AuthenticatedPainelAdmRouteImport.update({
 const AuthenticatedMeuPerfilRoute = AuthenticatedMeuPerfilRouteImport.update({
   id: '/meu-perfil',
   path: '/meu-perfil',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMateriaisRoute = AuthenticatedMateriaisRouteImport.update({
+  id: '/materiais',
+  path: '/materiais',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedLeadsRoute = AuthenticatedLeadsRouteImport.update({
@@ -181,6 +187,7 @@ export interface FileRoutesByFullPath {
   '/importar': typeof AuthenticatedImportarRoute
   '/integracao-arena': typeof AuthenticatedIntegracaoArenaRoute
   '/leads': typeof AuthenticatedLeadsRoute
+  '/materiais': typeof AuthenticatedMateriaisRoute
   '/meu-perfil': typeof AuthenticatedMeuPerfilRoute
   '/painel-adm': typeof AuthenticatedPainelAdmRoute
   '/perdidos': typeof AuthenticatedPerdidosRoute
@@ -207,6 +214,7 @@ export interface FileRoutesByTo {
   '/importar': typeof AuthenticatedImportarRoute
   '/integracao-arena': typeof AuthenticatedIntegracaoArenaRoute
   '/leads': typeof AuthenticatedLeadsRoute
+  '/materiais': typeof AuthenticatedMateriaisRoute
   '/meu-perfil': typeof AuthenticatedMeuPerfilRoute
   '/painel-adm': typeof AuthenticatedPainelAdmRoute
   '/perdidos': typeof AuthenticatedPerdidosRoute
@@ -235,6 +243,7 @@ export interface FileRoutesById {
   '/_authenticated/importar': typeof AuthenticatedImportarRoute
   '/_authenticated/integracao-arena': typeof AuthenticatedIntegracaoArenaRoute
   '/_authenticated/leads': typeof AuthenticatedLeadsRoute
+  '/_authenticated/materiais': typeof AuthenticatedMateriaisRoute
   '/_authenticated/meu-perfil': typeof AuthenticatedMeuPerfilRoute
   '/_authenticated/painel-adm': typeof AuthenticatedPainelAdmRoute
   '/_authenticated/perdidos': typeof AuthenticatedPerdidosRoute
@@ -263,6 +272,7 @@ export interface FileRouteTypes {
     | '/importar'
     | '/integracao-arena'
     | '/leads'
+    | '/materiais'
     | '/meu-perfil'
     | '/painel-adm'
     | '/perdidos'
@@ -289,6 +299,7 @@ export interface FileRouteTypes {
     | '/importar'
     | '/integracao-arena'
     | '/leads'
+    | '/materiais'
     | '/meu-perfil'
     | '/painel-adm'
     | '/perdidos'
@@ -316,6 +327,7 @@ export interface FileRouteTypes {
     | '/_authenticated/importar'
     | '/_authenticated/integracao-arena'
     | '/_authenticated/leads'
+    | '/_authenticated/materiais'
     | '/_authenticated/meu-perfil'
     | '/_authenticated/painel-adm'
     | '/_authenticated/perdidos'
@@ -427,6 +439,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMeuPerfilRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/materiais': {
+      id: '/_authenticated/materiais'
+      path: '/materiais'
+      fullPath: '/materiais'
+      preLoaderRoute: typeof AuthenticatedMateriaisRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/leads': {
       id: '/_authenticated/leads'
       path: '/leads'
@@ -527,6 +546,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedImportarRoute: typeof AuthenticatedImportarRoute
   AuthenticatedIntegracaoArenaRoute: typeof AuthenticatedIntegracaoArenaRoute
   AuthenticatedLeadsRoute: typeof AuthenticatedLeadsRoute
+  AuthenticatedMateriaisRoute: typeof AuthenticatedMateriaisRoute
   AuthenticatedMeuPerfilRoute: typeof AuthenticatedMeuPerfilRoute
   AuthenticatedPainelAdmRoute: typeof AuthenticatedPainelAdmRoute
   AuthenticatedPerdidosRoute: typeof AuthenticatedPerdidosRoute
@@ -552,6 +572,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedImportarRoute: AuthenticatedImportarRoute,
   AuthenticatedIntegracaoArenaRoute: AuthenticatedIntegracaoArenaRoute,
   AuthenticatedLeadsRoute: AuthenticatedLeadsRoute,
+  AuthenticatedMateriaisRoute: AuthenticatedMateriaisRoute,
   AuthenticatedMeuPerfilRoute: AuthenticatedMeuPerfilRoute,
   AuthenticatedPainelAdmRoute: AuthenticatedPainelAdmRoute,
   AuthenticatedPerdidosRoute: AuthenticatedPerdidosRoute,
