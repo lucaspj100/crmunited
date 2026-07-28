@@ -76,28 +76,35 @@ export function ConfirmPaymentDialog({
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent
+        className="max-w-lg max-h-[90vh] overflow-y-auto"
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>Confirmar pagamento do material — {sale.lead_name ?? "lead"}</DialogTitle>
         </DialogHeader>
         <p className="text-xs text-muted-foreground">
           Informe a data real em que o aluno pagou (não a data de hoje, se forem diferentes).
         </p>
-        <MaterialFormFields
-          state={state}
-          onChange={setState}
-          enrollmentDate={sale.enrollment_date}
-          rules={rules}
-          showHasMaterial={false}
-        />
+        <div onKeyDown={(e) => { if (e.key === "Enter" && (e.target as HTMLElement).tagName !== "TEXTAREA") e.preventDefault(); }}>
+          <MaterialFormFields
+            state={state}
+            onChange={setState}
+            enrollmentDate={sale.enrollment_date}
+            rules={rules}
+            showHasMaterial={false}
+          />
+        </div>
         <DialogFooter>
-          <Button variant="ghost" onClick={onClose}>Cancelar</Button>
-          <Button onClick={submit} disabled={saving}>{saving ? "Salvando…" : "Confirmar pagamento"}</Button>
+          <Button type="button" variant="ghost" onClick={onClose}>Cancelar</Button>
+          <Button type="button" onClick={submit} disabled={saving}>{saving ? "Salvando…" : "Confirmar pagamento"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
+
 
 export function StatusChangeDialog({
   sale,
