@@ -18,6 +18,8 @@ import { exportRowsToXlsx } from "@/lib/xlsx-export";
 import { NewLeadDialog } from "@/components/NewLeadDialog";
 import { LeadDetailsDialog } from "@/components/LeadDetailsDialog";
 import { QuickTaskDialog } from "@/components/QuickTaskDialog";
+import { MaterialFormFields, emptyMaterialForm, parseValue, type MaterialFormState } from "@/components/materiais/MaterialFormFields";
+import { fetchBonusRules, saveMaterialSale } from "@/lib/materials";
 import { ensureTaskForStatus } from "@/lib/task-automation";
 import { logLeadEvent } from "@/lib/lead-events";
 import { notifyArena } from "@/lib/arena-dispatch";
