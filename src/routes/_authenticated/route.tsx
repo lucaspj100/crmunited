@@ -30,6 +30,7 @@ const BASE_NAV = [
   { to: "/importar", label: "Importar", icon: Upload },
   { to: "/relatorios", label: "Relatórios", icon: BarChart3 },
   { to: "/checkout-do-dia", label: "Checkout do dia", icon: ClipboardCheck },
+  { to: "/materiais", label: "Materiais e premiação", icon: Package },
   { to: "/placar-diario", label: "Placar (Telão)", icon: Tv },
   { to: "/meu-perfil", label: "Meu perfil", icon: UserIcon },
 ] as const;
