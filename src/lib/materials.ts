@@ -185,21 +185,33 @@ export async function fetchBonusRules(): Promise<BonusRule[]> {
 export async function fetchMaterialSales(range: { start: string; end: string }): Promise<MaterialSaleRow[]> {
   const { data, error } = await supabase
     .from("material_sales" as never)
-    .select("*, leads(name), profiles:seller_id(full_name, email)")
+    .select("*, leads(name)")
     .gte("enrollment_date", range.start)
     .lte("enrollment_date", range.end)
     .order("enrollment_date", { ascending: false });
   if (error) throw error;
-  return ((data ?? []) as unknown as (MaterialSale & {
-    leads?: { name: string } | null;
-    profiles?: { full_name: string | null; email: string | null } | null;
-  })[]).map((r) => ({
+  const rows = (data ?? []) as unknown as (MaterialSale & { leads?: { name: string } | null })[];
+
+  // seller_id não possui FK para profiles, então o vendedor é resolvido em consulta separada.
+  const sellerIds = Array.from(new Set(rows.map((r) => r.seller_id).filter(Boolean)));
+  const sellerMap = new Map<string, string>();
+  if (sellerIds.length) {
+    const { data: profs } = await supabase
+      .from("profiles")
+      .select("id, full_name, email")
+      .in("id", sellerIds);
+    for (const p of (profs ?? []) as { id: string; full_name: string | null; email: string | null }[]) {
+      sellerMap.set(p.id, p.full_name || p.email || "");
+    }
+  }
+
+  return rows.map((r) => ({
     ...r,
     sale_value: r.sale_value == null ? null : Number(r.sale_value),
     minimum_allowed_value_snapshot:
       r.minimum_allowed_value_snapshot == null ? null : Number(r.minimum_allowed_value_snapshot),
     lead_name: r.leads?.name ?? null,
-    seller_name: r.profiles?.full_name || r.profiles?.email || null,
+    seller_name: sellerMap.get(r.seller_id) || null,
   }));
 }
 
