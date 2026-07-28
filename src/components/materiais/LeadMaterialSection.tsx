@@ -13,7 +13,17 @@ import {
   type MaterialSaleRow,
 } from "@/lib/materials";
 
-export function LeadMaterialSection({ leadId, leadName }: { leadId: string; leadName: string }) {
+export function LeadMaterialSection({
+  leadId,
+  leadName,
+  onConfirmPayment,
+}: {
+  leadId: string;
+  leadName: string;
+  /** Quando fornecido, o modal de pagamento é controlado pelo componente pai
+   *  (fora do modal de detalhes), evitando que ele seja desmontado. */
+  onConfirmPayment?: (sale: MaterialSaleRow) => void;
+}) {
   const qc = useQueryClient();
   const [confirming, setConfirming] = useState<MaterialSaleRow | null>(null);
   const { data: rules } = useQuery({ queryKey: ["material-rules"], queryFn: fetchBonusRules });
@@ -38,20 +48,28 @@ export function LeadMaterialSection({ leadId, leadName }: { leadId: string; lead
       </Badge>
       {sale.payment_status !== "paid" && sale.payment_status !== "cancelled" && sale.payment_status !== "refunded" && (
         <div>
-          <Button size="sm" variant="outline" onClick={() => setConfirming(row)}>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => (onConfirmPayment ? onConfirmPayment(row) : setConfirming(row))}
+          >
             Confirmar pagamento do material
           </Button>
         </div>
       )}
-      <ConfirmPaymentDialog
-        sale={confirming}
-        rules={rules}
-        onClose={() => setConfirming(null)}
-        onSaved={() => {
-          qc.invalidateQueries({ queryKey: ["material-sale", leadId] });
-          qc.invalidateQueries({ queryKey: ["material-sales"] });
-        }}
-      />
+      {!onConfirmPayment && confirming && (
+        <ConfirmPaymentDialog
+          key={confirming.id}
+          sale={confirming}
+          rules={rules}
+          onClose={() => setConfirming(null)}
+          onSaved={() => {
+            qc.invalidateQueries({ queryKey: ["material-sale", leadId] });
+            qc.invalidateQueries({ queryKey: ["material-sales"] });
+          }}
+        />
+      )}
     </div>
   );
 }
