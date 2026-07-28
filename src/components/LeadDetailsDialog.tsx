@@ -15,6 +15,9 @@ import { LeadTimeline } from "@/components/LeadTimeline";
 import { logLeadEvent } from "@/lib/lead-events";
 import { ensureEnrollmentSentToArena } from "@/lib/enrollment";
 import { LeadMaterialSection } from "@/components/materiais/LeadMaterialSection";
+import { ConfirmPaymentDialog } from "@/components/materiais/MaterialDialogs";
+import { fetchBonusRules, type MaterialSaleRow } from "@/lib/materials";
+import { useQuery } from "@tanstack/react-query";
 
 type LeadDetails = {
   id: string;
@@ -51,6 +54,9 @@ export function LeadDetailsDialog({
   const [deleting, setDeleting] = useState(false);
   const [arenaSent, setArenaSent] = useState<boolean | null>(null);
   const [resending, setResending] = useState(false);
+  // Modal de pagamento do material vive fora do modal de detalhes (não é desmontado por rerender)
+  const [paymentTarget, setPaymentTarget] = useState<MaterialSaleRow | null>(null);
+  const { data: materialRules } = useQuery({ queryKey: ["material-rules"], queryFn: fetchBonusRules });
 
   // editable fields (mesmos do cadastro)
   const [name, setName] = useState("");
@@ -138,7 +144,8 @@ export function LeadDetailsDialog({
   const lostReasonLabel = LOST_REASONS.find((r) => r.value === lead?.lost_reason)?.label;
 
   return (
-    <Dialog open={!!leadId} onOpenChange={(o) => !o && onClose()}>
+    <>
+    <Dialog open={!!leadId} onOpenChange={(o) => { if (!o && !paymentTarget) onClose(); }}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -172,7 +179,9 @@ export function LeadDetailsDialog({
               </div>
             )}
 
-            {lead.status === "matricula" && <LeadMaterialSection leadId={lead.id} leadName={lead.name} />}
+            {lead.status === "matricula" && (
+              <LeadMaterialSection leadId={lead.id} leadName={lead.name} onConfirmPayment={setPaymentTarget} />
+            )}
 
 
 
@@ -252,5 +261,18 @@ export function LeadDetailsDialog({
         )}
       </DialogContent>
     </Dialog>
+    {paymentTarget && (
+      <ConfirmPaymentDialog
+        key={paymentTarget.id}
+        sale={paymentTarget}
+        rules={materialRules}
+        onClose={() => setPaymentTarget(null)}
+        onSaved={() => {
+          qc.invalidateQueries({ queryKey: ["material-sale", paymentTarget.lead_id] });
+          qc.invalidateQueries({ queryKey: ["material-sales"] });
+        }}
+      />
+    )}
+    </>
   );
 }

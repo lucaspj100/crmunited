@@ -150,8 +150,8 @@ export function StatusChangeDialog({
           <Textarea rows={3} value={reason} onChange={(e) => setReason(e.target.value)} />
         </div>
         <DialogFooter>
-          <Button variant="ghost" onClick={onClose}>Voltar</Button>
-          <Button variant="destructive" onClick={submit} disabled={saving}>
+          <Button type="button" variant="ghost" onClick={onClose}>Voltar</Button>
+          <Button type="button" variant="destructive" onClick={submit} disabled={saving}>
             {saving ? "Salvando…" : "Confirmar"}
           </Button>
         </DialogFooter>
