@@ -171,6 +171,10 @@ export function LeadDetailsDialog({
               </div>
             )}
 
+            {lead.status === "matricula" && <LeadMaterialSection leadId={lead.id} leadName={lead.name} />}
+
+
+
             {lead.status === "matricula" && arenaSent === false && (
               <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3 space-y-2">
                 <div className="flex items-start gap-2 text-sm text-amber-800 dark:text-amber-200">
