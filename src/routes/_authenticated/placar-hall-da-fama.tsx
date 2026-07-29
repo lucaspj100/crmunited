@@ -352,12 +352,22 @@ function HallDaFama() {
                       <MiniStat label="Realizadas" value={champion.entrevistas_realizadas ?? 0} />
                       <MiniStat label="Matrículas" value={champion.matriculas} />
                     </div>
+                    {canShare(champion.vendedor_id) && (
+                      <Button
+                        size="sm"
+                        className="mt-4 bg-amber-500 text-slate-950 hover:bg-amber-400"
+                        onClick={() => shareSolo(champion, 1)}
+                      >
+                        <Share2 className="mr-1 h-4 w-4" /> 📲 Compartilhar conquista
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>
 
               {/* Pódio Top 3 */}
-              <Podium ranking={ranking} />
+              <Podium ranking={ranking} canShare={canShare} onShare={shareSolo} onShareTop3={shareTop3} />
+
 
               {/* Destaques */}
               <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
