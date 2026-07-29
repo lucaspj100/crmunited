@@ -764,6 +764,86 @@ export type Database = {
           },
         ]
       }
+      monthly_hall_of_fame: {
+        Row: {
+          calculation_rules_snapshot: Json
+          category_winners: Json
+          champion_points: number | null
+          champion_user_id: string | null
+          closed_at: string | null
+          closed_by: string | null
+          created_at: string
+          id: string
+          period_end: string
+          period_start: string
+          ranking_snapshot: Json
+          reference_month: number
+          reference_year: number
+          revision_history: Json
+          runner_up_points: number | null
+          runner_up_user_id: string | null
+          status: string
+          team_id: string | null
+          third_place_points: number | null
+          third_place_user_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          calculation_rules_snapshot?: Json
+          category_winners?: Json
+          champion_points?: number | null
+          champion_user_id?: string | null
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          id?: string
+          period_end: string
+          period_start: string
+          ranking_snapshot?: Json
+          reference_month: number
+          reference_year: number
+          revision_history?: Json
+          runner_up_points?: number | null
+          runner_up_user_id?: string | null
+          status?: string
+          team_id?: string | null
+          third_place_points?: number | null
+          third_place_user_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          calculation_rules_snapshot?: Json
+          category_winners?: Json
+          champion_points?: number | null
+          champion_user_id?: string | null
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          id?: string
+          period_end?: string
+          period_start?: string
+          ranking_snapshot?: Json
+          reference_month?: number
+          reference_year?: number
+          revision_history?: Json
+          runner_up_points?: number | null
+          runner_up_user_id?: string | null
+          status?: string
+          team_id?: string | null
+          third_place_points?: number | null
+          third_place_user_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monthly_hall_of_fame_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -1325,6 +1405,50 @@ export type Database = {
           },
         ]
       }
+      user_achievements: {
+        Row: {
+          achievement_type: string
+          created_at: string
+          hall_of_fame_id: string | null
+          id: string
+          metadata: Json
+          reference_month: number
+          reference_year: number
+          title: string
+          user_id: string
+        }
+        Insert: {
+          achievement_type: string
+          created_at?: string
+          hall_of_fame_id?: string | null
+          id?: string
+          metadata?: Json
+          reference_month: number
+          reference_year: number
+          title: string
+          user_id: string
+        }
+        Update: {
+          achievement_type?: string
+          created_at?: string
+          hall_of_fame_id?: string | null
+          id?: string
+          metadata?: Json
+          reference_month?: number
+          reference_year?: number
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_hall_of_fame_id_fkey"
+            columns: ["hall_of_fame_id"]
+            isOneToOne: false
+            referencedRelation: "monthly_hall_of_fame"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
@@ -1471,6 +1595,13 @@ export type Database = {
           nome: string
           owner_id: string
           status: string
+        }[]
+      }
+      hall_of_fame_active_days: {
+        Args: { _end: string; _start: string; _team_id?: string }
+        Returns: {
+          active_days: number
+          vendedor_id: string
         }[]
       }
       has_role: {
