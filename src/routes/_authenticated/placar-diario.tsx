@@ -22,6 +22,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Phone, PhoneCall, Sparkles, CalendarCheck, GraduationCap, Trophy, Maximize2, X, Flame, Target, Crown, Users, MessageCircle, Linkedin, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { scoreOf, fmtScore, isRealSeller } from "@/lib/scoring";
+
 
 
 export const Route = createFileRoute("/_authenticated/placar-diario")({
