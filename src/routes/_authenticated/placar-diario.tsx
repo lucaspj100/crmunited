@@ -249,6 +249,12 @@ function PlacarDiario() {
               {fullscreen ? <X className="h-4 w-4 mr-1" /> : <Maximize2 className="h-4 w-4 mr-1" />}
               {fullscreen ? "Sair" : "Modo Telão"}
             </Button>
+            <Link to="/placar-hall-da-fama">
+              <Button size="sm" variant="outline" className="border-amber-400/40 bg-amber-400/10 text-amber-200 hover:bg-amber-400/20">
+                🏛️ Hall da Fama
+              </Button>
+            </Link>
+
             <Link to="/dashboard">
               <Button size="sm" variant="ghost" className="text-white hover:bg-white/10">Voltar</Button>
             </Link>
