@@ -163,6 +163,18 @@ function HallDaFama() {
   const [reopenOpen, setReopenOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
+  // Compartilhamento de conquistas: cada vendedor compartilha a própria; admin pode compartilhar qualquer uma.
+  const [share, setShare] = useState<ShareSubject | null>(null);
+  const canShare = (id: string) => isAdmin || user?.id === id;
+  const shareSolo = (row: RankedRow, position: number) =>
+    setShare({ kind: "solo", position, person: { id: row.vendedor_id, nome: row.nome, avatar_url: row.avatar_url } });
+  const shareTop3 = () =>
+    setShare({
+      kind: "top3",
+      people: ranking.slice(0, 3).map((r) => ({ id: r.vendedor_id, nome: r.nome, avatar_url: r.avatar_url })),
+    });
+
+
   const doClose = async () => {
     setBusy(true);
     try {
