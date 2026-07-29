@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { toast } from "sonner";
 import {
   Crown, Trophy, ChevronLeft, ChevronRight, Info, Landmark, Sparkles, Clapperboard,
-  Lock, Unlock, RefreshCw, X, ArrowLeft,
+  Lock, Unlock, RefreshCw, X, ArrowLeft, Share2,
 } from "lucide-react";
 import {
   MONTH_NAMES, monthLabel, monthRange, currentMonthYear, isCurrentMonth, isFutureMonth,
@@ -19,6 +19,9 @@ import {
   type RankedRow, type CategoryWinner, type HallRecord,
 } from "@/lib/hall-of-fame";
 import { fmtScore, POINTS_LEGEND } from "@/lib/scoring";
+import { ShareAchievementDialog } from "@/components/hall/ShareAchievementDialog";
+import type { ShareSubject } from "@/lib/achievement-share";
+
 
 export const Route = createFileRoute("/_authenticated/placar-hall-da-fama")({
   component: HallDaFama,
