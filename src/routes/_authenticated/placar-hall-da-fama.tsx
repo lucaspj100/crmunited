@@ -453,6 +453,20 @@ function HallDaFama() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {share && (
+          <ShareAchievementDialog
+            key={`${share.kind}-${share.kind === "solo" ? share.person.id : "top3"}-${year}-${month}`}
+            open
+            onOpenChange={(v) => { if (!v) setShare(null); }}
+            subject={share}
+            official={isClosed}
+            year={year}
+            month={month}
+            currentUserId={user?.id ?? null}
+          />
+        )}
+
       </div>
     </TooltipProvider>
   );
