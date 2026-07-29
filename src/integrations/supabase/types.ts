@@ -56,6 +56,51 @@ export type Database = {
         }
         Relationships: []
       }
+      achievement_shares: {
+        Row: {
+          achievement: string
+          action: string
+          created_at: string
+          format: string
+          id: string
+          is_official: boolean
+          position: number | null
+          reference_month: number
+          reference_year: number
+          subject_user_id: string | null
+          template: string
+          user_id: string
+        }
+        Insert: {
+          achievement: string
+          action: string
+          created_at?: string
+          format: string
+          id?: string
+          is_official?: boolean
+          position?: number | null
+          reference_month: number
+          reference_year: number
+          subject_user_id?: string | null
+          template: string
+          user_id: string
+        }
+        Update: {
+          achievement?: string
+          action?: string
+          created_at?: string
+          format?: string
+          id?: string
+          is_official?: boolean
+          position?: number | null
+          reference_month?: number
+          reference_year?: number
+          subject_user_id?: string | null
+          template?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       ai_assistant_settings: {
         Row: {
           course_information: string
@@ -1132,6 +1177,63 @@ export type Database = {
           created_at?: string
           daily_calls_goal?: number
           id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      share_phrases: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          sort_order: number
+          text: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+          text: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+          text?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      share_preferences: {
+        Row: {
+          created_at: string
+          preferred_format: string
+          preferred_phrase: string | null
+          preferred_template: string
+          preferred_title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          preferred_format?: string
+          preferred_phrase?: string | null
+          preferred_template?: string
+          preferred_title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          preferred_format?: string
+          preferred_phrase?: string | null
+          preferred_template?: string
+          preferred_title?: string
           updated_at?: string
           user_id?: string
         }

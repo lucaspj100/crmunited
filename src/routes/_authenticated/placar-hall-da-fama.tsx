@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { toast } from "sonner";
 import {
   Crown, Trophy, ChevronLeft, ChevronRight, Info, Landmark, Sparkles, Clapperboard,
-  Lock, Unlock, RefreshCw, X, ArrowLeft,
+  Lock, Unlock, RefreshCw, X, ArrowLeft, Share2,
 } from "lucide-react";
 import {
   MONTH_NAMES, monthLabel, monthRange, currentMonthYear, isCurrentMonth, isFutureMonth,
@@ -19,6 +19,9 @@ import {
   type RankedRow, type CategoryWinner, type HallRecord,
 } from "@/lib/hall-of-fame";
 import { fmtScore, POINTS_LEGEND } from "@/lib/scoring";
+import { ShareAchievementDialog } from "@/components/hall/ShareAchievementDialog";
+import type { ShareSubject } from "@/lib/achievement-share";
+
 
 export const Route = createFileRoute("/_authenticated/placar-hall-da-fama")({
   component: HallDaFama,
@@ -159,6 +162,18 @@ function HallDaFama() {
   const [ceremony, setCeremony] = useState(false);
   const [reopenOpen, setReopenOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+
+  // Compartilhamento de conquistas: cada vendedor compartilha a própria; admin pode compartilhar qualquer uma.
+  const [share, setShare] = useState<ShareSubject | null>(null);
+  const canShare = (id: string) => isAdmin || user?.id === id;
+  const shareSolo = (row: RankedRow, position: number) =>
+    setShare({ kind: "solo", position, person: { id: row.vendedor_id, nome: row.nome, avatar_url: row.avatar_url } });
+  const shareTop3 = () =>
+    setShare({
+      kind: "top3",
+      people: ranking.slice(0, 3).map((r) => ({ id: r.vendedor_id, nome: r.nome, avatar_url: r.avatar_url })),
+    });
+
 
   const doClose = async () => {
     setBusy(true);
@@ -337,12 +352,22 @@ function HallDaFama() {
                       <MiniStat label="Realizadas" value={champion.entrevistas_realizadas ?? 0} />
                       <MiniStat label="Matrículas" value={champion.matriculas} />
                     </div>
+                    {canShare(champion.vendedor_id) && (
+                      <Button
+                        size="sm"
+                        className="mt-4 bg-amber-500 text-slate-950 hover:bg-amber-400"
+                        onClick={() => shareSolo(champion, 1)}
+                      >
+                        <Share2 className="mr-1 h-4 w-4" /> 📲 Compartilhar conquista
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>
 
               {/* Pódio Top 3 */}
-              <Podium ranking={ranking} />
+              <Podium ranking={ranking} canShare={canShare} onShare={shareSolo} onShareTop3={shareTop3} />
+
 
               {/* Destaques */}
               <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
@@ -428,6 +453,20 @@ function HallDaFama() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {share && (
+          <ShareAchievementDialog
+            key={`${share.kind}-${share.kind === "solo" ? share.person.id : "top3"}-${year}-${month}`}
+            open
+            onOpenChange={(v) => { if (!v) setShare(null); }}
+            subject={share}
+            official={isClosed}
+            year={year}
+            month={month}
+            currentUserId={user?.id ?? null}
+          />
+        )}
+
       </div>
     </TooltipProvider>
   );
@@ -462,7 +501,13 @@ const PODIUM_STYLES = [
   { ring: "border-amber-700", bg: "from-amber-700/25", label: "3º lugar", medal: "🥉", height: "md:mt-16", text: "text-amber-600" },
 ];
 
-function PodiumCard({ row, place }: { row: RankedRow; place: number }) {
+type ShareHandlers = {
+  canShare?: (id: string) => boolean;
+  onShare?: (row: RankedRow, position: number) => void;
+  onShareTop3?: () => void;
+};
+
+function PodiumCard({ row, place, canShare, onShare }: { row: RankedRow; place: number } & ShareHandlers) {
   const s = PODIUM_STYLES[place];
   return (
     <div className={`flex flex-col items-center rounded-2xl border border-white/10 bg-gradient-to-b ${s.bg} to-transparent p-5 ${s.height}`}>
@@ -477,11 +522,21 @@ function PodiumCard({ row, place }: { row: RankedRow; place: number }) {
         <span>🎯 {row.entrevistas_realizadas ?? 0} realizadas</span>
       </div>
       <p className="mt-1 text-center text-[11px] text-white/60">Destaque: {highlightOf(row)}</p>
+      {onShare && canShare?.(row.vendedor_id) && (
+        <Button
+          size="sm"
+          variant="outline"
+          className="mt-3 border-white/20 bg-white/5 text-white hover:bg-white/15"
+          onClick={() => onShare(row, place + 1)}
+        >
+          <Share2 className="mr-1 h-3.5 w-3.5" /> Compartilhar
+        </Button>
+      )}
     </div>
   );
 }
 
-function Podium({ ranking }: { ranking: RankedRow[] }) {
+function Podium({ ranking, canShare, onShare, onShareTop3 }: { ranking: RankedRow[] } & ShareHandlers) {
   const top = ranking.slice(0, 3);
   // Desktop: 2º | 1º | 3º — Mobile: 1º, 2º, 3º
   const desktopOrder = [top[1], top[0], top[2]].filter(Boolean) as RankedRow[];
@@ -491,16 +546,24 @@ function Podium({ ranking }: { ranking: RankedRow[] }) {
       <div className="mb-4 flex items-center gap-2">
         <Crown className="h-5 w-5 text-amber-400" />
         <h2 className="text-lg font-bold">Pódio do mês — Top {top.length}</h2>
+        {onShareTop3 && top.length === 3 && (
+          <Button size="sm" variant="ghost" className="ml-auto text-white/80 hover:text-white" onClick={onShareTop3}>
+            <Share2 className="mr-1 h-4 w-4" /> Compartilhar Top 3
+          </Button>
+        )}
       </div>
       <div className="hidden gap-4 md:grid" style={{ gridTemplateColumns: `repeat(${desktopOrder.length}, minmax(0,1fr))` }}>
-        {desktopOrder.map((r) => <PodiumCard key={r.vendedor_id} row={r} place={placeOf(r)} />)}
+        {desktopOrder.map((r) => (
+          <PodiumCard key={r.vendedor_id} row={r} place={placeOf(r)} canShare={canShare} onShare={onShare} />
+        ))}
       </div>
       <div className="grid gap-4 md:hidden">
-        {top.map((r, i) => <PodiumCard key={r.vendedor_id} row={r} place={i} />)}
+        {top.map((r, i) => <PodiumCard key={r.vendedor_id} row={r} place={i} canShare={canShare} onShare={onShare} />)}
       </div>
     </div>
   );
 }
+
 
 function CategoryCard({ c }: { c: CategoryWinner }) {
   return (
