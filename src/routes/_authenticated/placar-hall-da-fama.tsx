@@ -487,7 +487,13 @@ const PODIUM_STYLES = [
   { ring: "border-amber-700", bg: "from-amber-700/25", label: "3º lugar", medal: "🥉", height: "md:mt-16", text: "text-amber-600" },
 ];
 
-function PodiumCard({ row, place }: { row: RankedRow; place: number }) {
+type ShareHandlers = {
+  canShare?: (id: string) => boolean;
+  onShare?: (row: RankedRow, position: number) => void;
+  onShareTop3?: () => void;
+};
+
+function PodiumCard({ row, place, canShare, onShare }: { row: RankedRow; place: number } & ShareHandlers) {
   const s = PODIUM_STYLES[place];
   return (
     <div className={`flex flex-col items-center rounded-2xl border border-white/10 bg-gradient-to-b ${s.bg} to-transparent p-5 ${s.height}`}>
@@ -502,11 +508,21 @@ function PodiumCard({ row, place }: { row: RankedRow; place: number }) {
         <span>🎯 {row.entrevistas_realizadas ?? 0} realizadas</span>
       </div>
       <p className="mt-1 text-center text-[11px] text-white/60">Destaque: {highlightOf(row)}</p>
+      {onShare && canShare?.(row.vendedor_id) && (
+        <Button
+          size="sm"
+          variant="outline"
+          className="mt-3 border-white/20 bg-white/5 text-white hover:bg-white/15"
+          onClick={() => onShare(row, place + 1)}
+        >
+          <Share2 className="mr-1 h-3.5 w-3.5" /> Compartilhar
+        </Button>
+      )}
     </div>
   );
 }
 
-function Podium({ ranking }: { ranking: RankedRow[] }) {
+function Podium({ ranking, canShare, onShare, onShareTop3 }: { ranking: RankedRow[] } & ShareHandlers) {
   const top = ranking.slice(0, 3);
   // Desktop: 2º | 1º | 3º — Mobile: 1º, 2º, 3º
   const desktopOrder = [top[1], top[0], top[2]].filter(Boolean) as RankedRow[];
@@ -516,16 +532,24 @@ function Podium({ ranking }: { ranking: RankedRow[] }) {
       <div className="mb-4 flex items-center gap-2">
         <Crown className="h-5 w-5 text-amber-400" />
         <h2 className="text-lg font-bold">Pódio do mês — Top {top.length}</h2>
+        {onShareTop3 && top.length === 3 && (
+          <Button size="sm" variant="ghost" className="ml-auto text-white/80 hover:text-white" onClick={onShareTop3}>
+            <Share2 className="mr-1 h-4 w-4" /> Compartilhar Top 3
+          </Button>
+        )}
       </div>
       <div className="hidden gap-4 md:grid" style={{ gridTemplateColumns: `repeat(${desktopOrder.length}, minmax(0,1fr))` }}>
-        {desktopOrder.map((r) => <PodiumCard key={r.vendedor_id} row={r} place={placeOf(r)} />)}
+        {desktopOrder.map((r) => (
+          <PodiumCard key={r.vendedor_id} row={r} place={placeOf(r)} canShare={canShare} onShare={onShare} />
+        ))}
       </div>
       <div className="grid gap-4 md:hidden">
-        {top.map((r, i) => <PodiumCard key={r.vendedor_id} row={r} place={i} />)}
+        {top.map((r, i) => <PodiumCard key={r.vendedor_id} row={r} place={i} canShare={canShare} onShare={onShare} />)}
       </div>
     </div>
   );
 }
+
 
 function CategoryCard({ c }: { c: CategoryWinner }) {
   return (
