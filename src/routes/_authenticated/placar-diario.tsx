@@ -24,44 +24,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 
-// Filtra usuários técnicos que não devem aparecer no placar/ranking
-function isRealSeller(nome: string | null | undefined): boolean {
-  if (!nome) return false;
-  const n = nome.trim().toLowerCase();
-  if (!n) return false;
-  const blocked = ["placar", "telão", "telao", "teste", "test", "sistema", "admin"];
-  return !blocked.some((b) => n === b || n.startsWith(b + " "));
-}
-
 export const Route = createFileRoute("/_authenticated/placar-diario")({
   component: PlacarDiario,
 });
 
-// Pontuação por ação
-const POINTS = { call: 1, answered: 2, interested: 30, interview: 60, interview_done: 100, enrollment: 300, whatsapp: 0.1, linkedin: 0.1 };
 // Metas diárias do time (somatório de todos os vendedores)
 const TEAM_GOALS = { ligacoes: 500, entrevistas: 20, matriculas: 5 };
-
-function scoreOf(r: ProductivityRow) {
-  return (
-    r.ligacoes_feitas * POINTS.call +
-    r.ligacoes_atendidas * POINTS.answered +
-    r.interessados_gerados * POINTS.interested +
-    r.entrevistas_marcadas * POINTS.interview +
-    (r.entrevistas_realizadas ?? 0) * POINTS.interview_done +
-    r.matriculas * POINTS.enrollment +
-    (r.whatsapps_checkout ?? 0) * POINTS.whatsapp +
-    (r.linkedins_checkout ?? 0) * POINTS.linkedin
-  );
-}
 
 function initials(name: string) {
   return name.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "").join("") || "?";
 }
 
-function fmtScore(n: number) {
-  return Number.isInteger(n) ? String(n) : n.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-}
 
 function PlacarDiario() {
   const { roles } = useAuth();
