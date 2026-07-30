@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchProductivity, localIso, type ProductivityRow } from "@/lib/productivity";
 import { POINTS, POINTS_LEGEND, scoreOf, isRealSeller } from "@/lib/scoring";
 import { fetchExcludedIds } from "@/lib/hall-eligibility";
+import { publicTitleOf, publicLabelOf } from "@/lib/hall-titles";
 
 
 export type RankedRow = ProductivityRow & { score: number; active_days?: number };
@@ -329,7 +330,7 @@ async function saveAchievements(
     for (const w of c.winners) {
       rows.push({
         user_id: w.vendedor_id, achievement_type: `category_${c.key}`,
-        title: `${CATEGORY_EMOJI[c.key] ?? "⭐"} ${c.label} — ${period}`,
+        title: `${publicTitleOf(c.key)?.icon ?? "⭐"} ${publicLabelOf(c.key, c.label)} — ${period}`,
         reference_month: month, reference_year: year, hall_of_fame_id: hofId,
         metadata: { value: c.valueLabel, nome: w.nome },
       });
