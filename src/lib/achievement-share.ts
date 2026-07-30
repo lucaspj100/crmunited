@@ -148,7 +148,14 @@ export function buildCaption(args: {
     return `Top 3 comercial da Equipe Fanáticos em ${period}. 🏆\n\nReconhecimento para quem entrega consistência, evolução e resultado todos os dias.\n\nO próximo desafio já começou. 🚀\n\n#EquipeFanáticos #Top3 #Vendas #Performance #Resultados`;
   }
 
+  if (subject.kind === "highlight") {
+    const phrase = publicTitleOf(subject.categoryKey)?.phrase ?? "";
+    const tag = subject.categoryLabel.normalize("NFD").replace(/[\u0300-\u036f]/g, "").split(/\s+/).join("");
+    return `Reconhecido como ${subject.categoryLabel} da Equipe Fanáticos em ${period}. ${publicTitleOf(subject.categoryKey)?.icon ?? "⭐"}\n\n${phrase}\n\nSeguimos em busca do próximo nível. 🚀\n\n#EquipeFanáticos #${tag} #Vendas #Performance #Resultados`;
+  }
+
   if (subject.position === 1) {
+
     if (official) {
       const t = TITLE_TEXT[titleKey]
         .toLowerCase()
