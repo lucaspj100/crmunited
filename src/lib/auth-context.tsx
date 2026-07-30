@@ -31,13 +31,10 @@ async function logEvent(userId: string | null, event: string, extra: Record<stri
   } catch { /* best-effort */ }
 }
 
-async function bumpSignIn(userId: string) {
+async function bumpSignIn(_userId: string) {
   try {
-    const { data: cur } = await supabase.from("profiles").select("sign_in_count").eq("id", userId).maybeSingle();
-    const next = (cur?.sign_in_count ?? 0) + 1;
-    await supabase.from("profiles")
-      .update({ last_sign_in_at: new Date().toISOString(), sign_in_count: next })
-      .eq("id", userId);
+    // Metadados de acesso são gravados por função segura (somente o próprio usuário).
+    await supabase.rpc("record_sign_in");
   } catch { /* ignore */ }
 }
 
@@ -49,12 +46,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const lastLoggedUserRef = useRef<string | null>(null);
 
   const loadProfileData = async (userId: string) => {
-    const [{ data: rolesData }, { data: prof }] = await Promise.all([
+    const [{ data: rolesData }, { data: flags }] = await Promise.all([
       supabase.from("user_roles").select("role").eq("user_id", userId),
-      supabase.from("profiles").select("must_change_password").eq("id", userId).maybeSingle(),
+      supabase.rpc("my_account_flags"),
     ]);
     setRoles(((rolesData ?? []) as { role: Role }[]).map((r) => r.role));
-    setMustChange(!!prof?.must_change_password);
+    setMustChange(!!(flags as any)?.[0]?.must_change_password);
   };
 
   useEffect(() => {

@@ -33,13 +33,17 @@ export const adminListUsers = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     await assertAdmin(context.supabase, context.userId);
 
-    const { data: profiles, error: pErr } = await context.supabase
+    // Metadados sensíveis de acesso não são expostos pela API de dados:
+    // são lidos aqui, no servidor, somente após confirmar que o chamador é admin.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: profiles, error: pErr } = await supabaseAdmin
       .from("profiles")
       .select("id, full_name, email, avatar_url, status, last_sign_in_at, sign_in_count, must_change_password, deactivated_at, created_at, team_id, eligible_for_hall_of_fame")
       .order("full_name", { ascending: true });
     if (pErr) throw new Error(pErr.message);
 
-    const { data: rolesRows, error: rErr } = await context.supabase
+    const { data: rolesRows, error: rErr } = await supabaseAdmin
       .from("user_roles")
       .select("user_id, role");
     if (rErr) throw new Error(rErr.message);
