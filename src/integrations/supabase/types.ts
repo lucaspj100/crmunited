@@ -1932,6 +1932,14 @@ export type Database = {
           phone_normalized: string
         }[]
       }
+      my_account_flags: {
+        Args: never
+        Returns: {
+          must_change_password: boolean
+          sign_in_count: number
+          status: string
+        }[]
+      }
       productivity_summary: {
         Args: {
           _end: string
@@ -1957,6 +1965,7 @@ export type Database = {
           vendedor_responsavel_id: string
         }[]
       }
+      record_sign_in: { Args: never; Returns: undefined }
       resolve_leadership_commission_rule: {
         Args: { _employee_id: string; _on_date: string }
         Returns: {
