@@ -360,6 +360,7 @@ export async function closeMonth(args: {
   if (existing && existing.status === "closed") return existing;
   if (ranking.length === 0) return null;
   const { start, end } = monthRange(year, month);
+  const excluded = Array.from(await fetchExcludedIds());
   const payload = {
     reference_month: month,
     reference_year: year,
@@ -374,7 +375,13 @@ export async function closeMonth(args: {
     third_place_points: ranking[2]?.score ?? null,
     ranking_snapshot: ranking,
     category_winners: categories,
-    calculation_rules_snapshot: RULES_SNAPSHOT,
+    calculation_rules_snapshot: {
+      ...RULES_SNAPSHOT,
+      // Snapshot imutável: quem estava fora do Hall da Fama no momento do fechamento.
+      excluded_user_ids: excluded,
+      titles_version: "public-v1",
+    },
+
     closed_at: new Date().toISOString(),
     closed_by: userId,
   };
