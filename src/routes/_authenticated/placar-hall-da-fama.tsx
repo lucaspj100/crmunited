@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useTeams, primaryTeamId, teamParam, ALL_TEAMS } from "@/lib/teams";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import {
@@ -216,11 +216,19 @@ function HallDaFama() {
   const loading = loadingRecord || loadingLive;
 
   if (ceremony) {
-    return <Ceremony ranking={ranking} categories={categories} periodLabel={monthLabel(year, month)} onExit={() => setCeremony(false)} />;
+    return (
+      <Ceremony
+        ranking={ranking}
+        categories={categories}
+        periodLabel={monthLabel(year, month)}
+        isClosed={isClosed}
+        onExit={() => setCeremony(false)}
+      />
+    );
   }
 
   return (
-    <TooltipProvider>
+    <>
       <div className="fixed inset-0 z-50 overflow-y-auto bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
         {confetti && <Confetti />}
 
@@ -504,7 +512,7 @@ function HallDaFama() {
         )}
 
       </div>
-    </TooltipProvider>
+    </>
   );
 }
 
@@ -749,8 +757,8 @@ function ChampionsGallery({ history, onOpen }: { history: HallRecord[]; onOpen: 
 }
 
 function Ceremony({
-  ranking, categories, periodLabel, onExit,
-}: { ranking: RankedRow[]; categories: CategoryWinner[]; periodLabel: string; onExit: () => void }) {
+  ranking, categories, periodLabel, isClosed, onExit,
+}: { ranking: RankedRow[]; categories: CategoryWinner[]; periodLabel: string; isClosed: boolean; onExit: () => void }) {
   const [step, setStep] = useState(0);
   const top = ranking.slice(0, 3);
   const steps: Array<() => React.ReactNode> = [
@@ -795,6 +803,11 @@ function Ceremony({
       className="fixed inset-0 z-[80] flex items-center justify-center overflow-y-auto bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-6 text-white"
       onClick={() => !last && setStep((s) => s + 1)}
     >
+      {!isClosed && (
+        <div className="fixed left-1/2 top-4 z-10 w-[min(92vw,720px)] -translate-x-1/2 rounded-xl border border-amber-400/30 bg-amber-500/10 px-4 py-2 text-center text-xs md:text-sm text-amber-100">
+          Este mês ainda não foi encerrado. Esta é uma <strong>prévia da cerimônia</strong> — a cerimônia oficial poderá ser iniciada após o fechamento ou mediante confirmação antecipada do administrador.
+        </div>
+      )}
       {step >= 2 && step < steps.length - 1 && <Confetti />}
       <div className="w-full flex justify-center">{steps[step]()}</div>
       <div className="fixed bottom-6 left-1/2 flex -translate-x-1/2 gap-3" onClick={(e) => e.stopPropagation()}>
