@@ -266,8 +266,9 @@ export const AchievementCard = forwardRef<HTMLDivElement, CardProps>(function Ac
           background: `radial-gradient(60% 100% at 100% 50%, ${accent.main}1f 0%, transparent 70%)`,
         }} />
         <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", gap: 26 * u }}>
-          {template === "royalty" && subject.position === 1 && <div style={{ fontSize: 60 * u, lineHeight: 1 }}>👑</div>}
-          {template === "podium" && <div style={{ fontSize: 54 * u, lineHeight: 1 }}>{medal}</div>}
+          {template === "royalty" && position === 1 && <div style={{ fontSize: 60 * u, lineHeight: 1 }}>👑</div>}
+          {(template === "podium" || isHighlight) && <div style={{ fontSize: 54 * u, lineHeight: 1 }}>{medal}</div>}
+
           <Photo person={person} photos={photos} u={u} size={photoSize} accent={accent.main}
             showPhoto={showPhoto} zoom={photoZoom} offsetY={photoOffsetY} />
         </div>
