@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useTeams, primaryTeamId, teamParam, ALL_TEAMS } from "@/lib/teams";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import {
@@ -220,7 +220,7 @@ function HallDaFama() {
   }
 
   return (
-    <TooltipProvider>
+    <>
       <div className="fixed inset-0 z-50 overflow-y-auto bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
         {confetti && <Confetti />}
 
@@ -504,7 +504,7 @@ function HallDaFama() {
         )}
 
       </div>
-    </TooltipProvider>
+    </>
   );
 }
 
