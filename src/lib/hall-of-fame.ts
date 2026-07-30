@@ -103,7 +103,12 @@ export async function fetchActiveDays(
   return out;
 }
 
-/** Ranking mensal calculado com a MESMA fonte de verdade do placar (productivity_summary). */
+/**
+ * Ranking mensal do Hall da Fama.
+ * Usa a MESMA fonte de verdade do placar (productivity_summary), porém remove
+ * os usuários marcados como não elegíveis ao Hall da Fama (líderes, ADM, etc.).
+ * Essa exclusão NÃO afeta placar, telão, relatórios ou métricas operacionais.
+ */
 export async function fetchMonthRanking(args: {
   year: number;
   month: number;
@@ -111,10 +116,14 @@ export async function fetchMonthRanking(args: {
   withActiveDays?: boolean;
 }): Promise<RankedRow[]> {
   const { start, end } = monthRange(args.year, args.month);
-  const raw = await fetchProductivity({ start, end, vendedorId: null, teamId: args.teamId });
+  const [raw, excluded] = await Promise.all([
+    fetchProductivity({ start, end, vendedorId: null, teamId: args.teamId }),
+    fetchExcludedIds(),
+  ]);
   const seen = new Set<string>();
   const rows = raw.filter((r) => {
     if (!isRealSeller(r.nome)) return false;
+    if (excluded.has(r.vendedor_id)) return false;
     if (seen.has(r.vendedor_id)) return false;
     seen.add(r.vendedor_id);
     return true;
@@ -125,6 +134,7 @@ export async function fetchMonthRanking(args: {
     .map((r) => ({ ...r, score: scoreOf(r), active_days: activeDays[r.vendedor_id] ?? 0 }))
     .sort(compareRanked);
 }
+
 
 export type CategoryWinner = {
   key: string;
