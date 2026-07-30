@@ -280,6 +280,8 @@ export const AchievementCard = forwardRef<HTMLDivElement, CardProps>(function Ac
             {person.nome}
           </div>
           <div style={{ fontSize: 27 * u, color: accent.text, fontWeight: 600 }}>{t.subline}</div>
+          {valueLine}
+
           {phraseBlock}
           <div style={{ display: "flex", alignItems: "center", gap: 22 * u, marginTop: 4 * u }}>
             {statusChip}
