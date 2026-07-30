@@ -58,7 +58,7 @@ export const Route = createFileRoute("/_authenticated/comissao-lideranca")({
   }),
 });
 
-const PERIODS: Period[] = ["today", "week", "month", "last_month", "custom"];
+const PERIODS: Period[] = ["hoje", "ontem", "semana", "semana_passada", "mes", "mes_passado", "custom"];
 
 function Metric({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
