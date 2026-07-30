@@ -46,10 +46,21 @@ export const FALLBACK_PHRASES = [
   "Quem entrega resultado merece reconhecimento.",
 ];
 
-/** Peça individual (posição 1-3) ou peça coletiva do Top 3. */
+/** Peça individual (posição 1-3), peça coletiva do Top 3 ou destaque especial. */
 export type ShareSubject =
   | { kind: "solo"; position: number; person: SharePerson }
-  | { kind: "top3"; people: SharePerson[] };
+  | { kind: "top3"; people: SharePerson[] }
+  | {
+      kind: "highlight";
+      categoryKey: string;
+      /** Nome público da categoria (nunca a métrica interna). */
+      categoryLabel: string;
+      person: SharePerson;
+      /** Valor formatado (apenas usado quando o vendedor optar por exibir). */
+      valueLabel: string;
+      /** Destaque dividido com outros vendedores no mês. */
+      shared?: boolean;
+    };
 
 export type SharePerson = { id: string; nome: string; avatar_url: string | null };
 
@@ -73,10 +84,24 @@ export function pieceTexts(args: {
 }): { headline: string; emoji: string; subline: string; statusTag: string } {
   const { subject, titleKey, official, year, month } = args;
   const period = monthLabelPt(year, month);
-  const statusTag = official ? "RESULTADO OFICIAL" : "RESULTADO PARCIAL";
+  // Plural quando a peça reconhece mais de uma pessoa.
+  const plural = subject.kind === "top3";
+  const statusTag = official
+    ? plural ? "RESULTADOS OFICIAIS" : "RESULTADO OFICIAL"
+    : plural ? "RESULTADOS PARCIAIS" : "RESULTADO PARCIAL";
 
   if (subject.kind === "top3") {
     return { emoji: "🏆", headline: "TOP 3 SALES CHAMPIONS", subline: period, statusTag };
+  }
+
+  if (subject.kind === "highlight") {
+    const t = publicTitleOf(subject.categoryKey);
+    return {
+      emoji: t?.icon ?? "⭐",
+      headline: subject.categoryLabel.toUpperCase(),
+      subline: subject.shared ? `${SHARED_HIGHLIGHT_NOTE} — ${period}` : period,
+      statusTag,
+    };
   }
 
   if (subject.position === 1) {
@@ -103,6 +128,7 @@ export function pieceTexts(args: {
     statusTag,
   };
 }
+
 
 /** Legenda pronta para publicação — sem qualquer métrica operacional. */
 export function buildCaption(args: {
