@@ -60,7 +60,7 @@ function UsersAdmin() {
       toast.success(eligible
         ? `${u.full_name || u.email} volta a concorrer ao Hall da Fama.`
         : `${u.full_name || u.email} não concorre mais ao Hall da Fama.`);
-      void qc.invalidateQueries({ queryKey: ["admin_users"] });
+      void qc.invalidateQueries({ queryKey: ["admin-users"] });
       void qc.invalidateQueries({ queryKey: ["hof_eligibility"] });
       void qc.invalidateQueries({ queryKey: ["hof_ranking"] });
     } catch (e) {
