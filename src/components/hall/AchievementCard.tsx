@@ -18,7 +18,11 @@ export type CardProps = {
   format: ShareFormat;
   template: ShareTemplate;
   logoUrl?: string | null;
+  /** Exibir o número da conquista (opcional, escolha do vendedor). */
+  showValue?: boolean;
+  valueText?: string;
 };
+
 
 const ACCENT = [
   { main: "#f4c542", soft: "#7a5c12", text: "#fde9a9" }, // ouro
@@ -27,9 +31,10 @@ const ACCENT = [
 ];
 
 function accentFor(subject: ShareSubject) {
-  if (subject.kind === "top3") return ACCENT[0];
+  if (subject.kind === "top3" || subject.kind === "highlight") return ACCENT[0];
   return ACCENT[Math.min(subject.position, 3) - 1] ?? ACCENT[0];
 }
+
 
 function Photo({
   person, photos, u, size, accent, showPhoto, zoom, offsetY,
