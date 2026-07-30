@@ -16,6 +16,7 @@ import {
   logShare, saveSharePrefs, toDataUrl, usePhrases, useSharePrefs, pieceTexts,
   type ShareFormat, type ShareSubject, type ShareTemplate, type TitleKey,
 } from "@/lib/achievement-share";
+import { neutralValueLabel, publicPhraseOf } from "@/lib/hall-titles";
 
 type Props = {
   open: boolean;
@@ -33,10 +34,13 @@ export function ShareAchievementDialog({ open, onOpenChange, subject, official, 
   const { data: prefs } = useSharePrefs(currentUserId);
 
   const [format, setFormat] = useState<ShareFormat>("story");
-  const [template, setTemplate] = useState<ShareTemplate>(subject.kind === "top3" || (subject.kind === "solo" && subject.position > 1) ? "podium" : "royalty");
+  const [template, setTemplate] = useState<ShareTemplate>(
+    subject.kind === "solo" && subject.position === 1 ? "royalty" : "podium",
+  );
   const [titleKey, setTitleKey] = useState<TitleKey>("sales_champion");
   const [phrase, setPhrase] = useState(DEFAULT_PHRASE);
   const [showPhoto, setShowPhoto] = useState(true);
+  const [showValue, setShowValue] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [offsetY, setOffsetY] = useState(0);
   const [caption, setCaption] = useState("");
@@ -82,6 +86,13 @@ export function ShareAchievementDialog({ open, onOpenChange, subject, official, 
     return () => { cancelled = true; };
   }, [open, brand?.logo_url]);
 
+  // Destaques especiais usam a frase de reconhecimento da própria categoria.
+  useEffect(() => {
+    if (subject.kind !== "highlight") return;
+    setPhrase(publicPhraseOf(subject.categoryKey, DEFAULT_PHRASE));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subject]);
+
   // Legenda automática (regerada quando os parâmetros mudam, mas editável).
   useEffect(() => {
     setCaption(buildCaption({ subject, titleKey, official, year, month }));
@@ -104,7 +115,8 @@ export function ShareAchievementDialog({ open, onOpenChange, subject, official, 
   const texts = pieceTexts({ subject, titleKey, official, year, month });
   const achievementLabel = texts.headline;
   const position = subject.kind === "solo" ? subject.position : null;
-  const subjectUserId = subject.kind === "solo" ? subject.person.id : null;
+  const subjectUserId = subject.kind === "top3" ? null : subject.person.id;
+  const valueText = subject.kind === "highlight" ? neutralValueLabel(subject.categoryKey, subject.valueLabel) : "";
 
   const persist = () => {
     if (!currentUserId) return;
@@ -139,7 +151,7 @@ export function ShareAchievementDialog({ open, onOpenChange, subject, official, 
   };
 
   const fileName = fileNameFor({
-    nome: subject.kind === "solo" ? subject.person.nome : "top-3",
+    nome: subject.kind === "top3" ? "top-3" : subject.person.nome,
     year, month, format,
   });
 
@@ -198,7 +210,8 @@ export function ShareAchievementDialog({ open, onOpenChange, subject, official, 
   const cardProps = useMemo(() => ({
     subject, photos, showPhoto, photoZoom: zoom, photoOffsetY: offsetY,
     titleKey, phrase, official, year, month, format, template, logoUrl: logo,
-  }), [subject, photos, showPhoto, zoom, offsetY, titleKey, phrase, official, year, month, format, template, logo]);
+    showValue, valueText,
+  }), [subject, photos, showPhoto, zoom, offsetY, titleKey, phrase, official, year, month, format, template, logo, showValue, valueText]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -291,6 +304,16 @@ export function ShareAchievementDialog({ open, onOpenChange, subject, official, 
               <Label className="text-xs">Exibir foto</Label>
               <Switch checked={showPhoto} onCheckedChange={setShowPhoto} />
             </div>
+
+            {subject.kind === "highlight" && valueText && (
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <Label className="text-xs">Exibir número da conquista</Label>
+                  <p className="text-[11px] text-muted-foreground">Opcional — por padrão a peça mostra apenas o reconhecimento.</p>
+                </div>
+                <Switch checked={showValue} onCheckedChange={setShowValue} />
+              </div>
+            )}
 
             {showPhoto && (
               <div className="space-y-3">
