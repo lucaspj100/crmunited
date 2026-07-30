@@ -1,6 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
 import { fetchProductivity, localIso, type ProductivityRow } from "@/lib/productivity";
 import { POINTS, POINTS_LEGEND, scoreOf, isRealSeller } from "@/lib/scoring";
+import { fetchExcludedIds } from "@/lib/hall-eligibility";
+
 
 export type RankedRow = ProductivityRow & { score: number; active_days?: number };
 
