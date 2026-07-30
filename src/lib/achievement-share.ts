@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { MONTH_NAMES } from "@/lib/hall-of-fame";
+import { publicTitleOf, SHARED_HIGHLIGHT_NOTE, neutralValueLabel } from "@/lib/hall-titles";
+
 
 // ───────────────────────── Tipos e catálogos ─────────────────────────
 
@@ -46,10 +48,21 @@ export const FALLBACK_PHRASES = [
   "Quem entrega resultado merece reconhecimento.",
 ];
 
-/** Peça individual (posição 1-3) ou peça coletiva do Top 3. */
+/** Peça individual (posição 1-3), peça coletiva do Top 3 ou destaque especial. */
 export type ShareSubject =
   | { kind: "solo"; position: number; person: SharePerson }
-  | { kind: "top3"; people: SharePerson[] };
+  | { kind: "top3"; people: SharePerson[] }
+  | {
+      kind: "highlight";
+      categoryKey: string;
+      /** Nome público da categoria (nunca a métrica interna). */
+      categoryLabel: string;
+      person: SharePerson;
+      /** Valor formatado (apenas usado quando o vendedor optar por exibir). */
+      valueLabel: string;
+      /** Destaque dividido com outros vendedores no mês. */
+      shared?: boolean;
+    };
 
 export type SharePerson = { id: string; nome: string; avatar_url: string | null };
 
@@ -73,10 +86,24 @@ export function pieceTexts(args: {
 }): { headline: string; emoji: string; subline: string; statusTag: string } {
   const { subject, titleKey, official, year, month } = args;
   const period = monthLabelPt(year, month);
-  const statusTag = official ? "RESULTADO OFICIAL" : "RESULTADO PARCIAL";
+  // Plural quando a peça reconhece mais de uma pessoa.
+  const plural = subject.kind === "top3";
+  const statusTag = official
+    ? plural ? "RESULTADOS OFICIAIS" : "RESULTADO OFICIAL"
+    : plural ? "RESULTADOS PARCIAIS" : "RESULTADO PARCIAL";
 
   if (subject.kind === "top3") {
     return { emoji: "🏆", headline: "TOP 3 SALES CHAMPIONS", subline: period, statusTag };
+  }
+
+  if (subject.kind === "highlight") {
+    const t = publicTitleOf(subject.categoryKey);
+    return {
+      emoji: t?.icon ?? "⭐",
+      headline: subject.categoryLabel.toUpperCase(),
+      subline: subject.shared ? `${SHARED_HIGHLIGHT_NOTE} — ${period}` : period,
+      statusTag,
+    };
   }
 
   if (subject.position === 1) {
@@ -104,6 +131,7 @@ export function pieceTexts(args: {
   };
 }
 
+
 /** Legenda pronta para publicação — sem qualquer métrica operacional. */
 export function buildCaption(args: {
   subject: ShareSubject;
@@ -120,7 +148,14 @@ export function buildCaption(args: {
     return `Top 3 comercial da Equipe Fanáticos em ${period}. 🏆\n\nReconhecimento para quem entrega consistência, evolução e resultado todos os dias.\n\nO próximo desafio já começou. 🚀\n\n#EquipeFanáticos #Top3 #Vendas #Performance #Resultados`;
   }
 
+  if (subject.kind === "highlight") {
+    const phrase = publicTitleOf(subject.categoryKey)?.phrase ?? "";
+    const tag = subject.categoryLabel.normalize("NFD").replace(/[\u0300-\u036f]/g, "").split(/\s+/).join("");
+    return `Reconhecido como ${subject.categoryLabel} da Equipe Fanáticos em ${period}. ${publicTitleOf(subject.categoryKey)?.icon ?? "⭐"}\n\n${phrase}\n\nSeguimos em busca do próximo nível. 🚀\n\n#EquipeFanáticos #${tag} #Vendas #Performance #Resultados`;
+  }
+
   if (subject.position === 1) {
+
     if (official) {
       const t = TITLE_TEXT[titleKey]
         .toLowerCase()

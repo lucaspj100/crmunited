@@ -5,13 +5,14 @@ import { useServerFn } from "@tanstack/react-start";
 import { useAuth } from "@/lib/auth-context";
 import {
   adminListUsers, adminListUserAccessLogs, adminResetPasswordTemp,
-  adminSendResetEmail, adminSetUserStatus, adminUpdateUserRole,
+  adminSendResetEmail, adminSetUserStatus, adminUpdateUserRole, adminSetHallEligibility,
 } from "@/lib/user-admin.functions";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Users, Shield, Search, KeyRound, History, Ban, CheckCircle2, Copy, Mail, ArrowRightLeft } from "lucide-react";
@@ -50,6 +51,22 @@ function UsersAdmin() {
   const sendEmailFn = useServerFn(adminSendResetEmail);
   const setStatusFn = useServerFn(adminSetUserStatus);
   const setRoleFn = useServerFn(adminUpdateUserRole);
+  const setHallFn = useServerFn(adminSetHallEligibility);
+
+  // Elegibilidade ao Hall da Fama — não altera placar, telão nem relatórios.
+  const toggleHall = async (u: UserRow, eligible: boolean) => {
+    try {
+      await setHallFn({ data: { userId: u.id, eligible } });
+      toast.success(eligible
+        ? `${u.full_name || u.email} volta a concorrer ao Hall da Fama.`
+        : `${u.full_name || u.email} não concorre mais ao Hall da Fama.`);
+      void qc.invalidateQueries({ queryKey: ["admin-users"] });
+      void qc.invalidateQueries({ queryKey: ["hof_eligibility"] });
+      void qc.invalidateQueries({ queryKey: ["hof_ranking"] });
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  };
 
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "ativo" | "inativo" | "bloqueado" | "admin" | "vendedor">("all");
@@ -211,12 +228,13 @@ function UsersAdmin() {
                 <th className="px-2 py-2">Último acesso</th>
                 <th className="px-2 py-2">Criado em</th>
                 <th className="px-2 py-2 text-center">Acessos</th>
+                <th className="px-2 py-2 text-center">Hall da Fama</th>
                 <th className="px-2 py-2 text-right">Ações</th>
               </tr>
             </thead>
             <tbody>
-              {isLoading && <tr><td colSpan={9} className="p-6 text-center text-muted-foreground">Carregando…</td></tr>}
-              {!isLoading && filtered.length === 0 && <tr><td colSpan={9} className="p-6 text-center text-muted-foreground">Nenhum usuário encontrado.</td></tr>}
+              {isLoading && <tr><td colSpan={10} className="p-6 text-center text-muted-foreground">Carregando…</td></tr>}
+              {!isLoading && filtered.length === 0 && <tr><td colSpan={10} className="p-6 text-center text-muted-foreground">Nenhum usuário encontrado.</td></tr>}
               {filtered.map((u) => (
                 <tr key={u.id} className="border-b hover:bg-muted/40">
                   <td className="px-2 py-2 font-medium">{u.full_name || "—"}</td>
@@ -231,6 +249,15 @@ function UsersAdmin() {
                   <td className="px-2 py-2 text-muted-foreground">{fmtDate(u.last_sign_in_at)}</td>
                   <td className="px-2 py-2 text-muted-foreground">{fmtDate(u.created_at)}</td>
                   <td className="px-2 py-2 text-center">{u.sign_in_count ?? 0}</td>
+                  <td className="px-2 py-2">
+                    <div className="flex items-center justify-center">
+                      <Switch
+                        checked={(u as any).eligible_for_hall_of_fame !== false}
+                        onCheckedChange={(v) => void toggleHall(u, v)}
+                        title="Elegível ao Hall da Fama (não afeta placar, telão ou relatórios)"
+                      />
+                    </div>
+                  </td>
                   <td className="px-2 py-2">
                     <div className="flex justify-end gap-1">
                       <Button size="sm" variant="ghost" onClick={() => setLogsUser(u)} title="Ver acessos"><History className="h-4 w-4" /></Button>

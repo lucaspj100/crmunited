@@ -1,6 +1,9 @@
 import { supabase } from "@/integrations/supabase/client";
 import { fetchProductivity, localIso, type ProductivityRow } from "@/lib/productivity";
 import { POINTS, POINTS_LEGEND, scoreOf, isRealSeller } from "@/lib/scoring";
+import { fetchExcludedIds } from "@/lib/hall-eligibility";
+import { publicTitleOf, publicLabelOf } from "@/lib/hall-titles";
+
 
 export type RankedRow = ProductivityRow & { score: number; active_days?: number };
 
@@ -103,7 +106,12 @@ export async function fetchActiveDays(
   return out;
 }
 
-/** Ranking mensal calculado com a MESMA fonte de verdade do placar (productivity_summary). */
+/**
+ * Ranking mensal do Hall da Fama.
+ * Usa a MESMA fonte de verdade do placar (productivity_summary), porém remove
+ * os usuários marcados como não elegíveis ao Hall da Fama (líderes, ADM, etc.).
+ * Essa exclusão NÃO afeta placar, telão, relatórios ou métricas operacionais.
+ */
 export async function fetchMonthRanking(args: {
   year: number;
   month: number;
@@ -111,10 +119,14 @@ export async function fetchMonthRanking(args: {
   withActiveDays?: boolean;
 }): Promise<RankedRow[]> {
   const { start, end } = monthRange(args.year, args.month);
-  const raw = await fetchProductivity({ start, end, vendedorId: null, teamId: args.teamId });
+  const [raw, excluded] = await Promise.all([
+    fetchProductivity({ start, end, vendedorId: null, teamId: args.teamId }),
+    fetchExcludedIds(),
+  ]);
   const seen = new Set<string>();
   const rows = raw.filter((r) => {
     if (!isRealSeller(r.nome)) return false;
+    if (excluded.has(r.vendedor_id)) return false;
     if (seen.has(r.vendedor_id)) return false;
     seen.add(r.vendedor_id);
     return true;
@@ -125,6 +137,7 @@ export async function fetchMonthRanking(args: {
     .map((r) => ({ ...r, score: scoreOf(r), active_days: activeDays[r.vendedor_id] ?? 0 }))
     .sort(compareRanked);
 }
+
 
 export type CategoryWinner = {
   key: string;
@@ -292,11 +305,8 @@ const PODIUM_ACHIEVEMENTS = [
   { type: "third_place", emoji: "🥉", title: "3º lugar" },
 ];
 
-const CATEGORY_EMOJI: Record<string, string> = {
-  calls: "📞", answered: "✅", interested: "✨", interviews: "📅",
-  interviews_done: "🎯", enrollments: "🎓", conversion: "🏹",
-  consistency: "🔁", evolution: "📈",
-};
+/** Emojis/nomes públicos das categorias vêm de hall-titles (fonte única). */
+
 
 async function saveAchievements(
   hofId: string,
@@ -320,7 +330,7 @@ async function saveAchievements(
     for (const w of c.winners) {
       rows.push({
         user_id: w.vendedor_id, achievement_type: `category_${c.key}`,
-        title: `${CATEGORY_EMOJI[c.key] ?? "⭐"} ${c.label} — ${period}`,
+        title: `${publicTitleOf(c.key)?.icon ?? "⭐"} ${publicLabelOf(c.key, c.label)} — ${period}`,
         reference_month: month, reference_year: year, hall_of_fame_id: hofId,
         metadata: { value: c.valueLabel, nome: w.nome },
       });
@@ -348,6 +358,7 @@ export async function closeMonth(args: {
   if (existing && existing.status === "closed") return existing;
   if (ranking.length === 0) return null;
   const { start, end } = monthRange(year, month);
+  const excluded = Array.from(await fetchExcludedIds());
   const payload = {
     reference_month: month,
     reference_year: year,
@@ -362,7 +373,13 @@ export async function closeMonth(args: {
     third_place_points: ranking[2]?.score ?? null,
     ranking_snapshot: ranking,
     category_winners: categories,
-    calculation_rules_snapshot: RULES_SNAPSHOT,
+    calculation_rules_snapshot: {
+      ...RULES_SNAPSHOT,
+      // Snapshot imutável: quem estava fora do Hall da Fama no momento do fechamento.
+      excluded_user_ids: excluded,
+      titles_version: "public-v1",
+    },
+
     closed_at: new Date().toISOString(),
     closed_by: userId,
   };
