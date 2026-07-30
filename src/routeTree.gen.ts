@@ -34,6 +34,7 @@ import { Route as AuthenticatedEquipesRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedDiscadorRouteImport } from './routes/_authenticated/discador'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
+import { Route as AuthenticatedComissaoLiderancaRouteImport } from './routes/_authenticated/comissao-lideranca'
 import { Route as AuthenticatedCheckoutDoDiaRouteImport } from './routes/_authenticated/checkout-do-dia'
 import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
 
@@ -167,6 +168,12 @@ const AuthenticatedConfiguracoesRoute =
     path: '/configuracoes',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedComissaoLiderancaRoute =
+  AuthenticatedComissaoLiderancaRouteImport.update({
+    id: '/comissao-lideranca',
+    path: '/comissao-lideranca',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedCheckoutDoDiaRoute =
   AuthenticatedCheckoutDoDiaRouteImport.update({
     id: '/checkout-do-dia',
@@ -184,6 +191,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/agenda': typeof AuthenticatedAgendaRoute
   '/checkout-do-dia': typeof AuthenticatedCheckoutDoDiaRoute
+  '/comissao-lideranca': typeof AuthenticatedComissaoLiderancaRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/discador': typeof AuthenticatedDiscadorRoute
@@ -212,6 +220,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/agenda': typeof AuthenticatedAgendaRoute
   '/checkout-do-dia': typeof AuthenticatedCheckoutDoDiaRoute
+  '/comissao-lideranca': typeof AuthenticatedComissaoLiderancaRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/discador': typeof AuthenticatedDiscadorRoute
@@ -242,6 +251,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/agenda': typeof AuthenticatedAgendaRoute
   '/_authenticated/checkout-do-dia': typeof AuthenticatedCheckoutDoDiaRoute
+  '/_authenticated/comissao-lideranca': typeof AuthenticatedComissaoLiderancaRoute
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/discador': typeof AuthenticatedDiscadorRoute
@@ -272,6 +282,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/agenda'
     | '/checkout-do-dia'
+    | '/comissao-lideranca'
     | '/configuracoes'
     | '/dashboard'
     | '/discador'
@@ -300,6 +311,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/agenda'
     | '/checkout-do-dia'
+    | '/comissao-lideranca'
     | '/configuracoes'
     | '/dashboard'
     | '/discador'
@@ -329,6 +341,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/agenda'
     | '/_authenticated/checkout-do-dia'
+    | '/_authenticated/comissao-lideranca'
     | '/_authenticated/configuracoes'
     | '/_authenticated/dashboard'
     | '/_authenticated/discador'
@@ -536,6 +549,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedConfiguracoesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/comissao-lideranca': {
+      id: '/_authenticated/comissao-lideranca'
+      path: '/comissao-lideranca'
+      fullPath: '/comissao-lideranca'
+      preLoaderRoute: typeof AuthenticatedComissaoLiderancaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/checkout-do-dia': {
       id: '/_authenticated/checkout-do-dia'
       path: '/checkout-do-dia'
@@ -556,6 +576,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAgendaRoute: typeof AuthenticatedAgendaRoute
   AuthenticatedCheckoutDoDiaRoute: typeof AuthenticatedCheckoutDoDiaRoute
+  AuthenticatedComissaoLiderancaRoute: typeof AuthenticatedComissaoLiderancaRoute
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDiscadorRoute: typeof AuthenticatedDiscadorRoute
@@ -583,6 +604,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAgendaRoute: AuthenticatedAgendaRoute,
   AuthenticatedCheckoutDoDiaRoute: AuthenticatedCheckoutDoDiaRoute,
+  AuthenticatedComissaoLiderancaRoute: AuthenticatedComissaoLiderancaRoute,
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDiscadorRoute: AuthenticatedDiscadorRoute,
