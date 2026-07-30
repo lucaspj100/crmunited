@@ -21,6 +21,7 @@ import {
 import { fmtScore, POINTS_LEGEND } from "@/lib/scoring";
 import { ShareAchievementDialog } from "@/components/hall/ShareAchievementDialog";
 import type { ShareSubject } from "@/lib/achievement-share";
+import { publicLabelOf, publicTitleOf, SHARED_HIGHLIGHT_NOTE, ELIGIBILITY_NOTICE } from "@/lib/hall-titles";
 
 
 export const Route = createFileRoute("/_authenticated/placar-hall-da-fama")({
@@ -161,6 +162,7 @@ function HallDaFama() {
 
   const [ceremony, setCeremony] = useState(false);
   const [reopenOpen, setReopenOpen] = useState(false);
+  const [closeOpen, setCloseOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
   // Compartilhamento de conquistas: cada vendedor compartilha a própria; admin pode compartilhar qualquer uma.
@@ -168,6 +170,15 @@ function HallDaFama() {
   const canShare = (id: string) => isAdmin || user?.id === id;
   const shareSolo = (row: RankedRow, position: number) =>
     setShare({ kind: "solo", position, person: { id: row.vendedor_id, nome: row.nome, avatar_url: row.avatar_url } });
+  const shareHighlight = (c: CategoryWinner, w: { vendedor_id: string; nome: string; avatar_url: string | null }) =>
+    setShare({
+      kind: "highlight",
+      categoryKey: c.key,
+      categoryLabel: publicLabelOf(c.key, c.label),
+      person: { id: w.vendedor_id, nome: w.nome, avatar_url: w.avatar_url },
+      valueLabel: c.valueLabel,
+      shared: c.winners.length > 1,
+    });
   const shareTop3 = () =>
     setShare({
       kind: "top3",
@@ -181,6 +192,7 @@ function HallDaFama() {
       const rec = await closeMonth({ year, month, ranking: liveRanking, categories, userId: user?.id ?? null, existing: record ?? null });
       if (!rec) toast.error("Sem dados suficientes para fechar o mês.");
       else toast.success(`Resultado oficial de ${monthLabel(year, month)} registrado.`);
+      setCloseOpen(false);
       void qc.invalidateQueries({ queryKey: ["hof_record"] });
       void qc.invalidateQueries({ queryKey: ["hof_history"] });
     } catch (e) {
@@ -291,7 +303,7 @@ function HallDaFama() {
               {isAdmin && (
                 <div className="flex gap-2">
                   {!isClosed && !running && ranking.length > 0 && (
-                    <Button size="sm" disabled={busy} onClick={doClose} className="bg-amber-500 text-slate-900 hover:bg-amber-400">
+                    <Button size="sm" disabled={busy} onClick={() => setCloseOpen(true)} className="bg-amber-500 text-slate-900 hover:bg-amber-400">
                       {record ? <RefreshCw className="mr-1 h-4 w-4" /> : <Lock className="mr-1 h-4 w-4" />}
                       {record ? "Recalcular resultado" : "Fechar mês"}
                     </Button>
@@ -305,6 +317,12 @@ function HallDaFama() {
               )}
             </div>
           </div>
+
+          {isAdmin && (
+            <p className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white/60">
+              ℹ️ {ELIGIBILITY_NOTICE}
+            </p>
+          )}
 
           {loading && <p className="text-white/60">Carregando resultados…</p>}
 
@@ -380,7 +398,9 @@ function HallDaFama() {
                   />
                 </div>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                  {categories.map((c) => <CategoryCard key={c.key} c={c} />)}
+                  {categories.map((c) => (
+                    <CategoryCard key={c.key} c={c} canShare={canShare} onShareHighlight={shareHighlight} />
+                  ))}
                 </div>
               </div>
 
@@ -439,6 +459,22 @@ function HallDaFama() {
           />
         </div>
 
+        <Dialog open={closeOpen} onOpenChange={setCloseOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Encerrar {monthLabel(year, month)}</DialogTitle>
+              <DialogDescription>
+                O ranking, os destaques e a lista de usuários não elegíveis serão congelados como resultado
+                oficial deste mês. Nenhum recálculo posterior altera o histórico sem reabertura registrada.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setCloseOpen(false)}>Cancelar</Button>
+              <Button disabled={busy} onClick={doClose}>Confirmar fechamento</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         <Dialog open={reopenOpen} onOpenChange={setReopenOpen}>
           <DialogContent>
             <DialogHeader>
@@ -456,7 +492,7 @@ function HallDaFama() {
 
         {share && (
           <ShareAchievementDialog
-            key={`${share.kind}-${share.kind === "solo" ? share.person.id : "top3"}-${year}-${month}`}
+            key={`${share.kind}-${share.kind === "top3" ? "top3" : share.person.id}-${share.kind === "highlight" ? share.categoryKey : ""}-${year}-${month}`}
             open
             onOpenChange={(v) => { if (!v) setShare(null); }}
             subject={share}
@@ -565,14 +601,29 @@ function Podium({ ranking, canShare, onShare, onShareTop3 }: { ranking: RankedRo
 }
 
 
-function CategoryCard({ c }: { c: CategoryWinner }) {
+function CategoryCard({
+  c, canShare, onShareHighlight,
+}: {
+  c: CategoryWinner;
+  canShare?: (id: string) => boolean;
+  onShareHighlight?: (c: CategoryWinner, w: { vendedor_id: string; nome: string; avatar_url: string | null }) => void;
+}) {
+  const pub = publicTitleOf(c.key);
+  const label = pub?.label ?? c.label;
   return (
     <div className="rounded-xl border border-white/10 bg-slate-950/40 p-4">
       <div className="flex items-center gap-2">
-        <span className="text-lg">{c.icon}</span>
-        <span className="text-sm font-bold">{c.label}</span>
+        <span className="text-lg">{pub?.icon ?? c.icon}</span>
+        <span className="text-sm font-bold">{label}</span>
         <span className="ml-auto text-sm font-black text-amber-300">{c.valueLabel}</span>
-        <InfoTip title={c.label} lines={[c.description, "Desempate: matrículas → entrevistas realizadas → pontuação → ordem alfabética"]} />
+        <InfoTip
+          title={label}
+          lines={[
+            `Métrica interna: ${pub?.internalLabel ?? c.label}`,
+            c.description,
+            "Desempate: matrículas → entrevistas realizadas → pontuação → ordem alfabética",
+          ]}
+        />
       </div>
       {c.winners.length === 0 ? (
         <p className="mt-2 text-xs text-white/50">{c.empty ?? "Sem dados no período."}</p>
@@ -582,9 +633,19 @@ function CategoryCard({ c }: { c: CategoryWinner }) {
             <div key={w.vendedor_id} className="flex items-center gap-2">
               <Avatar row={w} size="h-8 w-8 text-xs" />
               <span className="truncate text-sm">{w.nome}</span>
+              {onShareHighlight && canShare?.(w.vendedor_id) && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="ml-auto h-7 px-2 text-white/70 hover:text-white"
+                  onClick={() => onShareHighlight(c, w)}
+                >
+                  <Share2 className="h-3.5 w-3.5" />
+                </Button>
+              )}
             </div>
           ))}
-          {c.winners.length > 1 && <p className="text-[11px] text-white/50">Empate técnico entre os vendedores acima.</p>}
+          {c.winners.length > 1 && <p className="text-[11px] text-white/50">{SHARED_HIGHLIGHT_NOTE} entre os vendedores acima.</p>}
         </div>
       )}
     </div>
