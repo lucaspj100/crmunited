@@ -35,7 +35,7 @@ export const adminListUsers = createServerFn({ method: "GET" })
 
     const { data: profiles, error: pErr } = await context.supabase
       .from("profiles")
-      .select("id, full_name, email, avatar_url, status, last_sign_in_at, sign_in_count, must_change_password, deactivated_at, created_at, team_id")
+      .select("id, full_name, email, avatar_url, status, last_sign_in_at, sign_in_count, must_change_password, deactivated_at, created_at, team_id, eligible_for_hall_of_fame")
       .order("full_name", { ascending: true });
     if (pErr) throw new Error(pErr.message);
 
@@ -253,6 +253,36 @@ export const changeOwnPassword = createServerFn({ method: "POST" })
       event_type: "password_changed",
       status: "success",
       reason: data.currentPassword ? "self_change" : "forced_after_reset",
+    });
+
+    return { ok: true };
+  });
+
+// ============= HALL DA FAMA: ELEGIBILIDADE =============
+// Afeta EXCLUSIVAMENTE o Hall da Fama. Placar, telão, relatórios e métricas
+// administrativas continuam considerando o usuário normalmente.
+export const adminSetHallEligibility = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({
+    userId: z.string().uuid(),
+    eligible: z.boolean(),
+  }))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { error } = await supabaseAdmin
+      .from("profiles")
+      .update({ eligible_for_hall_of_fame: data.eligible })
+      .eq("id", data.userId);
+    if (error) throw new Error(error.message);
+
+    await supabaseAdmin.from("access_logs").insert({
+      user_id: data.userId,
+      actor_id: context.userId,
+      event_type: "hall_of_fame_eligibility_changed",
+      status: "success",
+      metadata: { eligible: data.eligible },
     });
 
     return { ok: true };
