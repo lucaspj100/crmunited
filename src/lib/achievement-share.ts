@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { MONTH_NAMES } from "@/lib/hall-of-fame";
+import { publicTitleOf, SHARED_HIGHLIGHT_NOTE, neutralValueLabel } from "@/lib/hall-titles";
+
 
 // ───────────────────────── Tipos e catálogos ─────────────────────────
 
