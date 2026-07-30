@@ -894,6 +894,7 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           deactivated_at: string | null
+          eligible_for_hall_of_fame: boolean
           email: string | null
           full_name: string
           id: string
@@ -907,6 +908,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           deactivated_at?: string | null
+          eligible_for_hall_of_fame?: boolean
           email?: string | null
           full_name?: string
           id: string
@@ -920,6 +922,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           deactivated_at?: string | null
+          eligible_for_hall_of_fame?: boolean
           email?: string | null
           full_name?: string
           id?: string
