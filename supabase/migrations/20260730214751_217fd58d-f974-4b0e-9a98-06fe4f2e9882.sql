@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.ensure_leadership_commission(uuid, boolean) FROM authenticated;

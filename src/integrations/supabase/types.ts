@@ -372,6 +372,212 @@ export type Database = {
         }
         Relationships: []
       }
+      leadership_commission_audit_logs: {
+        Row: {
+          action: string
+          changed_at: string
+          changed_by: string | null
+          commission_id: string
+          id: string
+          new_data: Json | null
+          previous_data: Json | null
+          reason: string | null
+        }
+        Insert: {
+          action: string
+          changed_at?: string
+          changed_by?: string | null
+          commission_id: string
+          id?: string
+          new_data?: Json | null
+          previous_data?: Json | null
+          reason?: string | null
+        }
+        Update: {
+          action?: string
+          changed_at?: string
+          changed_by?: string | null
+          commission_id?: string
+          id?: string
+          new_data?: Json | null
+          previous_data?: Json | null
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leadership_commission_audit_logs_commission_id_fkey"
+            columns: ["commission_id"]
+            isOneToOne: false
+            referencedRelation: "leadership_commissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leadership_commission_rules: {
+        Row: {
+          commission_percentage: number | null
+          commission_type: Database["public"]["Enums"]["leadership_commission_type"]
+          created_at: string
+          created_by: string | null
+          employee_id: string | null
+          fixed_amount: number | null
+          id: string
+          is_active: boolean
+          notes: string | null
+          role_name: Database["public"]["Enums"]["app_role"] | null
+          rule_scope: Database["public"]["Enums"]["leadership_rule_scope"]
+          updated_at: string
+          updated_by: string | null
+          valid_from: string
+          valid_until: string | null
+        }
+        Insert: {
+          commission_percentage?: number | null
+          commission_type: Database["public"]["Enums"]["leadership_commission_type"]
+          created_at?: string
+          created_by?: string | null
+          employee_id?: string | null
+          fixed_amount?: number | null
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          role_name?: Database["public"]["Enums"]["app_role"] | null
+          rule_scope: Database["public"]["Enums"]["leadership_rule_scope"]
+          updated_at?: string
+          updated_by?: string | null
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Update: {
+          commission_percentage?: number | null
+          commission_type?: Database["public"]["Enums"]["leadership_commission_type"]
+          created_at?: string
+          created_by?: string | null
+          employee_id?: string | null
+          fixed_amount?: number | null
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          role_name?: Database["public"]["Enums"]["app_role"] | null
+          rule_scope?: Database["public"]["Enums"]["leadership_rule_scope"]
+          updated_at?: string
+          updated_by?: string | null
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leadership_commission_rules_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leadership_commissions: {
+        Row: {
+          commission_amount: number | null
+          commission_percentage_snapshot: number | null
+          commission_rule_id: string | null
+          commission_status: Database["public"]["Enums"]["leadership_commission_status"]
+          commission_type_snapshot:
+            | Database["public"]["Enums"]["leadership_commission_type"]
+            | null
+          created_at: string
+          employee_id: string | null
+          employee_name_snapshot: string | null
+          employee_role_snapshot: Database["public"]["Enums"]["app_role"] | null
+          enrollment_amount: number | null
+          enrollment_date: string | null
+          enrollment_status: string
+          fixed_amount_snapshot: number | null
+          id: string
+          lead_id: string
+          material_amount: number | null
+          needs_compensation: boolean
+          notes: string | null
+          paid_at: string | null
+          paid_by: string | null
+          payment_date: string | null
+          student_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          commission_amount?: number | null
+          commission_percentage_snapshot?: number | null
+          commission_rule_id?: string | null
+          commission_status?: Database["public"]["Enums"]["leadership_commission_status"]
+          commission_type_snapshot?:
+            | Database["public"]["Enums"]["leadership_commission_type"]
+            | null
+          created_at?: string
+          employee_id?: string | null
+          employee_name_snapshot?: string | null
+          employee_role_snapshot?:
+            | Database["public"]["Enums"]["app_role"]
+            | null
+          enrollment_amount?: number | null
+          enrollment_date?: string | null
+          enrollment_status?: string
+          fixed_amount_snapshot?: number | null
+          id?: string
+          lead_id: string
+          material_amount?: number | null
+          needs_compensation?: boolean
+          notes?: string | null
+          paid_at?: string | null
+          paid_by?: string | null
+          payment_date?: string | null
+          student_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          commission_amount?: number | null
+          commission_percentage_snapshot?: number | null
+          commission_rule_id?: string | null
+          commission_status?: Database["public"]["Enums"]["leadership_commission_status"]
+          commission_type_snapshot?:
+            | Database["public"]["Enums"]["leadership_commission_type"]
+            | null
+          created_at?: string
+          employee_id?: string | null
+          employee_name_snapshot?: string | null
+          employee_role_snapshot?:
+            | Database["public"]["Enums"]["app_role"]
+            | null
+          enrollment_amount?: number | null
+          enrollment_date?: string | null
+          enrollment_status?: string
+          fixed_amount_snapshot?: number | null
+          id?: string
+          lead_id?: string
+          material_amount?: number | null
+          needs_compensation?: boolean
+          notes?: string | null
+          paid_at?: string | null
+          paid_by?: string | null
+          payment_date?: string | null
+          student_name?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leadership_commissions_commission_rule_id_fkey"
+            columns: ["commission_rule_id"]
+            isOneToOne: false
+            referencedRelation: "leadership_commission_rules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leadership_commissions_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: true
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           company: string | null
@@ -1702,6 +1908,10 @@ export type Database = {
           status: string
         }[]
       }
+      ensure_leadership_commission: {
+        Args: { _lead_id: string; _recalculate?: boolean }
+        Returns: string
+      }
       hall_of_fame_active_days: {
         Args: { _end: string; _start: string; _team_id?: string }
         Returns: {
@@ -1747,6 +1957,32 @@ export type Database = {
           vendedor_responsavel_id: string
         }[]
       }
+      resolve_leadership_commission_rule: {
+        Args: { _employee_id: string; _on_date: string }
+        Returns: {
+          commission_percentage: number | null
+          commission_type: Database["public"]["Enums"]["leadership_commission_type"]
+          created_at: string
+          created_by: string | null
+          employee_id: string | null
+          fixed_amount: number | null
+          id: string
+          is_active: boolean
+          notes: string | null
+          role_name: Database["public"]["Enums"]["app_role"] | null
+          rule_scope: Database["public"]["Enums"]["leadership_rule_scope"]
+          updated_at: string
+          updated_by: string | null
+          valid_from: string
+          valid_until: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "leadership_commission_rules"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       teams_overview: { Args: never; Returns: Json }
     }
     Enums: {
@@ -1758,6 +1994,15 @@ export type Database = {
         | "entrevista_realizada"
         | "matricula"
         | "perdido"
+      leadership_commission_status:
+        | "nao_configurada"
+        | "prevista"
+        | "confirmada"
+        | "paga"
+        | "cancelada"
+        | "estornada"
+      leadership_commission_type: "percentage" | "fixed"
+      leadership_rule_scope: "individual" | "role"
       lost_reason:
         | "sem_resposta"
         | "sem_interesse"
@@ -1949,6 +2194,16 @@ export const Constants = {
         "matricula",
         "perdido",
       ],
+      leadership_commission_status: [
+        "nao_configurada",
+        "prevista",
+        "confirmada",
+        "paga",
+        "cancelada",
+        "estornada",
+      ],
+      leadership_commission_type: ["percentage", "fixed"],
+      leadership_rule_scope: ["individual", "role"],
       lost_reason: [
         "sem_resposta",
         "sem_interesse",
