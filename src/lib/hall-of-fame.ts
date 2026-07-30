@@ -304,11 +304,8 @@ const PODIUM_ACHIEVEMENTS = [
   { type: "third_place", emoji: "🥉", title: "3º lugar" },
 ];
 
-const CATEGORY_EMOJI: Record<string, string> = {
-  calls: "📞", answered: "✅", interested: "✨", interviews: "📅",
-  interviews_done: "🎯", enrollments: "🎓", conversion: "🏹",
-  consistency: "🔁", evolution: "📈",
-};
+/** Emojis/nomes públicos das categorias vêm de hall-titles (fonte única). */
+
 
 async function saveAchievements(
   hofId: string,
