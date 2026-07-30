@@ -97,7 +97,7 @@ function ComissaoLiderancaPage() {
 
 function Content() {
   const qc = useQueryClient();
-  const [period, setPeriod] = useState<Period>("month");
+  const [period, setPeriod] = useState<Period>("mes");
   const [customStart, setCustomStart] = useState(todayIso());
   const [customEnd, setCustomEnd] = useState(todayIso());
   const range = useMemo(() => periodRange(period, customStart, customEnd), [period, customStart, customEnd]);
