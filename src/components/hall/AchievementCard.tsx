@@ -193,15 +193,26 @@ export const AchievementCard = forwardRef<HTMLDivElement, CardProps>(function Ac
     );
   }
 
-  // ── Peça individual ──
+  // ── Peça individual (pódio ou destaque especial) ──
   const person = subject.person;
+  const position = subject.kind === "solo" ? subject.position : 0;
+  const isHighlight = subject.kind === "highlight";
   const photoSize = horizontal ? 250 * u : format === "feed" ? 330 * u : 420 * u;
-  const medal = ["🥇", "🥈", "🥉"][subject.position - 1] ?? "🏅";
+  const medal = isHighlight ? t.emoji : (["🥇", "🥈", "🥉"][position - 1] ?? "🏅");
+  const valueLine = props.showValue && props.valueText
+    ? (
+      <div style={{
+        marginTop: 14 * u, fontSize: 28 * u, fontWeight: 700, color: "rgba(255,255,255,0.82)",
+      }}>
+        {props.valueText}
+      </div>
+    )
+    : null;
 
   const core = (
     <>
       <div style={{ position: "relative", display: "flex", justifyContent: "center" }}>
-        {template === "royalty" && subject.position === 1 && (
+        {template === "royalty" && position === 1 && (
           <div style={{
             position: "absolute", top: -66 * u, left: "50%", transform: "translateX(-50%)",
             fontSize: 74 * u, lineHeight: 1,
@@ -209,7 +220,7 @@ export const AchievementCard = forwardRef<HTMLDivElement, CardProps>(function Ac
             👑
           </div>
         )}
-        {template === "podium" && (
+        {(template === "podium" || isHighlight) && (
           <div style={{
             position: "absolute", top: -56 * u, left: "50%", transform: "translateX(-50%)",
             fontSize: 62 * u, lineHeight: 1,
@@ -230,16 +241,18 @@ export const AchievementCard = forwardRef<HTMLDivElement, CardProps>(function Ac
         <div style={{ marginTop: 16 * u, fontSize: 30 * u, color: accent.text, fontWeight: 600 }}>
           {t.subline}
         </div>
-        {template === "podium" && (
+        {valueLine}
+        {template === "podium" && !isHighlight && (
           <div style={{
             marginTop: 18 * u, fontSize: 88 * u, fontWeight: 900, color: accent.main, lineHeight: 1,
           }}>
-            {subject.position}º
+            {position}º
           </div>
         )}
       </div>
     </>
   );
+
 
   if (horizontal) {
     return (
