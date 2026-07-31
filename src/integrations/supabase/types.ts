@@ -744,12 +744,16 @@ export type Database = {
           period_end: string
           period_label: string
           period_start: string
+          shared_at: string | null
+          shared_by: string | null
           shared_with_collaborator: boolean
           status: string
           subject_user_id: string
           tone: string
           updated_at: string
           updated_by: string | null
+          viewed_at: string | null
+          viewed_by_collaborator: boolean
         }
         Insert: {
           agreed_action?: string
@@ -766,12 +770,16 @@ export type Database = {
           period_end: string
           period_label?: string
           period_start: string
+          shared_at?: string | null
+          shared_by?: string | null
           shared_with_collaborator?: boolean
           status?: string
           subject_user_id: string
           tone?: string
           updated_at?: string
           updated_by?: string | null
+          viewed_at?: string | null
+          viewed_by_collaborator?: boolean
         }
         Update: {
           agreed_action?: string
@@ -788,12 +796,16 @@ export type Database = {
           period_end?: string
           period_label?: string
           period_start?: string
+          shared_at?: string | null
+          shared_by?: string | null
           shared_with_collaborator?: boolean
           status?: string
           subject_user_id?: string
           tone?: string
           updated_at?: string
           updated_by?: string | null
+          viewed_at?: string | null
+          viewed_by_collaborator?: boolean
         }
         Relationships: []
       }
@@ -2434,12 +2446,30 @@ export type Database = {
           phone_normalized: string
         }[]
       }
+      mark_feedback_viewed: { Args: { _id: string }; Returns: boolean }
       my_account_flags: {
         Args: never
         Returns: {
           must_change_password: boolean
           sign_in_count: number
           status: string
+        }[]
+      }
+      my_shared_feedbacks: {
+        Args: never
+        Returns: {
+          admin_name: string
+          agreed_action: string
+          final_feedback: string
+          id: string
+          meeting_date: string
+          next_focus: string
+          period_end: string
+          period_label: string
+          period_start: string
+          shared_at: string
+          viewed_at: string
+          viewed_by_collaborator: boolean
         }[]
       }
       productivity_summary: {
