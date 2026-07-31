@@ -131,14 +131,17 @@ function AuthedLayout() {
           <Button size="sm" variant="ghost" onClick={() => signOut()}><LogOut className="h-4 w-4" /></Button>
         </header>
         <nav className="flex gap-1 overflow-x-auto border-b bg-card px-2 py-2 md:hidden">
-          {NAV.map((n) => (
+          {NAV.map((n) => {
+            const count = n.to === "/hoje" ? pendingCount : n.to === "/meus-feedbacks" ? feedbackCount : 0;
+            return (
             <Link key={n.to} to={n.to} className="whitespace-nowrap rounded-md px-3 py-1.5 text-xs hover:bg-accent relative" activeProps={{ className: "bg-primary text-primary-foreground" }}>
               {n.label}
-              {n.to === "/hoje" && pendingCount > 0 && (
+              {count > 0 && (
                 <span className="ml-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-semibold text-white">
-                  {pendingCount > 99 ? "99+" : pendingCount}
+                  {count > 99 ? "99+" : count}
                 </span>
               )}
+
             </Link>
           ))}
         </nav>
