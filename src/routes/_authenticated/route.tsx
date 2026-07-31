@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, useNavigate, useLocation, Link } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useBrand } from "@/lib/brand";
 import { LayoutDashboard, Users, Kanban, RotateCw, BarChart3, LogOut, Settings, Upload, TrendingDown, Sparkles, Trophy, Calendar, PhoneCall, Link2, ClipboardCheck, Activity, Tv, User as UserIcon, Shield, Package, Wallet, MessageSquare } from "lucide-react";
@@ -11,6 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { ReturnNotificationWatcher } from "@/components/ReturnNotificationWatcher";
 import { TaskNotificationWatcher } from "@/components/TaskNotificationWatcher";
 import { useTodayActionsCount } from "@/lib/today-queue";
+import { useMyFeedbackNotifications } from "@/lib/my-feedbacks";
+
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
