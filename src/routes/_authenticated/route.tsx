@@ -2,7 +2,7 @@ import { createFileRoute, Outlet, useNavigate, useLocation, Link } from "@tansta
 import { useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useBrand } from "@/lib/brand";
-import { LayoutDashboard, Users, Kanban, RotateCw, BarChart3, LogOut, Settings, Upload, TrendingDown, Sparkles, Trophy, Calendar, PhoneCall, Link2, ClipboardCheck, Activity, Tv, User as UserIcon, Shield, Package, Wallet } from "lucide-react";
+import { LayoutDashboard, Users, Kanban, RotateCw, BarChart3, LogOut, Settings, Upload, TrendingDown, Sparkles, Trophy, Calendar, PhoneCall, Link2, ClipboardCheck, Activity, Tv, User as UserIcon, Shield, Package, Wallet, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ChangePasswordDialog } from "@/components/ChangePasswordDialog";
 import { Badge } from "@/components/ui/badge";
@@ -48,6 +48,7 @@ function AuthedLayout() {
         { to: "/painel-adm", label: "Painel ADM", icon: Trophy } as const,
         { to: "/processos-comerciais", label: "Processos", icon: Activity } as const,
         { to: "/comissao-lideranca", label: "Comissão da Liderança", icon: Wallet } as const,
+        { to: "/feedback-individual", label: "Feedback Individual", icon: MessageSquare } as const,
         { to: "/integracao-arena", label: "Integração Arena", icon: Link2 } as const,
         { to: "/usuarios-acessos", label: "Usuários e Acessos", icon: Shield } as const,
         { to: "/equipes", label: "Equipes", icon: Users } as const,

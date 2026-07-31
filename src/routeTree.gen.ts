@@ -30,6 +30,7 @@ import { Route as AuthenticatedImportarRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedHojeRouteImport } from './routes/_authenticated/hoje'
 import { Route as AuthenticatedFunilRouteImport } from './routes/_authenticated/funil'
 import { Route as AuthenticatedFilaRouteImport } from './routes/_authenticated/fila'
+import { Route as AuthenticatedFeedbackIndividualRouteImport } from './routes/_authenticated/feedback-individual'
 import { Route as AuthenticatedEquipesRouteImport } from './routes/_authenticated/equipes'
 import { Route as AuthenticatedDiscadorRouteImport } from './routes/_authenticated/discador'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -148,6 +149,12 @@ const AuthenticatedFilaRoute = AuthenticatedFilaRouteImport.update({
   path: '/fila',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedFeedbackIndividualRoute =
+  AuthenticatedFeedbackIndividualRouteImport.update({
+    id: '/feedback-individual',
+    path: '/feedback-individual',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedEquipesRoute = AuthenticatedEquipesRouteImport.update({
   id: '/equipes',
   path: '/equipes',
@@ -204,6 +211,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/discador': typeof AuthenticatedDiscadorRoute
   '/equipes': typeof AuthenticatedEquipesRoute
+  '/feedback-individual': typeof AuthenticatedFeedbackIndividualRoute
   '/fila': typeof AuthenticatedFilaRoute
   '/funil': typeof AuthenticatedFunilRoute
   '/hoje': typeof AuthenticatedHojeRoute
@@ -234,6 +242,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/discador': typeof AuthenticatedDiscadorRoute
   '/equipes': typeof AuthenticatedEquipesRoute
+  '/feedback-individual': typeof AuthenticatedFeedbackIndividualRoute
   '/fila': typeof AuthenticatedFilaRoute
   '/funil': typeof AuthenticatedFunilRoute
   '/hoje': typeof AuthenticatedHojeRoute
@@ -266,6 +275,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/discador': typeof AuthenticatedDiscadorRoute
   '/_authenticated/equipes': typeof AuthenticatedEquipesRoute
+  '/_authenticated/feedback-individual': typeof AuthenticatedFeedbackIndividualRoute
   '/_authenticated/fila': typeof AuthenticatedFilaRoute
   '/_authenticated/funil': typeof AuthenticatedFunilRoute
   '/_authenticated/hoje': typeof AuthenticatedHojeRoute
@@ -298,6 +308,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/discador'
     | '/equipes'
+    | '/feedback-individual'
     | '/fila'
     | '/funil'
     | '/hoje'
@@ -328,6 +339,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/discador'
     | '/equipes'
+    | '/feedback-individual'
     | '/fila'
     | '/funil'
     | '/hoje'
@@ -359,6 +371,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/discador'
     | '/_authenticated/equipes'
+    | '/_authenticated/feedback-individual'
     | '/_authenticated/fila'
     | '/_authenticated/funil'
     | '/_authenticated/hoje'
@@ -534,6 +547,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFilaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/feedback-individual': {
+      id: '/_authenticated/feedback-individual'
+      path: '/feedback-individual'
+      fullPath: '/feedback-individual'
+      preLoaderRoute: typeof AuthenticatedFeedbackIndividualRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/equipes': {
       id: '/_authenticated/equipes'
       path: '/equipes'
@@ -602,6 +622,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDiscadorRoute: typeof AuthenticatedDiscadorRoute
   AuthenticatedEquipesRoute: typeof AuthenticatedEquipesRoute
+  AuthenticatedFeedbackIndividualRoute: typeof AuthenticatedFeedbackIndividualRoute
   AuthenticatedFilaRoute: typeof AuthenticatedFilaRoute
   AuthenticatedFunilRoute: typeof AuthenticatedFunilRoute
   AuthenticatedHojeRoute: typeof AuthenticatedHojeRoute
@@ -631,6 +652,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDiscadorRoute: AuthenticatedDiscadorRoute,
   AuthenticatedEquipesRoute: AuthenticatedEquipesRoute,
+  AuthenticatedFeedbackIndividualRoute: AuthenticatedFeedbackIndividualRoute,
   AuthenticatedFilaRoute: AuthenticatedFilaRoute,
   AuthenticatedFunilRoute: AuthenticatedFunilRoute,
   AuthenticatedHojeRoute: AuthenticatedHojeRoute,
@@ -662,13 +684,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
