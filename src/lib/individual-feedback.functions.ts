@@ -66,7 +66,7 @@ function block(title: string, s: z.infer<typeof Snapshot>): string {
     `- leads perdidos: ${fmt(s.perdidos)}`,
     `- ligações feitas: ${fmt(s.ligacoes_feitas)} (atendidas: ${fmt(s.ligacoes_atendidas)})`,
     `- interessados gerados: ${fmt(s.interessados_gerados)}`,
-    `- leads trabalhados: ${fmt(s.leads_trabalhados)}`,
+    `- leads com contato registrado (contato marcado como feito, leads únicos): ${fmt(s.leads_trabalhados)}`,
     `- taxa de comparecimento: ${s.taxa_comparecimento === null ? "sem dado" : fmt(s.taxa_comparecimento) + "%"}`,
     `- conversão de entrevistas realizadas em matrículas: ${s.taxa_conversao_realizadas === null ? "sem dado" : fmt(s.taxa_conversao_realizadas) + "%"}`,
     `- pontuação do placar: ${fmt(s.pontuacao)}`,
