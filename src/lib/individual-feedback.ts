@@ -301,6 +301,8 @@ export async function saveFeedback(input: {
     next_focus: input.nextFocus,
     agreed_action: input.agreedAction,
     shared_with_collaborator: input.shared,
+    shared_at: input.shared ? new Date().toISOString() : null,
+    shared_by: input.shared ? input.createdBy : null,
     status: "salvo",
   };
 
