@@ -392,31 +392,41 @@ function FeedbackIndividualPage() {
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <MetricCard label="Entrevistas agendadas" value={fmtNum(metrics.current.entrevistas_marcadas)}
               prev={metrics.previous.entrevistas_marcadas} cur={metrics.current.entrevistas_marcadas}
-              avg={metrics.teamAverage.entrevistas_marcadas} goal={metrics.goals.entrevistas} />
+              avg={metrics.teamAverage.entrevistas_marcadas} goal={metrics.goals.entrevistas}
+              hint="Leads únicos cuja data de entrevista agendada (data original, se houve reagendamento) cai dentro do período. Reagendamento não gera contagem nova." />
             <MetricCard label="Entrevistas realizadas" value={fmtNum(metrics.current.entrevistas_realizadas)}
               prev={metrics.previous.entrevistas_realizadas} cur={metrics.current.entrevistas_realizadas}
-              avg={metrics.teamAverage.entrevistas_realizadas} />
+              avg={metrics.teamAverage.entrevistas_realizadas}
+              hint="Leads únicos com data de realização da entrevista dentro do período." />
             <MetricCard label="Matrículas" value={fmtNum(metrics.current.matriculas)}
               prev={metrics.previous.matriculas} cur={metrics.current.matriculas}
-              avg={metrics.teamAverage.matriculas} goal={metrics.goals.matriculas} />
+              avg={metrics.teamAverage.matriculas} goal={metrics.goals.matriculas}
+              hint="Leads únicos com data real da matrícula dentro do período." />
             <MetricCard label="Taxa de comparecimento" value={fmtPct(metrics.current.taxa_comparecimento)}
               prev={metrics.previous.taxa_comparecimento} cur={metrics.current.taxa_comparecimento}
-              avg={metrics.teamAverage.taxa_comparecimento} />
+              avg={metrics.teamAverage.taxa_comparecimento}
+              hint="Entrevistas realizadas ÷ entrevistas agendadas × 100." />
             <MetricCard label="Conversão realizadas → matrículas" value={fmtPct(metrics.current.taxa_conversao_realizadas)}
               prev={metrics.previous.taxa_conversao_realizadas} cur={metrics.current.taxa_conversao_realizadas}
-              avg={metrics.teamAverage.taxa_conversao_realizadas} />
+              avg={metrics.teamAverage.taxa_conversao_realizadas}
+              hint="Matrículas ÷ entrevistas realizadas × 100." />
             <MetricCard label="Leads perdidos" value={fmtNum(metrics.current.perdidos)}
               prev={metrics.previous.perdidos} cur={metrics.current.perdidos}
-              avg={metrics.teamAverage.perdidos} invert />
+              avg={metrics.teamAverage.perdidos} invert
+              hint="Leads únicos que registraram evento de perda no período (histórico do lead)." />
             <MetricCard label="Interessados gerados" value={fmtNum(metrics.current.interessados_gerados)}
               prev={metrics.previous.interessados_gerados} cur={metrics.current.interessados_gerados}
-              avg={metrics.teamAverage.interessados_gerados} />
+              avg={metrics.teamAverage.interessados_gerados}
+              hint="Leads únicos que passaram para o status Interessado (ou avançaram além dele) dentro do período." />
             <MetricCard label="Ligações feitas" value={fmtNum(metrics.current.ligacoes_feitas)}
               prev={metrics.previous.ligacoes_feitas} cur={metrics.current.ligacoes_feitas}
-              avg={metrics.teamAverage.ligacoes_feitas} goal={metrics.goals.ligacoes} />
-            <MetricCard label="Leads trabalhados" value={fmtNum(metrics.current.leads_trabalhados)}
+              avg={metrics.teamAverage.ligacoes_feitas} goal={metrics.goals.ligacoes}
+              hint="Quantidade de tentativas de ligação registradas no discador no período (atividades, não leads únicos)." />
+            <MetricCard label="Leads com contato registrado" value={fmtNum(metrics.current.leads_trabalhados)}
               prev={metrics.previous.leads_trabalhados} cur={metrics.current.leads_trabalhados}
-              avg={metrics.teamAverage.leads_trabalhados} />
+              avg={metrics.teamAverage.leads_trabalhados}
+              hint="Leads ÚNICOS do colaborador cujo campo “último contato” foi marcado dentro do período. Esse campo é preenchido apenas quando o vendedor marca o contato como feito na página Hoje. Não inclui ligações do discador, follow-ups, mudanças de etapa nem edições do lead." />
+
           </div>
         </>
       )}
