@@ -8,6 +8,7 @@ import {
   ArrowUp,
   ChevronDown,
   Copy,
+  Info,
   Loader2,
   Minus,
   Save,
@@ -27,6 +28,7 @@ import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   PERIOD_LABELS,
   formatRangeLabel,
