@@ -579,6 +579,7 @@ function MetricCard({
   avg,
   goal,
   invert,
+  hint,
 }: {
   label: string;
   value: string;
@@ -587,6 +588,7 @@ function MetricCard({
   avg: number | null;
   goal?: number | null;
   invert?: boolean;
+  hint?: string;
 }) {
   const trend = trendOf(cur, prev);
   const rel = vsAverage(cur, avg);
@@ -596,7 +598,25 @@ function MetricCard({
   return (
     <Card>
       <CardContent className="p-4">
-        <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
+        <div className="flex items-start gap-1.5">
+          <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
+          {hint && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  aria-label={`Como este indicador é calculado: ${label}`}
+                  className="mt-0.5 text-muted-foreground/70 transition-colors hover:text-foreground"
+                >
+                  <Info className="h-3.5 w-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-xs text-xs leading-relaxed">
+                {hint}
+              </TooltipContent>
+            </Tooltip>
+          )}
+        </div>
         <div className="mt-1 text-2xl font-bold tabular-nums">{value}</div>
         <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
           <span className={good ? "text-emerald-600" : bad ? "text-rose-600" : "text-muted-foreground"}>
