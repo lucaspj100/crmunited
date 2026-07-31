@@ -36,6 +36,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
 import { Route as AuthenticatedComissaoLiderancaRouteImport } from './routes/_authenticated/comissao-lideranca'
 import { Route as AuthenticatedCheckoutDoDiaRouteImport } from './routes/_authenticated/checkout-do-dia'
+import { Route as AuthenticatedAssistentesIaRouteImport } from './routes/_authenticated/assistentes-ia'
 import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
 
 const AuthRoute = AuthRouteImport.update({
@@ -180,6 +181,12 @@ const AuthenticatedCheckoutDoDiaRoute =
     path: '/checkout-do-dia',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAssistentesIaRoute =
+  AuthenticatedAssistentesIaRouteImport.update({
+    id: '/assistentes-ia',
+    path: '/assistentes-ia',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAgendaRoute = AuthenticatedAgendaRouteImport.update({
   id: '/agenda',
   path: '/agenda',
@@ -190,6 +197,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/agenda': typeof AuthenticatedAgendaRoute
+  '/assistentes-ia': typeof AuthenticatedAssistentesIaRoute
   '/checkout-do-dia': typeof AuthenticatedCheckoutDoDiaRoute
   '/comissao-lideranca': typeof AuthenticatedComissaoLiderancaRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
@@ -219,6 +227,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/agenda': typeof AuthenticatedAgendaRoute
+  '/assistentes-ia': typeof AuthenticatedAssistentesIaRoute
   '/checkout-do-dia': typeof AuthenticatedCheckoutDoDiaRoute
   '/comissao-lideranca': typeof AuthenticatedComissaoLiderancaRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
@@ -250,6 +259,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/agenda': typeof AuthenticatedAgendaRoute
+  '/_authenticated/assistentes-ia': typeof AuthenticatedAssistentesIaRoute
   '/_authenticated/checkout-do-dia': typeof AuthenticatedCheckoutDoDiaRoute
   '/_authenticated/comissao-lideranca': typeof AuthenticatedComissaoLiderancaRoute
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
@@ -281,6 +291,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/agenda'
+    | '/assistentes-ia'
     | '/checkout-do-dia'
     | '/comissao-lideranca'
     | '/configuracoes'
@@ -310,6 +321,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/agenda'
+    | '/assistentes-ia'
     | '/checkout-do-dia'
     | '/comissao-lideranca'
     | '/configuracoes'
@@ -340,6 +352,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/agenda'
+    | '/_authenticated/assistentes-ia'
     | '/_authenticated/checkout-do-dia'
     | '/_authenticated/comissao-lideranca'
     | '/_authenticated/configuracoes'
@@ -563,6 +576,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCheckoutDoDiaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/assistentes-ia': {
+      id: '/_authenticated/assistentes-ia'
+      path: '/assistentes-ia'
+      fullPath: '/assistentes-ia'
+      preLoaderRoute: typeof AuthenticatedAssistentesIaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/agenda': {
       id: '/_authenticated/agenda'
       path: '/agenda'
@@ -575,6 +595,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAgendaRoute: typeof AuthenticatedAgendaRoute
+  AuthenticatedAssistentesIaRoute: typeof AuthenticatedAssistentesIaRoute
   AuthenticatedCheckoutDoDiaRoute: typeof AuthenticatedCheckoutDoDiaRoute
   AuthenticatedComissaoLiderancaRoute: typeof AuthenticatedComissaoLiderancaRoute
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
@@ -603,6 +624,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAgendaRoute: AuthenticatedAgendaRoute,
+  AuthenticatedAssistentesIaRoute: AuthenticatedAssistentesIaRoute,
   AuthenticatedCheckoutDoDiaRoute: AuthenticatedCheckoutDoDiaRoute,
   AuthenticatedComissaoLiderancaRoute: AuthenticatedComissaoLiderancaRoute,
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
