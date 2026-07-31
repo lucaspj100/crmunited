@@ -21,7 +21,7 @@ const BASE_NAV = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/hoje", label: "Hoje", icon: Sparkles },
   { to: "/discador", label: "Discador", icon: PhoneCall },
-  { to: "/scripts", label: "Scripts", icon: FileText },
+  { to: "/assistentes-ia", label: "Assistentes IA", icon: Sparkles },
   { to: "/leads", label: "Leads", icon: Users },
   { to: "/funil", label: "Funil", icon: Kanban },
   { to: "/agenda", label: "Agenda", icon: Calendar },
