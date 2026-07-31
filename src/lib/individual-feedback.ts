@@ -248,10 +248,15 @@ export type FeedbackRow = {
   next_focus: string;
   agreed_action: string;
   shared_with_collaborator: boolean;
+  shared_at: string | null;
+  shared_by: string | null;
+  viewed_by_collaborator: boolean;
+  viewed_at: string | null;
   status: string;
   created_at: string;
   updated_at: string;
 };
+
 
 export async function listFeedbacks(subjectUserId: string): Promise<FeedbackRow[]> {
   const { data, error } = await supabase
