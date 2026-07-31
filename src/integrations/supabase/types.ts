@@ -101,6 +101,36 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_assistant_configs: {
+        Row: {
+          assistant: Database["public"]["Enums"]["ai_assistant_kind"]
+          enabled_modes: string[]
+          extra_instructions: string
+          is_active: boolean
+          model: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          assistant: Database["public"]["Enums"]["ai_assistant_kind"]
+          enabled_modes?: string[]
+          extra_instructions?: string
+          is_active?: boolean
+          model?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          assistant?: Database["public"]["Enums"]["ai_assistant_kind"]
+          enabled_modes?: string[]
+          extra_instructions?: string
+          is_active?: boolean
+          model?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       ai_assistant_settings: {
         Row: {
           course_information: string
@@ -131,6 +161,409 @@ export type Database = {
           prohibited_claims?: string
           updated_at?: string
           updated_by?: string | null
+        }
+        Relationships: []
+      }
+      ai_campaigns: {
+        Row: {
+          allowed_phrases: string
+          allowed_urgency: string
+          approved_message: string
+          conditions: string
+          created_at: string
+          created_by: string | null
+          ends_on: string | null
+          forbidden_phrases: string
+          id: string
+          is_active: boolean
+          name: string
+          reason: string
+          reference_month: string
+          starts_on: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          allowed_phrases?: string
+          allowed_urgency?: string
+          approved_message?: string
+          conditions?: string
+          created_at?: string
+          created_by?: string | null
+          ends_on?: string | null
+          forbidden_phrases?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          reason?: string
+          reference_month?: string
+          starts_on?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          allowed_phrases?: string
+          allowed_urgency?: string
+          approved_message?: string
+          conditions?: string
+          created_at?: string
+          created_by?: string | null
+          ends_on?: string | null
+          forbidden_phrases?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          reason?: string
+          reference_month?: string
+          starts_on?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      ai_examples: {
+        Row: {
+          assistant: Database["public"]["Enums"]["ai_assistant_kind"]
+          category: string
+          commercial_risk: string
+          context: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          is_approved: boolean
+          lead_message: string
+          objective: string
+          reason: string
+          recommended_fix: string
+          related_rule: string
+          response: string
+          stage: string
+          strategy: string
+          tags: string[]
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          assistant?: Database["public"]["Enums"]["ai_assistant_kind"]
+          category?: string
+          commercial_risk?: string
+          context?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          is_approved?: boolean
+          lead_message?: string
+          objective?: string
+          reason?: string
+          recommended_fix?: string
+          related_rule?: string
+          response?: string
+          stage?: string
+          strategy?: string
+          tags?: string[]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          assistant?: Database["public"]["Enums"]["ai_assistant_kind"]
+          category?: string
+          commercial_risk?: string
+          context?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          is_approved?: boolean
+          lead_message?: string
+          objective?: string
+          reason?: string
+          recommended_fix?: string
+          related_rule?: string
+          response?: string
+          stage?: string
+          strategy?: string
+          tags?: string[]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      ai_interactions: {
+        Row: {
+          assistant: Database["public"]["Enums"]["ai_assistant_kind"]
+          attachments: Json
+          copied_message: string | null
+          created_at: string
+          feedback: string | null
+          feedback_comment: string | null
+          id: string
+          input_text: string
+          instruction: string
+          knowledge_version: string
+          lead_id: string | null
+          mode: string
+          response: Json
+          sources: Json
+          tones: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assistant: Database["public"]["Enums"]["ai_assistant_kind"]
+          attachments?: Json
+          copied_message?: string | null
+          created_at?: string
+          feedback?: string | null
+          feedback_comment?: string | null
+          id?: string
+          input_text?: string
+          instruction?: string
+          knowledge_version?: string
+          lead_id?: string | null
+          mode?: string
+          response?: Json
+          sources?: Json
+          tones?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assistant?: Database["public"]["Enums"]["ai_assistant_kind"]
+          attachments?: Json
+          copied_message?: string | null
+          created_at?: string
+          feedback?: string | null
+          feedback_comment?: string | null
+          id?: string
+          input_text?: string
+          instruction?: string
+          knowledge_version?: string
+          lead_id?: string | null
+          mode?: string
+          response?: Json
+          sources?: Json
+          tones?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_interactions_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_knowledge_items: {
+        Row: {
+          assistants: Database["public"]["Enums"]["ai_assistant_kind"][]
+          category: string
+          content: string
+          created_at: string
+          created_by: string | null
+          description: string
+          id: string
+          is_active: boolean
+          kind: Database["public"]["Enums"]["ai_knowledge_kind"]
+          priority: number
+          structured: Json
+          title: string
+          updated_at: string
+          updated_by: string | null
+          valid_from: string
+          valid_until: string | null
+        }
+        Insert: {
+          assistants?: Database["public"]["Enums"]["ai_assistant_kind"][]
+          category?: string
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          id?: string
+          is_active?: boolean
+          kind?: Database["public"]["Enums"]["ai_knowledge_kind"]
+          priority?: number
+          structured?: Json
+          title: string
+          updated_at?: string
+          updated_by?: string | null
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Update: {
+          assistants?: Database["public"]["Enums"]["ai_assistant_kind"][]
+          category?: string
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          id?: string
+          is_active?: boolean
+          kind?: Database["public"]["Enums"]["ai_knowledge_kind"]
+          priority?: number
+          structured?: Json
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Relationships: []
+      }
+      ai_knowledge_versions: {
+        Row: {
+          action: string
+          assistants: Database["public"]["Enums"]["ai_assistant_kind"][]
+          changed_at: string
+          changed_by: string | null
+          id: string
+          new_data: Json | null
+          previous_data: Json | null
+          reason: string
+          target_id: string | null
+          target_table: string
+        }
+        Insert: {
+          action?: string
+          assistants?: Database["public"]["Enums"]["ai_assistant_kind"][]
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          new_data?: Json | null
+          previous_data?: Json | null
+          reason?: string
+          target_id?: string | null
+          target_table: string
+        }
+        Update: {
+          action?: string
+          assistants?: Database["public"]["Enums"]["ai_assistant_kind"][]
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          new_data?: Json | null
+          previous_data?: Json | null
+          reason?: string
+          target_id?: string | null
+          target_table?: string
+        }
+        Relationships: []
+      }
+      ai_negotiation_contexts: {
+        Row: {
+          already_reduced: string
+          authorization_data: Json
+          created_at: string
+          current_condition: Json
+          id: string
+          lead_id: string
+          narrative: string
+          not_changed_yet: string
+          presented: Json
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          already_reduced?: string
+          authorization_data?: Json
+          created_at?: string
+          current_condition?: Json
+          id?: string
+          lead_id: string
+          narrative?: string
+          not_changed_yet?: string
+          presented?: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          already_reduced?: string
+          authorization_data?: Json
+          created_at?: string
+          current_condition?: Json
+          id?: string
+          lead_id?: string
+          narrative?: string
+          not_changed_yet?: string
+          presented?: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_negotiation_contexts_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: true
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_objections: {
+        Row: {
+          assistants: Database["public"]["Enums"]["ai_assistant_kind"][]
+          category: string
+          created_at: string
+          created_by: string | null
+          diagnostic_questions: string
+          id: string
+          is_active: boolean
+          mistakes_to_avoid: string
+          objection: string
+          possible_causes: string
+          possible_condition: string
+          recommended_approach: string
+          updated_at: string
+          updated_by: string | null
+          when_to_ask_decision: string
+          when_to_close: string
+          when_to_followup: string
+          when_to_work_value: string
+        }
+        Insert: {
+          assistants?: Database["public"]["Enums"]["ai_assistant_kind"][]
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          diagnostic_questions?: string
+          id?: string
+          is_active?: boolean
+          mistakes_to_avoid?: string
+          objection: string
+          possible_causes?: string
+          possible_condition?: string
+          recommended_approach?: string
+          updated_at?: string
+          updated_by?: string | null
+          when_to_ask_decision?: string
+          when_to_close?: string
+          when_to_followup?: string
+          when_to_work_value?: string
+        }
+        Update: {
+          assistants?: Database["public"]["Enums"]["ai_assistant_kind"][]
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          diagnostic_questions?: string
+          id?: string
+          is_active?: boolean
+          mistakes_to_avoid?: string
+          objection?: string
+          possible_causes?: string
+          possible_condition?: string
+          recommended_approach?: string
+          updated_at?: string
+          updated_by?: string | null
+          when_to_ask_decision?: string
+          when_to_close?: string
+          when_to_followup?: string
+          when_to_work_value?: string
         }
         Relationships: []
       }
@@ -1995,6 +2428,20 @@ export type Database = {
       teams_overview: { Args: never; Returns: Json }
     }
     Enums: {
+      ai_assistant_kind: "prospeccao" | "entrevista" | "negociacao"
+      ai_knowledge_kind:
+        | "conhecimento"
+        | "curso"
+        | "valores"
+        | "limites"
+        | "materiais"
+        | "inicio"
+        | "estrategia"
+        | "frase_aprovada"
+        | "frase_proibida"
+        | "spin"
+        | "criterio"
+        | "comportamento"
       app_role: "admin" | "franqueado" | "vendedor"
       lead_status:
         | "novo"
@@ -2194,6 +2641,21 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      ai_assistant_kind: ["prospeccao", "entrevista", "negociacao"],
+      ai_knowledge_kind: [
+        "conhecimento",
+        "curso",
+        "valores",
+        "limites",
+        "materiais",
+        "inicio",
+        "estrategia",
+        "frase_aprovada",
+        "frase_proibida",
+        "spin",
+        "criterio",
+        "comportamento",
+      ],
       app_role: ["admin", "franqueado", "vendedor"],
       lead_status: [
         "novo",
