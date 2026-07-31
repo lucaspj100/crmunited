@@ -567,6 +567,57 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_usage_logs: {
+        Row: {
+          created_at: string
+          duration_ms: number
+          error_message: string | null
+          estimated_cost_usd: number
+          feature: string
+          id: string
+          input_tokens: number
+          metadata: Json
+          model: string
+          output_tokens: number
+          provider: string
+          status: string
+          total_tokens: number
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          duration_ms?: number
+          error_message?: string | null
+          estimated_cost_usd?: number
+          feature: string
+          id?: string
+          input_tokens?: number
+          metadata?: Json
+          model: string
+          output_tokens?: number
+          provider: string
+          status?: string
+          total_tokens?: number
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          duration_ms?: number
+          error_message?: string | null
+          estimated_cost_usd?: number
+          feature?: string
+          id?: string
+          input_tokens?: number
+          metadata?: Json
+          model?: string
+          output_tokens?: number
+          provider?: string
+          status?: string
+          total_tokens?: number
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           brand_name: string

@@ -66,7 +66,7 @@ function MyFeedbacksPage() {
 
   function close() {
     setOpenId(null);
-    if (id) navigate({ to: "/meus-feedbacks", search: {}, replace: true });
+    if (id) navigate({ to: "/meus-feedbacks", search: () => ({}), replace: true });
   }
 
   async function copy(text: string) {
