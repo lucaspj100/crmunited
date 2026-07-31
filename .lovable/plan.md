@@ -1,61 +1,69 @@
-## Diagnóstico da estrutura atual
+# Central de Assistentes IA
 
-**Matrícula** não é uma tabela própria: é o próprio lead em `leads` com `status = 'matricula'`.
-- Colaborador responsável: `leads.owner_id`
-- Valor da matrícula: `leads.enrollment_value` (já existe e é separado)
-- Material: `leads.material_value` + tabela dedicada `material_sales` (com regras de bônus próprias)
-- Mensalidade: `leads.monthly_fee`
-- Data real: `leads.enrollment_date`
-- Evento de conclusão: `registerEnrollmentAndSyncArena()` em `src/lib/enrollment.ts` grava o lead, cria `lead_events` tipo `enrolled` e dispara a Arena
-- Cancelamento hoje: o lead sai de `matricula` (vai para `perdido` ou outro status) — registrado em `lead_events` (`status_change`) e `lost_at`
+## O que já existe e será reaproveitado
 
-**Conclusão importante:** os valores já são campos distintos (matrícula / material / mensalidade). Não é preciso quebrar nada — a base de cálculo será exclusivamente `enrollment_value`.
+- Página `/scripts` com biblioteca de scripts (`sales_scripts`) + painel de IA (`AiAssistantPanel`).
+- Geração de IA já segura: server function autenticada `generateAssistantReply` → gateway Lovable AI (chave só no servidor). Não há Edge Function de IA; nada de chave no frontend.
+- Base de conhecimento inicial em `ai_assistant_settings` (instruções, curso, valores, objeções, proibições) — será mantida e migrada para a nova estrutura sem apagar nada.
+- Permissões: `has_role(uid,'admin'|'franqueado'|'vendedor')`, leads com dono (`owner_id`) e RLS já vigente. Vendedor continua vendo apenas os próprios leads.
+- `sales_scripts` permanece no banco (sai apenas da interface).
 
-**Cargos**: hoje existem apenas os perfis `admin`, `franqueado`, `vendedor` em `user_roles`. Não existem "consultor / supervisor / gerente". A regra por cargo será ancorada nesses perfis existentes (evita criar um segundo sistema de cargos). A regra individual por colaborador cobre qualquer exceção.
+## Interface
 
-**Permissões**: `has_role(uid,'admin')` já existe e é o padrão do projeto; o menu já filtra por `isAdmin`.
+- Menu: "Scripts" → "Assistentes IA" (rota `/scripts` mantida para não quebrar links; alias `/assistentes-ia`).
+- Página com seletor de assistente: Prospecção, Entrevista, Negociação — cada um com seus modos, campos e alertas próprios.
+- Entrada unificada: texto, Ctrl + V de print (prioritário), arrastar/soltar, clique, PNG/JPG/JPEG/WEBP/PDF/TXT, prévia com nome, tamanho, ampliar, remover, substituir, estados de erro/carregando. Compressão de imagens grandes no cliente.
+- Campo "O que você precisa fazer agora?", chips de tom, Ctrl + Enter para gerar, Escape para fechar prévia.
+- Resposta em blocos: Leitura da situação, Estratégia recomendada, Mensagem pronta (editável, copiar só a mensagem), Alerta comercial. Botões de refinamento (mais curta, mais natural, mais persuasiva, mais empática, perguntar antes, outra versão).
+- Seleção de lead do CRM alimentando o contexto (respeitando RLS).
+- Feedback do vendedor (funcionou / não funcionou / precisa melhorar + comentário) e histórico próprio.
+- "Base consultada" (regras, tabela, campanha, versão) visível só para admin.
 
-## Tabelas novas (nenhuma tabela existente é alterada)
+## Gestão da IA (somente admin)
 
-1. `leadership_commission_rules` — escopo `individual` (employee_id) ou `role` (role app_role), tipo `percentage`/`fixed`, valor, `valid_from`, `valid_until`, `is_active`, auditoria.
-   - Índice único parcial garantindo uma regra ativa por colaborador e por cargo na mesma vigência.
-2. `leadership_commissions` — um registro por matrícula (`UNIQUE (lead_id)`), com snapshots: nome do aluno, colaborador, cargo, data e valor da matrícula, valor do material (apenas informativo), tipo/percentual/valor fixo aplicados, valor final, status da matrícula, status da comissão (`prevista|confirmada|paga|cancelada|estornada|nao_configurada`), data de pagamento, observação.
-3. `leadership_commission_audit_logs` — ação, dados anteriores/novos, motivo, autor, data.
+Abas: conhecimento comercial, produtos/curso, valores e condições, limites de autonomia, materiais, formas de início, campanhas, estratégias, objeções, respostas aprovadas, respostas inadequadas, Laboratório da IA, histórico de alterações, configuração dos assistentes.
 
-Funções/triggers:
-- `resolve_leadership_commission_rule(employee_id, date)` — individual tem prioridade sobre cargo; sem regra → `nao_configurada`, sem inventar percentual.
-- Trigger em `leads`: ao entrar em `matricula` cria a comissão (idempotente por `lead_id`); ao sair de `matricula` aplica prevista→cancelada, confirmada/paga→estornada. Nunca apaga registros, nunca recalcula histórico.
+Tudo editável sem mexer em código, com título, categoria, assistentes afetados, status, prioridade, vigência, autor e data. Laboratório permite simular cenário e aprovar/corrigir/transformar em regra, com escopo explícito antes de salvar (nunca regra global automática).
 
-## RLS
+## Tabelas novas (nenhuma tabela existente é apagada)
 
-Todas as três tabelas: `GRANT` só para `authenticated` + `service_role`, RLS ativa e **todas** as policies (select/insert/update) exigindo `has_role(auth.uid(),'admin')`. Vendedor/franqueado não leem nada nem via API direta. A rota também é bloqueada no frontend e o menu só aparece para admin.
+1. `ai_knowledge_items` — base editável: `kind` (conhecimento, curso, valor, limite, material, inicio, estrategia, objecao, frase_aprovada, frase_proibida, spin, criterio), título, categoria, conteúdo (texto + `jsonb` para estruturas como tabela de preços/limites), assistentes afetados (array), prioridade, vigência, ativo, autor/atualizador.
+2. `ai_campaigns` — campanha do mês: nome, mês, motivo, mensagem aprovada, condições, início/fim reais, urgência permitida, frases permitidas/proibidas, ativo.
+3. `ai_objections` — objeção, causas, perguntas de diagnóstico, erros a evitar, abordagem, quando trabalhar valor, condição possível, quando pedir decisão/follow-up/encerrar.
+4. `ai_examples` — respostas aprovadas e inadequadas: contexto, mensagem do lead, estágio, objetivo, estratégia, resposta, motivo, risco, correção, assistente, categoria, tags, `is_approved`.
+5. `ai_assistant_configs` — comportamento por assistente: system prompt adicional, modos habilitados, modelo, temperatura lógica, ativo.
+6. `ai_knowledge_versions` — versionamento de tudo acima: tabela alvo, registro, versão anterior/nova (`jsonb`), motivo, autor, data, assistentes afetados; permite comparar e restaurar.
+7. `ai_interactions` — histórico: usuário, assistente, lead, modo, entrada, metadados dos arquivos (sem conteúdo sensível), objetivo, resposta, mensagem copiada, versão da base, feedback e comentário.
+8. `ai_negotiation_contexts` — condição apresentada, condição atual, o que já foi reduzido, contexto livre e autorização especial (autorizado por, item, condição, forma de pagamento, validade, observação), por lead.
 
-## Interface (`/comissao-lideranca`, só admin)
+Migração de dados: os valores da tabela comercial, materiais, limites de autonomia, regras de início e objeções descritos no pedido entram como `INSERT` iniciais em `ai_knowledge_items` / `ai_objections`, para o admin editar depois pela tela.
 
-- Cards de resumo do período: prevista, confirmada, paga, estornada, total líquido (`confirmada + paga − estornada`, sem dupla contagem), qtd. de matrículas com comissão, qtd. sem configuração.
-- Aba **Configuração de comissões**: tabela de colaboradores (nome, cargo, status, tipo, valor, vigência, status da regra, editar) + bloco de regras padrão por cargo.
-- Aba **Histórico**: tabela paginada com todas as colunas pedidas, "—" quando não se aplica, ações (confirmar, marcar paga com data, estornar, editar com motivo obrigatório, recalcular com confirmação).
-- Aba **Por colaborador**: resumo ordenável.
-- Filtros: atalhos Hoje / Esta semana / Este mês / Mês anterior / Personalizado reusando `weekRange` e `localIso` de `src/lib/productivity.ts` (domingo→sábado 23:59), além de colaborador, cargo, status da matrícula, status da comissão, tipo e configurada/não configurada.
-- Exportação Excel e CSV respeitando os filtros, via `src/lib/xlsx-export.ts` já existente.
-- Formatação `R$ 1.250,00` e `5,00%`, responsivo, tokens de tema do projeto.
+## Permissões e RLS
 
-## Arquivos
+- Todas as tabelas: `GRANT` só para `authenticated` + `service_role`, RLS ativa.
+- Base de conhecimento, campanhas, objeções, exemplos, configs, versões: leitura para `authenticated` (a IA precisa aplicar as regras), escrita **somente** `has_role(auth.uid(),'admin')`. Vendedor não edita nada.
+- `ai_interactions` e `ai_negotiation_contexts`: vendedor lê/escreve apenas os próprios registros; admin/franqueado leem conforme padrão atual.
+- Contexto de lead montado no servidor a partir do `owner_id` do lead e do usuário autenticado — impossível puxar lead de outro vendedor; nunca mistura dois leads na mesma chamada.
+- Auditoria de toda alteração administrativa em `ai_knowledge_versions`.
 
-Novos: migration SQL, `src/lib/leadership-commission.ts`, `src/lib/leadership-commission.functions.ts` (server fns admin-only), `src/routes/_authenticated/comissao-lideranca.tsx`, componentes em `src/components/comissao/`.
-Alterados: `src/routes/_authenticated/route.tsx` (item de menu admin). `src/lib/enrollment.ts` só recebe um "ensure" idempotente caso o trigger não cubra retroativos — sem mudar o fluxo atual.
+## Backend / IA
 
-## Riscos
-
-- Baixo: nenhuma tabela existente muda de forma; o trigger em `leads` é aditivo e à prova de falha (não bloqueia a matrícula se a comissão não puder ser criada).
-- Matrículas antigas não geram comissão retroativa automaticamente; haverá ação manual "gerar comissões do período" para o admin, com confirmação.
-- Cargos limitados aos perfis existentes; se você quiser cargos próprios (consultor/supervisor/gerente), isso vira uma etapa extra.
+- Mantém o padrão TanStack: server functions em `src/lib/ai-assistants.functions.ts` (+ helpers `.server.ts`), autenticadas por `requireSupabaseAuth`. Nenhuma Edge Function nova.
+- O prompt é montado no servidor lendo as tabelas ativas e vigentes (regras, tabela comercial, limites, materiais, campanha ativa, objeções, exemplos aprovados/inadequados, config do assistente) + contexto do lead + entrada do vendedor. Resposta estruturada nos 4 blocos, com lista de regras consultadas para rastreabilidade.
+- Guardrails no prompt: não inventar preço/vaga/horário/campanha, não somar material físico + digital, não descer abaixo da autonomia sem autorização, não prometer bolsa, matrícula ≠ início, primeira mensalidade um mês após o início.
+- Validação de arquivos no frontend e no servidor (tipo, tamanho, imagens até 10 MB), sem persistir arquivos, sem log de conteúdo sensível, proteção contra chamadas duplicadas/uso excessivo.
 
 ## Etapas
 
-1. Banco: tabelas, funções, triggers, RLS/GRANTs.
-2. Configuração por colaborador e por cargo.
-3. Geração automática + ação de geração retroativa.
-4. Dashboard, histórico, filtros, resumo por colaborador.
-5. Cancelamento/estorno, auditoria de edições, exportação.
-6. Testes de cenários e relatório final.
+1. Banco: 8 tabelas, GRANTs, RLS, seeds da tabela comercial e objeções.
+2. Página remodelada: 3 assistentes, entrada com Ctrl + V/upload/prévia, resposta em blocos, refinamentos, atalhos, menu renomeado.
+3. Seleção de lead, contexto compartilhado, campos estruturados de negociação e autorização especial, histórico e feedback.
+4. Gestão da IA com as 14 abas, versionamento, restauração e rastreabilidade.
+5. Laboratório da IA, correção por exemplo/regra com escopo.
+6. Revisão de segurança/RLS, responsividade e testes de cenários reais.
+
+## Riscos
+
+- Escopo grande: entrego por etapas, com a página funcional já na etapa 2 sem perder o comportamento atual.
+- `sales_scripts` e `ai_assistant_settings` continuam no banco; a remoção definitiva fica para uma decisão sua depois.
+- Qualidade das respostas depende da base cadastrada; os seeds iniciais já vêm com sua tabela comercial atual.
