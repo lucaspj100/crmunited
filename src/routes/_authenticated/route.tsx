@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, useNavigate, useLocation, Link } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useBrand } from "@/lib/brand";
 import { LayoutDashboard, Users, Kanban, RotateCw, BarChart3, LogOut, Settings, Upload, TrendingDown, Sparkles, Trophy, Calendar, PhoneCall, Link2, ClipboardCheck, Activity, Tv, User as UserIcon, Shield, Package, Wallet, MessageSquare } from "lucide-react";
@@ -11,6 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { ReturnNotificationWatcher } from "@/components/ReturnNotificationWatcher";
 import { TaskNotificationWatcher } from "@/components/TaskNotificationWatcher";
 import { useTodayActionsCount } from "@/lib/today-queue";
+import { useMyFeedbackNotifications } from "@/lib/my-feedbacks";
+
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -42,6 +44,11 @@ function AuthedLayout() {
   const { data: brand } = useBrand();
   const isAdmin = roles.includes("admin");
   const pendingCount = useTodayActionsCount();
+  const openFeedback = useCallback(
+    (id: string) => navigate({ to: "/meus-feedbacks", search: { id } }),
+    [navigate],
+  );
+  const { unviewedCount: feedbackCount } = useMyFeedbackNotifications(!!session && !isAdmin, openFeedback);
   const NAV = isAdmin
     ? [
         ...BASE_NAV,
@@ -54,7 +61,8 @@ function AuthedLayout() {
         { to: "/equipes", label: "Equipes", icon: Users } as const,
         { to: "/configuracoes", label: "Configurações", icon: Settings } as const,
       ]
-    : BASE_NAV;
+    : [...BASE_NAV, { to: "/meus-feedbacks", label: "Meus Feedbacks", icon: MessageSquare } as const];
+
 
   useEffect(() => {
     if (!loading && !session) navigate({ to: "/auth", replace: true });
@@ -86,7 +94,7 @@ function AuthedLayout() {
         <nav className="flex-1 space-y-1 p-3">
           {NAV.map((n) => {
             const active = location.pathname.startsWith(n.to);
-            const showBadge = n.to === "/hoje" && pendingCount > 0;
+            const count = n.to === "/hoje" ? pendingCount : n.to === "/meus-feedbacks" ? feedbackCount : 0;
             return (
               <Link
                 key={n.to}
@@ -100,11 +108,12 @@ function AuthedLayout() {
               >
                 <n.icon className="h-4 w-4" />
                 <span className="flex-1">{n.label}</span>
-                {showBadge && (
+                {count > 0 && (
                   <Badge className="h-5 min-w-5 px-1.5 text-[10px] bg-rose-500 text-white hover:bg-rose-500">
-                    {pendingCount > 99 ? "99+" : pendingCount}
+                    {count > 99 ? "99+" : count}
                   </Badge>
                 )}
+
               </Link>
             );
           })}
@@ -122,16 +131,21 @@ function AuthedLayout() {
           <Button size="sm" variant="ghost" onClick={() => signOut()}><LogOut className="h-4 w-4" /></Button>
         </header>
         <nav className="flex gap-1 overflow-x-auto border-b bg-card px-2 py-2 md:hidden">
-          {NAV.map((n) => (
+          {NAV.map((n) => {
+            const count = n.to === "/hoje" ? pendingCount : n.to === "/meus-feedbacks" ? feedbackCount : 0;
+            return (
             <Link key={n.to} to={n.to} className="whitespace-nowrap rounded-md px-3 py-1.5 text-xs hover:bg-accent relative" activeProps={{ className: "bg-primary text-primary-foreground" }}>
               {n.label}
-              {n.to === "/hoje" && pendingCount > 0 && (
+              {count > 0 && (
                 <span className="ml-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-semibold text-white">
-                  {pendingCount > 99 ? "99+" : pendingCount}
+                  {count > 99 ? "99+" : count}
                 </span>
               )}
+
             </Link>
-          ))}
+            );
+          })}
+
         </nav>
         <main className="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-6 max-w-full">
           <Outlet />

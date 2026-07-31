@@ -15,6 +15,7 @@ import {
   ShieldAlert,
   Sparkles,
   Trash2,
+  Send,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
@@ -48,8 +49,12 @@ import {
   fmtPct,
   listFeedbacks,
   saveFeedback,
+  shareFeedback,
+  shareStatusLabel,
   trendOf,
+  unshareFeedback,
   vsAverage,
+
   type FeedbackMetrics,
   type FeedbackRow,
   type FeedbackTone,
@@ -252,7 +257,21 @@ function FeedbackIndividualPage() {
     }
   }
 
+
+  async function handleShare(id: string, share: boolean) {
+    if (!user) return;
+    try {
+      if (share) await shareFeedback(id, user.id);
+      else await unshareFeedback(id, user.id);
+      await queryClient.invalidateQueries({ queryKey: ["feedback-history", sellerId] });
+      toast.success(share ? "Feedback compartilhado com o colaborador." : "Compartilhamento retirado.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao atualizar o compartilhamento.");
+    }
+  }
+
   function loadIntoForm(row: FeedbackRow) {
+
     setLeaderNotes(row.leader_notes);
     setExtraContext(row.extra_context);
     setTone((row.tone as FeedbackTone) ?? "equilibrado");
@@ -539,6 +558,7 @@ function FeedbackIndividualPage() {
                       <Badge variant={row.shared_with_collaborator ? "default" : "secondary"}>
                         {row.shared_with_collaborator ? "Compartilhado" : "Privado"}
                       </Badge>
+                      <span className="text-xs text-muted-foreground">{shareStatusLabel(row)}</span>
                       <span className="text-xs text-muted-foreground">
                         Reunião: {row.meeting_date ? formatRangeLabel({ start: row.meeting_date, end: row.meeting_date }) : "—"}
                       </span>
@@ -556,10 +576,20 @@ function FeedbackIndividualPage() {
                         toast.success("Feedback copiado.");
                       }}>Copiar</Button>
                       <Button size="sm" variant="outline" onClick={() => loadIntoForm(row)}>Editar</Button>
+                      {row.shared_with_collaborator ? (
+                        <Button size="sm" variant="outline" onClick={() => void handleShare(row.id, false)}>
+                          Retirar compartilhamento
+                        </Button>
+                      ) : (
+                        <Button size="sm" onClick={() => void handleShare(row.id, true)}>
+                          <Send className="mr-1 h-4 w-4" /> Compartilhar com o colaborador
+                        </Button>
+                      )}
                       <Button size="sm" variant="ghost" className="text-destructive" onClick={() => handleDelete(row.id)}>
                         <Trash2 className="mr-1 h-4 w-4" /> Excluir
                       </Button>
                     </div>
+
                   </div>
                 ))}
               </CardContent>
