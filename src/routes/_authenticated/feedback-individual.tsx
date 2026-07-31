@@ -539,6 +539,7 @@ function FeedbackIndividualPage() {
                       <Badge variant={row.shared_with_collaborator ? "default" : "secondary"}>
                         {row.shared_with_collaborator ? "Compartilhado" : "Privado"}
                       </Badge>
+                      <span className="text-xs text-muted-foreground">{shareStatusLabel(row)}</span>
                       <span className="text-xs text-muted-foreground">
                         Reunião: {row.meeting_date ? formatRangeLabel({ start: row.meeting_date, end: row.meeting_date }) : "—"}
                       </span>
@@ -556,10 +557,20 @@ function FeedbackIndividualPage() {
                         toast.success("Feedback copiado.");
                       }}>Copiar</Button>
                       <Button size="sm" variant="outline" onClick={() => loadIntoForm(row)}>Editar</Button>
+                      {row.shared_with_collaborator ? (
+                        <Button size="sm" variant="outline" onClick={() => void handleShare(row.id, false)}>
+                          Retirar compartilhamento
+                        </Button>
+                      ) : (
+                        <Button size="sm" onClick={() => void handleShare(row.id, true)}>
+                          <Send className="mr-1 h-4 w-4" /> Compartilhar com o colaborador
+                        </Button>
+                      )}
                       <Button size="sm" variant="ghost" className="text-destructive" onClick={() => handleDelete(row.id)}>
                         <Trash2 className="mr-1 h-4 w-4" /> Excluir
                       </Button>
                     </div>
+
                   </div>
                 ))}
               </CardContent>
