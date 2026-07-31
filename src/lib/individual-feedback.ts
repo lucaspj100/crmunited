@@ -328,3 +328,50 @@ export async function deleteFeedback(id: string): Promise<void> {
   const { error } = await supabase.from("individual_feedbacks").delete().eq("id", id);
   if (error) throw error;
 }
+
+/** Compartilha o feedback com o colaborador (somente administradores, garantido por RLS). */
+export async function shareFeedback(id: string, adminId: string): Promise<FeedbackRow> {
+  const { data, error } = await supabase
+    .from("individual_feedbacks")
+    .update({
+      shared_with_collaborator: true,
+      shared_at: new Date().toISOString(),
+      shared_by: adminId,
+      updated_by: adminId,
+    })
+    .eq("id", id)
+    .select("*")
+    .single();
+  if (error) throw error;
+  return data as unknown as FeedbackRow;
+}
+
+/** Retira o compartilhamento (somente administradores). */
+export async function unshareFeedback(id: string, adminId: string): Promise<FeedbackRow> {
+  const { data, error } = await supabase
+    .from("individual_feedbacks")
+    .update({
+      shared_with_collaborator: false,
+      shared_at: null,
+      shared_by: null,
+      viewed_by_collaborator: false,
+      viewed_at: null,
+      updated_by: adminId,
+    })
+    .eq("id", id)
+    .select("*")
+    .single();
+  if (error) throw error;
+  return data as unknown as FeedbackRow;
+}
+
+export function shareStatusLabel(row: {
+  shared_with_collaborator: boolean;
+  viewed_by_collaborator: boolean;
+  viewed_at: string | null;
+}): string {
+  if (!row.shared_with_collaborator) return "Não compartilhado";
+  if (!row.viewed_by_collaborator) return "Compartilhado, ainda não visualizado";
+  const when = row.viewed_at ? new Date(row.viewed_at).toLocaleString("pt-BR") : "—";
+  return `Visualizado pelo colaborador em ${when}`;
+}
