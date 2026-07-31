@@ -94,7 +94,7 @@ function AuthedLayout() {
         <nav className="flex-1 space-y-1 p-3">
           {NAV.map((n) => {
             const active = location.pathname.startsWith(n.to);
-            const showBadge = n.to === "/hoje" && pendingCount > 0;
+            const count = n.to === "/hoje" ? pendingCount : n.to === "/meus-feedbacks" ? feedbackCount : 0;
             return (
               <Link
                 key={n.to}
@@ -108,11 +108,12 @@ function AuthedLayout() {
               >
                 <n.icon className="h-4 w-4" />
                 <span className="flex-1">{n.label}</span>
-                {showBadge && (
+                {count > 0 && (
                   <Badge className="h-5 min-w-5 px-1.5 text-[10px] bg-rose-500 text-white hover:bg-rose-500">
-                    {pendingCount > 99 ? "99+" : pendingCount}
+                    {count > 99 ? "99+" : count}
                   </Badge>
                 )}
+
               </Link>
             );
           })}
