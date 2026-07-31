@@ -44,6 +44,11 @@ function AuthedLayout() {
   const { data: brand } = useBrand();
   const isAdmin = roles.includes("admin");
   const pendingCount = useTodayActionsCount();
+  const openFeedback = useCallback(
+    (id: string) => navigate({ to: "/meus-feedbacks", search: { id } }),
+    [navigate],
+  );
+  const { unviewedCount: feedbackCount } = useMyFeedbackNotifications(!!session && !isAdmin, openFeedback);
   const NAV = isAdmin
     ? [
         ...BASE_NAV,
@@ -56,7 +61,8 @@ function AuthedLayout() {
         { to: "/equipes", label: "Equipes", icon: Users } as const,
         { to: "/configuracoes", label: "Configurações", icon: Settings } as const,
       ]
-    : BASE_NAV;
+    : [...BASE_NAV, { to: "/meus-feedbacks", label: "Meus Feedbacks", icon: MessageSquare } as const];
+
 
   useEffect(() => {
     if (!loading && !session) navigate({ to: "/auth", replace: true });
