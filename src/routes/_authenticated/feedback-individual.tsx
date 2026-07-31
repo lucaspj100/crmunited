@@ -48,8 +48,12 @@ import {
   fmtPct,
   listFeedbacks,
   saveFeedback,
+  shareFeedback,
+  shareStatusLabel,
   trendOf,
+  unshareFeedback,
   vsAverage,
+
   type FeedbackMetrics,
   type FeedbackRow,
   type FeedbackTone,
