@@ -256,7 +256,21 @@ function FeedbackIndividualPage() {
     }
   }
 
+
+  async function handleShare(id: string, share: boolean) {
+    if (!user) return;
+    try {
+      if (share) await shareFeedback(id, user.id);
+      else await unshareFeedback(id, user.id);
+      await queryClient.invalidateQueries({ queryKey: ["feedback-history", sellerId] });
+      toast.success(share ? "Feedback compartilhado com o colaborador." : "Compartilhamento retirado.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao atualizar o compartilhamento.");
+    }
+  }
+
   function loadIntoForm(row: FeedbackRow) {
+
     setLeaderNotes(row.leader_notes);
     setExtraContext(row.extra_context);
     setTone((row.tone as FeedbackTone) ?? "equilibrado");
