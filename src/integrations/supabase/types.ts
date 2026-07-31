@@ -728,6 +728,75 @@ export type Database = {
         }
         Relationships: []
       }
+      individual_feedbacks: {
+        Row: {
+          agreed_action: string
+          created_at: string
+          created_by: string | null
+          extra_context: string
+          final_feedback: string
+          generated_feedback: string
+          id: string
+          leader_notes: string
+          meeting_date: string | null
+          metrics_snapshot: Json
+          next_focus: string
+          period_end: string
+          period_label: string
+          period_start: string
+          shared_with_collaborator: boolean
+          status: string
+          subject_user_id: string
+          tone: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          agreed_action?: string
+          created_at?: string
+          created_by?: string | null
+          extra_context?: string
+          final_feedback?: string
+          generated_feedback?: string
+          id?: string
+          leader_notes?: string
+          meeting_date?: string | null
+          metrics_snapshot?: Json
+          next_focus?: string
+          period_end: string
+          period_label?: string
+          period_start: string
+          shared_with_collaborator?: boolean
+          status?: string
+          subject_user_id: string
+          tone?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          agreed_action?: string
+          created_at?: string
+          created_by?: string | null
+          extra_context?: string
+          final_feedback?: string
+          generated_feedback?: string
+          id?: string
+          leader_notes?: string
+          meeting_date?: string | null
+          metrics_snapshot?: Json
+          next_focus?: string
+          period_end?: string
+          period_label?: string
+          period_start?: string
+          shared_with_collaborator?: boolean
+          status?: string
+          subject_user_id?: string
+          tone?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       lead_events: {
         Row: {
           created_at: string
