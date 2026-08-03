@@ -1660,47 +1660,73 @@ export type Database = {
           },
         ]
       }
-      profiles: {
+      profile_account_security: {
         Row: {
-          avatar_url: string | null
           created_at: string
           deactivated_at: string | null
-          eligible_for_hall_of_fame: boolean
-          email: string | null
-          full_name: string
-          id: string
           last_sign_in_at: string | null
           must_change_password: boolean
           sign_in_count: number
           status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          deactivated_at?: string | null
+          last_sign_in_at?: string | null
+          must_change_password?: boolean
+          sign_in_count?: number
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          deactivated_at?: string | null
+          last_sign_in_at?: string | null
+          must_change_password?: boolean
+          sign_in_count?: number
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_account_security_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          eligible_for_hall_of_fame: boolean
+          email: string | null
+          full_name: string
+          id: string
           team_id: string | null
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
-          deactivated_at?: string | null
           eligible_for_hall_of_fame?: boolean
           email?: string | null
           full_name?: string
           id: string
-          last_sign_in_at?: string | null
-          must_change_password?: boolean
-          sign_in_count?: number
-          status?: string
           team_id?: string | null
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
-          deactivated_at?: string | null
           eligible_for_hall_of_fame?: boolean
           email?: string | null
           full_name?: string
           id?: string
-          last_sign_in_at?: string | null
-          must_change_password?: boolean
-          sign_in_count?: number
-          status?: string
           team_id?: string | null
         }
         Relationships: [

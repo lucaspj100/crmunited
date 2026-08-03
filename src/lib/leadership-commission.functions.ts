@@ -17,7 +17,7 @@ export const lcListConfig = createServerFn({ method: "GET" })
 
     const [{ data: profiles, error: pErr }, { data: roles, error: rErr }, { data: rules, error: ruErr }] =
       await Promise.all([
-        supabaseAdmin.from("profiles").select("id, full_name, email, status").order("full_name"),
+        supabaseAdmin.from("profiles").select("id, full_name, email").order("full_name"),
         supabaseAdmin.from("user_roles").select("user_id, role"),
         supabaseAdmin
           .from("leadership_commission_rules")

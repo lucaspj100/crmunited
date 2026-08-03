@@ -17,7 +17,7 @@ export const adminListTeams = createServerFn({ method: "GET" })
 
     const [{ data: teams, error: tErr }, { data: profiles, error: pErr }] = await Promise.all([
       supabaseAdmin.from("teams").select("*").order("is_primary", { ascending: false }).order("name"),
-      supabaseAdmin.from("profiles").select("id, full_name, email, status, team_id"),
+      supabaseAdmin.from("profiles").select("id, full_name, email, team_id"),
     ]);
     if (tErr) throw new Error(tErr.message);
     if (pErr) throw new Error(pErr.message);
