@@ -203,13 +203,16 @@ function MetasPage() {
 }
 
 function GoalDialog({
-  open, goal, defaultMonth, defaultYear, sellers, onClose,
+  open, goal, defaultMonth, defaultYear, sellers, sellersLoading, sellersError, onRetrySellers, onClose,
 }: {
   open: boolean;
   goal: EnrollmentGoal | null;
   defaultMonth: number;
   defaultYear: number;
   sellers: Seller[];
+  sellersLoading: boolean;
+  sellersError: Error | null;
+  onRetrySellers: () => void;
   onClose: () => void;
 }) {
   const qc = useQueryClient();
