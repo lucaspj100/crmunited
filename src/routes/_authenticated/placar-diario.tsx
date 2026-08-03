@@ -459,13 +459,28 @@ function PlacarDiario() {
               <Highlight title="Mais entrevistas marcadas" row={top("entrevistas_marcadas")} field="entrevistas_marcadas" />
               <Highlight title="Mais entrevistas realizadas" row={top("entrevistas_realizadas")} field="entrevistas_realizadas" />
               <Highlight title="Mais matrículas" row={top("matriculas")} field="matriculas" />
+              {isAdmin && (
+                <GoalHighlight
+                  best={bestGoalPct}
+                  loading={teamGoalsQ.isLoading}
+                  error={!!teamGoalsQ.error}
+                />
+              )}
             </div>
           </div>
         </div>
 
         {/* Ranking completo da equipe — apenas ADM/Franqueado */}
         {isAdmin && (
-          <FullRanking ranked={ranked} onSelect={(r) => setSelectedSeller(r)} />
+          <FullRanking
+            ranked={ranked}
+            onSelect={(r) => setSelectedSeller(r)}
+            goalsBySeller={goalsBySeller}
+            monthDoneById={monthDoneById}
+            goalsLoading={teamGoalsQ.isLoading}
+            goalsError={!!teamGoalsQ.error}
+            goalMonthLabel={monthLabel(nowMY.month, nowMY.year)}
+          />
         )}
 
 
