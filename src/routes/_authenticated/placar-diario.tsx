@@ -146,6 +146,9 @@ function PlacarDiario() {
   const nowMY = useMemo(() => currentMonthYear(), []);
   const monthR = useMemo(() => monthRange(nowMY.month, nowMY.year), [nowMY]);
   const { data: myGoal = null } = useMyActiveGoal(nowMY.month, nowMY.year);
+  // Mês de referência da missão coletiva: derivado do período exibido (ex.: mês passado)
+  const missionRef = useMemo(() => referenceMonthOf(range), [range]);
+
 
   // ---- Metas da equipe (somente admin/franqueado; RLS garante o resto) ----
   const teamGoalsQ = useTeamActiveGoals(nowMY.month, nowMY.year, isAdmin);
