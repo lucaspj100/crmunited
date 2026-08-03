@@ -396,28 +396,25 @@ export type MissionWeek = {
 
 /** Semanas comerciais do mês: segunda a sábado, recortadas pelos limites do mês. */
 export function monthBusinessWeeks(month: number, year: number): MissionWeek[] {
-  const first = new Date(year, month - 1, 1);
-  const last = new Date(year, month, 0);
-  const weeks: MissionWeek[] = [];
-  let cursor = first;
-  while (cursor <= last) {
-    // segunda-feira da semana do cursor (domingo pertence à semana anterior)
-    const dow = cursor.getDay();
-    const offsetToMonday = dow === 0 ? -6 : 1 - dow;
-    const monday = plusDays(cursor, offsetToMonday);
-    const saturday = plusDays(monday, 5);
-    const start = monday < first ? first : monday;
-    const end = saturday > last ? last : saturday;
-    weeks.push({
-      index: weeks.length,
-      start: localIso(start),
-      end: localIso(end),
-      businessDays: businessDaysBetween(localIso(start), localIso(end)),
-      target: 0,
-    });
-    cursor = plusDays(saturday, 1);
+  const last = new Date(year, month, 0).getDate();
+  const groups = new Map<string, { start: string; end: string; businessDays: number }>();
+  for (let day = 1; day <= last; day++) {
+    const d = new Date(year, month - 1, day);
+    if (!isBusinessDay(d)) continue; // domingo fora da agenda comercial
+    const monday = plusDays(d, 1 - d.getDay());
+    const key = localIso(monday);
+    const iso = localIso(d);
+    const g = groups.get(key);
+    if (g) {
+      g.end = iso;
+      g.businessDays += 1;
+    } else {
+      groups.set(key, { start: iso, end: iso, businessDays: 1 });
+    }
   }
-  return weeks.filter((w) => w.businessDays > 0);
+  return [...groups.entries()]
+    .sort((a, b) => (a[0] < b[0] ? -1 : 1))
+    .map(([, g], index) => ({ index, start: g.start, end: g.end, businessDays: g.businessDays, target: 0 }));
 }
 
 /**
