@@ -615,6 +615,39 @@ export function WhatsappListPanel() {
         </div>
       )}
 
+      {listError && (
+        <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm">
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
+            <div className="min-w-0 flex-1">
+              <div className="font-medium text-destructive">Não foi possível carregar a lista de WhatsApp</div>
+              <div className="text-xs text-muted-foreground mt-0.5 break-words">
+                {listError instanceof Error ? listError.message : "Erro ao consultar os contatos."}
+              </div>
+              <Button size="sm" variant="outline" className="mt-2 h-7 text-xs" onClick={invalidateAll}>
+                Tentar novamente
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isAdmin && inconsistentCount > 0 && (
+        <div className="rounded-md border border-amber-400/50 bg-amber-50 dark:bg-amber-900/20 p-3 text-sm">
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+            <div className="min-w-0 flex-1">
+              <div className="font-medium">{inconsistentCount} registro(s) sem contato relacionado</div>
+              <div className="text-xs text-muted-foreground mt-0.5">
+                Essas entradas foram ocultadas da fila de trabalho (contato removido ou sem permissão de leitura).
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+
       {/* Métricas: linha compacta no mobile, cards no desktop */}
       <div className="md:hidden rounded-md border bg-muted/30 px-3 py-1.5 text-xs text-muted-foreground flex items-center gap-3 overflow-x-auto whitespace-nowrap">
         <span>Na lista: <strong className="text-foreground">{summary.total}</strong></span>
