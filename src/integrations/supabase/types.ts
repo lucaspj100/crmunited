@@ -2463,6 +2463,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_view_contact_via_whatsapp_list: {
+        Args: { _contact_id: string }
+        Returns: boolean
+      }
       debug_entrevistas_marcadas: {
         Args: { _end: string; _start: string; _vendedor_id?: string }
         Returns: {

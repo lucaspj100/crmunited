@@ -170,7 +170,7 @@ export function WhatsappListPanel() {
     staleTime: 10 * 60 * 1000,
   });
 
-  const { data: rows = [], isLoading } = useQuery<Row[]>({
+  const { data: allRows = [], isLoading, error: listError } = useQuery<Row[]>({
     enabled: !!user,
     queryKey: ["whatsapp_list", user?.id, isAdmin ? sellerFilter : "self"],
     queryFn: async () => {
@@ -184,14 +184,28 @@ export function WhatsappListPanel() {
       if (error) throw error;
       const entries = (data ?? []) as WhatsappListEntry[];
       if (entries.length === 0) return [];
-      const pids = entries.map((e) => e.prospect_contact_id);
+      const pids = Array.from(new Set(entries.map((e) => e.prospect_contact_id)));
       const oids = Array.from(new Set(entries.map((e) => e.owner_id)));
-      const [contactsRes, profilesRes] = await Promise.all([
-        supabase.from("prospect_contacts").select("*").in("id", pids),
-        supabase.from("profiles").select("id, full_name, email").in("id", oids),
-      ]);
-      const contacts = (contactsRes.data ?? []) as ProspectContact[];
-      const profiles = (profilesRes.data ?? []) as Array<{ id: string; full_name: string | null; email: string }>;
+
+      // IMPORTANTE: buscar em lotes — listas grandes (centenas de IDs) estouram
+      // o tamanho da URL do `in(...)` e a consulta falha silenciosamente.
+      const CHUNK = 100;
+      const contacts: ProspectContact[] = [];
+      for (let i = 0; i < pids.length; i += CHUNK) {
+        const slice = pids.slice(i, i + CHUNK);
+        const res = await supabase.from("prospect_contacts").select("*").in("id", slice);
+        if (res.error) throw res.error;
+        contacts.push(...((res.data ?? []) as ProspectContact[]));
+      }
+
+      const profiles: Array<{ id: string; full_name: string | null; email: string }> = [];
+      for (let i = 0; i < oids.length; i += CHUNK) {
+        const slice = oids.slice(i, i + CHUNK);
+        const res = await supabase.from("profiles").select("id, full_name, email").in("id", slice);
+        if (res.error) throw res.error;
+        profiles.push(...((res.data ?? []) as Array<{ id: string; full_name: string | null; email: string }>));
+      }
+
       const cById = new Map(contacts.map((c) => [c.id, c]));
       const pById = new Map(profiles.map((p) => [p.id, p.full_name?.trim() || p.email || "Sem nome"]));
       return entries.map((e) => ({
@@ -201,6 +215,10 @@ export function WhatsappListPanel() {
       }));
     },
   });
+
+  // Registros sem contato relacionado (órfãos / sem permissão) nunca entram na lista de trabalho.
+  const rows = useMemo(() => allRows.filter((r) => !!r.contact), [allRows]);
+  const inconsistentCount = allRows.length - rows.length;
 
   const filtered = useMemo(() => {
     let list = rows;
@@ -525,19 +543,30 @@ export function WhatsappListPanel() {
     bulkMode,
   };
 
+  const validAwaitingRows = useMemo(
+    () =>
+      filtered.filter(
+        (row) =>
+          row.status === "aguardando" &&
+          row.contact &&
+          (row.contact.telefone_normalizado || row.contact.telefone_original),
+      ),
+    [filtered],
+  );
+
   const openNextAwaiting = async () => {
     if (!hasActiveTemplate) {
       setShowNoTemplateDialog(true);
       return;
     }
-    const next = filtered.find((r) => r.status === "aguardando");
+    const next = validAwaitingRows[0];
     if (!next) {
-      toast.info("Nenhum contato aguardando WhatsApp.");
+      toast.info("Nenhum contato aguardando WhatsApp com telefone válido.");
       return;
     }
     await openWhatsapp(next);
   };
-  const awaitingCount = summary.aguardando;
+  const awaitingCount = validAwaitingRows.length;
 
 
 
@@ -585,6 +614,39 @@ export function WhatsappListPanel() {
           </div>
         </div>
       )}
+
+      {listError && (
+        <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm">
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
+            <div className="min-w-0 flex-1">
+              <div className="font-medium text-destructive">Não foi possível carregar a lista de WhatsApp</div>
+              <div className="text-xs text-muted-foreground mt-0.5 break-words">
+                {listError instanceof Error ? listError.message : "Erro ao consultar os contatos."}
+              </div>
+              <Button size="sm" variant="outline" className="mt-2 h-7 text-xs" onClick={invalidateAll}>
+                Tentar novamente
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isAdmin && inconsistentCount > 0 && (
+        <div className="rounded-md border border-amber-400/50 bg-amber-50 dark:bg-amber-900/20 p-3 text-sm">
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+            <div className="min-w-0 flex-1">
+              <div className="font-medium">{inconsistentCount} registro(s) sem contato relacionado</div>
+              <div className="text-xs text-muted-foreground mt-0.5">
+                Essas entradas foram ocultadas da fila de trabalho (contato removido ou sem permissão de leitura).
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+
 
       {/* Métricas: linha compacta no mobile, cards no desktop */}
       <div className="md:hidden rounded-md border bg-muted/30 px-3 py-1.5 text-xs text-muted-foreground flex items-center gap-3 overflow-x-auto whitespace-nowrap">
