@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import {
@@ -33,7 +33,10 @@ import {
   type EnrollmentGoal,
 } from "@/lib/enrollment-goals";
 import { MyGoalBanner } from "@/components/metas/MyGoalBanner";
+import { TeamMissionCard } from "@/components/metas/TeamMissionCard";
+import { referenceMonthOf } from "@/lib/team-mission";
 import { InterestedAuditCard } from "@/components/processos/InterestedAuditCard";
+
 
 
 
@@ -95,8 +98,12 @@ function PlacarDiario() {
 
 
   // Realtime: atualiza assim que houver nova tentativa ou mudança de lead
-  const qc = (useQuery as unknown as { getClient?: () => unknown }) && undefined; // no-op marker
+  const queryClient = useQueryClient();
   useEffect(() => {
+    const refreshMission = () => {
+      void queryClient.invalidateQueries({ queryKey: ["mission_month_production"] });
+      void queryClient.invalidateQueries({ queryKey: ["team_goal_summary"] });
+    };
     // open to all authenticated
     const ch = supabase
       .channel("placar-diario")
@@ -114,11 +121,15 @@ function PlacarDiario() {
             _start: range.start, _end: range.end, _vendedor_id: null, _team_id: teamId,
           } as never);
           if (Array.isArray(data)) setLive(data as unknown as ProductivityRow[]);
+          refreshMission();
         })();
       })
+      .on("postgres_changes", { event: "*", schema: "public", table: "lead_events" }, refreshMission)
+      .on("postgres_changes", { event: "*", schema: "public", table: "seller_enrollment_goals" }, refreshMission)
       .subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, [range.start, range.end, teamId]);
+  }, [range.start, range.end, teamId, queryClient]);
+
 
   const [live, setLive] = useState<ProductivityRow[] | null>(null);
   const rowsAll = (live ?? rowsRaw) as ProductivityRow[];
@@ -143,6 +154,9 @@ function PlacarDiario() {
   const nowMY = useMemo(() => currentMonthYear(), []);
   const monthR = useMemo(() => monthRange(nowMY.month, nowMY.year), [nowMY]);
   const { data: myGoal = null } = useMyActiveGoal(nowMY.month, nowMY.year);
+  // Mês de referência da missão coletiva: derivado do período exibido (ex.: mês passado)
+  const missionRef = useMemo(() => referenceMonthOf(range), [range]);
+
 
   // ---- Metas da equipe (somente admin/franqueado; RLS garante o resto) ----
   const teamGoalsQ = useTeamActiveGoals(nowMY.month, nowMY.year, isAdmin);
@@ -390,6 +404,20 @@ function PlacarDiario() {
           userId={user?.id}
           periodLabel={PERIOD_LABELS[period]}
         />
+
+        {/* Missão da equipe — meta coletiva mensal (visível a todos os perfis) */}
+        <TeamMissionCard
+          month={missionRef.month}
+          year={missionRef.year}
+          teamId={teamId}
+          teamName={teams.find((t) => t.id === effectiveTeam)?.name ?? "Equipe"}
+          isAdmin={isAdmin}
+          periodLabel={PERIOD_LABELS[period]}
+          periodEnrollments={totals.matriculas}
+          showPeriodLine={period !== "mes"}
+          telao={fullscreen}
+        />
+
 
 
         <div className="grid grid-cols-1 xl:grid-cols-[2fr_1fr] gap-5">
