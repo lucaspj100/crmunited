@@ -78,7 +78,8 @@ function MetasPage() {
   const [editing, setEditing] = useState<EnrollmentGoal | null>(null);
   const [creating, setCreating] = useState(false);
 
-  const { data: sellers = [] } = useSellers();
+  const sellersQuery = useSellers();
+  const sellers = sellersQuery.data ?? [];
   const { data: goals = [], isLoading } = useQuery({
     queryKey: ["enrollment_goals", month, year],
     queryFn: () => fetchEnrollmentGoals({ month, year }),
