@@ -425,6 +425,15 @@ function PlacarDiario() {
                         <span>🎓 {r.matriculas}</span>
                         <span>❌ {r.perdidos}</span>
                       </div>
+                      {/* Meta mensal — visível apenas para admin/franqueado */}
+                      {isAdmin && (
+                        <GoalMini
+                          goal={goalsBySeller.get(r.vendedor_id) ?? null}
+                          done={monthDoneById.get(r.vendedor_id) ?? 0}
+                          loading={teamGoalsQ.isLoading}
+                          error={!!teamGoalsQ.error}
+                        />
+                      )}
                     </div>
                     <div className="text-right">
                       <div className={`font-black tabular-nums ${idx === 0 ? "text-5xl" : "text-4xl"}`}>{fmtScore(r.score)}</div>
