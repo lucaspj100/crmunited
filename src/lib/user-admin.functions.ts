@@ -109,10 +109,10 @@ export const adminResetPasswordTemp = createServerFn({ method: "POST" })
     if (upErr) throw new Error(upErr.message);
 
     const { error: pErr } = await supabaseAdmin
-      .from("profiles")
-      .update({ must_change_password: true, status: "pendente_redefinicao" })
-      .eq("id", data.userId);
+      .from("profile_account_security")
+      .upsert({ user_id: data.userId, must_change_password: true, status: "pendente_redefinicao" }, { onConflict: "user_id" });
     if (pErr) throw new Error(pErr.message);
+
 
     await supabaseAdmin.from("access_logs").insert({
       user_id: data.userId,
