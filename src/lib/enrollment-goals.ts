@@ -165,3 +165,29 @@ export function interviewEstimate(interviewsDone: number, enrollments: number, r
   if (rate <= 0) return { enough: false };
   return { enough: true, rate: rate * 100, interviewsNeeded: Math.ceil(remaining / rate) };
 }
+
+/**
+ * Meta ativa do próprio usuário autenticado. A consulta é restrita a auth.uid()
+ * (a RLS também garante isso), portanto o front nunca recebe metas de colegas.
+ */
+export function useMyActiveGoal(month: number, year: number) {
+  return useQuery({
+    queryKey: ["my_enrollment_goal", month, year],
+    staleTime: 60_000,
+    queryFn: async (): Promise<EnrollmentGoal | null> => {
+      const { data: auth } = await supabase.auth.getUser();
+      const uid = auth.user?.id;
+      if (!uid) return null;
+      const { data, error } = await supabase
+        .from("seller_enrollment_goals")
+        .select("id,seller_id,team_id,month,year,target_enrollments,notes,active,created_at,updated_at")
+        .eq("seller_id", uid)
+        .eq("month", month)
+        .eq("year", year)
+        .eq("active", true)
+        .maybeSingle();
+      if (error) throw error;
+      return (data as EnrollmentGoal | null) ?? null;
+    },
+  });
+}
