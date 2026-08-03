@@ -23,7 +23,15 @@ import { Phone, PhoneCall, Sparkles, CalendarCheck, GraduationCap, Trophy, Maxim
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { scoreOf, fmtScore, isRealSeller } from "@/lib/scoring";
-import { useMyActiveGoal, currentMonthYear, monthRange } from "@/lib/enrollment-goals";
+import {
+  useMyActiveGoal,
+  useTeamActiveGoals,
+  currentMonthYear,
+  monthRange,
+  monthLabel,
+  computeGoalProgress,
+  type EnrollmentGoal,
+} from "@/lib/enrollment-goals";
 import { MyGoalBanner } from "@/components/metas/MyGoalBanner";
 
 
@@ -135,6 +143,14 @@ function PlacarDiario() {
   const monthR = useMemo(() => monthRange(nowMY.month, nowMY.year), [nowMY]);
   const { data: myGoal = null } = useMyActiveGoal(nowMY.month, nowMY.year);
 
+  // ---- Metas da equipe (somente admin/franqueado; RLS garante o resto) ----
+  const teamGoalsQ = useTeamActiveGoals(nowMY.month, nowMY.year, isAdmin);
+  const goalsBySeller = useMemo(() => {
+    const m = new Map<string, EnrollmentGoal>();
+    for (const g of teamGoalsQ.data ?? []) m.set(g.seller_id, g);
+    return m;
+  }, [teamGoalsQ.data]);
+
   const { data: monthRows = [] } = useQuery({
     enabled: true,
     queryKey: ["placar_mes_metas", monthR.start, monthR.end, effectiveTeam],
@@ -146,6 +162,20 @@ function PlacarDiario() {
     for (const r of monthRows as ProductivityRow[]) m.set(r.vendedor_id, r.matriculas);
     return m;
   }, [monthRows]);
+
+  // Maior % da meta entre vendedores com meta ativa (somente admin)
+  const bestGoalPct = useMemo(() => {
+    if (!isAdmin) return null;
+    let best: { row: ProductivityRow; done: number; target: number; pct: number } | null = null;
+    for (const r of rows) {
+      const g = goalsBySeller.get(r.vendedor_id);
+      if (!g || g.target_enrollments <= 0) continue;
+      const done = monthDoneById.get(r.vendedor_id) ?? 0;
+      const pct = (done / g.target_enrollments) * 100;
+      if (!best || pct > best.pct) best = { row: r, done, target: g.target_enrollments, pct };
+    }
+    return best;
+  }, [isAdmin, rows, goalsBySeller, monthDoneById]);
 
   const [selectedSeller, setSelectedSeller] = useState<(ProductivityRow & { score: number }) | null>(null);
 
