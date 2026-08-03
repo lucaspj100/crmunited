@@ -1956,6 +1956,63 @@ export type Database = {
         }
         Relationships: []
       }
+      seller_enrollment_goals: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string | null
+          id: string
+          month: number
+          notes: string | null
+          seller_id: string
+          target_enrollments: number
+          team_id: string | null
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          month: number
+          notes?: string | null
+          seller_id: string
+          target_enrollments: number
+          team_id?: string | null
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          month?: number
+          notes?: string | null
+          seller_id?: string
+          target_enrollments?: number
+          team_id?: string | null
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seller_enrollment_goals_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seller_enrollment_goals_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       share_phrases: {
         Row: {
           created_at: string
