@@ -2552,6 +2552,22 @@ export type Database = {
         }
         Returns: boolean
       }
+      interested_audit: {
+        Args: { _end: string; _start: string }
+        Returns: {
+          backfilled: boolean
+          became_interested_at: string
+          current_seller_id: string
+          current_seller_name: string
+          current_status: string
+          divergence_reason: string
+          event_seller_id: string
+          event_seller_name: string
+          lead_id: string
+          nome: string
+          origem: string
+        }[]
+      }
       lead_phones_lookup: {
         Args: { _phones: string[] }
         Returns: {

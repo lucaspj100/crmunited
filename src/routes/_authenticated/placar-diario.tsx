@@ -33,6 +33,7 @@ import {
   type EnrollmentGoal,
 } from "@/lib/enrollment-goals";
 import { MyGoalBanner } from "@/components/metas/MyGoalBanner";
+import { InterestedAuditCard } from "@/components/processos/InterestedAuditCard";
 
 
 
@@ -487,6 +488,8 @@ function PlacarDiario() {
         {/* Diagnóstico Comercial — apenas ADM/Franqueado */}
         {isAdmin && <AdmDiagnostic totals={totals} rows={rows} />}
         {isAdmin && <DebugEntrevistasMarcadas start={range.start} end={range.end} rows={rows} />}
+        {isAdmin && <InterestedAuditCard start={range.start} end={range.end} />}
+
       </div>
 
       <SellerDetailDialog
