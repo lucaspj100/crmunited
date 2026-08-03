@@ -22,25 +22,51 @@ export const Route = createFileRoute("/_authenticated/metas-matricula")({ compon
 
 type Seller = { id: string; nome: string; team_id: string | null };
 
+/**
+ * Funções consideradas comerciais. O enum app_role do projeto só possui
+ * admin | franqueado | vendedor, portanto apenas "vendedor" é válido aqui.
+ */
+const SELLER_ROLES = ["vendedor"] as const;
+
 function useSellers() {
   return useQuery({
     queryKey: ["sellers_for_goals"],
     staleTime: 60_000,
+    retry: false,
     queryFn: async (): Promise<Seller[]> => {
-      const [profs, roles] = await Promise.all([
-        supabase.from("profiles").select("id, full_name, email, team_id, status"),
-        supabase.from("user_roles").select("user_id, role"),
-      ]);
-      if (profs.error) throw profs.error;
-      if (roles.error) throw roles.error;
-      const sellerIds = new Set((roles.data ?? []).filter((r) => r.role === "vendedor").map((r) => r.user_id));
-      return (profs.data ?? [])
-        .filter((p) => sellerIds.has(p.id) && p.status === "ativo")
-        .map((p) => ({ id: p.id, nome: p.full_name || p.email || "Vendedor", team_id: p.team_id }))
+      const { data: roleRows, error: rolesError } = await supabase
+        .from("user_roles")
+        .select("user_id, role");
+      if (rolesError) throw rolesError;
+
+      const sellerIds = Array.from(
+        new Set(
+          (roleRows ?? [])
+            .filter((r) => (SELLER_ROLES as readonly string[]).includes(r.role))
+            .map((r) => r.user_id)
+            .filter((id): id is string => !!id),
+        ),
+      );
+      if (sellerIds.length === 0) return [];
+
+      // Atenção: selecionar apenas colunas com permissão de leitura (sem `status`).
+      const { data: profs, error: profilesError } = await supabase
+        .from("profiles")
+        .select("id, full_name, email, team_id")
+        .in("id", sellerIds);
+      if (profilesError) throw profilesError;
+
+      return (profs ?? [])
+        .map((p) => ({
+          id: p.id,
+          nome: p.full_name?.trim() || p.email || "Usuário sem nome",
+          team_id: p.team_id,
+        }))
         .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
     },
   });
 }
+
 
 function MetasPage() {
   const { roles } = useAuth();
@@ -52,7 +78,8 @@ function MetasPage() {
   const [editing, setEditing] = useState<EnrollmentGoal | null>(null);
   const [creating, setCreating] = useState(false);
 
-  const { data: sellers = [] } = useSellers();
+  const sellersQuery = useSellers();
+  const sellers = sellersQuery.data ?? [];
   const { data: goals = [], isLoading } = useQuery({
     queryKey: ["enrollment_goals", month, year],
     queryFn: () => fetchEnrollmentGoals({ month, year }),
@@ -165,20 +192,27 @@ function MetasPage() {
         defaultMonth={month}
         defaultYear={year}
         sellers={sellers}
+        sellersLoading={sellersQuery.isLoading}
+        sellersError={sellersQuery.error as Error | null}
+        onRetrySellers={() => sellersQuery.refetch()}
         onClose={() => { setCreating(false); setEditing(null); }}
       />
+
     </div>
   );
 }
 
 function GoalDialog({
-  open, goal, defaultMonth, defaultYear, sellers, onClose,
+  open, goal, defaultMonth, defaultYear, sellers, sellersLoading, sellersError, onRetrySellers, onClose,
 }: {
   open: boolean;
   goal: EnrollmentGoal | null;
   defaultMonth: number;
   defaultYear: number;
   sellers: Seller[];
+  sellersLoading: boolean;
+  sellersError: Error | null;
+  onRetrySellers: () => void;
   onClose: () => void;
 }) {
   const qc = useQueryClient();
@@ -240,20 +274,40 @@ function GoalDialog({
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg overflow-visible">
         <DialogHeader>
           <DialogTitle>{goal ? "Editar meta" : "Nova meta de matrículas"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-1.5">
             <Label>Vendedor</Label>
-            <Select value={sellerId} onValueChange={setSellerId}>
-              <SelectTrigger><SelectValue placeholder="Selecione o vendedor" /></SelectTrigger>
-              <SelectContent>
-                {sellers.map((s) => <SelectItem key={s.id} value={s.id}>{s.nome}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            {sellersError ? (
+              <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm">
+                <div className="text-destructive">Não foi possível carregar os vendedores.</div>
+                <div className="mt-1 text-xs text-muted-foreground break-words">{sellersError.message}</div>
+                <Button size="sm" variant="outline" className="mt-2" onClick={onRetrySellers}>Tentar novamente</Button>
+              </div>
+            ) : (
+              <>
+                <Select value={sellerId} onValueChange={setSellerId} disabled={sellersLoading || sellers.length === 0}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={sellersLoading ? "Carregando vendedores…" : "Selecione o vendedor"} />
+                  </SelectTrigger>
+                  <SelectContent className="z-[100] max-h-72">
+                    {sellers.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>{s.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {!sellersLoading && sellers.length === 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    Nenhum vendedor comercial foi encontrado. Verifique as funções dos usuários.
+                  </p>
+                )}
+              </>
+            )}
           </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Mês</Label>
