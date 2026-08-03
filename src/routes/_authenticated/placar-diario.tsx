@@ -413,6 +413,8 @@ function PlacarDiario() {
           teamName={teams.find((t) => t.id === effectiveTeam)?.name ?? "Equipe"}
           isAdmin={isAdmin}
           periodLabel={PERIOD_LABELS[period]}
+          periodRange={range}
+
           periodEnrollments={totals.matriculas}
           showPeriodLine={period !== "mes"}
           telao={fullscreen}
