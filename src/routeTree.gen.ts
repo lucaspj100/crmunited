@@ -24,6 +24,7 @@ import { Route as AuthenticatedPerdidosRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedPainelAdmRouteImport } from './routes/_authenticated/painel-adm'
 import { Route as AuthenticatedMeusFeedbacksRouteImport } from './routes/_authenticated/meus-feedbacks'
 import { Route as AuthenticatedMeuPerfilRouteImport } from './routes/_authenticated/meu-perfil'
+import { Route as AuthenticatedMetasMatriculaRouteImport } from './routes/_authenticated/metas-matricula'
 import { Route as AuthenticatedMateriaisRouteImport } from './routes/_authenticated/materiais'
 import { Route as AuthenticatedLeadsRouteImport } from './routes/_authenticated/leads'
 import { Route as AuthenticatedIntegracaoArenaRouteImport } from './routes/_authenticated/integracao-arena'
@@ -120,6 +121,12 @@ const AuthenticatedMeuPerfilRoute = AuthenticatedMeuPerfilRouteImport.update({
   path: '/meu-perfil',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMetasMatriculaRoute =
+  AuthenticatedMetasMatriculaRouteImport.update({
+    id: '/metas-matricula',
+    path: '/metas-matricula',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMateriaisRoute = AuthenticatedMateriaisRouteImport.update({
   id: '/materiais',
   path: '/materiais',
@@ -226,6 +233,7 @@ export interface FileRoutesByFullPath {
   '/integracao-arena': typeof AuthenticatedIntegracaoArenaRoute
   '/leads': typeof AuthenticatedLeadsRoute
   '/materiais': typeof AuthenticatedMateriaisRoute
+  '/metas-matricula': typeof AuthenticatedMetasMatriculaRoute
   '/meu-perfil': typeof AuthenticatedMeuPerfilRoute
   '/meus-feedbacks': typeof AuthenticatedMeusFeedbacksRoute
   '/painel-adm': typeof AuthenticatedPainelAdmRoute
@@ -258,6 +266,7 @@ export interface FileRoutesByTo {
   '/integracao-arena': typeof AuthenticatedIntegracaoArenaRoute
   '/leads': typeof AuthenticatedLeadsRoute
   '/materiais': typeof AuthenticatedMateriaisRoute
+  '/metas-matricula': typeof AuthenticatedMetasMatriculaRoute
   '/meu-perfil': typeof AuthenticatedMeuPerfilRoute
   '/meus-feedbacks': typeof AuthenticatedMeusFeedbacksRoute
   '/painel-adm': typeof AuthenticatedPainelAdmRoute
@@ -292,6 +301,7 @@ export interface FileRoutesById {
   '/_authenticated/integracao-arena': typeof AuthenticatedIntegracaoArenaRoute
   '/_authenticated/leads': typeof AuthenticatedLeadsRoute
   '/_authenticated/materiais': typeof AuthenticatedMateriaisRoute
+  '/_authenticated/metas-matricula': typeof AuthenticatedMetasMatriculaRoute
   '/_authenticated/meu-perfil': typeof AuthenticatedMeuPerfilRoute
   '/_authenticated/meus-feedbacks': typeof AuthenticatedMeusFeedbacksRoute
   '/_authenticated/painel-adm': typeof AuthenticatedPainelAdmRoute
@@ -326,6 +336,7 @@ export interface FileRouteTypes {
     | '/integracao-arena'
     | '/leads'
     | '/materiais'
+    | '/metas-matricula'
     | '/meu-perfil'
     | '/meus-feedbacks'
     | '/painel-adm'
@@ -358,6 +369,7 @@ export interface FileRouteTypes {
     | '/integracao-arena'
     | '/leads'
     | '/materiais'
+    | '/metas-matricula'
     | '/meu-perfil'
     | '/meus-feedbacks'
     | '/painel-adm'
@@ -391,6 +403,7 @@ export interface FileRouteTypes {
     | '/_authenticated/integracao-arena'
     | '/_authenticated/leads'
     | '/_authenticated/materiais'
+    | '/_authenticated/metas-matricula'
     | '/_authenticated/meu-perfil'
     | '/_authenticated/meus-feedbacks'
     | '/_authenticated/painel-adm'
@@ -516,6 +529,13 @@ declare module '@tanstack/react-router' {
       path: '/meu-perfil'
       fullPath: '/meu-perfil'
       preLoaderRoute: typeof AuthenticatedMeuPerfilRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/metas-matricula': {
+      id: '/_authenticated/metas-matricula'
+      path: '/metas-matricula'
+      fullPath: '/metas-matricula'
+      preLoaderRoute: typeof AuthenticatedMetasMatriculaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/materiais': {
@@ -650,6 +670,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedIntegracaoArenaRoute: typeof AuthenticatedIntegracaoArenaRoute
   AuthenticatedLeadsRoute: typeof AuthenticatedLeadsRoute
   AuthenticatedMateriaisRoute: typeof AuthenticatedMateriaisRoute
+  AuthenticatedMetasMatriculaRoute: typeof AuthenticatedMetasMatriculaRoute
   AuthenticatedMeuPerfilRoute: typeof AuthenticatedMeuPerfilRoute
   AuthenticatedMeusFeedbacksRoute: typeof AuthenticatedMeusFeedbacksRoute
   AuthenticatedPainelAdmRoute: typeof AuthenticatedPainelAdmRoute
@@ -681,6 +702,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedIntegracaoArenaRoute: AuthenticatedIntegracaoArenaRoute,
   AuthenticatedLeadsRoute: AuthenticatedLeadsRoute,
   AuthenticatedMateriaisRoute: AuthenticatedMateriaisRoute,
+  AuthenticatedMetasMatriculaRoute: AuthenticatedMetasMatriculaRoute,
   AuthenticatedMeuPerfilRoute: AuthenticatedMeuPerfilRoute,
   AuthenticatedMeusFeedbacksRoute: AuthenticatedMeusFeedbacksRoute,
   AuthenticatedPainelAdmRoute: AuthenticatedPainelAdmRoute,

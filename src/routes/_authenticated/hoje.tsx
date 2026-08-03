@@ -22,6 +22,7 @@ import {
   User, AlertTriangle, Flame, Snowflake, Sun, PhoneCall, Sparkles, Clock,
 } from "lucide-react";
 import { toast } from "sonner";
+import { MyGoalCard } from "@/components/metas/MyGoalCard";
 import { buildTodayQueue, localToday, useHojeData } from "@/lib/today-queue";
 import type { Lead, Task, Profile, ProspectMini, QueueItem, Reason } from "@/lib/today-queue";
 
@@ -137,6 +138,9 @@ function HojePage() {
           )}
         </div>
       </div>
+
+      {/* Minha meta de matrículas */}
+      <MyGoalCard />
 
       {/* Próxima melhor ação */}
       <NextBestAction item={next} onWork={() => next && openItem(next)} onDetails={(id) => setDetailsId(id)} />
