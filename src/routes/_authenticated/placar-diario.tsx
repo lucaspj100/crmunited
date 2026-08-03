@@ -23,6 +23,11 @@ import { Phone, PhoneCall, Sparkles, CalendarCheck, GraduationCap, Trophy, Maxim
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { scoreOf, fmtScore, isRealSeller } from "@/lib/scoring";
+import {
+  useActiveGoals, monthsInRange, currentMonthYear, monthRange, targetForRange,
+  computeGoalProgress, monthLabel, type GoalTarget,
+} from "@/lib/enrollment-goals";
+import { GoalProgressBlock } from "@/components/metas/GoalProgressBlock";
 
 
 
@@ -126,6 +131,54 @@ function PlacarDiario() {
       .map((r) => ({ ...r, score: scoreOf(r) }))
       .sort((a, b) => b.score - a.score);
   }, [rows]);
+
+  // ---- Metas individuais de matrícula ----
+  const rangeMonths = useMemo(() => monthsInRange(range.start, range.end), [range.start, range.end]);
+  const nowMY = useMemo(() => currentMonthYear(), []);
+  const monthR = useMemo(() => monthRange(nowMY.month, nowMY.year), [nowMY]);
+  const goalMonths = useMemo(() => {
+    const set = new Map<string, { month: number; year: number }>();
+    for (const m of [...rangeMonths, nowMY]) set.set(`${m.year}-${m.month}`, m);
+    return Array.from(set.values());
+  }, [rangeMonths, nowMY]);
+  const { data: goals = [] } = useActiveGoals(goalMonths);
+
+  const monthlyMode = period === "hoje" || period === "ontem" || period === "semana" || period === "semana_passada";
+  const { data: monthRows = [] } = useQuery({
+    enabled: monthlyMode,
+    queryKey: ["placar_mes_metas", monthR.start, monthR.end, effectiveTeam],
+    queryFn: () => fetchProductivity({ start: monthR.start, end: monthR.end, vendedorId: null, teamId: teamId }),
+    refetchInterval: 60_000,
+  });
+  const monthDoneById = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const r of monthRows as ProductivityRow[]) m.set(r.vendedor_id, r.matriculas);
+    return m;
+  }, [monthRows]);
+
+  const goalInfo = useMemo(() => {
+    return (r: ProductivityRow): { target: GoalTarget; done: number; note?: string } => {
+      if (monthlyMode) {
+        return {
+          target: targetForRange(goals, r.vendedor_id, [nowMY]),
+          done: monthDoneById.get(r.vendedor_id) ?? 0,
+          note: `${r.matriculas} no período selecionado · meta de ${monthLabel(nowMY.month, nowMY.year)}`,
+        };
+      }
+      return { target: targetForRange(goals, r.vendedor_id, rangeMonths), done: r.matriculas };
+    };
+  }, [goals, monthlyMode, monthDoneById, nowMY, rangeMonths]);
+
+  const topGoalPct = useMemo(() => {
+    let best: { row: ProductivityRow; pct: number } | null = null;
+    for (const r of rows) {
+      const info = goalInfo(r);
+      if (info.target.kind !== "target") continue;
+      const pct = computeGoalProgress(info.done, info.target.target).percentage;
+      if (!best || pct > best.pct) best = { row: r, pct };
+    }
+    return best;
+  }, [rows, goalInfo]);
 
   const [selectedSeller, setSelectedSeller] = useState<(ProductivityRow & { score: number }) | null>(null);
 
@@ -363,6 +416,17 @@ function PlacarDiario() {
                         <span>🎓 {r.matriculas}</span>
                         <span>❌ {r.perdidos}</span>
                       </div>
+                      <div className="mt-2 hidden sm:block">
+                        <GoalProgressBlock
+                          done={goalInfo(r).done}
+                          target={goalInfo(r).target}
+                          telao={idx === 0}
+                          periodNote={goalInfo(r).note}
+                        />
+                      </div>
+                      <div className="mt-2 sm:hidden">
+                        <GoalProgressBlock done={goalInfo(r).done} target={goalInfo(r).target} compact />
+                      </div>
                     </div>
                     <div className="text-right">
                       <div className={`font-black tabular-nums ${idx === 0 ? "text-5xl" : "text-4xl"}`}>{fmtScore(r.score)}</div>
@@ -388,13 +452,25 @@ function PlacarDiario() {
               <Highlight title="Mais entrevistas marcadas" row={top("entrevistas_marcadas")} field="entrevistas_marcadas" />
               <Highlight title="Mais entrevistas realizadas" row={top("entrevistas_realizadas")} field="entrevistas_realizadas" />
               <Highlight title="Mais matrículas" row={top("matriculas")} field="matriculas" />
+              <div className="flex items-center gap-3 rounded-xl border border-amber-400/30 bg-amber-400/10 p-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-amber-400 to-orange-600 font-bold text-slate-900">
+                  {topGoalPct?.row.avatar_url
+                    ? <img src={topGoalPct.row.avatar_url} alt="" className="h-full w-full object-cover" />
+                    : (topGoalPct ? initials(topGoalPct.row.nome) : "—")}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-[11px] uppercase tracking-wider text-white/60">Maior % da meta</div>
+                  <div className="truncate font-semibold">{topGoalPct?.row.nome ?? "Sem metas cadastradas"}</div>
+                </div>
+                <div className="text-2xl font-black tabular-nums">{topGoalPct ? `${topGoalPct.pct.toFixed(0)}%` : "—"}</div>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Ranking completo da equipe — apenas ADM/Franqueado */}
         {isAdmin && (
-          <FullRanking ranked={ranked} onSelect={(r) => setSelectedSeller(r)} />
+          <FullRanking ranked={ranked} goalInfo={goalInfo} onSelect={(r) => setSelectedSeller(r)} />
         )}
 
         {/* Diagnóstico Comercial — apenas ADM/Franqueado */}
@@ -622,7 +698,11 @@ function Highlight({ title, row, field }: { title: string; row: ProductivityRow 
 
 type RankedRow = ProductivityRow & { score: number };
 
-function FullRanking({ ranked, onSelect }: { ranked: RankedRow[]; onSelect: (r: RankedRow) => void }) {
+function FullRanking({ ranked, goalInfo, onSelect }: {
+  ranked: RankedRow[];
+  goalInfo: (r: ProductivityRow) => { target: GoalTarget; done: number; note?: string };
+  onSelect: (r: RankedRow) => void;
+}) {
   return (
     <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
       <div className="flex items-center gap-2 mb-4">
@@ -644,6 +724,7 @@ function FullRanking({ ranked, onSelect }: { ranked: RankedRow[]; onSelect: (r: 
                 <th className="py-2 px-2 text-right">Interes.</th>
                 <th className="py-2 px-2 text-right">Entrev.</th>
                 <th className="py-2 px-2 text-right">Matr.</th>
+                <th className="py-2 px-2 min-w-[180px]">Meta de matrículas</th>
                 <th className="py-2 px-2 text-right">WA</th>
                 <th className="py-2 px-2 text-right">LI</th>
                 <th className="py-2 pl-2 text-right">Pontos</th>
@@ -672,6 +753,9 @@ function FullRanking({ ranked, onSelect }: { ranked: RankedRow[]; onSelect: (r: 
                   <td className="py-3 px-2 text-right tabular-nums">{r.interessados_gerados}</td>
                   <td className="py-3 px-2 text-right tabular-nums">{r.entrevistas_marcadas}</td>
                   <td className="py-3 px-2 text-right tabular-nums">{r.matriculas}</td>
+                  <td className="py-3 px-2">
+                    <GoalProgressBlock done={goalInfo(r).done} target={goalInfo(r).target} />
+                  </td>
                   <td className="py-3 px-2 text-right tabular-nums">{r.whatsapps_checkout ?? 0}</td>
                   <td className="py-3 px-2 text-right tabular-nums">{r.linkedins_checkout ?? 0}</td>
                   <td className="py-3 pl-2 text-right font-black tabular-nums text-amber-300">{fmtScore(r.score)}</td>
