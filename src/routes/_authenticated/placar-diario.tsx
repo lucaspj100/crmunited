@@ -489,8 +489,9 @@ function PlacarDiario() {
 
         {/* Ranking completo da equipe — apenas ADM/Franqueado */}
         {isAdmin && (
-          <FullRanking ranked={ranked} goalInfo={goalInfo} onSelect={(r) => setSelectedSeller(r)} />
+          <FullRanking ranked={ranked} onSelect={(r) => setSelectedSeller(r)} />
         )}
+
 
         {/* Diagnóstico Comercial — apenas ADM/Franqueado */}
         {isAdmin && <AdmDiagnostic totals={totals} rows={rows} />}
