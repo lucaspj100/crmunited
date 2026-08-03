@@ -842,6 +842,27 @@ function FullRanking({ ranked, onSelect, goalsBySeller, monthDoneById, goalsLoad
   );
 }
 
+/** Célula "Meta mensal" do ranking (admin/franqueado). */
+function GoalCell({ goal, done, loading, error }: {
+  goal: EnrollmentGoal | null;
+  done: number;
+  loading: boolean;
+  error: boolean;
+}) {
+  if (loading) return <span className="text-white/40">…</span>;
+  if (error) return <span className="text-rose-300 text-[11px]">erro ao carregar</span>;
+  if (!goal) return <span className="text-white/40 text-[11px]">Meta não definida</span>;
+  const p = computeGoalProgress(done, goal.target_enrollments);
+  return (
+    <span>
+      {p.done} / {p.target}
+      <span className="ml-1 text-[11px] text-amber-300">{p.percentage.toFixed(0)}%</span>
+    </span>
+  );
+}
+
+
+
 function SellerDetailDialog({
   seller, period, onClose,
 }: {
