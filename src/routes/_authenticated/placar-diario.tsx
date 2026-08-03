@@ -33,6 +33,7 @@ import {
   type EnrollmentGoal,
 } from "@/lib/enrollment-goals";
 import { MyGoalBanner } from "@/components/metas/MyGoalBanner";
+import { InterestedAuditCard } from "@/components/processos/InterestedAuditCard";
 
 
 
