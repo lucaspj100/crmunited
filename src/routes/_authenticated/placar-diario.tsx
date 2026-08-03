@@ -28,6 +28,7 @@ import {
   computeGoalProgress, monthLabel, type GoalTarget,
 } from "@/lib/enrollment-goals";
 import { GoalProgressBlock } from "@/components/metas/GoalProgressBlock";
+import { MyGoalBanner } from "@/components/metas/MyGoalBanner";
 
 
 
