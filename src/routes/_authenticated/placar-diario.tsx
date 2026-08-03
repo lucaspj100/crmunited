@@ -794,6 +794,7 @@ function FullRanking({ ranked, onSelect, goalsBySeller, monthDoneById, goalsLoad
                 <th className="py-2 px-2 text-right">Matr.</th>
                 <th className="py-2 px-2 text-right">WA</th>
                 <th className="py-2 px-2 text-right">LI</th>
+                <th className="py-2 px-2 text-right">Meta mensal<span className="ml-1 normal-case text-white/30">({goalMonthLabel})</span></th>
                 <th className="py-2 pl-2 text-right">Pontos</th>
               </tr>
             </thead>
