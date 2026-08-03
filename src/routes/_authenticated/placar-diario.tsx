@@ -386,6 +386,21 @@ function PlacarDiario() {
           </div>
         )}
 
+        {/* Card fixo "Minha meta" — acima do pódio, para todo vendedor */}
+        <MyGoalBanner
+          rows={rows}
+          monthDoneById={monthDoneById}
+          goals={goals}
+          month={nowMY.month}
+          year={nowMY.year}
+          isAdmin={isAdmin}
+          userId={user?.id}
+          adminSellerId={adminGoalSeller}
+          onAdminSellerChange={setAdminGoalSeller}
+          periodLabel={PERIOD_LABELS[period]}
+        />
+
+
         <div className="grid grid-cols-1 xl:grid-cols-[2fr_1fr] gap-5">
           {/* Pódio - Top 3 */}
           <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
