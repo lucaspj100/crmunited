@@ -28,6 +28,7 @@ import {
   computeGoalProgress, monthLabel, type GoalTarget,
 } from "@/lib/enrollment-goals";
 import { GoalProgressBlock } from "@/components/metas/GoalProgressBlock";
+import { MyGoalBanner } from "@/components/metas/MyGoalBanner";
 
 
 
@@ -44,8 +45,10 @@ function initials(name: string) {
 
 
 function PlacarDiario() {
-  const { roles } = useAuth();
+  const { roles, user } = useAuth();
   const isAdmin = roles.includes("admin") || roles.includes("franqueado");
+  const [adminGoalSeller, setAdminGoalSeller] = useState<string | null>(null);
+
 
   const [period, setPeriod] = useState<Period>("hoje");
   const [customStart, setCustomStart] = useState<string>(todayIso());
@@ -145,8 +148,9 @@ function PlacarDiario() {
 
   const monthlyMode = period === "hoje" || period === "ontem" || period === "semana" || period === "semana_passada";
   const { data: monthRows = [] } = useQuery({
-    enabled: monthlyMode,
+    enabled: true,
     queryKey: ["placar_mes_metas", monthR.start, monthR.end, effectiveTeam],
+
     queryFn: () => fetchProductivity({ start: monthR.start, end: monthR.end, vendedorId: null, teamId: teamId }),
     refetchInterval: 60_000,
   });
@@ -381,6 +385,21 @@ function PlacarDiario() {
             </div>
           </div>
         )}
+
+        {/* Card fixo "Minha meta" — acima do pódio, para todo vendedor */}
+        <MyGoalBanner
+          rows={rows}
+          monthDoneById={monthDoneById}
+          goals={goals}
+          month={nowMY.month}
+          year={nowMY.year}
+          isAdmin={isAdmin}
+          userId={user?.id}
+          adminSellerId={adminGoalSeller}
+          onAdminSellerChange={setAdminGoalSeller}
+          periodLabel={PERIOD_LABELS[period]}
+        />
+
 
         <div className="grid grid-cols-1 xl:grid-cols-[2fr_1fr] gap-5">
           {/* Pódio - Top 3 */}
