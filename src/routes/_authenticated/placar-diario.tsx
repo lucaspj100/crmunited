@@ -823,6 +823,14 @@ function FullRanking({ ranked, onSelect, goalsBySeller, monthDoneById, goalsLoad
                   <td className="py-3 px-2 text-right tabular-nums">{r.matriculas}</td>
                   <td className="py-3 px-2 text-right tabular-nums">{r.whatsapps_checkout ?? 0}</td>
                   <td className="py-3 px-2 text-right tabular-nums">{r.linkedins_checkout ?? 0}</td>
+                  <td className="py-3 px-2 text-right tabular-nums">
+                    <GoalCell
+                      goal={goalsBySeller.get(r.vendedor_id) ?? null}
+                      done={monthDoneById.get(r.vendedor_id) ?? 0}
+                      loading={goalsLoading}
+                      error={goalsError}
+                    />
+                  </td>
                   <td className="py-3 pl-2 text-right font-black tabular-nums text-amber-300">{fmtScore(r.score)}</td>
                 </tr>
               ))}
