@@ -274,20 +274,40 @@ function GoalDialog({
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg overflow-visible">
         <DialogHeader>
           <DialogTitle>{goal ? "Editar meta" : "Nova meta de matrículas"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-1.5">
             <Label>Vendedor</Label>
-            <Select value={sellerId} onValueChange={setSellerId}>
-              <SelectTrigger><SelectValue placeholder="Selecione o vendedor" /></SelectTrigger>
-              <SelectContent>
-                {sellers.map((s) => <SelectItem key={s.id} value={s.id}>{s.nome}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            {sellersError ? (
+              <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm">
+                <div className="text-destructive">Não foi possível carregar os vendedores.</div>
+                <div className="mt-1 text-xs text-muted-foreground break-words">{sellersError.message}</div>
+                <Button size="sm" variant="outline" className="mt-2" onClick={onRetrySellers}>Tentar novamente</Button>
+              </div>
+            ) : (
+              <>
+                <Select value={sellerId} onValueChange={setSellerId} disabled={sellersLoading || sellers.length === 0}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={sellersLoading ? "Carregando vendedores…" : "Selecione o vendedor"} />
+                  </SelectTrigger>
+                  <SelectContent className="z-[100] max-h-72">
+                    {sellers.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>{s.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {!sellersLoading && sellers.length === 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    Nenhum vendedor comercial foi encontrado. Verifique as funções dos usuários.
+                  </p>
+                )}
+              </>
+            )}
           </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Mês</Label>
