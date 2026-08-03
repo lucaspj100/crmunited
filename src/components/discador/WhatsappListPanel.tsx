@@ -543,19 +543,30 @@ export function WhatsappListPanel() {
     bulkMode,
   };
 
+  const validAwaitingRows = useMemo(
+    () =>
+      filtered.filter(
+        (row) =>
+          row.status === "aguardando" &&
+          row.contact &&
+          (row.contact.telefone_normalizado || row.contact.telefone_original),
+      ),
+    [filtered],
+  );
+
   const openNextAwaiting = async () => {
     if (!hasActiveTemplate) {
       setShowNoTemplateDialog(true);
       return;
     }
-    const next = filtered.find((r) => r.status === "aguardando");
+    const next = validAwaitingRows[0];
     if (!next) {
-      toast.info("Nenhum contato aguardando WhatsApp.");
+      toast.info("Nenhum contato aguardando WhatsApp com telefone válido.");
       return;
     }
     await openWhatsapp(next);
   };
-  const awaitingCount = summary.aguardando;
+  const awaitingCount = validAwaitingRows.length;
 
 
 
