@@ -2320,6 +2320,42 @@ export type Database = {
           },
         ]
       }
+      team_mission_settings: {
+        Row: {
+          created_at: string
+          done_to_enrollment_rate_max: number
+          done_to_enrollment_rate_min: number
+          id: boolean
+          interested_to_enrollment_rate: number
+          min_sample_done: number
+          min_sample_interested: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          done_to_enrollment_rate_max?: number
+          done_to_enrollment_rate_min?: number
+          id?: boolean
+          interested_to_enrollment_rate?: number
+          min_sample_done?: number
+          min_sample_interested?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          done_to_enrollment_rate_max?: number
+          done_to_enrollment_rate_min?: number
+          id?: boolean
+          interested_to_enrollment_rate?: number
+          min_sample_done?: number
+          min_sample_interested?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       teams: {
         Row: {
           created_at: string
@@ -2677,6 +2713,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      team_enrollment_goal_summary: {
+        Args: { _month: number; _team_id?: string; _year: number }
+        Returns: Json
       }
       teams_overview: { Args: never; Returns: Json }
     }
