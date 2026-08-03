@@ -264,9 +264,9 @@ export const changeOwnPassword = createServerFn({ method: "POST" })
     if (upErr) throw new Error(upErr.message);
 
     await supabaseAdmin
-      .from("profiles")
-      .update({ must_change_password: false, status: "ativo" })
-      .eq("id", context.userId);
+      .from("profile_account_security")
+      .upsert({ user_id: context.userId, must_change_password: false, status: "ativo" }, { onConflict: "user_id" });
+
 
     await supabaseAdmin.from("access_logs").insert({
       user_id: context.userId,
