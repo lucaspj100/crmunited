@@ -707,11 +707,68 @@ function Highlight({ title, row, field }: { title: string; row: ProductivityRow 
   );
 }
 
+/** Meta mensal resumida no card do pódio (admin/franqueado). */
+function GoalMini({ goal, done, loading, error }: {
+  goal: EnrollmentGoal | null;
+  done: number;
+  loading: boolean;
+  error: boolean;
+}) {
+  if (loading) return <div className="mt-1 text-[11px] text-white/40">Carregando meta…</div>;
+  if (error) return <div className="mt-1 text-[11px] text-rose-300">Não foi possível carregar as metas.</div>;
+  if (!goal) return <div className="mt-1 text-[11px] text-white/40">Meta não definida</div>;
+  const p = computeGoalProgress(done, goal.target_enrollments);
+  return (
+    <div className="mt-1.5 space-y-1">
+      <div className="flex flex-wrap items-center gap-x-2 text-[11px] text-white/70">
+        <span className="tabular-nums">Matrículas: <b className="text-white">{p.done} de {p.target}</b></span>
+        <span className="tabular-nums text-amber-300">{p.percentage.toFixed(0)}% da meta</span>
+        <span className="tabular-nums">Faltam {p.remaining}</span>
+      </div>
+      <Progress value={p.barValue} className="h-1.5 bg-white/10" />
+    </div>
+  );
+}
+
+/** Destaque "Maior % da meta" (admin/franqueado). */
+function GoalHighlight({ best, loading, error }: {
+  best: { row: ProductivityRow; done: number; target: number; pct: number } | null;
+  loading: boolean;
+  error: boolean;
+}) {
+  const body = loading
+    ? "Carregando metas…"
+    : error
+      ? "Não foi possível carregar as metas."
+      : best
+        ? `${best.done}/${best.target} · ${best.pct.toFixed(0)}%`
+        : "Sem metas cadastradas";
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-amber-400/30 bg-amber-400/10 p-3">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-amber-400 to-orange-600 font-bold text-slate-900">
+        {best?.row.avatar_url
+          ? <img src={best.row.avatar_url} alt="" className="h-full w-full object-cover" />
+          : (best ? initials(best.row.nome) : <Target className="h-4 w-4" />)}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="text-[11px] uppercase tracking-wider text-white/60">Maior % da meta</div>
+        <div className="truncate font-semibold">{best?.row.nome ?? "—"}</div>
+      </div>
+      <div className={`text-right ${error ? "text-rose-300" : "text-white/80"} text-xs tabular-nums`}>{body}</div>
+    </div>
+  );
+}
+
 type RankedRow = ProductivityRow & { score: number };
 
-function FullRanking({ ranked, onSelect }: {
+function FullRanking({ ranked, onSelect, goalsBySeller, monthDoneById, goalsLoading, goalsError, goalMonthLabel }: {
   ranked: RankedRow[];
   onSelect: (r: RankedRow) => void;
+  goalsBySeller: Map<string, EnrollmentGoal>;
+  monthDoneById: Map<string, number>;
+  goalsLoading: boolean;
+  goalsError: boolean;
+  goalMonthLabel: string;
 }) {
 
   return (
