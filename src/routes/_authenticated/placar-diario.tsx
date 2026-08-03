@@ -391,6 +391,20 @@ function PlacarDiario() {
           periodLabel={PERIOD_LABELS[period]}
         />
 
+        {/* Missão da equipe — meta coletiva mensal (visível a todos os perfis) */}
+        <TeamMissionCard
+          month={missionRef.month}
+          year={missionRef.year}
+          teamId={teamId}
+          teamName={teams.find((t) => t.id === effectiveTeam)?.name ?? "Equipe"}
+          isAdmin={isAdmin}
+          periodLabel={PERIOD_LABELS[period]}
+          periodEnrollments={totals.matriculas}
+          showPeriodLine={period !== "mes"}
+          telao={fullscreen}
+        />
+
+
 
         <div className="grid grid-cols-1 xl:grid-cols-[2fr_1fr] gap-5">
           {/* Pódio - Top 3 */}
