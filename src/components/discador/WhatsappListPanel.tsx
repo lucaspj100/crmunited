@@ -170,7 +170,7 @@ export function WhatsappListPanel() {
     staleTime: 10 * 60 * 1000,
   });
 
-  const { data: rows = [], isLoading } = useQuery<Row[]>({
+  const { data: allRows = [], isLoading, error: listError } = useQuery<Row[]>({
     enabled: !!user,
     queryKey: ["whatsapp_list", user?.id, isAdmin ? sellerFilter : "self"],
     queryFn: async () => {
@@ -184,14 +184,28 @@ export function WhatsappListPanel() {
       if (error) throw error;
       const entries = (data ?? []) as WhatsappListEntry[];
       if (entries.length === 0) return [];
-      const pids = entries.map((e) => e.prospect_contact_id);
+      const pids = Array.from(new Set(entries.map((e) => e.prospect_contact_id)));
       const oids = Array.from(new Set(entries.map((e) => e.owner_id)));
-      const [contactsRes, profilesRes] = await Promise.all([
-        supabase.from("prospect_contacts").select("*").in("id", pids),
-        supabase.from("profiles").select("id, full_name, email").in("id", oids),
-      ]);
-      const contacts = (contactsRes.data ?? []) as ProspectContact[];
-      const profiles = (profilesRes.data ?? []) as Array<{ id: string; full_name: string | null; email: string }>;
+
+      // IMPORTANTE: buscar em lotes — listas grandes (centenas de IDs) estouram
+      // o tamanho da URL do `in(...)` e a consulta falha silenciosamente.
+      const CHUNK = 100;
+      const contacts: ProspectContact[] = [];
+      for (let i = 0; i < pids.length; i += CHUNK) {
+        const slice = pids.slice(i, i + CHUNK);
+        const res = await supabase.from("prospect_contacts").select("*").in("id", slice);
+        if (res.error) throw res.error;
+        contacts.push(...((res.data ?? []) as ProspectContact[]));
+      }
+
+      const profiles: Array<{ id: string; full_name: string | null; email: string }> = [];
+      for (let i = 0; i < oids.length; i += CHUNK) {
+        const slice = oids.slice(i, i + CHUNK);
+        const res = await supabase.from("profiles").select("id, full_name, email").in("id", slice);
+        if (res.error) throw res.error;
+        profiles.push(...((res.data ?? []) as Array<{ id: string; full_name: string | null; email: string }>));
+      }
+
       const cById = new Map(contacts.map((c) => [c.id, c]));
       const pById = new Map(profiles.map((p) => [p.id, p.full_name?.trim() || p.email || "Sem nome"]));
       return entries.map((e) => ({
@@ -201,6 +215,10 @@ export function WhatsappListPanel() {
       }));
     },
   });
+
+  // Registros sem contato relacionado (órfãos / sem permissão) nunca entram na lista de trabalho.
+  const rows = useMemo(() => allRows.filter((r) => !!r.contact), [allRows]);
+  const inconsistentCount = allRows.length - rows.length;
 
   const filtered = useMemo(() => {
     let list = rows;
