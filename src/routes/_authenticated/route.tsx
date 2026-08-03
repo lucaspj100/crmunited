@@ -59,6 +59,7 @@ function AuthedLayout() {
         { to: "/integracao-arena", label: "Integração Arena", icon: Link2 } as const,
         { to: "/usuarios-acessos", label: "Usuários e Acessos", icon: Shield } as const,
         { to: "/equipes", label: "Equipes", icon: Users } as const,
+        { to: "/metas-matricula", label: "Metas de matrícula", icon: Target } as const,
         { to: "/configuracoes", label: "Configurações", icon: Settings } as const,
       ]
     : [...BASE_NAV, { to: "/meus-feedbacks", label: "Meus Feedbacks", icon: MessageSquare } as const];
