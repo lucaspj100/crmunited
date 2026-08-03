@@ -22,25 +22,51 @@ export const Route = createFileRoute("/_authenticated/metas-matricula")({ compon
 
 type Seller = { id: string; nome: string; team_id: string | null };
 
+/**
+ * Funções consideradas comerciais. O enum app_role do projeto só possui
+ * admin | franqueado | vendedor, portanto apenas "vendedor" é válido aqui.
+ */
+const SELLER_ROLES = ["vendedor"] as const;
+
 function useSellers() {
   return useQuery({
     queryKey: ["sellers_for_goals"],
     staleTime: 60_000,
+    retry: false,
     queryFn: async (): Promise<Seller[]> => {
-      const [profs, roles] = await Promise.all([
-        supabase.from("profiles").select("id, full_name, email, team_id, status"),
-        supabase.from("user_roles").select("user_id, role"),
-      ]);
-      if (profs.error) throw profs.error;
-      if (roles.error) throw roles.error;
-      const sellerIds = new Set((roles.data ?? []).filter((r) => r.role === "vendedor").map((r) => r.user_id));
-      return (profs.data ?? [])
-        .filter((p) => sellerIds.has(p.id) && p.status === "ativo")
-        .map((p) => ({ id: p.id, nome: p.full_name || p.email || "Vendedor", team_id: p.team_id }))
+      const { data: roleRows, error: rolesError } = await supabase
+        .from("user_roles")
+        .select("user_id, role");
+      if (rolesError) throw rolesError;
+
+      const sellerIds = Array.from(
+        new Set(
+          (roleRows ?? [])
+            .filter((r) => (SELLER_ROLES as readonly string[]).includes(r.role))
+            .map((r) => r.user_id)
+            .filter((id): id is string => !!id),
+        ),
+      );
+      if (sellerIds.length === 0) return [];
+
+      // Atenção: selecionar apenas colunas com permissão de leitura (sem `status`).
+      const { data: profs, error: profilesError } = await supabase
+        .from("profiles")
+        .select("id, full_name, email, team_id")
+        .in("id", sellerIds);
+      if (profilesError) throw profilesError;
+
+      return (profs ?? [])
+        .map((p) => ({
+          id: p.id,
+          nome: p.full_name?.trim() || p.email || "Usuário sem nome",
+          team_id: p.team_id,
+        }))
         .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
     },
   });
 }
+
 
 function MetasPage() {
   const { roles } = useAuth();
