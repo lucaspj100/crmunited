@@ -446,8 +446,9 @@ export function currentWeekOf(weeks: MissionWeek[], ref: Date = new Date()): Mis
   const iso = localIso(ref);
   const found = weeks.find((w) => iso >= w.start && iso <= w.end);
   if (found) return found;
-  if (iso < weeks[0]!.start) return weeks[0]!;
-  return weeks[weeks.length - 1]!;
+  // Domingo (ou data fora das semanas) aponta para a próxima semana comercial.
+  const next = weeks.find((w) => w.start > iso);
+  return next ?? weeks[weeks.length - 1]!;
 }
 
 export type WeekProgress = {
