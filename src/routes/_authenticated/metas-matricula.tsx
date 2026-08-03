@@ -58,13 +58,13 @@ function MetasPage() {
     queryFn: () => fetchEnrollmentGoals({ month, year }),
   });
 
-  if (!isAdmin) return <Navigate to="/dashboard" replace />;
-
   const sellerName = (id: string) => sellers.find((s) => s.id === id)?.nome ?? id;
   const withoutGoal = useMemo(
     () => sellers.filter((s) => !goals.some((g) => g.seller_id === s.id && g.active)),
     [sellers, goals],
   );
+
+  if (!isAdmin) return <Navigate to="/dashboard" replace />;
 
   const remove = async (g: EnrollmentGoal) => {
     const { error } = await supabase.from("seller_enrollment_goals").delete().eq("id", g.id);
