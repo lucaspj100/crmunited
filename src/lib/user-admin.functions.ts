@@ -179,12 +179,13 @@ export const adminSetUserStatus = createServerFn({ method: "POST" })
     if (banErr) throw new Error(banErr.message);
 
     const { error: pErr } = await supabaseAdmin
-      .from("profiles")
-      .update({
+      .from("profile_account_security")
+      .upsert({
+        user_id: data.userId,
         status: data.status,
         deactivated_at: data.status === "ativo" ? null : new Date().toISOString(),
-      })
-      .eq("id", data.userId);
+      }, { onConflict: "user_id" });
+
     if (pErr) throw new Error(pErr.message);
 
     await supabaseAdmin.from("access_logs").insert({
