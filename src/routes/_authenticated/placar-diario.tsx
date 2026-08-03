@@ -147,8 +147,9 @@ function PlacarDiario() {
 
   const monthlyMode = period === "hoje" || period === "ontem" || period === "semana" || period === "semana_passada";
   const { data: monthRows = [] } = useQuery({
-    enabled: monthlyMode,
+    enabled: true,
     queryKey: ["placar_mes_metas", monthR.start, monthR.end, effectiveTeam],
+
     queryFn: () => fetchProductivity({ start: monthR.start, end: monthR.end, vendedorId: null, teamId: teamId }),
     refetchInterval: 60_000,
   });
