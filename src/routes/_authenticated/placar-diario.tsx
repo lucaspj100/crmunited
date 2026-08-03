@@ -33,7 +33,10 @@ import {
   type EnrollmentGoal,
 } from "@/lib/enrollment-goals";
 import { MyGoalBanner } from "@/components/metas/MyGoalBanner";
+import { TeamMissionCard } from "@/components/metas/TeamMissionCard";
+import { referenceMonthOf } from "@/lib/team-mission";
 import { InterestedAuditCard } from "@/components/processos/InterestedAuditCard";
+
 
 
 
