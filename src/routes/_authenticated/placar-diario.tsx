@@ -718,11 +718,11 @@ function Highlight({ title, row, field }: { title: string; row: ProductivityRow 
 
 type RankedRow = ProductivityRow & { score: number };
 
-function FullRanking({ ranked, goalInfo, onSelect }: {
+function FullRanking({ ranked, onSelect }: {
   ranked: RankedRow[];
-  goalInfo: (r: ProductivityRow) => { target: GoalTarget; done: number; note?: string };
   onSelect: (r: RankedRow) => void;
 }) {
+
   return (
     <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
       <div className="flex items-center gap-2 mb-4">
