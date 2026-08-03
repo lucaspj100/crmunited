@@ -191,3 +191,29 @@ export function useMyActiveGoal(month: number, year: number) {
     },
   });
 }
+
+/**
+ * Metas ativas do mês para toda a equipe. Uso exclusivo de admin/franqueado
+ * (a RLS entrega apenas a própria meta para vendedores, por isso o hook só é
+ * habilitado quando `enabled` é verdadeiro). Relação sempre por seller_id.
+ */
+export function useTeamActiveGoals(month: number, year: number, enabled: boolean) {
+  return useQuery({
+    queryKey: ["team_enrollment_goals", month, year],
+    enabled,
+    staleTime: 60_000,
+    queryFn: async (): Promise<EnrollmentGoal[]> => {
+      const { data, error } = await supabase
+        .from("seller_enrollment_goals")
+        .select("id,seller_id,team_id,month,year,target_enrollments,notes,active,created_at,updated_at")
+        .eq("month", month)
+        .eq("year", year)
+        .eq("active", true);
+      if (error) {
+        console.error("Erro ao carregar metas da equipe:", error);
+        throw error;
+      }
+      return (data ?? []) as EnrollmentGoal[];
+    },
+  });
+}
