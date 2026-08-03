@@ -192,8 +192,12 @@ function MetasPage() {
         defaultMonth={month}
         defaultYear={year}
         sellers={sellers}
+        sellersLoading={sellersQuery.isLoading}
+        sellersError={sellersQuery.error as Error | null}
+        onRetrySellers={() => sellersQuery.refetch()}
         onClose={() => { setCreating(false); setEditing(null); }}
       />
+
     </div>
   );
 }
