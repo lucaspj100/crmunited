@@ -39,9 +39,16 @@ export const adminListUsers = createServerFn({ method: "GET" })
 
     const { data: profiles, error: pErr } = await supabaseAdmin
       .from("profiles")
-      .select("id, full_name, email, avatar_url, status, last_sign_in_at, sign_in_count, must_change_password, deactivated_at, created_at, team_id, eligible_for_hall_of_fame")
+      .select("id, full_name, email, avatar_url, created_at, team_id, eligible_for_hall_of_fame")
       .order("full_name", { ascending: true });
     if (pErr) throw new Error(pErr.message);
+
+    const { data: security, error: sErr } = await supabaseAdmin
+      .from("profile_account_security")
+      .select("user_id, status, last_sign_in_at, sign_in_count, must_change_password, deactivated_at");
+    if (sErr) throw new Error(sErr.message);
+
+    const securityByUser = new Map((security ?? []).map((s: any) => [s.user_id, s]));
 
     const { data: rolesRows, error: rErr } = await supabaseAdmin
       .from("user_roles")
@@ -55,10 +62,19 @@ export const adminListUsers = createServerFn({ method: "GET" })
       rolesByUser.set(r.user_id, arr);
     }
 
-    return (profiles ?? []).map((p: any) => ({
-      ...p,
-      roles: rolesByUser.get(p.id) ?? [],
-    }));
+    return (profiles ?? []).map((p: any) => {
+      const s: any = securityByUser.get(p.id) ?? {};
+      return {
+        ...p,
+        status: s.status ?? "ativo",
+        last_sign_in_at: s.last_sign_in_at ?? null,
+        sign_in_count: s.sign_in_count ?? 0,
+        must_change_password: !!s.must_change_password,
+        deactivated_at: s.deactivated_at ?? null,
+        roles: rolesByUser.get(p.id) ?? [],
+      };
+    });
+
   });
 
 // ============= LIST ACCESS LOGS FOR ONE USER =============
