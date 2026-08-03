@@ -98,8 +98,12 @@ function PlacarDiario() {
 
 
   // Realtime: atualiza assim que houver nova tentativa ou mudança de lead
-  const qc = (useQuery as unknown as { getClient?: () => unknown }) && undefined; // no-op marker
+  const queryClient = useQueryClient();
   useEffect(() => {
+    const refreshMission = () => {
+      void queryClient.invalidateQueries({ queryKey: ["mission_month_production"] });
+      void queryClient.invalidateQueries({ queryKey: ["team_goal_summary"] });
+    };
     // open to all authenticated
     const ch = supabase
       .channel("placar-diario")
@@ -117,11 +121,15 @@ function PlacarDiario() {
             _start: range.start, _end: range.end, _vendedor_id: null, _team_id: teamId,
           } as never);
           if (Array.isArray(data)) setLive(data as unknown as ProductivityRow[]);
+          refreshMission();
         })();
       })
+      .on("postgres_changes", { event: "*", schema: "public", table: "lead_events" }, refreshMission)
+      .on("postgres_changes", { event: "*", schema: "public", table: "seller_enrollment_goals" }, refreshMission)
       .subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, [range.start, range.end, teamId]);
+  }, [range.start, range.end, teamId, queryClient]);
+
 
   const [live, setLive] = useState<ProductivityRow[] | null>(null);
   const rowsAll = (live ?? rowsRaw) as ProductivityRow[];
