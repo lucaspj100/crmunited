@@ -240,10 +240,11 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
   };
 
   const refreshQueue = async () => {
-    await loadQueue({ keepContactId: focusedContact ? undefined : contact?.id });
     exitFocus();
-    toast.success("Fila atualizada");
+    await loadQueue();
+    toast.success("Fila atualizada. Primeiro contato prioritário carregado.");
   };
+
 
   const { data: counts } = useQuery({
     queryKey: ["prospect_counts", user?.id],
