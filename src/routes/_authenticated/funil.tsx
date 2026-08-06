@@ -26,6 +26,8 @@ import { notifyArena } from "@/lib/arena-dispatch";
 import { registerEnrollmentAndSyncArena, cancelEnrollmentAndSyncArena } from "@/lib/enrollment";
 import { labelFor, TASK_TYPES } from "@/lib/constants";
 import { toast } from "sonner";
+import { ScholarshipCardBadges, type ScholarshipLead } from "@/components/scholarship/ScholarshipSection";
+import { SCHOLARSHIP_FILTERS, matchesScholarshipFilter } from "@/lib/scholarship";
 
 export const Route = createFileRoute("/_authenticated/funil")({ component: FunilPage });
 
