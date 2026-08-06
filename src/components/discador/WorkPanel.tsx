@@ -159,7 +159,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
   const { user } = useAuth();
   const qc = useQueryClient();
   const [queue, setQueue] = useState<ProspectContact[]>([]);
-  const [currentIndex, setCurrentIndex] = useState<number>(-1);
+  const [currentContactId, setCurrentContactId] = useState<string | null>(null);
   const [loadingQueue, setLoadingQueue] = useState(false);
   const [resultOpen, setResultOpen] = useState(false);
   const [convertOpen, setConvertOpen] = useState(false);
@@ -172,8 +172,16 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
   const [focusedContact, setFocusedContact] = useState<ProspectContact | null>(null);
   const [loadingFocus, setLoadingFocus] = useState(false);
 
+  const { list: activeQueue, label: activeLabel } = useMemo(() => buildActiveQueue(queue), [queue]);
+
+  const activeIndex = useMemo(() => {
+    if (activeQueue.length === 0) return -1;
+    const i = currentContactId ? activeQueue.findIndex((c) => c.id === currentContactId) : -1;
+    return i >= 0 ? i : 0;
+  }, [activeQueue, currentContactId]);
+
   const contact: ProspectContact | null =
-    focusedContact ?? (currentIndex >= 0 && currentIndex < queue.length ? queue[currentIndex] : null);
+    focusedContact ?? (activeIndex >= 0 ? activeQueue[activeIndex]! : null);
 
   // Carrega a fila completa do vendedor
   const loadQueue = async (opts?: { keepContactId?: string; silent?: boolean }) => {
@@ -196,19 +204,16 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     }
     const sorted = sortQueue((data ?? []) as ProspectContact[]);
     setQueue(sorted);
-    if (sorted.length === 0) {
-      setCurrentIndex(-1);
+    const nextActive = buildActiveQueue(sorted).list;
+    if (nextActive.length === 0) {
+      setCurrentContactId(null);
       return;
     }
     const keepId = opts?.keepContactId;
-    if (keepId) {
-      const idx = sorted.findIndex((c) => c.id === keepId);
-      setCurrentIndex(idx >= 0 ? idx : 0);
-    } else {
-      setCurrentIndex(0);
-    }
-
+    const keep = keepId ? nextActive.find((c) => c.id === keepId) : undefined;
+    setCurrentContactId(keep ? keep.id : nextActive[0]!.id);
   };
+
 
   // Bootstrap
   useEffect(() => {
