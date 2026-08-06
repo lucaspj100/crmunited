@@ -55,7 +55,10 @@ const clean = (v: unknown, max = 500): string | null => {
  */
 export async function receiveScholarshipLead(input: ScholarshipPayload): Promise<ScholarshipResult> {
   try {
-    const slug = String(input.public_slug || "").trim().toLowerCase();
+    // Aceita slug curto ("l") ou URL/caminho completo, usando só o último segmento.
+    const rawSlug = String(input.public_slug || "").trim().toLowerCase().split(/[?#]/)[0] ?? "";
+    const parts = rawSlug.split("/").filter(Boolean);
+    const slug = (parts.length > 0 ? parts[parts.length - 1]! : "").replace(/[^a-z0-9-]/g, "");
     const { data: link } = await supabaseAdmin
       .from("public_seller_links")
       .select("seller_id, active")
