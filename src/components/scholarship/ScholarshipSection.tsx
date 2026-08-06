@@ -9,13 +9,15 @@ import { logLeadEvent } from "@/lib/lead-events";
 import {
   CONFIRMATION_LABELS,
   CONFIRMATION_STATUS,
-  QUALIFICATION_FIELDS,
+  QUALIFICATION_EMPTY,
+  QUALIFICATION_GROUPS,
   awaitingConfirmation,
   classificationMeta,
   formStatusLabel,
   formatRequestedInterview,
   hasFormScheduling,
   isScholarshipLead,
+  qualificationValue,
 } from "@/lib/scholarship";
 import { notifyArena } from "@/lib/arena-dispatch";
 
