@@ -169,9 +169,10 @@ function LinkFormDialog({
   const [saving, setSaving] = useState(false);
 
   const save = async () => {
-    const normalized = slug.trim().toLowerCase().replace(/[^a-z0-9-]/g, "-");
+    const normalized = normalizeSlug(slug);
     if (!sellerId) { toast.error("Selecione o vendedor"); return; }
-    if (normalized.length < 3) { toast.error("Slug muito curto"); return; }
+    if (!normalized) { toast.error("Informe o slug do vendedor"); return; }
+    if (!/^[a-z0-9-]+$/.test(normalized)) { toast.error("Use apenas letras minúsculas, números e hífen"); return; }
     if (existing.some((l) => l.public_slug === normalized && l.id !== row?.id)) {
       toast.error("Este slug já está em uso");
       return;
@@ -216,9 +217,12 @@ function LinkFormDialog({
             </Select>
           </div>
           <div>
-            <Label>Slug público *</Label>
-            <Input value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="lucas" maxLength={50} />
-            <p className="mt-1 text-xs text-muted-foreground">{fullLink(slug.trim().toLowerCase() || "slug")}</p>
+            <Label>Slug do vendedor *</Label>
+            <Input value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="l" maxLength={200} />
+            <p className="mt-1 text-xs text-muted-foreground">
+              Digite apenas o código curto, por exemplo: l ou el. Não cole a URL completa.
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">{fullLink(normalizeSlug(slug) || "slug")}</p>
           </div>
         </div>
         <DialogFooter>
