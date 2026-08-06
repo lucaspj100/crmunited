@@ -73,6 +73,7 @@ function Confetti() {
 
 function HallDaFama() {
   const { user, roles } = useAuth();
+  const { points: scorePoints } = useScoreSettings();
   const isAdmin = roles.includes("admin") || roles.includes("franqueado");
   const qc = useQueryClient();
 
@@ -418,7 +419,7 @@ function HallDaFama() {
                 <div className="mb-3 flex items-center gap-2">
                   <h2 className="text-lg font-bold">Ranking completo do mês</h2>
                   <InfoTip title="Critérios de desempate do ranking" lines={TIEBREAKERS} />
-                  <span className="ml-auto hidden text-xs text-white/50 md:block">Pontuação: {buildLegend(useScoreSettings().points)}</span>
+                  <span className="ml-auto hidden text-xs text-white/50 md:block">Pontuação: {buildLegend(scorePoints)}</span>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
