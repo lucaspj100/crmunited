@@ -159,7 +159,16 @@ export async function receiveScholarshipLead(input: ScholarshipPayload): Promise
 
     if (existing) {
       leadId = existing.id;
-      const patch: Record<string, unknown> = { ...fields };
+      // Atualização progressiva: valores vazios/null do payload NÃO apagam dados já preenchidos.
+      const patch: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(fields)) {
+        if (v === null || v === undefined) continue;
+        if (typeof v === "string" && v.trim() === "") continue;
+        if (k === "form_answers" && Object.keys(v as Record<string, unknown>).length === 0) continue;
+        if (k === "high_priority" && v === false) continue;
+        if (k === "form_completed" && v === false && existing.form_completed) continue;
+        patch[k] = v;
+      }
       // vendedor nunca muda depois da criação
       delete patch["owner_id"];
       // primeira vez que aparece um agendamento → aguardando confirmação
@@ -168,6 +177,7 @@ export async function receiveScholarshipLead(input: ScholarshipPayload): Promise
       }
       const { error } = await supabaseAdmin.from("leads").update(patch as never).eq("id", leadId);
       if (error) throw error;
+
     } else {
       const { data, error } = await supabaseAdmin
         .from("leads")

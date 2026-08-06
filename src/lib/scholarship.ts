@@ -49,6 +49,7 @@ export function formStatusLabel(value: string | null | undefined): string | null
 }
 
 export type ScholarshipLeadFields = {
+  source?: string | null;
   source_system?: string | null;
   scholarship_classification?: string | null;
   form_status?: string | null;
@@ -61,7 +62,7 @@ export type ScholarshipLeadFields = {
 };
 
 export function isScholarshipLead(lead: ScholarshipLeadFields | null | undefined): boolean {
-  return lead?.source_system === SCHOLARSHIP_SYSTEM;
+  return lead?.source_system === SCHOLARSHIP_SYSTEM || lead?.source === SCHOLARSHIP_SOURCE;
 }
 
 export function hasFormScheduling(lead: ScholarshipLeadFields | null | undefined): boolean {
@@ -133,3 +134,81 @@ export const QUALIFICATION_FIELDS: { key: string; label: string }[] = [
   { key: "financial_fit", label: "Alinhamento financeiro" },
   { key: "interview_intent", label: "Intenção de participar da entrevista" },
 ];
+
+/** Blocos exibidos na seção "Qualificação do Processo Bolsista".
+ *  `fallback` aponta para a chave equivalente em form_answers (respostas_json). */
+export type QualificationField = { key: string; label: string; fallback?: string };
+
+export const QUALIFICATION_GROUPS: { title: string; fields: QualificationField[] }[] = [
+  {
+    title: "Dados profissionais",
+    fields: [
+      { key: "email", label: "E-mail", fallback: "email" },
+      { key: "city_state", label: "Cidade / estado", fallback: "cidade_estado" },
+      { key: "profession", label: "Profissão", fallback: "profissao" },
+      { key: "company_name", label: "Empresa", fallback: "empresa" },
+      { key: "english_level", label: "Nível de inglês", fallback: "nivel_ingles" },
+    ],
+  },
+  {
+    title: "Objetivo e dor",
+    fields: [
+      { key: "english_goal", label: "Objetivo com o inglês", fallback: "motivo_ingles" },
+      { key: "english_impact", label: "Impacto do inglês no dia a dia", fallback: "impacto_ingles" },
+      { key: "lost_opportunity", label: "Já perdeu oportunidade?", fallback: "perdeu_oportunidade" },
+      { key: "why_not_studying", label: "Por que ainda não faz curso?", fallback: "motivo_nao_faz_curso" },
+    ],
+  },
+  {
+    title: "Momento de compra",
+    fields: [
+      { key: "start_timeframe", label: "Prazo para começar", fallback: "prazo_inicio" },
+      { key: "financial_fit", label: "Alinhamento financeiro", fallback: "alinhamento_financeiro" },
+      { key: "interview_intent", label: "Decisão sobre a entrevista", fallback: "decisao_entrevista" },
+    ],
+  },
+  {
+    title: "Análise do formulário",
+    fields: [
+      { key: "scholarship_classification", label: "Classificação", fallback: "classificacao" },
+      { key: "high_priority", label: "Alta prioridade" },
+      { key: "form_status", label: "Status do formulário", fallback: "status_formulario" },
+      { key: "form_step", label: "Etapa em que parou", fallback: "etapa_formulario" },
+      { key: "form_completed", label: "Formulário concluído" },
+    ],
+  },
+];
+
+const NOT_INFORMED = "Não informado";
+
+/** Valor legível de um campo, com fallback em form_answers e sem "null"/"undefined". */
+export function qualificationValue(
+  lead: Record<string, unknown>,
+  field: QualificationField,
+): string {
+  const pick = (v: unknown): string | null => {
+    if (v === null || v === undefined) return null;
+    if (typeof v === "boolean") return v ? "Sim" : "Não";
+    if (typeof v === "object") return null;
+    const s = String(v).trim();
+    return s ? s : null;
+  };
+
+  let raw = pick(lead[field.key]);
+  if (!raw && field.fallback) {
+    const answers = (lead["form_answers"] ?? {}) as Record<string, unknown>;
+    raw = pick(answers[field.fallback]);
+  }
+  if (!raw) return NOT_INFORMED;
+
+  if (field.key === "form_status") return formStatusLabel(raw) ?? raw;
+  if (field.key === "scholarship_classification") {
+    const meta = classificationMeta(raw);
+    return meta ? `${meta.emoji} ${meta.label}` : raw;
+  }
+  if (field.key === "form_completed") return raw === "Sim" ? "Concluído" : "Incompleto";
+  return raw;
+}
+
+export const QUALIFICATION_EMPTY = NOT_INFORMED;
+

@@ -38,7 +38,33 @@ type LeadDetails = {
   enrollment_value?: number | null;
   monthly_fee?: number | null;
   material_value?: number | null;
+  // Processo bolsista (unitedidiomasbolsa)
+  email?: string | null;
+  company_name?: string | null;
+  city_state?: string | null;
+  profession?: string | null;
+  english_level?: string | null;
+  english_goal?: string | null;
+  english_impact?: string | null;
+  lost_opportunity?: string | null;
+  why_not_studying?: string | null;
+  start_timeframe?: string | null;
+  financial_fit?: string | null;
+  interview_intent?: string | null;
+  scholarship_classification?: string | null;
+  high_priority?: boolean | null;
+  form_status?: string | null;
+  form_step?: string | null;
+  form_completed?: boolean | null;
+  form_answers?: Record<string, unknown> | null;
+  requested_interview_at?: string | null;
+  scheduling_source?: string | null;
+  confirmation_status?: string | null;
+  source?: string | null;
+  source_system?: string | null;
+  external_lead_id?: string | null;
 };
+
 
 export function LeadDetailsDialog({
   leadId,
@@ -77,7 +103,7 @@ export function LeadDetailsDialog({
       setLead(l);
       setName(l.name || "");
       setPhone(l.phone || "");
-      setCompany(l.company || "");
+      setCompany(l.company || l.company_name || "");
       setLinkedin(l.linkedin_url || "");
       setObservation(l.observation || "");
       if (l.owner_id) {

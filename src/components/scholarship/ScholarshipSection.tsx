@@ -9,13 +9,15 @@ import { logLeadEvent } from "@/lib/lead-events";
 import {
   CONFIRMATION_LABELS,
   CONFIRMATION_STATUS,
-  QUALIFICATION_FIELDS,
+  QUALIFICATION_EMPTY,
+  QUALIFICATION_GROUPS,
   awaitingConfirmation,
   classificationMeta,
   formStatusLabel,
   formatRequestedInterview,
   hasFormScheduling,
   isScholarshipLead,
+  qualificationValue,
 } from "@/lib/scholarship";
 import { notifyArena } from "@/lib/arena-dispatch";
 
@@ -226,24 +228,59 @@ export function ScholarshipSection({
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
-        {QUALIFICATION_FIELDS.map((f) => {
-          const v = val(lead, f.key);
-          if (!v) return null;
-          return (
-            <div key={f.key} className="text-xs">
-              <span className="text-muted-foreground">{f.label}: </span>
-              <span className="font-medium">{v}</span>
+      <div className="space-y-2">
+        {QUALIFICATION_GROUPS.map((g) => (
+          <div key={g.title} className="rounded-md border bg-background/60 p-2">
+            <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1">
+              {g.title}
             </div>
-          );
-        })}
-        {val(lead, "form_step") !== null && (
-          <div className="text-xs">
-            <span className="text-muted-foreground">Etapa alcançada no formulário: </span>
-            <span className="font-medium">{String(lead["form_step"])}</span>
+            <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
+              {g.fields.map((f) => {
+                const v = qualificationValue(lead as Record<string, unknown>, f);
+                return (
+                  <div key={f.key} className="text-xs leading-snug">
+                    <span className="text-muted-foreground">{f.label}: </span>
+                    <span className={v === QUALIFICATION_EMPTY ? "italic text-muted-foreground" : "font-medium"}>
+                      {v}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        )}
+        ))}
+
+        <div className="rounded-md border bg-background/60 p-2">
+          <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1">
+            Agendamento
+          </div>
+          {requestedIso ? (
+            <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
+              <div className="text-xs">
+                <span className="text-muted-foreground">Data e hora solicitadas: </span>
+                <span className="font-medium">{formatRequestedInterview(requestedIso)}</span>
+              </div>
+              <div className="text-xs">
+                <span className="text-muted-foreground">Origem do agendamento: </span>
+                <span className="font-medium">
+                  {(lead["scheduling_source"] as string | null) === "formulario_bolsista"
+                    ? "Formulário do processo bolsista"
+                    : ((lead["scheduling_source"] as string | null) ?? QUALIFICATION_EMPTY)}
+                </span>
+              </div>
+              <div className="text-xs">
+                <span className="text-muted-foreground">Status de confirmação: </span>
+                <span className="font-medium">
+                  {CONFIRMATION_LABELS[confirmation ?? ""] ?? "Aguardando confirmação"}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="text-xs italic text-muted-foreground">Sem agendamento pelo formulário.</div>
+          )}
+        </div>
       </div>
+
 
       {Object.keys(answers).length > 0 && (
         <details className="text-xs">
