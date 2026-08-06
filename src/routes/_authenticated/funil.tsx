@@ -165,6 +165,14 @@ function FunilPage() {
               <SelectItem value="frio">❄️ Frio</SelectItem>
             </SelectContent>
           </Select>
+          <Select value={scholarshipFilter} onValueChange={setScholarshipFilter}>
+            <SelectTrigger className="w-[200px]"><SelectValue placeholder="Processo bolsista" /></SelectTrigger>
+            <SelectContent>
+              {SCHOLARSHIP_FILTERS.map((f) => (
+                <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Button
             variant="outline"
             onClick={() => {
