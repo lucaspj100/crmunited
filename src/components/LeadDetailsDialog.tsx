@@ -162,6 +162,8 @@ export function LeadDetailsDialog({
               <span className="text-muted-foreground">Vendedor responsável: </span>
               <span className="font-medium">{ownerName || "—"}</span>
             </div>
+
+            <ScholarshipSection lead={lead as unknown as ScholarshipLead} onChanged={onClose} />
             <div><Label>Nome *</Label><Input value={name} onChange={(e) => setName(e.target.value)} required maxLength={200} /></div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div><Label>WhatsApp / Telefone</Label><Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(11) 99999-9999" /></div>
