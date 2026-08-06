@@ -39,6 +39,8 @@ const BASE_NAV = [
 
 function AuthedLayout() {
   const { session, loading, signOut, user, roles, mustChangePassword } = useAuth();
+  // Carrega a configuração de pontuação (fonte única) para todo o app autenticado.
+  useScoreSettings();
   const navigate = useNavigate();
   const location = useLocation();
   const { data: brand } = useBrand();
