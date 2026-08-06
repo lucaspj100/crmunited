@@ -590,10 +590,10 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
               <Button variant="outline" onClick={() => { setLastAction(undefined); setResultOpen(true); }} className="h-12 min-w-0 px-1">
                 <ListChecks className="h-4 w-4 shrink-0" /><span className="truncate text-[10px] ml-1">Reg.</span>
               </Button>
-              <Button variant="ghost" onClick={goPrev} disabled={queue.length < 2} className="h-12 min-w-0 px-1">
+              <Button variant="ghost" onClick={goPrev} disabled={activeQueue.length < 2} className="h-12 min-w-0 px-1">
                 <ArrowLeft className="h-4 w-4 shrink-0" /><span className="truncate text-[10px] ml-1">Ant.</span>
               </Button>
-              <Button variant="ghost" onClick={goNext} disabled={queue.length < 2} className="h-12 min-w-0 px-1">
+              <Button variant="ghost" onClick={goNext} disabled={activeQueue.length < 2} className="h-12 min-w-0 px-1">
                 <ArrowRight className="h-4 w-4 shrink-0" /><span className="truncate text-[10px] ml-1">Próx.</span>
               </Button>
               <Button variant="secondary" onClick={refreshQueue} disabled={loadingQueue} className="h-12 min-w-0 px-1">
@@ -700,10 +700,10 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
                   <Button variant="outline" onClick={addToWhatsapp}>
                     <MessageCircle className="h-4 w-4 mr-2" />Adicionar à Lista WhatsApp
                   </Button>
-                  <Button variant="outline" onClick={goPrev} disabled={queue.length < 2}>
+                  <Button variant="outline" onClick={goPrev} disabled={activeQueue.length < 2}>
                     <ArrowLeft className="h-4 w-4 mr-2" />Anterior
                   </Button>
-                  <Button variant="outline" onClick={goNext} disabled={queue.length < 2}>
+                  <Button variant="outline" onClick={goNext} disabled={activeQueue.length < 2}>
                     <ArrowRight className="h-4 w-4 mr-2" />Próximo
                   </Button>
                   <Button variant="secondary" onClick={refreshQueue} disabled={loadingQueue}>
