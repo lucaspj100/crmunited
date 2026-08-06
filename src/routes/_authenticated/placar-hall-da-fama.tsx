@@ -18,7 +18,8 @@ import {
   fetchHallRecord, fetchHallHistory, closeMonth, reopenMonth,
   type RankedRow, type CategoryWinner, type HallRecord,
 } from "@/lib/hall-of-fame";
-import { fmtScore, POINTS_LEGEND } from "@/lib/scoring";
+import { fmtScore } from "@/lib/scoring";
+import { useScoreSettings, buildLegend } from "@/lib/score-settings";
 import { ShareAchievementDialog } from "@/components/hall/ShareAchievementDialog";
 import type { ShareSubject } from "@/lib/achievement-share";
 import { publicLabelOf, publicTitleOf, SHARED_HIGHLIGHT_NOTE, ELIGIBILITY_NOTICE } from "@/lib/hall-titles";
@@ -417,7 +418,7 @@ function HallDaFama() {
                 <div className="mb-3 flex items-center gap-2">
                   <h2 className="text-lg font-bold">Ranking completo do mês</h2>
                   <InfoTip title="Critérios de desempate do ranking" lines={TIEBREAKERS} />
-                  <span className="ml-auto hidden text-xs text-white/50 md:block">Pontuação: {POINTS_LEGEND}</span>
+                  <span className="ml-auto hidden text-xs text-white/50 md:block">Pontuação: {buildLegend(useScoreSettings().points)}</span>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
