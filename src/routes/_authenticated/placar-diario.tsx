@@ -23,6 +23,7 @@ import { Phone, PhoneCall, Sparkles, CalendarCheck, GraduationCap, Trophy, Maxim
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { scoreOf, fmtScore, isRealSeller } from "@/lib/scoring";
+import { useScoreSettings, buildLegend } from "@/lib/score-settings";
 import {
   useMyActiveGoal,
   useTeamActiveGoals,
