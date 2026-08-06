@@ -174,6 +174,10 @@ function PainelAdm() {
         <p className="text-sm text-muted-foreground">Ranking, métricas e alertas da operação comercial</p>
       </div>
 
+      <ScoreSettingsCard />
+
+
+
       <Card className="p-4">
         <div className="flex flex-wrap items-end gap-3">
           <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground"><Filter className="h-4 w-4" />Filtros</div>
