@@ -26,6 +26,8 @@ import { notifyArena } from "@/lib/arena-dispatch";
 import { registerEnrollmentAndSyncArena, cancelEnrollmentAndSyncArena } from "@/lib/enrollment";
 import { labelFor, TASK_TYPES } from "@/lib/constants";
 import { toast } from "sonner";
+import { ScholarshipCardBadges, type ScholarshipLead } from "@/components/scholarship/ScholarshipSection";
+import { SCHOLARSHIP_FILTERS, matchesScholarshipFilter } from "@/lib/scholarship";
 
 export const Route = createFileRoute("/_authenticated/funil")({ component: FunilPage });
 
@@ -49,6 +51,7 @@ function FunilPage() {
   const [detailsId, setDetailsId] = useState<string | null>(null);
   const [vendorFilter, setVendorFilter] = useState<string>("all");
   const [tempFilter, setTempFilter] = useState<string>("all");
+  const [scholarshipFilter, setScholarshipFilter] = useState<string>("all");
   const [quickTaskLead, setQuickTaskLead] = useState<Lead | null>(null);
   const [cancelEnrollment, setCancelEnrollment] = useState<{ lead: Lead; newStatus: string } | null>(null);
 
@@ -105,13 +108,15 @@ function FunilPage() {
   }, [leads, profileById]);
 
   const baseFiltered = vendorFilter === "all" ? leads : leads.filter((l) => l.owner_id === vendorFilter);
-  const filteredLeads = tempFilter === "all"
+  const tempFiltered = tempFilter === "all"
     ? baseFiltered
     : baseFiltered.filter((l) => leadTemperature({
         status: l.status, last_contact_at: l.last_contact_at,
         interview_date: l.interview_date, updated_at: l.updated_at,
         next: nextByLead.get(l.id) ?? null,
       }) === tempFilter);
+  const filteredLeads = tempFiltered.filter((l) => matchesScholarshipFilter(l as never, scholarshipFilter));
+
 
   const moveLead = async (lead: Lead, newStatus: string) => {
     if (lead.status === newStatus) return;
@@ -158,6 +163,14 @@ function FunilPage() {
               <SelectItem value="quente">🔥 Quente</SelectItem>
               <SelectItem value="morno">🌤️ Morno</SelectItem>
               <SelectItem value="frio">❄️ Frio</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={scholarshipFilter} onValueChange={setScholarshipFilter}>
+            <SelectTrigger className="w-[200px]"><SelectValue placeholder="Processo bolsista" /></SelectTrigger>
+            <SelectContent>
+              {SCHOLARSHIP_FILTERS.map((f) => (
+                <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
           <Button
@@ -235,6 +248,7 @@ function FunilPage() {
                               Discador
                             </span>
                           )}
+                          <ScholarshipCardBadges lead={l as unknown as ScholarshipLead} />
                         </div>
                         <span title={tempMeta.label} className={`shrink-0 inline-flex items-center justify-center h-5 px-1.5 rounded-full border text-[10px] ${tempMeta.color}`}>
                           {tempMeta.emoji}
