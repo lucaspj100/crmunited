@@ -1,3 +1,4 @@
+import { useScoreSettings } from "@/lib/score-settings";
 import { createFileRoute, Outlet, useNavigate, useLocation, Link } from "@tanstack/react-router";
 import { useCallback, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
