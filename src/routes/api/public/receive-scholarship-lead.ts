@@ -6,7 +6,7 @@ import { z } from "zod";
 const str = (max: number) => z.string().trim().max(max).optional().nullable();
 
 const schema = z.object({
-  public_slug: z.string().trim().min(2).max(60),
+  public_slug: z.string().trim().min(1).max(60),
   external_lead_id: z.string().trim().min(3).max(120),
   nome: z.string().trim().min(1).max(200),
   whatsapp: z.string().trim().min(8).max(40),
