@@ -20,10 +20,19 @@ type LinkRow = {
 };
 type Profile = { id: string; full_name: string | null; email: string | null };
 
-const FORM_BASE_URL = "https://unitedidiomasbolsa.lovable.app/bolsa";
+const FORM_BASE_URL = "https://unitedidiomasbolsa.lovable.app/agendar";
 
 function fullLink(slug: string) {
   return `${FORM_BASE_URL}/${slug}`;
+}
+
+// Aceita colagem de URL completa ou caminho e extrai só o último segmento.
+export function normalizeSlug(input: string): string {
+  const trimmed = input.trim().toLowerCase();
+  const withoutQuery = trimmed.split(/[?#]/)[0] ?? "";
+  const segments = withoutQuery.split("/").filter(Boolean);
+  const last = segments.length > 0 ? segments[segments.length - 1]! : "";
+  return last.replace(/[^a-z0-9-]/g, "");
 }
 
 export function ScholarshipLinksCard() {
