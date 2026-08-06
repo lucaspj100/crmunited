@@ -27,7 +27,7 @@ export type ProspectContact = {
 export async function fetchNextProspect(userId: string): Promise<ProspectContact | null> {
   const now = new Date().toISOString();
 
-  // 1) Aguardando ligação
+  // 1) Nunca trabalhados: Aguardando ligação, 0 tentativas, sem última tentativa
   const { data: pri } = await supabase
     .from("prospect_contacts")
     .select("*")
@@ -36,10 +36,13 @@ export async function fetchNextProspect(userId: string): Promise<ProspectContact
     .eq("nao_chamar", false)
     .eq("telefone_invalido", false)
     .eq("status_prospeccao", "Aguardando ligação")
+    .eq("quantidade_tentativas", 0)
+    .is("ultima_tentativa", null)
     .order("created_at", { ascending: true })
     .limit(1)
     .maybeSingle();
   if (pri) return pri as ProspectContact;
+
 
   // 2) Ligar depois vencido
   const { data: due } = await supabase

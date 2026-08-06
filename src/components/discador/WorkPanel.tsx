@@ -63,16 +63,44 @@ const REMOVE_FROM_QUEUE_STATUSES = new Set([
   "Interessado",
 ]);
 
+function isNeverContacted(c: ProspectContact): boolean {
+  return (
+    c.status_prospeccao === "Aguardando ligação" &&
+    Number(c.quantidade_tentativas ?? 0) === 0 &&
+    !c.ultima_tentativa
+  );
+}
+
+/** 1) nunca trabalhados (created_at asc) → 2) retornos vencidos (proxima_tentativa asc) → 3) já tentados (ultima_tentativa asc) */
+function queueGroup(c: ProspectContact): number {
+  if (isNeverContacted(c)) return 0;
+  if (c.status_prospeccao === "Ligar depois") {
+    const due = c.proxima_tentativa ? new Date(c.proxima_tentativa).getTime() : null;
+    if (due !== null && due <= Date.now()) return 1;
+    return 3; // retorno futuro fica no fim
+  }
+  return 2;
+}
+
 function sortQueue(list: ProspectContact[]): ProspectContact[] {
+  const ts = (v: string | null | undefined) => (v ? new Date(v).getTime() : 0);
   return [...list].sort((a, b) => {
+    const ga = queueGroup(a);
+    const gb = queueGroup(b);
+    if (ga !== gb) return ga - gb;
+    if (ga === 0) return ts(a.created_at) - ts(b.created_at);
+    if (ga === 1 || ga === 3) return ts(a.proxima_tentativa) - ts(b.proxima_tentativa);
+    // já tentados: mais tempo sem tentativa primeiro (null primeiro)
+    const da = ts(a.ultima_tentativa);
+    const db = ts(b.ultima_tentativa);
+    if (da !== db) return da - db;
     const pa = STATUS_PRIORITY[a.status_prospeccao] ?? 99;
     const pb = STATUS_PRIORITY[b.status_prospeccao] ?? 99;
     if (pa !== pb) return pa - pb;
-    const ta = new Date(a.updated_at || a.created_at).getTime();
-    const tb = new Date(b.updated_at || b.created_at).getTime();
-    return ta - tb;
+    return ts(a.created_at) - ts(b.created_at);
   });
 }
+
 
 export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocusConsumed }: Props = {}) {
   const { user } = useAuth();
@@ -119,13 +147,14 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
       setCurrentIndex(-1);
       return;
     }
-    const keepId = opts?.keepContactId ?? contact?.id;
+    const keepId = opts?.keepContactId;
     if (keepId) {
       const idx = sorted.findIndex((c) => c.id === keepId);
       setCurrentIndex(idx >= 0 ? idx : 0);
     } else {
-      setCurrentIndex((prev) => (prev >= 0 && prev < sorted.length ? prev : 0));
+      setCurrentIndex(0);
     }
+
   };
 
   // Bootstrap
@@ -211,10 +240,11 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
   };
 
   const refreshQueue = async () => {
-    await loadQueue({ keepContactId: focusedContact ? undefined : contact?.id });
     exitFocus();
-    toast.success("Fila atualizada");
+    await loadQueue();
+    toast.success("Fila atualizada. Primeiro contato prioritário carregado.");
   };
+
 
   const { data: counts } = useQuery({
     queryKey: ["prospect_counts", user?.id],
@@ -340,22 +370,10 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
       return;
     }
 
-    if (shouldRemove) {
-      setQueue((q) => {
-        const idx = q.findIndex((c) => c.id === updated.id);
-        if (idx < 0) return q;
-        const next = q.filter((_, i) => i !== idx);
-        if (next.length === 0) {
-          setCurrentIndex(-1);
-        } else {
-          setCurrentIndex(idx >= next.length ? 0 : idx);
-        }
-        return next;
-      });
-    } else {
-      // atualiza o contato no array mantendo posição
-      setQueue((q) => q.map((c) => (c.id === updated.id ? updated : c)));
-    }
+    // Após registrar tentativa: recarrega a fila reordenada e abre o primeiro prioritário.
+    exitFocus();
+    await loadQueue({ silent: true });
+
   };
 
   return (
