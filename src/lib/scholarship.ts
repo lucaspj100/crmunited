@@ -49,6 +49,7 @@ export function formStatusLabel(value: string | null | undefined): string | null
 }
 
 export type ScholarshipLeadFields = {
+  source?: string | null;
   source_system?: string | null;
   scholarship_classification?: string | null;
   form_status?: string | null;
@@ -61,7 +62,7 @@ export type ScholarshipLeadFields = {
 };
 
 export function isScholarshipLead(lead: ScholarshipLeadFields | null | undefined): boolean {
-  return lead?.source_system === SCHOLARSHIP_SYSTEM;
+  return lead?.source_system === SCHOLARSHIP_SYSTEM || lead?.source === SCHOLARSHIP_SOURCE;
 }
 
 export function hasFormScheduling(lead: ScholarshipLeadFields | null | undefined): boolean {
