@@ -249,7 +249,8 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
         return;
       }
       setFocusedContact(loaded);
-      setCurrentIndex(-1);
+      setCurrentContactId(null);
+
       if (autoOpenResult) {
         setLastAction(undefined);
         setResultOpen(true);
