@@ -101,12 +101,65 @@ function sortQueue(list: ProspectContact[]): ProspectContact[] {
   });
 }
 
+const ATTEMPTED_STATUSES = ["Não atendeu", "Ocupado", "Caixa postal", "Atendeu", "Ligando"];
+
+function isEligible(c: ProspectContact): boolean {
+  return !c.convertido_em_lead && !c.nao_chamar && !c.telefone_invalido;
+}
+
+/**
+ * Fila ativa de navegação: enquanto existir "Aguardando ligação" elegível,
+ * "Próximo"/"Anterior" navegam SOMENTE nesse grupo.
+ */
+function buildActiveQueue(queue: ProspectContact[]): { list: ProspectContact[]; label: string } {
+  const ts = (v: string | null | undefined) => (v ? new Date(v).getTime() : 0);
+  const eligible = queue.filter(isEligible);
+
+  const waiting = eligible
+    .filter((c) => c.status_prospeccao === "Aguardando ligação")
+    .sort((a, b) => {
+      const na = isNeverContacted(a) ? 0 : 1;
+      const nb = isNeverContacted(b) ? 0 : 1;
+      if (na !== nb) return na - nb;
+      const qa = Number(a.quantidade_tentativas ?? 0);
+      const qb = Number(b.quantidade_tentativas ?? 0);
+      if (qa !== qb) return qa - qb;
+      const ua = ts(a.ultima_tentativa);
+      const ub = ts(b.ultima_tentativa);
+      if (ua !== ub) return ua - ub;
+      return ts(a.created_at) - ts(b.created_at);
+    });
+  if (waiting.length > 0) return { list: waiting, label: "aguardando ligação" };
+
+  const now = Date.now();
+  const dueReturns = eligible
+    .filter(
+      (c) =>
+        c.status_prospeccao === "Ligar depois" &&
+        !!c.proxima_tentativa &&
+        new Date(c.proxima_tentativa).getTime() <= now,
+    )
+    .sort((a, b) => ts(a.proxima_tentativa) - ts(b.proxima_tentativa));
+  if (dueReturns.length > 0) return { list: dueReturns, label: "retornos vencidos" };
+
+  const attempted = eligible
+    .filter((c) => ATTEMPTED_STATUSES.includes(c.status_prospeccao))
+    .sort((a, b) => {
+      const da = ts(a.ultima_tentativa);
+      const db = ts(b.ultima_tentativa);
+      if (da !== db) return da - db;
+      return ts(a.created_at) - ts(b.created_at);
+    });
+  return { list: attempted, label: "contatos para nova tentativa" };
+}
+
+
 
 export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocusConsumed }: Props = {}) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [queue, setQueue] = useState<ProspectContact[]>([]);
-  const [currentIndex, setCurrentIndex] = useState<number>(-1);
+  const [currentContactId, setCurrentContactId] = useState<string | null>(null);
   const [loadingQueue, setLoadingQueue] = useState(false);
   const [resultOpen, setResultOpen] = useState(false);
   const [convertOpen, setConvertOpen] = useState(false);
@@ -119,8 +172,16 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
   const [focusedContact, setFocusedContact] = useState<ProspectContact | null>(null);
   const [loadingFocus, setLoadingFocus] = useState(false);
 
+  const { list: activeQueue, label: activeLabel } = useMemo(() => buildActiveQueue(queue), [queue]);
+
+  const activeIndex = useMemo(() => {
+    if (activeQueue.length === 0) return -1;
+    const i = currentContactId ? activeQueue.findIndex((c) => c.id === currentContactId) : -1;
+    return i >= 0 ? i : 0;
+  }, [activeQueue, currentContactId]);
+
   const contact: ProspectContact | null =
-    focusedContact ?? (currentIndex >= 0 && currentIndex < queue.length ? queue[currentIndex] : null);
+    focusedContact ?? (activeIndex >= 0 ? activeQueue[activeIndex]! : null);
 
   // Carrega a fila completa do vendedor
   const loadQueue = async (opts?: { keepContactId?: string; silent?: boolean }) => {
@@ -143,19 +204,16 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     }
     const sorted = sortQueue((data ?? []) as ProspectContact[]);
     setQueue(sorted);
-    if (sorted.length === 0) {
-      setCurrentIndex(-1);
+    const nextActive = buildActiveQueue(sorted).list;
+    if (nextActive.length === 0) {
+      setCurrentContactId(null);
       return;
     }
     const keepId = opts?.keepContactId;
-    if (keepId) {
-      const idx = sorted.findIndex((c) => c.id === keepId);
-      setCurrentIndex(idx >= 0 ? idx : 0);
-    } else {
-      setCurrentIndex(0);
-    }
-
+    const keep = keepId ? nextActive.find((c) => c.id === keepId) : undefined;
+    setCurrentContactId(keep ? keep.id : nextActive[0]!.id);
   };
+
 
   // Bootstrap
   useEffect(() => {
@@ -191,7 +249,8 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
         return;
       }
       setFocusedContact(loaded);
-      setCurrentIndex(-1);
+      setCurrentContactId(null);
+
       if (autoOpenResult) {
         setLastAction(undefined);
         setResultOpen(true);
@@ -229,15 +288,18 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
   };
 
   const goPrev = () => {
-    if (queue.length === 0) return;
+    if (activeQueue.length === 0) return;
     exitFocus();
-    setCurrentIndex((i) => (i <= 0 ? queue.length - 1 : i - 1));
+    const i = activeIndex <= 0 ? activeQueue.length - 1 : activeIndex - 1;
+    setCurrentContactId(activeQueue[i]!.id);
   };
   const goNext = () => {
-    if (queue.length === 0) return;
+    if (activeQueue.length === 0) return;
     exitFocus();
-    setCurrentIndex((i) => (i >= queue.length - 1 ? 0 : i + 1));
+    const i = activeIndex >= activeQueue.length - 1 ? 0 : activeIndex + 1;
+    setCurrentContactId(activeQueue[i]!.id);
   };
+
 
   const refreshQueue = async () => {
     exitFocus();
@@ -279,9 +341,10 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     : { dial: "", dddDestino: null as string | null };
 
   const queuePos = useMemo(() => {
-    if (queue.length === 0 || currentIndex < 0) return null;
-    return `${currentIndex + 1} / ${queue.length} na fila`;
-  }, [queue.length, currentIndex]);
+    if (activeQueue.length === 0 || activeIndex < 0) return null;
+    return `${activeIndex + 1} / ${activeQueue.length} ${activeLabel}`;
+  }, [activeQueue.length, activeIndex, activeLabel]);
+
 
   const ligar = async () => {
     if (!contact || !user) return;
@@ -527,10 +590,10 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
               <Button variant="outline" onClick={() => { setLastAction(undefined); setResultOpen(true); }} className="h-12 min-w-0 px-1">
                 <ListChecks className="h-4 w-4 shrink-0" /><span className="truncate text-[10px] ml-1">Reg.</span>
               </Button>
-              <Button variant="ghost" onClick={goPrev} disabled={queue.length < 2} className="h-12 min-w-0 px-1">
+              <Button variant="ghost" onClick={goPrev} disabled={activeQueue.length < 2} className="h-12 min-w-0 px-1">
                 <ArrowLeft className="h-4 w-4 shrink-0" /><span className="truncate text-[10px] ml-1">Ant.</span>
               </Button>
-              <Button variant="ghost" onClick={goNext} disabled={queue.length < 2} className="h-12 min-w-0 px-1">
+              <Button variant="ghost" onClick={goNext} disabled={activeQueue.length < 2} className="h-12 min-w-0 px-1">
                 <ArrowRight className="h-4 w-4 shrink-0" /><span className="truncate text-[10px] ml-1">Próx.</span>
               </Button>
               <Button variant="secondary" onClick={refreshQueue} disabled={loadingQueue} className="h-12 min-w-0 px-1">
@@ -637,10 +700,10 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
                   <Button variant="outline" onClick={addToWhatsapp}>
                     <MessageCircle className="h-4 w-4 mr-2" />Adicionar à Lista WhatsApp
                   </Button>
-                  <Button variant="outline" onClick={goPrev} disabled={queue.length < 2}>
+                  <Button variant="outline" onClick={goPrev} disabled={activeQueue.length < 2}>
                     <ArrowLeft className="h-4 w-4 mr-2" />Anterior
                   </Button>
-                  <Button variant="outline" onClick={goNext} disabled={queue.length < 2}>
+                  <Button variant="outline" onClick={goNext} disabled={activeQueue.length < 2}>
                     <ArrowRight className="h-4 w-4 mr-2" />Próximo
                   </Button>
                   <Button variant="secondary" onClick={refreshQueue} disabled={loadingQueue}>
@@ -695,12 +758,11 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
             qc.invalidateQueries({ queryKey: ["prospect_counts"] });
             // remove o convertido da fila local e avança
             if (!contact) return;
+            const removedId = contact.id;
             setQueue((q) => {
-              const idx = q.findIndex((c) => c.id === contact.id);
-              if (idx < 0) return q;
-              const next = q.filter((_, i) => i !== idx);
-              if (next.length === 0) setCurrentIndex(-1);
-              else setCurrentIndex(idx >= next.length ? 0 : idx);
+              const next = q.filter((c) => c.id !== removedId);
+              const nextActive = buildActiveQueue(next).list;
+              setCurrentContactId(nextActive.length > 0 ? nextActive[0]!.id : null);
               return next;
             });
           }}
