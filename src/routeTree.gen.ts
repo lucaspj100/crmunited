@@ -26,6 +26,7 @@ import { Route as AuthenticatedMeusFeedbacksRouteImport } from './routes/_authen
 import { Route as AuthenticatedMeuPerfilRouteImport } from './routes/_authenticated/meu-perfil'
 import { Route as AuthenticatedMetasMatriculaRouteImport } from './routes/_authenticated/metas-matricula'
 import { Route as AuthenticatedMateriaisRouteImport } from './routes/_authenticated/materiais'
+import { Route as AuthenticatedLinksBolsistaRouteImport } from './routes/_authenticated/links-bolsista'
 import { Route as AuthenticatedLeadsRouteImport } from './routes/_authenticated/leads'
 import { Route as AuthenticatedIntegracaoArenaRouteImport } from './routes/_authenticated/integracao-arena'
 import { Route as AuthenticatedImportarRouteImport } from './routes/_authenticated/importar'
@@ -133,6 +134,12 @@ const AuthenticatedMateriaisRoute = AuthenticatedMateriaisRouteImport.update({
   path: '/materiais',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedLinksBolsistaRoute =
+  AuthenticatedLinksBolsistaRouteImport.update({
+    id: '/links-bolsista',
+    path: '/links-bolsista',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedLeadsRoute = AuthenticatedLeadsRouteImport.update({
   id: '/leads',
   path: '/leads',
@@ -239,6 +246,7 @@ export interface FileRoutesByFullPath {
   '/importar': typeof AuthenticatedImportarRoute
   '/integracao-arena': typeof AuthenticatedIntegracaoArenaRoute
   '/leads': typeof AuthenticatedLeadsRoute
+  '/links-bolsista': typeof AuthenticatedLinksBolsistaRoute
   '/materiais': typeof AuthenticatedMateriaisRoute
   '/metas-matricula': typeof AuthenticatedMetasMatriculaRoute
   '/meu-perfil': typeof AuthenticatedMeuPerfilRoute
@@ -273,6 +281,7 @@ export interface FileRoutesByTo {
   '/importar': typeof AuthenticatedImportarRoute
   '/integracao-arena': typeof AuthenticatedIntegracaoArenaRoute
   '/leads': typeof AuthenticatedLeadsRoute
+  '/links-bolsista': typeof AuthenticatedLinksBolsistaRoute
   '/materiais': typeof AuthenticatedMateriaisRoute
   '/metas-matricula': typeof AuthenticatedMetasMatriculaRoute
   '/meu-perfil': typeof AuthenticatedMeuPerfilRoute
@@ -309,6 +318,7 @@ export interface FileRoutesById {
   '/_authenticated/importar': typeof AuthenticatedImportarRoute
   '/_authenticated/integracao-arena': typeof AuthenticatedIntegracaoArenaRoute
   '/_authenticated/leads': typeof AuthenticatedLeadsRoute
+  '/_authenticated/links-bolsista': typeof AuthenticatedLinksBolsistaRoute
   '/_authenticated/materiais': typeof AuthenticatedMateriaisRoute
   '/_authenticated/metas-matricula': typeof AuthenticatedMetasMatriculaRoute
   '/_authenticated/meu-perfil': typeof AuthenticatedMeuPerfilRoute
@@ -345,6 +355,7 @@ export interface FileRouteTypes {
     | '/importar'
     | '/integracao-arena'
     | '/leads'
+    | '/links-bolsista'
     | '/materiais'
     | '/metas-matricula'
     | '/meu-perfil'
@@ -379,6 +390,7 @@ export interface FileRouteTypes {
     | '/importar'
     | '/integracao-arena'
     | '/leads'
+    | '/links-bolsista'
     | '/materiais'
     | '/metas-matricula'
     | '/meu-perfil'
@@ -414,6 +426,7 @@ export interface FileRouteTypes {
     | '/_authenticated/importar'
     | '/_authenticated/integracao-arena'
     | '/_authenticated/leads'
+    | '/_authenticated/links-bolsista'
     | '/_authenticated/materiais'
     | '/_authenticated/metas-matricula'
     | '/_authenticated/meu-perfil'
@@ -559,6 +572,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMateriaisRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/links-bolsista': {
+      id: '/_authenticated/links-bolsista'
+      path: '/links-bolsista'
+      fullPath: '/links-bolsista'
+      preLoaderRoute: typeof AuthenticatedLinksBolsistaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/leads': {
       id: '/_authenticated/leads'
       path: '/leads'
@@ -690,6 +710,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedImportarRoute: typeof AuthenticatedImportarRoute
   AuthenticatedIntegracaoArenaRoute: typeof AuthenticatedIntegracaoArenaRoute
   AuthenticatedLeadsRoute: typeof AuthenticatedLeadsRoute
+  AuthenticatedLinksBolsistaRoute: typeof AuthenticatedLinksBolsistaRoute
   AuthenticatedMateriaisRoute: typeof AuthenticatedMateriaisRoute
   AuthenticatedMetasMatriculaRoute: typeof AuthenticatedMetasMatriculaRoute
   AuthenticatedMeuPerfilRoute: typeof AuthenticatedMeuPerfilRoute
@@ -722,6 +743,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedImportarRoute: AuthenticatedImportarRoute,
   AuthenticatedIntegracaoArenaRoute: AuthenticatedIntegracaoArenaRoute,
   AuthenticatedLeadsRoute: AuthenticatedLeadsRoute,
+  AuthenticatedLinksBolsistaRoute: AuthenticatedLinksBolsistaRoute,
   AuthenticatedMateriaisRoute: AuthenticatedMateriaisRoute,
   AuthenticatedMetasMatriculaRoute: AuthenticatedMetasMatriculaRoute,
   AuthenticatedMeuPerfilRoute: AuthenticatedMeuPerfilRoute,
@@ -750,13 +772,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
