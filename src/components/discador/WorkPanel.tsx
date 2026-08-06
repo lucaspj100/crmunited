@@ -287,15 +287,18 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
   };
 
   const goPrev = () => {
-    if (queue.length === 0) return;
+    if (activeQueue.length === 0) return;
     exitFocus();
-    setCurrentIndex((i) => (i <= 0 ? queue.length - 1 : i - 1));
+    const i = activeIndex <= 0 ? activeQueue.length - 1 : activeIndex - 1;
+    setCurrentContactId(activeQueue[i]!.id);
   };
   const goNext = () => {
-    if (queue.length === 0) return;
+    if (activeQueue.length === 0) return;
     exitFocus();
-    setCurrentIndex((i) => (i >= queue.length - 1 ? 0 : i + 1));
+    const i = activeIndex >= activeQueue.length - 1 ? 0 : activeIndex + 1;
+    setCurrentContactId(activeQueue[i]!.id);
   };
+
 
   const refreshQueue = async () => {
     exitFocus();
