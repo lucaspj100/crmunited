@@ -1145,23 +1145,42 @@ export type Database = {
       }
       leads: {
         Row: {
+          city_state: string | null
           company: string | null
+          company_name: string | null
+          confirmation_status: string | null
+          confirmed_at: string | null
+          confirmed_by: string | null
           created_at: string
+          email: string | null
+          english_goal: string | null
+          english_impact: string | null
+          english_level: string | null
           enrollment_date: string | null
           enrollment_value: number | null
+          external_lead_id: string | null
+          financial_fit: string | null
+          form_answers: Json
+          form_completed: boolean
+          form_status: string | null
+          form_step: string | null
+          high_priority: boolean
           id: string
           in_rescue: boolean
           interview_confirmed_at: string | null
           interview_date: string | null
           interview_done_date: string | null
+          interview_intent: string | null
           interview_notes: string | null
           interview_original_date: string | null
           interview_reschedule_count: number
           interview_time: string | null
+          last_confirmation_attempt_at: string | null
           last_contact_at: string | null
           last_source: string
           linkedin_url: string | null
           lost_at: string | null
+          lost_opportunity: string | null
           lost_reason: Database["public"]["Enums"]["lost_reason"] | null
           lost_type: Database["public"]["Enums"]["lost_type"] | null
           material_value: number | null
@@ -1173,33 +1192,61 @@ export type Database = {
           phone: string | null
           phone_invalid: boolean
           phone_normalized: string | null
+          profession: string | null
+          requested_interview_at: string | null
           rescue_date: string | null
           rescued_at: string | null
           rescued_by: string | null
+          scheduling_source: string | null
+          scholarship_classification: string | null
+          scholarship_notified_at: string | null
+          scholarship_task_created: boolean
           sheets_row: number | null
           source: string | null
+          source_system: string | null
+          start_timeframe: string | null
           status: Database["public"]["Enums"]["lead_status"]
           updated_at: string
           updated_by: string | null
+          why_not_studying: string | null
         }
         Insert: {
+          city_state?: string | null
           company?: string | null
+          company_name?: string | null
+          confirmation_status?: string | null
+          confirmed_at?: string | null
+          confirmed_by?: string | null
           created_at?: string
+          email?: string | null
+          english_goal?: string | null
+          english_impact?: string | null
+          english_level?: string | null
           enrollment_date?: string | null
           enrollment_value?: number | null
+          external_lead_id?: string | null
+          financial_fit?: string | null
+          form_answers?: Json
+          form_completed?: boolean
+          form_status?: string | null
+          form_step?: string | null
+          high_priority?: boolean
           id?: string
           in_rescue?: boolean
           interview_confirmed_at?: string | null
           interview_date?: string | null
           interview_done_date?: string | null
+          interview_intent?: string | null
           interview_notes?: string | null
           interview_original_date?: string | null
           interview_reschedule_count?: number
           interview_time?: string | null
+          last_confirmation_attempt_at?: string | null
           last_contact_at?: string | null
           last_source?: string
           linkedin_url?: string | null
           lost_at?: string | null
+          lost_opportunity?: string | null
           lost_reason?: Database["public"]["Enums"]["lost_reason"] | null
           lost_type?: Database["public"]["Enums"]["lost_type"] | null
           material_value?: number | null
@@ -1211,33 +1258,61 @@ export type Database = {
           phone?: string | null
           phone_invalid?: boolean
           phone_normalized?: string | null
+          profession?: string | null
+          requested_interview_at?: string | null
           rescue_date?: string | null
           rescued_at?: string | null
           rescued_by?: string | null
+          scheduling_source?: string | null
+          scholarship_classification?: string | null
+          scholarship_notified_at?: string | null
+          scholarship_task_created?: boolean
           sheets_row?: number | null
           source?: string | null
+          source_system?: string | null
+          start_timeframe?: string | null
           status?: Database["public"]["Enums"]["lead_status"]
           updated_at?: string
           updated_by?: string | null
+          why_not_studying?: string | null
         }
         Update: {
+          city_state?: string | null
           company?: string | null
+          company_name?: string | null
+          confirmation_status?: string | null
+          confirmed_at?: string | null
+          confirmed_by?: string | null
           created_at?: string
+          email?: string | null
+          english_goal?: string | null
+          english_impact?: string | null
+          english_level?: string | null
           enrollment_date?: string | null
           enrollment_value?: number | null
+          external_lead_id?: string | null
+          financial_fit?: string | null
+          form_answers?: Json
+          form_completed?: boolean
+          form_status?: string | null
+          form_step?: string | null
+          high_priority?: boolean
           id?: string
           in_rescue?: boolean
           interview_confirmed_at?: string | null
           interview_date?: string | null
           interview_done_date?: string | null
+          interview_intent?: string | null
           interview_notes?: string | null
           interview_original_date?: string | null
           interview_reschedule_count?: number
           interview_time?: string | null
+          last_confirmation_attempt_at?: string | null
           last_contact_at?: string | null
           last_source?: string
           linkedin_url?: string | null
           lost_at?: string | null
+          lost_opportunity?: string | null
           lost_reason?: Database["public"]["Enums"]["lost_reason"] | null
           lost_type?: Database["public"]["Enums"]["lost_type"] | null
           material_value?: number | null
@@ -1249,14 +1324,23 @@ export type Database = {
           phone?: string | null
           phone_invalid?: boolean
           phone_normalized?: string | null
+          profession?: string | null
+          requested_interview_at?: string | null
           rescue_date?: string | null
           rescued_at?: string | null
           rescued_by?: string | null
+          scheduling_source?: string | null
+          scholarship_classification?: string | null
+          scholarship_notified_at?: string | null
+          scholarship_task_created?: boolean
           sheets_row?: number | null
           source?: string | null
+          source_system?: string | null
+          start_timeframe?: string | null
           status?: Database["public"]["Enums"]["lead_status"]
           updated_at?: string
           updated_by?: string | null
+          why_not_studying?: string | null
         }
         Relationships: []
       }
@@ -1921,6 +2005,47 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      public_seller_links: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string | null
+          id: string
+          public_slug: string
+          seller_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          public_slug: string
+          seller_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          public_slug?: string
+          seller_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "public_seller_links_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sales_scripts: {
         Row: {
