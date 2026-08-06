@@ -177,6 +177,8 @@ function PainelAdm() {
 
       <ScoreSettingsCard />
 
+      <ScholarshipLinksCard />
+
 
 
       <Card className="p-4">
