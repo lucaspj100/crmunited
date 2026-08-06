@@ -145,11 +145,15 @@ function PlacarDiario() {
     });
   }, [rowsAll]);
 
+  const { points: scorePoints } = useScoreSettings();
+  const scoreLegend = useMemo(() => buildLegend(scorePoints), [scorePoints]);
+
   const ranked = useMemo(() => {
     return [...rows]
-      .map((r) => ({ ...r, score: scoreOf(r) }))
+      .map((r) => ({ ...r, score: scoreOf(r, scorePoints) }))
       .sort((a, b) => b.score - a.score);
-  }, [rows]);
+  }, [rows, scorePoints]);
+
 
   // ---- Meta individual de matrícula (privada: somente auth.uid()) ----
   const nowMY = useMemo(() => currentMonthYear(), []);
