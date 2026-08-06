@@ -758,12 +758,11 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
             qc.invalidateQueries({ queryKey: ["prospect_counts"] });
             // remove o convertido da fila local e avança
             if (!contact) return;
+            const removedId = contact.id;
             setQueue((q) => {
-              const idx = q.findIndex((c) => c.id === contact.id);
-              if (idx < 0) return q;
-              const next = q.filter((_, i) => i !== idx);
-              if (next.length === 0) setCurrentIndex(-1);
-              else setCurrentIndex(idx >= next.length ? 0 : idx);
+              const next = q.filter((c) => c.id !== removedId);
+              const nextActive = buildActiveQueue(next).list;
+              setCurrentContactId(nextActive.length > 0 ? nextActive[0]!.id : null);
               return next;
             });
           }}
