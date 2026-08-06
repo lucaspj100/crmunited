@@ -18,6 +18,7 @@ import { LeadMaterialSection } from "@/components/materiais/LeadMaterialSection"
 import { ConfirmPaymentDialog } from "@/components/materiais/MaterialDialogs";
 import { fetchBonusRules, type MaterialSaleRow } from "@/lib/materials";
 import { useQuery } from "@tanstack/react-query";
+import { ScholarshipSection, type ScholarshipLead } from "@/components/scholarship/ScholarshipSection";
 
 type LeadDetails = {
   id: string;
