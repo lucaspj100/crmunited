@@ -101,6 +101,59 @@ function sortQueue(list: ProspectContact[]): ProspectContact[] {
   });
 }
 
+const ATTEMPTED_STATUSES = ["Não atendeu", "Ocupado", "Caixa postal", "Atendeu", "Ligando"];
+
+function isEligible(c: ProspectContact): boolean {
+  return !c.convertido_em_lead && !c.nao_chamar && !c.telefone_invalido;
+}
+
+/**
+ * Fila ativa de navegação: enquanto existir "Aguardando ligação" elegível,
+ * "Próximo"/"Anterior" navegam SOMENTE nesse grupo.
+ */
+function buildActiveQueue(queue: ProspectContact[]): { list: ProspectContact[]; label: string } {
+  const ts = (v: string | null | undefined) => (v ? new Date(v).getTime() : 0);
+  const eligible = queue.filter(isEligible);
+
+  const waiting = eligible
+    .filter((c) => c.status_prospeccao === "Aguardando ligação")
+    .sort((a, b) => {
+      const na = isNeverContacted(a) ? 0 : 1;
+      const nb = isNeverContacted(b) ? 0 : 1;
+      if (na !== nb) return na - nb;
+      const qa = Number(a.quantidade_tentativas ?? 0);
+      const qb = Number(b.quantidade_tentativas ?? 0);
+      if (qa !== qb) return qa - qb;
+      const ua = ts(a.ultima_tentativa);
+      const ub = ts(b.ultima_tentativa);
+      if (ua !== ub) return ua - ub;
+      return ts(a.created_at) - ts(b.created_at);
+    });
+  if (waiting.length > 0) return { list: waiting, label: "aguardando ligação" };
+
+  const now = Date.now();
+  const dueReturns = eligible
+    .filter(
+      (c) =>
+        c.status_prospeccao === "Ligar depois" &&
+        !!c.proxima_tentativa &&
+        new Date(c.proxima_tentativa).getTime() <= now,
+    )
+    .sort((a, b) => ts(a.proxima_tentativa) - ts(b.proxima_tentativa));
+  if (dueReturns.length > 0) return { list: dueReturns, label: "retornos vencidos" };
+
+  const attempted = eligible
+    .filter((c) => ATTEMPTED_STATUSES.includes(c.status_prospeccao))
+    .sort((a, b) => {
+      const da = ts(a.ultima_tentativa);
+      const db = ts(b.ultima_tentativa);
+      if (da !== db) return da - db;
+      return ts(a.created_at) - ts(b.created_at);
+    });
+  return { list: attempted, label: "contatos para nova tentativa" };
+}
+
+
 
 export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocusConsumed }: Props = {}) {
   const { user } = useAuth();
