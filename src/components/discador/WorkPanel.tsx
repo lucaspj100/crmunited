@@ -370,22 +370,10 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
       return;
     }
 
-    if (shouldRemove) {
-      setQueue((q) => {
-        const idx = q.findIndex((c) => c.id === updated.id);
-        if (idx < 0) return q;
-        const next = q.filter((_, i) => i !== idx);
-        if (next.length === 0) {
-          setCurrentIndex(-1);
-        } else {
-          setCurrentIndex(idx >= next.length ? 0 : idx);
-        }
-        return next;
-      });
-    } else {
-      // atualiza o contato no array mantendo posição
-      setQueue((q) => q.map((c) => (c.id === updated.id ? updated : c)));
-    }
+    // Após registrar tentativa: recarrega a fila reordenada e abre o primeiro prioritário.
+    exitFocus();
+    await loadQueue({ silent: true });
+
   };
 
   return (
