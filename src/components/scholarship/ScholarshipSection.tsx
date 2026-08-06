@@ -237,7 +237,7 @@ export function ScholarshipSection({
             </div>
           );
         })}
-        {lead["form_step"] && (
+        {val(lead, "form_step") !== null && (
           <div className="text-xs">
             <span className="text-muted-foreground">Etapa alcançada no formulário: </span>
             <span className="font-medium">{String(lead["form_step"])}</span>
