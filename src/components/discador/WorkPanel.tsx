@@ -340,9 +340,10 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     : { dial: "", dddDestino: null as string | null };
 
   const queuePos = useMemo(() => {
-    if (queue.length === 0 || currentIndex < 0) return null;
-    return `${currentIndex + 1} / ${queue.length} na fila`;
-  }, [queue.length, currentIndex]);
+    if (activeQueue.length === 0 || activeIndex < 0) return null;
+    return `${activeIndex + 1} / ${activeQueue.length} ${activeLabel}`;
+  }, [activeQueue.length, activeIndex, activeLabel]);
+
 
   const ligar = async () => {
     if (!contact || !user) return;
