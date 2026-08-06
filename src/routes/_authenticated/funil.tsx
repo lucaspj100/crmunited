@@ -108,13 +108,15 @@ function FunilPage() {
   }, [leads, profileById]);
 
   const baseFiltered = vendorFilter === "all" ? leads : leads.filter((l) => l.owner_id === vendorFilter);
-  const filteredLeads = tempFilter === "all"
+  const tempFiltered = tempFilter === "all"
     ? baseFiltered
     : baseFiltered.filter((l) => leadTemperature({
         status: l.status, last_contact_at: l.last_contact_at,
         interview_date: l.interview_date, updated_at: l.updated_at,
         next: nextByLead.get(l.id) ?? null,
       }) === tempFilter);
+  const filteredLeads = tempFiltered.filter((l) => matchesScholarshipFilter(l as never, scholarshipFilter));
+
 
   const moveLead = async (lead: Lead, newStatus: string) => {
     if (lead.status === newStatus) return;
