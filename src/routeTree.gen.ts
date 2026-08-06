@@ -41,6 +41,7 @@ import { Route as AuthenticatedComissaoLiderancaRouteImport } from './routes/_au
 import { Route as AuthenticatedCheckoutDoDiaRouteImport } from './routes/_authenticated/checkout-do-dia'
 import { Route as AuthenticatedAssistentesIaRouteImport } from './routes/_authenticated/assistentes-ia'
 import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
+import { Route as ApiPublicReceiveScholarshipLeadRouteImport } from './routes/api/public/receive-scholarship-lead'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -213,6 +214,12 @@ const AuthenticatedAgendaRoute = AuthenticatedAgendaRouteImport.update({
   path: '/agenda',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicReceiveScholarshipLeadRoute =
+  ApiPublicReceiveScholarshipLeadRouteImport.update({
+    id: '/api/public/receive-scholarship-lead',
+    path: '/api/public/receive-scholarship-lead',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -246,6 +253,7 @@ export interface FileRoutesByFullPath {
   '/scripts': typeof AuthenticatedScriptsRoute
   '/tarefas': typeof AuthenticatedTarefasRoute
   '/usuarios-acessos': typeof AuthenticatedUsuariosAcessosRoute
+  '/api/public/receive-scholarship-lead': typeof ApiPublicReceiveScholarshipLeadRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -279,6 +287,7 @@ export interface FileRoutesByTo {
   '/scripts': typeof AuthenticatedScriptsRoute
   '/tarefas': typeof AuthenticatedTarefasRoute
   '/usuarios-acessos': typeof AuthenticatedUsuariosAcessosRoute
+  '/api/public/receive-scholarship-lead': typeof ApiPublicReceiveScholarshipLeadRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -314,6 +323,7 @@ export interface FileRoutesById {
   '/_authenticated/scripts': typeof AuthenticatedScriptsRoute
   '/_authenticated/tarefas': typeof AuthenticatedTarefasRoute
   '/_authenticated/usuarios-acessos': typeof AuthenticatedUsuariosAcessosRoute
+  '/api/public/receive-scholarship-lead': typeof ApiPublicReceiveScholarshipLeadRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -349,6 +359,7 @@ export interface FileRouteTypes {
     | '/scripts'
     | '/tarefas'
     | '/usuarios-acessos'
+    | '/api/public/receive-scholarship-lead'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -382,6 +393,7 @@ export interface FileRouteTypes {
     | '/scripts'
     | '/tarefas'
     | '/usuarios-acessos'
+    | '/api/public/receive-scholarship-lead'
   id:
     | '__root__'
     | '/'
@@ -416,12 +428,14 @@ export interface FileRouteTypes {
     | '/_authenticated/scripts'
     | '/_authenticated/tarefas'
     | '/_authenticated/usuarios-acessos'
+    | '/api/public/receive-scholarship-lead'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiPublicReceiveScholarshipLeadRoute: typeof ApiPublicReceiveScholarshipLeadRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -650,6 +664,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAgendaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/receive-scholarship-lead': {
+      id: '/api/public/receive-scholarship-lead'
+      path: '/api/public/receive-scholarship-lead'
+      fullPath: '/api/public/receive-scholarship-lead'
+      preLoaderRoute: typeof ApiPublicReceiveScholarshipLeadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -724,17 +745,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiPublicReceiveScholarshipLeadRoute: ApiPublicReceiveScholarshipLeadRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
