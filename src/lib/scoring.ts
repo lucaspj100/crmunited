@@ -1,30 +1,26 @@
 import type { ProductivityRow } from "@/lib/productivity";
+import { DEFAULT_POINTS, getActivePoints, buildLegend, type ScorePoints } from "@/lib/score-settings";
 
-/** Pontuação oficial do placar comercial — fonte única de verdade. */
-export const POINTS = {
-  call: 1,
-  answered: 2,
-  interested: 30,
-  interview: 60,
-  interview_done: 100,
-  enrollment: 300,
-  whatsapp: 0.1,
-  linkedin: 0.1,
-} as const;
+/**
+ * Pontuação padrão (fallback de segurança).
+ * A fonte única de verdade é a tabela `score_settings`, carregada em runtime
+ * via `useScoreSettings()` / `getActivePoints()`.
+ */
+export const POINTS = DEFAULT_POINTS;
 
-export const POINTS_LEGEND =
-  "ligação 1 · atendida 2 · interessado 30 · entrev. marcada 60 · entrev. realizada 100 · matrícula 300 · WhatsApp 0,1 · LinkedIn 0,1";
+/** Legenda dinâmica com os valores configurados pelo ADM. */
+export const POINTS_LEGEND = buildLegend();
 
-export function scoreOf(r: ProductivityRow): number {
+export function scoreOf(r: ProductivityRow, points: ScorePoints = getActivePoints()): number {
   return (
-    r.ligacoes_feitas * POINTS.call +
-    r.ligacoes_atendidas * POINTS.answered +
-    r.interessados_gerados * POINTS.interested +
-    r.entrevistas_marcadas * POINTS.interview +
-    (r.entrevistas_realizadas ?? 0) * POINTS.interview_done +
-    r.matriculas * POINTS.enrollment +
-    (r.whatsapps_checkout ?? 0) * POINTS.whatsapp +
-    (r.linkedins_checkout ?? 0) * POINTS.linkedin
+    r.ligacoes_feitas * points.call +
+    r.ligacoes_atendidas * points.answered +
+    r.interessados_gerados * points.interested +
+    r.entrevistas_marcadas * points.interview +
+    (r.entrevistas_realizadas ?? 0) * points.interview_done +
+    r.matriculas * points.enrollment +
+    (r.whatsapps_checkout ?? 0) * points.whatsapp +
+    (r.linkedins_checkout ?? 0) * points.linkedin
   );
 }
 
