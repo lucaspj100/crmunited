@@ -13,6 +13,7 @@ import { Trophy, AlertTriangle, Users, Filter } from "lucide-react";
 import { periodRange as sharedPeriodRange, weekRange } from "@/lib/productivity";
 import { useTeams, primaryTeamId, teamParam, ALL_TEAMS } from "@/lib/teams";
 import { ScoreSettingsCard } from "@/components/admin/ScoreSettingsCard";
+import { ScholarshipLinksCard } from "@/components/admin/ScholarshipLinksCard";
 
 export const Route = createFileRoute("/_authenticated/painel-adm")({ component: PainelAdm });
 
