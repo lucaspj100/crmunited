@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Trophy, AlertTriangle, Users, Filter } from "lucide-react";
 import { periodRange as sharedPeriodRange, weekRange } from "@/lib/productivity";
 import { useTeams, primaryTeamId, teamParam, ALL_TEAMS } from "@/lib/teams";
+import { ScoreSettingsCard } from "@/components/admin/ScoreSettingsCard";
 
 export const Route = createFileRoute("/_authenticated/painel-adm")({ component: PainelAdm });
 
@@ -173,6 +174,10 @@ function PainelAdm() {
         <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2"><Users className="h-6 w-6 text-primary" />Painel ADM por vendedor</h1>
         <p className="text-sm text-muted-foreground">Ranking, métricas e alertas da operação comercial</p>
       </div>
+
+      <ScoreSettingsCard />
+
+
 
       <Card className="p-4">
         <div className="flex flex-wrap items-end gap-3">

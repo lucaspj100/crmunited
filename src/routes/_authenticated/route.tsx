@@ -1,3 +1,4 @@
+import { useScoreSettings } from "@/lib/score-settings";
 import { createFileRoute, Outlet, useNavigate, useLocation, Link } from "@tanstack/react-router";
 import { useCallback, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
@@ -39,6 +40,8 @@ const BASE_NAV = [
 
 function AuthedLayout() {
   const { session, loading, signOut, user, roles, mustChangePassword } = useAuth();
+  // Carrega a configuração de pontuação (fonte única) para todo o app autenticado.
+  useScoreSettings();
   const navigate = useNavigate();
   const location = useLocation();
   const { data: brand } = useBrand();

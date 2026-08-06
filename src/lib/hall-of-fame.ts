@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { fetchProductivity, localIso, type ProductivityRow } from "@/lib/productivity";
-import { POINTS, POINTS_LEGEND, scoreOf, isRealSeller } from "@/lib/scoring";
+import { scoreOf, isRealSeller } from "@/lib/scoring";
+import { getActivePoints, buildLegend } from "@/lib/score-settings";
 import { fetchExcludedIds } from "@/lib/hall-eligibility";
 import { publicTitleOf, publicLabelOf } from "@/lib/hall-titles";
 
@@ -231,6 +232,7 @@ export function computeCategories(rows: RankedRow[], prevRows: RankedRow[]): Cat
 
 /** Principal destaque individual do vendedor no mês. */
 export function highlightOf(r: RankedRow): string {
+  const POINTS = getActivePoints();
   const parts: Array<[string, number]> = [
     [`${r.matriculas} matrícula${r.matriculas === 1 ? "" : "s"}`, r.matriculas * POINTS.enrollment],
     [`${r.entrevistas_realizadas ?? 0} entrevistas realizadas`, (r.entrevistas_realizadas ?? 0) * POINTS.interview_done],
@@ -343,7 +345,7 @@ async function saveAchievements(
   });
 }
 
-export const RULES_SNAPSHOT = { points: POINTS, legend: POINTS_LEGEND, tiebreakers: TIEBREAKERS, timezone: "America/Sao_Paulo" };
+export const rulesSnapshot = () => ({ points: getActivePoints(), legend: buildLegend(), tiebreakers: TIEBREAKERS, timezone: "America/Sao_Paulo" });
 
 /** Fecha o mês (ou recalcula um mês reaberto). Nunca sobrescreve um fechamento existente. */
 export async function closeMonth(args: {
@@ -374,7 +376,7 @@ export async function closeMonth(args: {
     ranking_snapshot: ranking,
     category_winners: categories,
     calculation_rules_snapshot: {
-      ...RULES_SNAPSHOT,
+      ...rulesSnapshot(),
       // Snapshot imutável: quem estava fora do Hall da Fama no momento do fechamento.
       excluded_user_ids: excluded,
       titles_version: "public-v1",

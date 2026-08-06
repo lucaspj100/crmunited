@@ -1958,6 +1958,60 @@ export type Database = {
         }
         Relationships: []
       }
+      score_settings: {
+        Row: {
+          activity_key: string
+          activity_label: string
+          id: string
+          points: number
+          sort_order: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          activity_key: string
+          activity_label: string
+          id?: string
+          points?: number
+          sort_order?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          activity_key?: string
+          activity_label?: string
+          id?: string
+          points?: number
+          sort_order?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      score_settings_history: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          id: string
+          new_values: Json
+          previous_values: Json
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          new_values?: Json
+          previous_values?: Json
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          new_values?: Json
+          previous_values?: Json
+        }
+        Relationships: []
+      }
       seller_daily_goals: {
         Row: {
           created_at: string

@@ -23,6 +23,7 @@ import { Phone, PhoneCall, Sparkles, CalendarCheck, GraduationCap, Trophy, Maxim
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { scoreOf, fmtScore, isRealSeller } from "@/lib/scoring";
+import { useScoreSettings, buildLegend } from "@/lib/score-settings";
 import {
   useMyActiveGoal,
   useTeamActiveGoals,
@@ -144,11 +145,15 @@ function PlacarDiario() {
     });
   }, [rowsAll]);
 
+  const { points: scorePoints } = useScoreSettings();
+  const scoreLegend = useMemo(() => buildLegend(scorePoints), [scorePoints]);
+
   const ranked = useMemo(() => {
     return [...rows]
-      .map((r) => ({ ...r, score: scoreOf(r) }))
+      .map((r) => ({ ...r, score: scoreOf(r, scorePoints) }))
       .sort((a, b) => b.score - a.score);
-  }, [rows]);
+  }, [rows, scorePoints]);
+
 
   // ---- Meta individual de matrícula (privada: somente auth.uid()) ----
   const nowMY = useMemo(() => currentMonthYear(), []);
@@ -428,7 +433,7 @@ function PlacarDiario() {
             <div className="flex items-center gap-2 mb-4">
               <Crown className="h-5 w-5 text-amber-400" />
               <h2 className="text-lg font-bold">Pódio de hoje — Top 3</h2>
-              <span className="text-xs text-white/50 ml-2">Pontuação: ligação 1 · atendida 2 · interessado 30 · entrev. marcada 60 · entrev. realizada 100 · matrícula 300 · WhatsApp 0,1 · LinkedIn 0,1</span>
+              <span className="text-xs text-white/50 ml-2">Pontuação: {scoreLegend}</span>
             </div>
             <div className="space-y-3">
               {ranked.length === 0 && <p className="text-white/60 text-sm">Sem dados ainda.</p>}
