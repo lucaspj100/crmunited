@@ -103,7 +103,7 @@ export function LeadDetailsDialog({
       setLead(l);
       setName(l.name || "");
       setPhone(l.phone || "");
-      setCompany(l.company || "");
+      setCompany(l.company || l.company_name || "");
       setLinkedin(l.linkedin_url || "");
       setObservation(l.observation || "");
       if (l.owner_id) {
