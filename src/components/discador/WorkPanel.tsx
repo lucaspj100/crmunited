@@ -147,13 +147,14 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
       setCurrentIndex(-1);
       return;
     }
-    const keepId = opts?.keepContactId ?? contact?.id;
+    const keepId = opts?.keepContactId;
     if (keepId) {
       const idx = sorted.findIndex((c) => c.id === keepId);
       setCurrentIndex(idx >= 0 ? idx : 0);
     } else {
-      setCurrentIndex((prev) => (prev >= 0 && prev < sorted.length ? prev : 0));
+      setCurrentIndex(0);
     }
+
   };
 
   // Bootstrap
