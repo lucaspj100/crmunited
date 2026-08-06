@@ -235,6 +235,7 @@ function FunilPage() {
                               Discador
                             </span>
                           )}
+                          <ScholarshipCardBadges lead={l as unknown as ScholarshipLead} />
                         </div>
                         <span title={tempMeta.label} className={`shrink-0 inline-flex items-center justify-center h-5 px-1.5 rounded-full border text-[10px] ${tempMeta.color}`}>
                           {tempMeta.emoji}
