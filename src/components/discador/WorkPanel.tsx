@@ -36,15 +36,14 @@ type RetornoTask = {
   due_time: string | null;
 };
 
-const QUEUE_STATUSES = [
-  "Aguardando ligação",
-  "Ligar depois",
-  "Não atendeu",
-  "Ocupado",
-  "Caixa postal",
-  "Atendeu",
-  "Ligando",
-] as const;
+import {
+  QUEUE_STATUSES,
+  isEligibleForDialer,
+  applyDialerEligibility,
+  fetchDialerQueue,
+  fetchProspectContactById,
+} from "@/lib/prospect-eligibility";
+
 
 const STATUS_PRIORITY: Record<string, number> = {
   "Aguardando ligação": 0,
@@ -104,8 +103,9 @@ function sortQueue(list: ProspectContact[]): ProspectContact[] {
 const ATTEMPTED_STATUSES = ["Não atendeu", "Ocupado", "Caixa postal", "Atendeu", "Ligando"];
 
 function isEligible(c: ProspectContact): boolean {
-  return !c.convertido_em_lead && !c.nao_chamar && !c.telefone_invalido;
+  return isEligibleForDialer(c);
 }
+
 
 /**
  * Fila ativa de navegação: enquanto existir "Aguardando ligação" elegível,
@@ -183,27 +183,22 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
   const contact: ProspectContact | null =
     focusedContact ?? (activeIndex >= 0 ? activeQueue[activeIndex]! : null);
 
-  // Carrega a fila completa do vendedor
-  const loadQueue = async (opts?: { keepContactId?: string; silent?: boolean }) => {
+  // Carrega a fila completa do vendedor (com paginação — o Data API corta em 1000 linhas)
+  const loadQueue = async (opts?: { keepContactId?: string; silent?: boolean; keepSelection?: boolean }) => {
     if (!user) return;
     if (!opts?.silent) setLoadingQueue(true);
-    const { data, error } = await supabase
-      .from("prospect_contacts")
-      .select("*")
-      .eq("vendedor_responsavel_id", user.id)
-      .eq("convertido_em_lead", false)
-      .eq("nao_chamar", false)
-      .eq("telefone_invalido", false)
-      .in("status_prospeccao", QUEUE_STATUSES as unknown as string[])
-      .order("created_at", { ascending: true })
-      .limit(5000);
-    setLoadingQueue(false);
-    if (error) {
-      toast.error(`Erro ao carregar fila: ${error.message}`);
+    let rows: ProspectContact[] = [];
+    try {
+      rows = await fetchDialerQueue(user.id);
+    } catch (err) {
+      setLoadingQueue(false);
+      toast.error(`Erro ao carregar fila: ${err instanceof Error ? err.message : String(err)}`);
       return;
     }
-    const sorted = sortQueue((data ?? []) as ProspectContact[]);
+    setLoadingQueue(false);
+    const sorted = sortQueue(rows);
     setQueue(sorted);
+    if (opts?.keepSelection) return;
     const nextActive = buildActiveQueue(sorted).list;
     if (nextActive.length === 0) {
       setCurrentContactId(null);
@@ -213,6 +208,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     const keep = keepId ? nextActive.find((c) => c.id === keepId) : undefined;
     setCurrentContactId(keep ? keep.id : nextActive[0]!.id);
   };
+
 
 
   // Bootstrap
@@ -316,7 +312,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
       const [total, done, pending, interested] = await Promise.all([
         base,
         supabase.from("prospect_contacts").select("id", { count: "exact", head: true }).eq("vendedor_responsavel_id", user!.id).eq("convertido_em_lead", true),
-        supabase.from("prospect_contacts").select("id", { count: "exact", head: true }).eq("vendedor_responsavel_id", user!.id).eq("convertido_em_lead", false).eq("nao_chamar", false).eq("telefone_invalido", false).in("status_prospeccao", QUEUE_STATUSES as unknown as string[]),
+        applyDialerEligibility(supabase.from("prospect_contacts").select("id", { count: "exact", head: true }).eq("vendedor_responsavel_id", user!.id).in("status_prospeccao", QUEUE_STATUSES as unknown as string[])),
         supabase.from("prospect_contacts").select("id", { count: "exact", head: true }).eq("vendedor_responsavel_id", user!.id).eq("status_prospeccao", "Interessado"),
       ]);
       return { total: total.count ?? 0, done: done.count ?? 0, pending: pending.count ?? 0, interested: interested.count ?? 0 };
@@ -399,7 +395,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
 
 
 
-  const onResultSaved = async (_goNext: boolean) => {
+  const onResultSaved = async (goNext: boolean) => {
     qc.invalidateQueries({ queryKey: ["prospect_counts"] });
     qc.invalidateQueries({ queryKey: ["prospect_attempts", contact?.id] });
     qc.invalidateQueries({ queryKey: ["daily_scoreboard"] });
@@ -408,36 +404,28 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     qc.invalidateQueries({ queryKey: ["tasks"] });
     qc.invalidateQueries({ queryKey: ["hoje"] });
     if (!contact) return;
-    const currentId = contact.id;
-    const wasFocused = !!focusedContact;
+    const savedContactId = contact.id;
     const wasRetorno = !!activeRetornoTaskId || !!retornoTask;
-    // Recarrega o contato do banco
-    const { data } = await supabase.from("prospect_contacts").select("*").eq("id", currentId).single();
-    if (!data) return;
-    const updated = data as ProspectContact;
-    const shouldRemove =
-      updated.convertido_em_lead ||
-      updated.nao_chamar ||
-      updated.telefone_invalido ||
-      REMOVE_FROM_QUEUE_STATUSES.has(updated.status_prospeccao);
 
-    if (wasRetorno) {
+    // "Salvar e ir para próximo": atualiza a fila e navega para o próximo prioritário.
+    if (goNext || wasRetorno) {
       exitFocus();
       await loadQueue({ silent: true });
       return;
     }
 
-    if (wasFocused) {
-      // Modo foco (veio de /hoje): não mexe na fila do dia; apenas sai do foco.
-      setFocusedContact(shouldRemove ? null : updated);
-      return;
+    // "Salvar": apenas atualiza os dados e PERMANECE no mesmo contato.
+    const updated = await fetchProspectContactById(savedContactId);
+    setActiveRetornoTaskId(null);
+    setRetornoTask(null);
+    await loadQueue({ silent: true, keepSelection: true });
+    if (updated) {
+      // Mantém o contato salvo visível mesmo que ele tenha saído da fila prioritária.
+      setFocusedContact(updated);
+      setCurrentContactId(null);
     }
-
-    // Após registrar tentativa: recarrega a fila reordenada e abre o primeiro prioritário.
-    exitFocus();
-    await loadQueue({ silent: true });
-
   };
+
 
   return (
     <>
