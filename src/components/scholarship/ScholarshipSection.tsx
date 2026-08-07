@@ -105,6 +105,16 @@ export function ScholarshipSection({
   const requestedIso = lead["requested_interview_at"] as string | null;
   const confirmation = lead["confirmation_status"] as string | null;
   const answers = (lead["form_answers"] ?? {}) as Record<string, unknown>;
+  const phone = val(lead, "phone");
+  const suggestion = suggestedContact(lead as never);
+  const messageText =
+    suggestion === "agendar"
+      ? buildNoScheduleMessage(lead as never)
+      : suggestion === "confirmar"
+        ? buildInterviewConfirmationMessage(lead as never)
+        : suggestion === "confirmacao_final"
+          ? buildFinalConfirmationMessage(lead as never)
+          : "";
 
   const closeConfirmTask = async () => {
     await supabase
