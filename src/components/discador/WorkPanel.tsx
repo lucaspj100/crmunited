@@ -103,8 +103,9 @@ function sortQueue(list: ProspectContact[]): ProspectContact[] {
 const ATTEMPTED_STATUSES = ["Não atendeu", "Ocupado", "Caixa postal", "Atendeu", "Ligando"];
 
 function isEligible(c: ProspectContact): boolean {
-  return !c.convertido_em_lead && !c.nao_chamar && !c.telefone_invalido;
+  return isEligibleForDialer(c);
 }
+
 
 /**
  * Fila ativa de navegação: enquanto existir "Aguardando ligação" elegível,
