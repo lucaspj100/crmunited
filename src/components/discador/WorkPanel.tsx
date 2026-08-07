@@ -395,7 +395,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
 
 
 
-  const onResultSaved = async (_goNext: boolean) => {
+  const onResultSaved = async (goNext: boolean) => {
     qc.invalidateQueries({ queryKey: ["prospect_counts"] });
     qc.invalidateQueries({ queryKey: ["prospect_attempts", contact?.id] });
     qc.invalidateQueries({ queryKey: ["daily_scoreboard"] });
@@ -404,36 +404,28 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     qc.invalidateQueries({ queryKey: ["tasks"] });
     qc.invalidateQueries({ queryKey: ["hoje"] });
     if (!contact) return;
-    const currentId = contact.id;
-    const wasFocused = !!focusedContact;
+    const savedContactId = contact.id;
     const wasRetorno = !!activeRetornoTaskId || !!retornoTask;
-    // Recarrega o contato do banco
-    const { data } = await supabase.from("prospect_contacts").select("*").eq("id", currentId).single();
-    if (!data) return;
-    const updated = data as ProspectContact;
-    const shouldRemove =
-      updated.convertido_em_lead ||
-      updated.nao_chamar ||
-      updated.telefone_invalido ||
-      REMOVE_FROM_QUEUE_STATUSES.has(updated.status_prospeccao);
 
-    if (wasRetorno) {
+    // "Salvar e ir para próximo": atualiza a fila e navega para o próximo prioritário.
+    if (goNext || wasRetorno) {
       exitFocus();
       await loadQueue({ silent: true });
       return;
     }
 
-    if (wasFocused) {
-      // Modo foco (veio de /hoje): não mexe na fila do dia; apenas sai do foco.
-      setFocusedContact(shouldRemove ? null : updated);
-      return;
+    // "Salvar": apenas atualiza os dados e PERMANECE no mesmo contato.
+    const updated = await fetchProspectContactById(savedContactId);
+    setActiveRetornoTaskId(null);
+    setRetornoTask(null);
+    await loadQueue({ silent: true, keepSelection: true });
+    if (updated) {
+      // Mantém o contato salvo visível mesmo que ele tenha saído da fila prioritária.
+      setFocusedContact(updated);
+      setCurrentContactId(null);
     }
-
-    // Após registrar tentativa: recarrega a fila reordenada e abre o primeiro prioritário.
-    exitFocus();
-    await loadQueue({ silent: true });
-
   };
+
 
   return (
     <>
