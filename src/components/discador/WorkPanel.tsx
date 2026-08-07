@@ -406,25 +406,45 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     if (!contact) return;
     const savedContactId = contact.id;
     const wasRetorno = !!activeRetornoTaskId || !!retornoTask;
+    const prevIndex = activeIndex;
 
     // "Salvar e ir para próximo": atualiza a fila e navega para o próximo prioritário.
-    if (goNext || wasRetorno) {
+    // Retorno aberto pela aba Hoje também sai do foco (a tarefa já foi concluída),
+    // mas apenas quando o vendedor pediu para avançar.
+    if (goNext) {
       exitFocus();
       await loadQueue({ silent: true });
       return;
     }
 
-    // "Salvar": apenas atualiza os dados e PERMANECE no mesmo contato.
+    // "Salvar": apenas atualiza os dados e PERMANECE no mesmo contato,
+    // sem resetar a posição do sprint.
     const updated = await fetchProspectContactById(savedContactId);
+    // Limpa apenas o vínculo com a tarefa de retorno (já concluída no salvamento).
     setActiveRetornoTaskId(null);
     setRetornoTask(null);
     await loadQueue({ silent: true, keepSelection: true });
     if (updated) {
       // Mantém o contato salvo visível mesmo que ele tenha saído da fila prioritária.
       setFocusedContact(updated);
-      setCurrentContactId(null);
+    } else if (wasRetorno) {
+      setFocusedContact(null);
     }
+    // Preserva a posição visual do sprint: ancora a seleção no mesmo índice da fila ativa.
+    setQueue((prev) => {
+      const nextActive = buildActiveQueue(prev).list;
+      if (nextActive.length === 0) setCurrentContactId(null);
+      else {
+        const stillThere = nextActive.some((c) => c.id === savedContactId);
+        const idx = stillThere
+          ? nextActive.findIndex((c) => c.id === savedContactId)
+          : Math.min(Math.max(prevIndex, 0), nextActive.length - 1);
+        setCurrentContactId(nextActive[idx]!.id);
+      }
+      return prev;
+    });
   };
+
 
 
   return (
