@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -98,6 +98,20 @@ export function ScholarshipSection({
   const qc = useQueryClient();
   const [busy, setBusy] = useState(false);
   const [msgOpen, setMsgOpen] = useState(false);
+  const ownerId = lead.owner_id;
+  const { data: ownerName } = useQuery({
+    enabled: !!ownerId,
+    queryKey: ["lead_owner_first_name", ownerId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", ownerId)
+        .maybeSingle();
+      return (data?.full_name ?? "").trim() || null;
+    },
+    staleTime: 10 * 60 * 1000,
+  });
   if (!isScholarshipLead(lead as never)) return null;
 
   const cls = classificationMeta(lead["scholarship_classification"] as string | null);
@@ -109,12 +123,13 @@ export function ScholarshipSection({
   const suggestion = suggestedContact(lead as never);
   const messageText =
     suggestion === "agendar"
-      ? buildNoScheduleMessage(lead as never)
+      ? buildNoScheduleMessage(lead as never, ownerName)
       : suggestion === "confirmar"
-        ? buildInterviewConfirmationMessage(lead as never)
+        ? buildInterviewConfirmationMessage(lead as never, ownerName)
         : suggestion === "confirmacao_final"
-          ? buildFinalConfirmationMessage(lead as never)
+          ? buildFinalConfirmationMessage(lead as never, ownerName)
           : "";
+
 
   const closeConfirmTask = async () => {
     await supabase
