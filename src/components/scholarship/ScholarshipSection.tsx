@@ -304,6 +304,46 @@ export function ScholarshipSection({
         </details>
       )}
 
+      {suggestion && (
+        <div className="rounded-md border bg-background/60 p-2" onClick={(e) => e.stopPropagation()}>
+          <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">
+            Contato sugerido
+          </div>
+          <Button type="button" size="sm" variant="secondary" onClick={() => setMsgOpen(true)} className="gap-1.5">
+            <MessageSquare className="h-3.5 w-3.5" />
+            {suggestion === "agendar"
+              ? "💬 Criar mensagem para agendar"
+              : suggestion === "confirmar"
+                ? "✅ Criar mensagem de confirmação"
+                : "📋 Copiar confirmação final"}
+          </Button>
+          <ScholarshipMessageDialog
+            open={msgOpen}
+            onOpenChange={setMsgOpen}
+            title={
+              suggestion === "agendar"
+                ? "Mensagem para agendar a entrevista"
+                : suggestion === "confirmar"
+                  ? "Mensagem de confirmação de horário"
+                  : "Confirmação final da entrevista"
+            }
+            description="Edite a mensagem antes de copiar ou abrir o WhatsApp. Nenhum dado do lead é alterado."
+            message={messageText}
+            phone={phone}
+            onOpenWhatsapp={() =>
+              void logLeadEvent({
+                leadId: lead.id,
+                type: "note",
+                description:
+                  suggestion === "agendar"
+                    ? "Mensagem de agendamento aberta no WhatsApp"
+                    : "Mensagem de confirmação aberta no WhatsApp",
+              })
+            }
+          />
+        </div>
+      )}
+
       <div className="flex flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
         {scheduled && confirmation !== CONFIRMATION_STATUS.confirmed && (
           <Button type="button" size="sm" onClick={onConfirmInterview} disabled={busy} className="gap-1.5">
