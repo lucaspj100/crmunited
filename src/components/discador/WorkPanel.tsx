@@ -36,15 +36,14 @@ type RetornoTask = {
   due_time: string | null;
 };
 
-const QUEUE_STATUSES = [
-  "Aguardando ligação",
-  "Ligar depois",
-  "Não atendeu",
-  "Ocupado",
-  "Caixa postal",
-  "Atendeu",
-  "Ligando",
-] as const;
+import {
+  QUEUE_STATUSES,
+  isEligibleForDialer,
+  applyDialerEligibility,
+  fetchDialerQueue,
+  fetchProspectContactById,
+} from "@/lib/prospect-eligibility";
+
 
 const STATUS_PRIORITY: Record<string, number> = {
   "Aguardando ligação": 0,
