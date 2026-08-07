@@ -90,6 +90,7 @@ export const SCHOLARSHIP_FILTERS = [
   { value: "bolsista", label: "Processo bolsista" },
   { value: "form_incompleto", label: "Formulário incompleto" },
   { value: "form_concluido", label: "Formulário concluído" },
+  { value: "concluiu_sem_agendar", label: "⏳ Preencheu formulário — não agendou" },
   { value: "com_agendamento", label: "Com agendamento" },
   { value: "aguardando_confirmacao", label: "Aguardando confirmação" },
   { value: "confirmado", label: "Confirmado" },
@@ -113,6 +114,8 @@ export function matchesScholarshipFilter(lead: ScholarshipLeadFields, filter: st
       return !!lead.form_completed;
     case "com_agendamento":
       return hasFormScheduling(lead);
+    case "concluiu_sem_agendar":
+      return hasCompletedFormWithoutScheduling(lead);
     case "aguardando_confirmacao":
       return awaitingConfirmation(lead);
     case "confirmado":
