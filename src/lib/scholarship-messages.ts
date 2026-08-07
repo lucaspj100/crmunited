@@ -104,24 +104,30 @@ export function buildPersonalizedSnippet(lead: MessageLead): string | null {
   return null;
 }
 
-export function buildNoScheduleMessage(lead: MessageLead): string {
+export function buildNoScheduleMessage(lead: MessageLead, sellerName?: string | null): string {
   const snippet = buildPersonalizedSnippet(lead);
   return [
     `Oi, ${getFirstName(lead.name as string | null)}! Tudo bem? 😊`,
-    "Vi que você concluiu sua qualificação para o processo de inglês e seu perfil foi aprovado para entrevista.",
+    intro(
+      sellerName,
+      "Estou entrando em contato porque vi que você concluiu sua qualificação no nosso processo para inglês e seu perfil foi aprovado para entrevista.",
+    ),
     snippet,
-    "Só faltou definirmos o horário da entrevista.",
+    "Só faltou definirmos o horário da sua entrevista.",
     "Qual período fica melhor pra você: manhã, tarde ou noite?",
   ]
     .filter(Boolean)
     .join("\n\n");
 }
 
-export function buildInterviewConfirmationMessage(lead: MessageLead): string {
+export function buildInterviewConfirmationMessage(lead: MessageLead, sellerName?: string | null): string {
   const dt = formatInterviewDateTime(lead["requested_interview_at"] as string | null);
   return [
     `Oi, ${getFirstName(lead.name as string | null)}! Tudo bem? 😊`,
-    "Vi aqui que você concluiu sua qualificação e escolheu o horário da sua entrevista.",
+    intro(
+      sellerName,
+      "Estou entrando em contato porque vi que você concluiu sua qualificação no nosso processo e escolheu o horário da sua entrevista.",
+    ),
     dt ? `Ficou agendado para ${dt.weekday}, dia ${dt.date}, às ${dt.time}.` : null,
     "A entrevista será uma conversa para entendermos melhor seu objetivo com o inglês, seu momento atual e verificarmos as condições disponíveis para o seu perfil.",
     "Posso confirmar sua presença nesse horário?",
@@ -130,23 +136,26 @@ export function buildInterviewConfirmationMessage(lead: MessageLead): string {
     .join("\n\n");
 }
 
-export function buildFinalConfirmationMessage(lead: MessageLead): string {
+export function buildFinalConfirmationMessage(lead: MessageLead, sellerName?: string | null): string {
   const iso =
     (lead["requested_interview_at"] as string | null) ??
     (lead["interview_date"]
       ? `${lead["interview_date"]}T${(lead["interview_time"] as string | null) ?? "00:00"}`
       : null);
   const dt = formatInterviewDateTime(iso);
+  const seller = getSellerFirstName(sellerName);
   return [
     `Perfeito, ${getFirstName(lead.name as string | null)}! ✅`,
+    seller ? `Aqui é o ${seller}, da United Idiomas.` : "Aqui é da equipe da United Idiomas.",
     dt
-      ? `Entrevista confirmada para ${dt.weekday}, ${dt.date}, às ${dt.time}.`
-      : "Entrevista confirmada.",
+      ? `Sua entrevista ficou confirmada para ${dt.weekday}, ${dt.date}, às ${dt.time}.`
+      : "Sua entrevista ficou confirmada.",
     "Próximo ao horário eu te envio o acesso. Até lá!",
   ]
     .filter(Boolean)
     .join("\n\n");
 }
+
 
 /** Qual ação de contato sugerido exibir para o lead. */
 export type SuggestedContact = "agendar" | "confirmar" | "confirmacao_final" | null;
