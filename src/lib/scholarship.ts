@@ -73,6 +73,11 @@ export function awaitingConfirmation(lead: ScholarshipLeadFields | null | undefi
   return hasFormScheduling(lead) && lead?.confirmation_status === CONFIRMATION_STATUS.waiting;
 }
 
+/** Concluiu o formulário mas não escolheu horário pelo formulário. */
+export function hasCompletedFormWithoutScheduling(lead: ScholarshipLeadFields | null | undefined): boolean {
+  return !!lead && isScholarshipLead(lead) && lead.form_completed === true && !hasFormScheduling(lead);
+}
+
 export function formatRequestedInterview(iso: string | null | undefined): string {
   if (!iso) return "—";
   const d = new Date(iso);
