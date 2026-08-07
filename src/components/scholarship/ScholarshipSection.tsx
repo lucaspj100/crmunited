@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { CalendarCheck, CalendarX, GraduationCap, Heart } from "lucide-react";
+import { CalendarCheck, CalendarX, GraduationCap, Heart, MessageSquare } from "lucide-react";
 import { logLeadEvent } from "@/lib/lead-events";
 import {
   CONFIRMATION_LABELS,
