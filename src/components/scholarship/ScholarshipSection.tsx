@@ -20,6 +20,13 @@ import {
   qualificationValue,
 } from "@/lib/scholarship";
 import { notifyArena } from "@/lib/arena-dispatch";
+import { ScholarshipMessageDialog } from "@/components/scholarship/ScholarshipMessageDialog";
+import {
+  buildFinalConfirmationMessage,
+  buildInterviewConfirmationMessage,
+  buildNoScheduleMessage,
+  suggestedContact,
+} from "@/lib/scholarship-messages";
 
 export type ScholarshipLead = Record<string, unknown> & {
   id: string;
@@ -90,6 +97,7 @@ export function ScholarshipSection({
 }) {
   const qc = useQueryClient();
   const [busy, setBusy] = useState(false);
+  const [msgOpen, setMsgOpen] = useState(false);
   if (!isScholarshipLead(lead as never)) return null;
 
   const cls = classificationMeta(lead["scholarship_classification"] as string | null);
