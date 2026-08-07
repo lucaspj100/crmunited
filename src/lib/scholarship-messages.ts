@@ -16,6 +16,23 @@ export function getFirstName(name: string | null | undefined): string {
   return first.charAt(0).toLocaleUpperCase("pt-BR") + first.slice(1);
 }
 
+/** Primeiro nome do responsável pelo lead. Nunca usa e-mail nem "Vendedor". */
+export function getSellerFirstName(name: string | null | undefined): string | null {
+  const clean = String(name ?? "").trim().replace(/\s+/g, " ");
+  if (!clean || clean.includes("@")) return null;
+  const first = clean.split(" ")[0];
+  if (!first || /^vendedor$/i.test(first)) return null;
+  return first.charAt(0).toLocaleUpperCase("pt-BR") + first.slice(1);
+}
+
+/** Assinatura de abertura: identifica quem fala e a empresa. */
+function intro(sellerName: string | null | undefined, reason: string): string {
+  const first = getSellerFirstName(sellerName);
+  const who = first ? `Aqui é o ${first}, da United Idiomas.` : "Aqui é da equipe da United Idiomas.";
+  return `${who} ${reason}`;
+}
+
+
 /** Data/hora da entrevista em pt-BR usando o fuso local (mesma regra de formatRequestedInterview). */
 export function formatInterviewDateTime(
   iso: string | null | undefined,
