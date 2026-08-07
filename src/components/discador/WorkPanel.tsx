@@ -312,7 +312,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
       const [total, done, pending, interested] = await Promise.all([
         base,
         supabase.from("prospect_contacts").select("id", { count: "exact", head: true }).eq("vendedor_responsavel_id", user!.id).eq("convertido_em_lead", true),
-        supabase.from("prospect_contacts").select("id", { count: "exact", head: true }).eq("vendedor_responsavel_id", user!.id).eq("convertido_em_lead", false).eq("nao_chamar", false).eq("telefone_invalido", false).in("status_prospeccao", QUEUE_STATUSES as unknown as string[]),
+        applyDialerEligibility(supabase.from("prospect_contacts").select("id", { count: "exact", head: true }).eq("vendedor_responsavel_id", user!.id).in("status_prospeccao", QUEUE_STATUSES as unknown as string[])),
         supabase.from("prospect_contacts").select("id", { count: "exact", head: true }).eq("vendedor_responsavel_id", user!.id).eq("status_prospeccao", "Interessado"),
       ]);
       return { total: total.count ?? 0, done: done.count ?? 0, pending: pending.count ?? 0, interested: interested.count ?? 0 };
