@@ -183,27 +183,22 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
   const contact: ProspectContact | null =
     focusedContact ?? (activeIndex >= 0 ? activeQueue[activeIndex]! : null);
 
-  // Carrega a fila completa do vendedor
-  const loadQueue = async (opts?: { keepContactId?: string; silent?: boolean }) => {
+  // Carrega a fila completa do vendedor (com paginação — o Data API corta em 1000 linhas)
+  const loadQueue = async (opts?: { keepContactId?: string; silent?: boolean; keepSelection?: boolean }) => {
     if (!user) return;
     if (!opts?.silent) setLoadingQueue(true);
-    const { data, error } = await supabase
-      .from("prospect_contacts")
-      .select("*")
-      .eq("vendedor_responsavel_id", user.id)
-      .eq("convertido_em_lead", false)
-      .eq("nao_chamar", false)
-      .eq("telefone_invalido", false)
-      .in("status_prospeccao", QUEUE_STATUSES as unknown as string[])
-      .order("created_at", { ascending: true })
-      .limit(5000);
-    setLoadingQueue(false);
-    if (error) {
-      toast.error(`Erro ao carregar fila: ${error.message}`);
+    let rows: ProspectContact[] = [];
+    try {
+      rows = await fetchDialerQueue(user.id);
+    } catch (err) {
+      setLoadingQueue(false);
+      toast.error(`Erro ao carregar fila: ${err instanceof Error ? err.message : String(err)}`);
       return;
     }
-    const sorted = sortQueue((data ?? []) as ProspectContact[]);
+    setLoadingQueue(false);
+    const sorted = sortQueue(rows);
     setQueue(sorted);
+    if (opts?.keepSelection) return;
     const nextActive = buildActiveQueue(sorted).list;
     if (nextActive.length === 0) {
       setCurrentContactId(null);
@@ -213,6 +208,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     const keep = keepId ? nextActive.find((c) => c.id === keepId) : undefined;
     setCurrentContactId(keep ? keep.id : nextActive[0]!.id);
   };
+
 
 
   // Bootstrap
