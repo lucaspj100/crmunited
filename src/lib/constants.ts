@@ -81,9 +81,10 @@ export function onlyDigits(s: string | null | undefined): string {
   return (s ?? "").replace(/\D/g, "");
 }
 
-export function waLink(phone: string | null | undefined): string {
+export function waLink(phone: string | null | undefined, message?: string): string {
   const d = onlyDigits(phone);
   if (!d) return "#";
   const full = d.length <= 11 ? `55${d}` : d;
-  return `https://wa.me/${full}`;
+  const base = `https://wa.me/${full}`;
+  return message?.trim() ? `${base}?text=${encodeURIComponent(message)}` : base;
 }

@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { CalendarCheck, CalendarX, GraduationCap, Heart } from "lucide-react";
+import { CalendarCheck, CalendarX, GraduationCap, Heart, MessageSquare } from "lucide-react";
 import { logLeadEvent } from "@/lib/lead-events";
 import {
   CONFIRMATION_LABELS,
@@ -20,6 +20,13 @@ import {
   qualificationValue,
 } from "@/lib/scholarship";
 import { notifyArena } from "@/lib/arena-dispatch";
+import { ScholarshipMessageDialog } from "@/components/scholarship/ScholarshipMessageDialog";
+import {
+  buildFinalConfirmationMessage,
+  buildInterviewConfirmationMessage,
+  buildNoScheduleMessage,
+  suggestedContact,
+} from "@/lib/scholarship-messages";
 
 export type ScholarshipLead = Record<string, unknown> & {
   id: string;
@@ -90,6 +97,7 @@ export function ScholarshipSection({
 }) {
   const qc = useQueryClient();
   const [busy, setBusy] = useState(false);
+  const [msgOpen, setMsgOpen] = useState(false);
   if (!isScholarshipLead(lead as never)) return null;
 
   const cls = classificationMeta(lead["scholarship_classification"] as string | null);
@@ -97,6 +105,16 @@ export function ScholarshipSection({
   const requestedIso = lead["requested_interview_at"] as string | null;
   const confirmation = lead["confirmation_status"] as string | null;
   const answers = (lead["form_answers"] ?? {}) as Record<string, unknown>;
+  const phone = val(lead, "phone");
+  const suggestion = suggestedContact(lead as never);
+  const messageText =
+    suggestion === "agendar"
+      ? buildNoScheduleMessage(lead as never)
+      : suggestion === "confirmar"
+        ? buildInterviewConfirmationMessage(lead as never)
+        : suggestion === "confirmacao_final"
+          ? buildFinalConfirmationMessage(lead as never)
+          : "";
 
   const closeConfirmTask = async () => {
     await supabase
@@ -294,6 +312,46 @@ export function ScholarshipSection({
             ))}
           </div>
         </details>
+      )}
+
+      {suggestion && (
+        <div className="rounded-md border bg-background/60 p-2" onClick={(e) => e.stopPropagation()}>
+          <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">
+            Contato sugerido
+          </div>
+          <Button type="button" size="sm" variant="secondary" onClick={() => setMsgOpen(true)} className="gap-1.5">
+            <MessageSquare className="h-3.5 w-3.5" />
+            {suggestion === "agendar"
+              ? "💬 Criar mensagem para agendar"
+              : suggestion === "confirmar"
+                ? "✅ Criar mensagem de confirmação"
+                : "📋 Copiar confirmação final"}
+          </Button>
+          <ScholarshipMessageDialog
+            open={msgOpen}
+            onOpenChange={setMsgOpen}
+            title={
+              suggestion === "agendar"
+                ? "Mensagem para agendar a entrevista"
+                : suggestion === "confirmar"
+                  ? "Mensagem de confirmação de horário"
+                  : "Confirmação final da entrevista"
+            }
+            description="Edite a mensagem antes de copiar ou abrir o WhatsApp. Nenhum dado do lead é alterado."
+            message={messageText}
+            phone={phone}
+            onOpenWhatsapp={() =>
+              void logLeadEvent({
+                leadId: lead.id,
+                type: "note",
+                description:
+                  suggestion === "agendar"
+                    ? "Mensagem de agendamento aberta no WhatsApp"
+                    : "Mensagem de confirmação aberta no WhatsApp",
+              })
+            }
+          />
+        </div>
       )}
 
       <div className="flex flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
