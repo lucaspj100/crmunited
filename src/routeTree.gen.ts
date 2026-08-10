@@ -22,6 +22,7 @@ import { Route as AuthenticatedPlacarHallDaFamaRouteImport } from './routes/_aut
 import { Route as AuthenticatedPlacarDiarioRouteImport } from './routes/_authenticated/placar-diario'
 import { Route as AuthenticatedPerdidosRouteImport } from './routes/_authenticated/perdidos'
 import { Route as AuthenticatedPainelAdmRouteImport } from './routes/_authenticated/painel-adm'
+import { Route as AuthenticatedMinhaComissaoRouteImport } from './routes/_authenticated/minha-comissao'
 import { Route as AuthenticatedMeusFeedbacksRouteImport } from './routes/_authenticated/meus-feedbacks'
 import { Route as AuthenticatedMeuPerfilRouteImport } from './routes/_authenticated/meu-perfil'
 import { Route as AuthenticatedMetasMatriculaRouteImport } from './routes/_authenticated/metas-matricula'
@@ -113,6 +114,12 @@ const AuthenticatedPainelAdmRoute = AuthenticatedPainelAdmRouteImport.update({
   path: '/painel-adm',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMinhaComissaoRoute =
+  AuthenticatedMinhaComissaoRouteImport.update({
+    id: '/minha-comissao',
+    path: '/minha-comissao',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMeusFeedbacksRoute =
   AuthenticatedMeusFeedbacksRouteImport.update({
     id: '/meus-feedbacks',
@@ -259,6 +266,7 @@ export interface FileRoutesByFullPath {
   '/metas-matricula': typeof AuthenticatedMetasMatriculaRoute
   '/meu-perfil': typeof AuthenticatedMeuPerfilRoute
   '/meus-feedbacks': typeof AuthenticatedMeusFeedbacksRoute
+  '/minha-comissao': typeof AuthenticatedMinhaComissaoRoute
   '/painel-adm': typeof AuthenticatedPainelAdmRoute
   '/perdidos': typeof AuthenticatedPerdidosRoute
   '/placar-diario': typeof AuthenticatedPlacarDiarioRoute
@@ -295,6 +303,7 @@ export interface FileRoutesByTo {
   '/metas-matricula': typeof AuthenticatedMetasMatriculaRoute
   '/meu-perfil': typeof AuthenticatedMeuPerfilRoute
   '/meus-feedbacks': typeof AuthenticatedMeusFeedbacksRoute
+  '/minha-comissao': typeof AuthenticatedMinhaComissaoRoute
   '/painel-adm': typeof AuthenticatedPainelAdmRoute
   '/perdidos': typeof AuthenticatedPerdidosRoute
   '/placar-diario': typeof AuthenticatedPlacarDiarioRoute
@@ -333,6 +342,7 @@ export interface FileRoutesById {
   '/_authenticated/metas-matricula': typeof AuthenticatedMetasMatriculaRoute
   '/_authenticated/meu-perfil': typeof AuthenticatedMeuPerfilRoute
   '/_authenticated/meus-feedbacks': typeof AuthenticatedMeusFeedbacksRoute
+  '/_authenticated/minha-comissao': typeof AuthenticatedMinhaComissaoRoute
   '/_authenticated/painel-adm': typeof AuthenticatedPainelAdmRoute
   '/_authenticated/perdidos': typeof AuthenticatedPerdidosRoute
   '/_authenticated/placar-diario': typeof AuthenticatedPlacarDiarioRoute
@@ -371,6 +381,7 @@ export interface FileRouteTypes {
     | '/metas-matricula'
     | '/meu-perfil'
     | '/meus-feedbacks'
+    | '/minha-comissao'
     | '/painel-adm'
     | '/perdidos'
     | '/placar-diario'
@@ -407,6 +418,7 @@ export interface FileRouteTypes {
     | '/metas-matricula'
     | '/meu-perfil'
     | '/meus-feedbacks'
+    | '/minha-comissao'
     | '/painel-adm'
     | '/perdidos'
     | '/placar-diario'
@@ -444,6 +456,7 @@ export interface FileRouteTypes {
     | '/_authenticated/metas-matricula'
     | '/_authenticated/meu-perfil'
     | '/_authenticated/meus-feedbacks'
+    | '/_authenticated/minha-comissao'
     | '/_authenticated/painel-adm'
     | '/_authenticated/perdidos'
     | '/_authenticated/placar-diario'
@@ -555,6 +568,13 @@ declare module '@tanstack/react-router' {
       path: '/painel-adm'
       fullPath: '/painel-adm'
       preLoaderRoute: typeof AuthenticatedPainelAdmRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/minha-comissao': {
+      id: '/_authenticated/minha-comissao'
+      path: '/minha-comissao'
+      fullPath: '/minha-comissao'
+      preLoaderRoute: typeof AuthenticatedMinhaComissaoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/meus-feedbacks': {
@@ -736,6 +756,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMetasMatriculaRoute: typeof AuthenticatedMetasMatriculaRoute
   AuthenticatedMeuPerfilRoute: typeof AuthenticatedMeuPerfilRoute
   AuthenticatedMeusFeedbacksRoute: typeof AuthenticatedMeusFeedbacksRoute
+  AuthenticatedMinhaComissaoRoute: typeof AuthenticatedMinhaComissaoRoute
   AuthenticatedPainelAdmRoute: typeof AuthenticatedPainelAdmRoute
   AuthenticatedPerdidosRoute: typeof AuthenticatedPerdidosRoute
   AuthenticatedPlacarDiarioRoute: typeof AuthenticatedPlacarDiarioRoute
@@ -770,6 +791,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMetasMatriculaRoute: AuthenticatedMetasMatriculaRoute,
   AuthenticatedMeuPerfilRoute: AuthenticatedMeuPerfilRoute,
   AuthenticatedMeusFeedbacksRoute: AuthenticatedMeusFeedbacksRoute,
+  AuthenticatedMinhaComissaoRoute: AuthenticatedMinhaComissaoRoute,
   AuthenticatedPainelAdmRoute: AuthenticatedPainelAdmRoute,
   AuthenticatedPerdidosRoute: AuthenticatedPerdidosRoute,
   AuthenticatedPlacarDiarioRoute: AuthenticatedPlacarDiarioRoute,
