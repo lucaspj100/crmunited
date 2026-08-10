@@ -89,6 +89,7 @@ export function LeadDetailsDialog({
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [company, setCompany] = useState("");
+  const [email, setEmail] = useState("");
   const [linkedin, setLinkedin] = useState("");
   const [observation, setObservation] = useState("");
 
@@ -104,6 +105,7 @@ export function LeadDetailsDialog({
       setName(l.name || "");
       setPhone(l.phone || "");
       setCompany(l.company || l.company_name || "");
+      setEmail(l.email || "");
       setLinkedin(l.linkedin_url || "");
       setObservation(l.observation || "");
       if (l.owner_id) {
@@ -145,6 +147,7 @@ export function LeadDetailsDialog({
       name: name.trim(),
       phone: phone.trim() || null,
       company: company.trim() || null,
+      email: email.trim() || null,
       linkedin_url: linkedin.trim() || null,
       observation: observation.trim() || null,
     }).eq("id", lead.id);

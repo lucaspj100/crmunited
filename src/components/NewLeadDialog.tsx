@@ -54,6 +54,7 @@ export function NewLeadDialog({ trigger }: { trigger?: ReactNode }) {
       phone_normalized: normalized,
       phone_invalid: phoneRaw ? !valid : false,
       company: String(fd.get("company") || "").trim() || null,
+      email: String(fd.get("email") || "").trim() || null,
       linkedin_url: String(fd.get("linkedin") || "").trim() || null,
       observation: String(fd.get("observation") || "").trim() || null,
       source: String(fd.get("source") || "").trim() || null,
@@ -88,6 +89,7 @@ export function NewLeadDialog({ trigger }: { trigger?: ReactNode }) {
             <div><Label>WhatsApp / Telefone</Label><Input name="phone" placeholder="(11) 99999-9999" /></div>
             <div><Label>Empresa</Label><Input name="company" /></div>
           </div>
+          <div><Label>E-mail</Label><Input name="email" type="email" placeholder="nome@empresa.com" /></div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <Label>Status</Label>
