@@ -89,6 +89,7 @@ export function LeadDetailsDialog({
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [company, setCompany] = useState("");
+  const [email, setEmail] = useState("");
   const [linkedin, setLinkedin] = useState("");
   const [observation, setObservation] = useState("");
 
@@ -104,6 +105,7 @@ export function LeadDetailsDialog({
       setName(l.name || "");
       setPhone(l.phone || "");
       setCompany(l.company || l.company_name || "");
+      setEmail(l.email || "");
       setLinkedin(l.linkedin_url || "");
       setObservation(l.observation || "");
       if (l.owner_id) {
@@ -145,6 +147,7 @@ export function LeadDetailsDialog({
       name: name.trim(),
       phone: phone.trim() || null,
       company: company.trim() || null,
+      email: email.trim() || null,
       linkedin_url: linkedin.trim() || null,
       observation: observation.trim() || null,
     }).eq("id", lead.id);
@@ -196,6 +199,7 @@ export function LeadDetailsDialog({
               <div><Label>WhatsApp / Telefone</Label><Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(11) 99999-9999" /></div>
               <div><Label>Empresa</Label><Input value={company} onChange={(e) => setCompany(e.target.value)} /></div>
             </div>
+            <div><Label>E-mail</Label><Input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="nome@empresa.com" /></div>
             <div><Label>LinkedIn</Label><Input value={linkedin} onChange={(e) => setLinkedin(e.target.value)} type="url" placeholder="https://linkedin.com/in/…" /></div>
             <div><Label>Observação</Label><Textarea value={observation} onChange={(e) => setObservation(e.target.value)} rows={3} /></div>
 
