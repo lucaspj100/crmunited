@@ -199,6 +199,7 @@ export function LeadDetailsDialog({
               <div><Label>WhatsApp / Telefone</Label><Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(11) 99999-9999" /></div>
               <div><Label>Empresa</Label><Input value={company} onChange={(e) => setCompany(e.target.value)} /></div>
             </div>
+            <div><Label>E-mail</Label><Input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="nome@empresa.com" /></div>
             <div><Label>LinkedIn</Label><Input value={linkedin} onChange={(e) => setLinkedin(e.target.value)} type="url" placeholder="https://linkedin.com/in/…" /></div>
             <div><Label>Observação</Label><Textarea value={observation} onChange={(e) => setObservation(e.target.value)} rows={3} /></div>
 
