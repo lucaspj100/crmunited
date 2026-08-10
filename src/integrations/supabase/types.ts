@@ -2137,6 +2137,122 @@ export type Database = {
         }
         Relationships: []
       }
+      seller_commission_rules: {
+        Row: {
+          commission_percentage: number
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          notes: string | null
+          seller_id: string
+          updated_at: string
+          updated_by: string | null
+          valid_from: string
+          valid_until: string | null
+        }
+        Insert: {
+          commission_percentage: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          seller_id: string
+          updated_at?: string
+          updated_by?: string | null
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Update: {
+          commission_percentage?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          seller_id?: string
+          updated_at?: string
+          updated_by?: string | null
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seller_commission_rules_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seller_commissions: {
+        Row: {
+          commission_amount: number | null
+          commission_percentage_snapshot: number | null
+          commission_rule_id: string | null
+          created_at: string
+          enrollment_date: string | null
+          enrollment_value_snapshot: number | null
+          id: string
+          lead_id: string
+          notes: string | null
+          seller_id: string | null
+          seller_name_snapshot: string | null
+          status: Database["public"]["Enums"]["seller_commission_status"]
+          student_name_snapshot: string | null
+          updated_at: string
+        }
+        Insert: {
+          commission_amount?: number | null
+          commission_percentage_snapshot?: number | null
+          commission_rule_id?: string | null
+          created_at?: string
+          enrollment_date?: string | null
+          enrollment_value_snapshot?: number | null
+          id?: string
+          lead_id: string
+          notes?: string | null
+          seller_id?: string | null
+          seller_name_snapshot?: string | null
+          status?: Database["public"]["Enums"]["seller_commission_status"]
+          student_name_snapshot?: string | null
+          updated_at?: string
+        }
+        Update: {
+          commission_amount?: number | null
+          commission_percentage_snapshot?: number | null
+          commission_rule_id?: string | null
+          created_at?: string
+          enrollment_date?: string | null
+          enrollment_value_snapshot?: number | null
+          id?: string
+          lead_id?: string
+          notes?: string | null
+          seller_id?: string | null
+          seller_name_snapshot?: string | null
+          status?: Database["public"]["Enums"]["seller_commission_status"]
+          student_name_snapshot?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seller_commissions_commission_rule_id_fkey"
+            columns: ["commission_rule_id"]
+            isOneToOne: false
+            referencedRelation: "seller_commission_rules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seller_commissions_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: true
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       seller_daily_goals: {
         Row: {
           created_at: string
@@ -2785,6 +2901,10 @@ export type Database = {
         Args: { _lead_id: string; _recalculate?: boolean }
         Returns: string
       }
+      ensure_seller_commission: {
+        Args: { _lead_id: string; _reprice?: boolean }
+        Returns: string
+      }
       hall_of_fame_active_days: {
         Args: { _end: string; _start: string; _team_id?: string }
         Returns: {
@@ -2899,6 +3019,28 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      resolve_seller_commission_rule: {
+        Args: { _on_date: string; _seller_id: string }
+        Returns: {
+          commission_percentage: number
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          notes: string | null
+          seller_id: string
+          updated_at: string
+          updated_by: string | null
+          valid_from: string
+          valid_until: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "seller_commission_rules"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       team_enrollment_goal_summary: {
         Args: { _month: number; _team_id?: string; _year: number }
         Returns: Json
@@ -2978,6 +3120,7 @@ export type Database = {
         | "cancelled"
         | "refunded"
       material_type: "digital" | "physical"
+      seller_commission_status: "nao_configurada" | "prevista" | "cancelada"
       task_status: "pendente" | "concluida" | "remarcada" | "cancelada"
       task_type:
         | "enviar_mensagem"
@@ -3198,6 +3341,7 @@ export const Constants = {
         "refunded",
       ],
       material_type: ["digital", "physical"],
+      seller_commission_status: ["nao_configurada", "prevista", "cancelada"],
       task_status: ["pendente", "concluida", "remarcada", "cancelada"],
       task_type: [
         "enviar_mensagem",

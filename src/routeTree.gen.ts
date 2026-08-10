@@ -22,6 +22,7 @@ import { Route as AuthenticatedPlacarHallDaFamaRouteImport } from './routes/_aut
 import { Route as AuthenticatedPlacarDiarioRouteImport } from './routes/_authenticated/placar-diario'
 import { Route as AuthenticatedPerdidosRouteImport } from './routes/_authenticated/perdidos'
 import { Route as AuthenticatedPainelAdmRouteImport } from './routes/_authenticated/painel-adm'
+import { Route as AuthenticatedMinhaComissaoRouteImport } from './routes/_authenticated/minha-comissao'
 import { Route as AuthenticatedMeusFeedbacksRouteImport } from './routes/_authenticated/meus-feedbacks'
 import { Route as AuthenticatedMeuPerfilRouteImport } from './routes/_authenticated/meu-perfil'
 import { Route as AuthenticatedMetasMatriculaRouteImport } from './routes/_authenticated/metas-matricula'
@@ -38,6 +39,7 @@ import { Route as AuthenticatedEquipesRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedDiscadorRouteImport } from './routes/_authenticated/discador'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
+import { Route as AuthenticatedComissaoVendedoresRouteImport } from './routes/_authenticated/comissao-vendedores'
 import { Route as AuthenticatedComissaoLiderancaRouteImport } from './routes/_authenticated/comissao-lideranca'
 import { Route as AuthenticatedCheckoutDoDiaRouteImport } from './routes/_authenticated/checkout-do-dia'
 import { Route as AuthenticatedAssistentesIaRouteImport } from './routes/_authenticated/assistentes-ia'
@@ -112,6 +114,12 @@ const AuthenticatedPainelAdmRoute = AuthenticatedPainelAdmRouteImport.update({
   path: '/painel-adm',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMinhaComissaoRoute =
+  AuthenticatedMinhaComissaoRouteImport.update({
+    id: '/minha-comissao',
+    path: '/minha-comissao',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMeusFeedbacksRoute =
   AuthenticatedMeusFeedbacksRouteImport.update({
     id: '/meus-feedbacks',
@@ -198,6 +206,12 @@ const AuthenticatedConfiguracoesRoute =
     path: '/configuracoes',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedComissaoVendedoresRoute =
+  AuthenticatedComissaoVendedoresRouteImport.update({
+    id: '/comissao-vendedores',
+    path: '/comissao-vendedores',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedComissaoLiderancaRoute =
   AuthenticatedComissaoLiderancaRouteImport.update({
     id: '/comissao-lideranca',
@@ -235,6 +249,7 @@ export interface FileRoutesByFullPath {
   '/assistentes-ia': typeof AuthenticatedAssistentesIaRoute
   '/checkout-do-dia': typeof AuthenticatedCheckoutDoDiaRoute
   '/comissao-lideranca': typeof AuthenticatedComissaoLiderancaRoute
+  '/comissao-vendedores': typeof AuthenticatedComissaoVendedoresRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/discador': typeof AuthenticatedDiscadorRoute
@@ -251,6 +266,7 @@ export interface FileRoutesByFullPath {
   '/metas-matricula': typeof AuthenticatedMetasMatriculaRoute
   '/meu-perfil': typeof AuthenticatedMeuPerfilRoute
   '/meus-feedbacks': typeof AuthenticatedMeusFeedbacksRoute
+  '/minha-comissao': typeof AuthenticatedMinhaComissaoRoute
   '/painel-adm': typeof AuthenticatedPainelAdmRoute
   '/perdidos': typeof AuthenticatedPerdidosRoute
   '/placar-diario': typeof AuthenticatedPlacarDiarioRoute
@@ -270,6 +286,7 @@ export interface FileRoutesByTo {
   '/assistentes-ia': typeof AuthenticatedAssistentesIaRoute
   '/checkout-do-dia': typeof AuthenticatedCheckoutDoDiaRoute
   '/comissao-lideranca': typeof AuthenticatedComissaoLiderancaRoute
+  '/comissao-vendedores': typeof AuthenticatedComissaoVendedoresRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/discador': typeof AuthenticatedDiscadorRoute
@@ -286,6 +303,7 @@ export interface FileRoutesByTo {
   '/metas-matricula': typeof AuthenticatedMetasMatriculaRoute
   '/meu-perfil': typeof AuthenticatedMeuPerfilRoute
   '/meus-feedbacks': typeof AuthenticatedMeusFeedbacksRoute
+  '/minha-comissao': typeof AuthenticatedMinhaComissaoRoute
   '/painel-adm': typeof AuthenticatedPainelAdmRoute
   '/perdidos': typeof AuthenticatedPerdidosRoute
   '/placar-diario': typeof AuthenticatedPlacarDiarioRoute
@@ -307,6 +325,7 @@ export interface FileRoutesById {
   '/_authenticated/assistentes-ia': typeof AuthenticatedAssistentesIaRoute
   '/_authenticated/checkout-do-dia': typeof AuthenticatedCheckoutDoDiaRoute
   '/_authenticated/comissao-lideranca': typeof AuthenticatedComissaoLiderancaRoute
+  '/_authenticated/comissao-vendedores': typeof AuthenticatedComissaoVendedoresRoute
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/discador': typeof AuthenticatedDiscadorRoute
@@ -323,6 +342,7 @@ export interface FileRoutesById {
   '/_authenticated/metas-matricula': typeof AuthenticatedMetasMatriculaRoute
   '/_authenticated/meu-perfil': typeof AuthenticatedMeuPerfilRoute
   '/_authenticated/meus-feedbacks': typeof AuthenticatedMeusFeedbacksRoute
+  '/_authenticated/minha-comissao': typeof AuthenticatedMinhaComissaoRoute
   '/_authenticated/painel-adm': typeof AuthenticatedPainelAdmRoute
   '/_authenticated/perdidos': typeof AuthenticatedPerdidosRoute
   '/_authenticated/placar-diario': typeof AuthenticatedPlacarDiarioRoute
@@ -344,6 +364,7 @@ export interface FileRouteTypes {
     | '/assistentes-ia'
     | '/checkout-do-dia'
     | '/comissao-lideranca'
+    | '/comissao-vendedores'
     | '/configuracoes'
     | '/dashboard'
     | '/discador'
@@ -360,6 +381,7 @@ export interface FileRouteTypes {
     | '/metas-matricula'
     | '/meu-perfil'
     | '/meus-feedbacks'
+    | '/minha-comissao'
     | '/painel-adm'
     | '/perdidos'
     | '/placar-diario'
@@ -379,6 +401,7 @@ export interface FileRouteTypes {
     | '/assistentes-ia'
     | '/checkout-do-dia'
     | '/comissao-lideranca'
+    | '/comissao-vendedores'
     | '/configuracoes'
     | '/dashboard'
     | '/discador'
@@ -395,6 +418,7 @@ export interface FileRouteTypes {
     | '/metas-matricula'
     | '/meu-perfil'
     | '/meus-feedbacks'
+    | '/minha-comissao'
     | '/painel-adm'
     | '/perdidos'
     | '/placar-diario'
@@ -415,6 +439,7 @@ export interface FileRouteTypes {
     | '/_authenticated/assistentes-ia'
     | '/_authenticated/checkout-do-dia'
     | '/_authenticated/comissao-lideranca'
+    | '/_authenticated/comissao-vendedores'
     | '/_authenticated/configuracoes'
     | '/_authenticated/dashboard'
     | '/_authenticated/discador'
@@ -431,6 +456,7 @@ export interface FileRouteTypes {
     | '/_authenticated/metas-matricula'
     | '/_authenticated/meu-perfil'
     | '/_authenticated/meus-feedbacks'
+    | '/_authenticated/minha-comissao'
     | '/_authenticated/painel-adm'
     | '/_authenticated/perdidos'
     | '/_authenticated/placar-diario'
@@ -542,6 +568,13 @@ declare module '@tanstack/react-router' {
       path: '/painel-adm'
       fullPath: '/painel-adm'
       preLoaderRoute: typeof AuthenticatedPainelAdmRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/minha-comissao': {
+      id: '/_authenticated/minha-comissao'
+      path: '/minha-comissao'
+      fullPath: '/minha-comissao'
+      preLoaderRoute: typeof AuthenticatedMinhaComissaoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/meus-feedbacks': {
@@ -656,6 +689,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedConfiguracoesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/comissao-vendedores': {
+      id: '/_authenticated/comissao-vendedores'
+      path: '/comissao-vendedores'
+      fullPath: '/comissao-vendedores'
+      preLoaderRoute: typeof AuthenticatedComissaoVendedoresRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/comissao-lideranca': {
       id: '/_authenticated/comissao-lideranca'
       path: '/comissao-lideranca'
@@ -699,6 +739,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAssistentesIaRoute: typeof AuthenticatedAssistentesIaRoute
   AuthenticatedCheckoutDoDiaRoute: typeof AuthenticatedCheckoutDoDiaRoute
   AuthenticatedComissaoLiderancaRoute: typeof AuthenticatedComissaoLiderancaRoute
+  AuthenticatedComissaoVendedoresRoute: typeof AuthenticatedComissaoVendedoresRoute
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDiscadorRoute: typeof AuthenticatedDiscadorRoute
@@ -715,6 +756,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMetasMatriculaRoute: typeof AuthenticatedMetasMatriculaRoute
   AuthenticatedMeuPerfilRoute: typeof AuthenticatedMeuPerfilRoute
   AuthenticatedMeusFeedbacksRoute: typeof AuthenticatedMeusFeedbacksRoute
+  AuthenticatedMinhaComissaoRoute: typeof AuthenticatedMinhaComissaoRoute
   AuthenticatedPainelAdmRoute: typeof AuthenticatedPainelAdmRoute
   AuthenticatedPerdidosRoute: typeof AuthenticatedPerdidosRoute
   AuthenticatedPlacarDiarioRoute: typeof AuthenticatedPlacarDiarioRoute
@@ -732,6 +774,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAssistentesIaRoute: AuthenticatedAssistentesIaRoute,
   AuthenticatedCheckoutDoDiaRoute: AuthenticatedCheckoutDoDiaRoute,
   AuthenticatedComissaoLiderancaRoute: AuthenticatedComissaoLiderancaRoute,
+  AuthenticatedComissaoVendedoresRoute: AuthenticatedComissaoVendedoresRoute,
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDiscadorRoute: AuthenticatedDiscadorRoute,
@@ -748,6 +791,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMetasMatriculaRoute: AuthenticatedMetasMatriculaRoute,
   AuthenticatedMeuPerfilRoute: AuthenticatedMeuPerfilRoute,
   AuthenticatedMeusFeedbacksRoute: AuthenticatedMeusFeedbacksRoute,
+  AuthenticatedMinhaComissaoRoute: AuthenticatedMinhaComissaoRoute,
   AuthenticatedPainelAdmRoute: AuthenticatedPainelAdmRoute,
   AuthenticatedPerdidosRoute: AuthenticatedPerdidosRoute,
   AuthenticatedPlacarDiarioRoute: AuthenticatedPlacarDiarioRoute,
@@ -772,13 +816,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

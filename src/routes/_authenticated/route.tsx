@@ -58,6 +58,7 @@ function AuthedLayout() {
         { to: "/painel-adm", label: "Painel ADM", icon: Trophy } as const,
         { to: "/processos-comerciais", label: "Processos", icon: Activity } as const,
         { to: "/comissao-lideranca", label: "Comissão da Liderança", icon: Wallet } as const,
+        { to: "/comissao-vendedores", label: "Comissão dos vendedores", icon: Wallet } as const,
         { to: "/feedback-individual", label: "Feedback Individual", icon: MessageSquare } as const,
         { to: "/links-bolsista", label: "Links do Processo Bolsista", icon: GraduationCap } as const,
         { to: "/integracao-arena", label: "Integração Arena", icon: Link2 } as const,
@@ -66,7 +67,12 @@ function AuthedLayout() {
         { to: "/metas-matricula", label: "Metas de matrícula", icon: Target } as const,
         { to: "/configuracoes", label: "Configurações", icon: Settings } as const,
       ]
-    : [...BASE_NAV, { to: "/meus-feedbacks", label: "Meus Feedbacks", icon: MessageSquare } as const];
+    : [
+        ...BASE_NAV,
+        { to: "/minha-comissao", label: "Minha Comissão", icon: Wallet } as const,
+        { to: "/meus-feedbacks", label: "Meus Feedbacks", icon: MessageSquare } as const,
+      ];
+
 
 
   useEffect(() => {
