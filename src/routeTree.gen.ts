@@ -45,6 +45,7 @@ import { Route as AuthenticatedCheckoutDoDiaRouteImport } from './routes/_authen
 import { Route as AuthenticatedAssistentesIaRouteImport } from './routes/_authenticated/assistentes-ia'
 import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
 import { Route as ApiPublicReceiveScholarshipLeadRouteImport } from './routes/api/public/receive-scholarship-lead'
+import { Route as ApiPublicLinkedinMessageEventRouteImport } from './routes/api/public/linkedin-message-event'
 import { Route as ApiPublicFindSellerByEmailRouteImport } from './routes/api/public/find-seller-by-email'
 
 const AuthRoute = AuthRouteImport.update({
@@ -242,6 +243,12 @@ const ApiPublicReceiveScholarshipLeadRoute =
     path: '/api/public/receive-scholarship-lead',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicLinkedinMessageEventRoute =
+  ApiPublicLinkedinMessageEventRouteImport.update({
+    id: '/api/public/linkedin-message-event',
+    path: '/api/public/linkedin-message-event',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicFindSellerByEmailRoute =
   ApiPublicFindSellerByEmailRouteImport.update({
     id: '/api/public/find-seller-by-email',
@@ -285,6 +292,7 @@ export interface FileRoutesByFullPath {
   '/tarefas': typeof AuthenticatedTarefasRoute
   '/usuarios-acessos': typeof AuthenticatedUsuariosAcessosRoute
   '/api/public/find-seller-by-email': typeof ApiPublicFindSellerByEmailRoute
+  '/api/public/linkedin-message-event': typeof ApiPublicLinkedinMessageEventRoute
   '/api/public/receive-scholarship-lead': typeof ApiPublicReceiveScholarshipLeadRoute
 }
 export interface FileRoutesByTo {
@@ -323,6 +331,7 @@ export interface FileRoutesByTo {
   '/tarefas': typeof AuthenticatedTarefasRoute
   '/usuarios-acessos': typeof AuthenticatedUsuariosAcessosRoute
   '/api/public/find-seller-by-email': typeof ApiPublicFindSellerByEmailRoute
+  '/api/public/linkedin-message-event': typeof ApiPublicLinkedinMessageEventRoute
   '/api/public/receive-scholarship-lead': typeof ApiPublicReceiveScholarshipLeadRoute
 }
 export interface FileRoutesById {
@@ -363,6 +372,7 @@ export interface FileRoutesById {
   '/_authenticated/tarefas': typeof AuthenticatedTarefasRoute
   '/_authenticated/usuarios-acessos': typeof AuthenticatedUsuariosAcessosRoute
   '/api/public/find-seller-by-email': typeof ApiPublicFindSellerByEmailRoute
+  '/api/public/linkedin-message-event': typeof ApiPublicLinkedinMessageEventRoute
   '/api/public/receive-scholarship-lead': typeof ApiPublicReceiveScholarshipLeadRoute
 }
 export interface FileRouteTypes {
@@ -403,6 +413,7 @@ export interface FileRouteTypes {
     | '/tarefas'
     | '/usuarios-acessos'
     | '/api/public/find-seller-by-email'
+    | '/api/public/linkedin-message-event'
     | '/api/public/receive-scholarship-lead'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -441,6 +452,7 @@ export interface FileRouteTypes {
     | '/tarefas'
     | '/usuarios-acessos'
     | '/api/public/find-seller-by-email'
+    | '/api/public/linkedin-message-event'
     | '/api/public/receive-scholarship-lead'
   id:
     | '__root__'
@@ -480,6 +492,7 @@ export interface FileRouteTypes {
     | '/_authenticated/tarefas'
     | '/_authenticated/usuarios-acessos'
     | '/api/public/find-seller-by-email'
+    | '/api/public/linkedin-message-event'
     | '/api/public/receive-scholarship-lead'
   fileRoutesById: FileRoutesById
 }
@@ -488,6 +501,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ApiPublicFindSellerByEmailRoute: typeof ApiPublicFindSellerByEmailRoute
+  ApiPublicLinkedinMessageEventRoute: typeof ApiPublicLinkedinMessageEventRoute
   ApiPublicReceiveScholarshipLeadRoute: typeof ApiPublicReceiveScholarshipLeadRoute
 }
 
@@ -745,6 +759,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicReceiveScholarshipLeadRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/linkedin-message-event': {
+      id: '/api/public/linkedin-message-event'
+      path: '/api/public/linkedin-message-event'
+      fullPath: '/api/public/linkedin-message-event'
+      preLoaderRoute: typeof ApiPublicLinkedinMessageEventRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/find-seller-by-email': {
       id: '/api/public/find-seller-by-email'
       path: '/api/public/find-seller-by-email'
@@ -833,6 +854,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ApiPublicFindSellerByEmailRoute: ApiPublicFindSellerByEmailRoute,
+  ApiPublicLinkedinMessageEventRoute: ApiPublicLinkedinMessageEventRoute,
   ApiPublicReceiveScholarshipLeadRoute: ApiPublicReceiveScholarshipLeadRoute,
 }
 export const routeTree = rootRouteImport
