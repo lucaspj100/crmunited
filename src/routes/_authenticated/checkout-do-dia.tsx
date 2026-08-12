@@ -76,8 +76,11 @@ function CheckoutDoDia() {
       matriculas: snapshot.matriculas,
       leads_trabalhados: snapshot.leads_trabalhados,
       leads_novos_atribuidos: snapshot.leads_novos_atribuidos,
-      linkedin_msgs: linkedin,
-      whatsapp_msgs: whats,
+      // LinkedIn/WhatsApp não são mais informados manualmente no checkout.
+      // Registros históricos permanecem intactos; novos checkouts entram com 0
+      // para não duplicar a futura metrificação automática do LinkedIn Tracker.
+      linkedin_msgs: existing ? existing.linkedin_msgs : 0,
+      whatsapp_msgs: existing ? existing.whatsapp_msgs : 0,
       observacoes: obs || null,
     };
     const { error } = await supabase
