@@ -53,15 +53,11 @@ function CheckoutDoDia() {
     },
   });
 
-  const [linkedin, setLinkedin] = useState(0);
-  const [whats, setWhats] = useState(0);
   const [obs, setObs] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (existing) {
-      setLinkedin(existing.linkedin_msgs);
-      setWhats(existing.whatsapp_msgs);
       setObs(existing.observacoes ?? "");
     }
   }, [existing]);
