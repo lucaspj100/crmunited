@@ -127,16 +127,6 @@ function CheckoutDoDia() {
       <Card>
         <CardHeader><CardTitle>Preenchimento manual</CardTitle></CardHeader>
         <CardContent className="space-y-3">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-sm">Mensagens no LinkedIn hoje</label>
-              <Input type="number" min={0} value={linkedin} onChange={(e) => setLinkedin(Number(e.target.value) || 0)} />
-            </div>
-            <div>
-              <label className="text-sm">Mensagens no WhatsApp hoje</label>
-              <Input type="number" min={0} value={whats} onChange={(e) => setWhats(Number(e.target.value) || 0)} />
-            </div>
-          </div>
           <div>
             <label className="text-sm">Observações gerais (opcional)</label>
             <Textarea value={obs} onChange={(e) => setObs(e.target.value)} rows={4} />
