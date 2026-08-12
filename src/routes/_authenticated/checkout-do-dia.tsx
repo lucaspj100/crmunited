@@ -6,7 +6,6 @@ import { useAuth } from "@/lib/auth-context";
 import { fetchProductivity, todayIso, type ProductivityRow } from "@/lib/productivity";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 
@@ -53,15 +52,11 @@ function CheckoutDoDia() {
     },
   });
 
-  const [linkedin, setLinkedin] = useState(0);
-  const [whats, setWhats] = useState(0);
   const [obs, setObs] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (existing) {
-      setLinkedin(existing.linkedin_msgs);
-      setWhats(existing.whatsapp_msgs);
       setObs(existing.observacoes ?? "");
     }
   }, [existing]);
@@ -80,8 +75,11 @@ function CheckoutDoDia() {
       matriculas: snapshot.matriculas,
       leads_trabalhados: snapshot.leads_trabalhados,
       leads_novos_atribuidos: snapshot.leads_novos_atribuidos,
-      linkedin_msgs: linkedin,
-      whatsapp_msgs: whats,
+      // LinkedIn/WhatsApp não são mais informados manualmente no checkout.
+      // Registros históricos permanecem intactos; novos checkouts entram com 0
+      // para não duplicar a futura metrificação automática do LinkedIn Tracker.
+      linkedin_msgs: existing ? existing.linkedin_msgs : 0,
+      whatsapp_msgs: existing ? existing.whatsapp_msgs : 0,
       observacoes: obs || null,
     };
     const { error } = await supabase
@@ -104,7 +102,7 @@ function CheckoutDoDia() {
         <p className="text-sm text-muted-foreground">
           {existing
             ? `Você já fez o checkout hoje às ${new Date(existing.submitted_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}. Você pode revisar e atualizar.`
-            : "Resumo automático do seu dia. Preencha apenas LinkedIn e WhatsApp."}
+            : "Resumo automático do seu dia. Confira os números e adicione observações se quiser."}
         </p>
       </header>
 
@@ -126,18 +124,8 @@ function CheckoutDoDia() {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Preenchimento manual</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Observações</CardTitle></CardHeader>
         <CardContent className="space-y-3">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-sm">Mensagens no LinkedIn hoje</label>
-              <Input type="number" min={0} value={linkedin} onChange={(e) => setLinkedin(Number(e.target.value) || 0)} />
-            </div>
-            <div>
-              <label className="text-sm">Mensagens no WhatsApp hoje</label>
-              <Input type="number" min={0} value={whats} onChange={(e) => setWhats(Number(e.target.value) || 0)} />
-            </div>
-          </div>
           <div>
             <label className="text-sm">Observações gerais (opcional)</label>
             <Textarea value={obs} onChange={(e) => setObs(e.target.value)} rows={4} />
