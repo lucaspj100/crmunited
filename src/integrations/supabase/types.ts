@@ -1344,6 +1344,42 @@ export type Database = {
         }
         Relationships: []
       }
+      linkedin_message_events: {
+        Row: {
+          created_at: string
+          external_event_id: string
+          id: string
+          installation_id: string | null
+          sent_at: string
+          source: string
+          tracker_user_id: string | null
+          updated_at: string
+          vendedor_id: string
+        }
+        Insert: {
+          created_at?: string
+          external_event_id: string
+          id?: string
+          installation_id?: string | null
+          sent_at: string
+          source?: string
+          tracker_user_id?: string | null
+          updated_at?: string
+          vendedor_id: string
+        }
+        Update: {
+          created_at?: string
+          external_event_id?: string
+          id?: string
+          installation_id?: string | null
+          sent_at?: string
+          source?: string
+          tracker_user_id?: string | null
+          updated_at?: string
+          vendedor_id?: string
+        }
+        Relationships: []
+      }
       material_bonus_closings: {
         Row: {
           closed_at: string | null
