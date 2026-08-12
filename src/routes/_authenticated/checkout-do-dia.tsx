@@ -6,7 +6,6 @@ import { useAuth } from "@/lib/auth-context";
 import { fetchProductivity, todayIso, type ProductivityRow } from "@/lib/productivity";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 
@@ -103,7 +102,7 @@ function CheckoutDoDia() {
         <p className="text-sm text-muted-foreground">
           {existing
             ? `Você já fez o checkout hoje às ${new Date(existing.submitted_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}. Você pode revisar e atualizar.`
-            : "Resumo automático do seu dia. Preencha apenas LinkedIn e WhatsApp."}
+            : "Resumo automático do seu dia. Confira os números e adicione observações se quiser."}
         </p>
       </header>
 
@@ -125,7 +124,7 @@ function CheckoutDoDia() {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Preenchimento manual</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Observações</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <div>
             <label className="text-sm">Observações gerais (opcional)</label>
