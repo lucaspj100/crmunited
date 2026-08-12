@@ -45,6 +45,7 @@ import { Route as AuthenticatedCheckoutDoDiaRouteImport } from './routes/_authen
 import { Route as AuthenticatedAssistentesIaRouteImport } from './routes/_authenticated/assistentes-ia'
 import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
 import { Route as ApiPublicReceiveScholarshipLeadRouteImport } from './routes/api/public/receive-scholarship-lead'
+import { Route as ApiPublicFindSellerByEmailRouteImport } from './routes/api/public/find-seller-by-email'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -241,6 +242,12 @@ const ApiPublicReceiveScholarshipLeadRoute =
     path: '/api/public/receive-scholarship-lead',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicFindSellerByEmailRoute =
+  ApiPublicFindSellerByEmailRouteImport.update({
+    id: '/api/public/find-seller-by-email',
+    path: '/api/public/find-seller-by-email',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -277,6 +284,7 @@ export interface FileRoutesByFullPath {
   '/scripts': typeof AuthenticatedScriptsRoute
   '/tarefas': typeof AuthenticatedTarefasRoute
   '/usuarios-acessos': typeof AuthenticatedUsuariosAcessosRoute
+  '/api/public/find-seller-by-email': typeof ApiPublicFindSellerByEmailRoute
   '/api/public/receive-scholarship-lead': typeof ApiPublicReceiveScholarshipLeadRoute
 }
 export interface FileRoutesByTo {
@@ -314,6 +322,7 @@ export interface FileRoutesByTo {
   '/scripts': typeof AuthenticatedScriptsRoute
   '/tarefas': typeof AuthenticatedTarefasRoute
   '/usuarios-acessos': typeof AuthenticatedUsuariosAcessosRoute
+  '/api/public/find-seller-by-email': typeof ApiPublicFindSellerByEmailRoute
   '/api/public/receive-scholarship-lead': typeof ApiPublicReceiveScholarshipLeadRoute
 }
 export interface FileRoutesById {
@@ -353,6 +362,7 @@ export interface FileRoutesById {
   '/_authenticated/scripts': typeof AuthenticatedScriptsRoute
   '/_authenticated/tarefas': typeof AuthenticatedTarefasRoute
   '/_authenticated/usuarios-acessos': typeof AuthenticatedUsuariosAcessosRoute
+  '/api/public/find-seller-by-email': typeof ApiPublicFindSellerByEmailRoute
   '/api/public/receive-scholarship-lead': typeof ApiPublicReceiveScholarshipLeadRoute
 }
 export interface FileRouteTypes {
@@ -392,6 +402,7 @@ export interface FileRouteTypes {
     | '/scripts'
     | '/tarefas'
     | '/usuarios-acessos'
+    | '/api/public/find-seller-by-email'
     | '/api/public/receive-scholarship-lead'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -429,6 +440,7 @@ export interface FileRouteTypes {
     | '/scripts'
     | '/tarefas'
     | '/usuarios-acessos'
+    | '/api/public/find-seller-by-email'
     | '/api/public/receive-scholarship-lead'
   id:
     | '__root__'
@@ -467,6 +479,7 @@ export interface FileRouteTypes {
     | '/_authenticated/scripts'
     | '/_authenticated/tarefas'
     | '/_authenticated/usuarios-acessos'
+    | '/api/public/find-seller-by-email'
     | '/api/public/receive-scholarship-lead'
   fileRoutesById: FileRoutesById
 }
@@ -474,6 +487,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiPublicFindSellerByEmailRoute: typeof ApiPublicFindSellerByEmailRoute
   ApiPublicReceiveScholarshipLeadRoute: typeof ApiPublicReceiveScholarshipLeadRoute
 }
 
@@ -731,6 +745,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicReceiveScholarshipLeadRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/find-seller-by-email': {
+      id: '/api/public/find-seller-by-email'
+      path: '/api/public/find-seller-by-email'
+      fullPath: '/api/public/find-seller-by-email'
+      preLoaderRoute: typeof ApiPublicFindSellerByEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -811,6 +832,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiPublicFindSellerByEmailRoute: ApiPublicFindSellerByEmailRoute,
   ApiPublicReceiveScholarshipLeadRoute: ApiPublicReceiveScholarshipLeadRoute,
 }
 export const routeTree = rootRouteImport
