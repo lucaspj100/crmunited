@@ -105,29 +105,28 @@ function PlacarDiario() {
       void queryClient.invalidateQueries({ queryKey: ["mission_month_production"] });
       void queryClient.invalidateQueries({ queryKey: ["team_goal_summary"] });
     };
+    const reloadSummary = () => {
+      void (async () => {
+        const { data } = await supabase.rpc("productivity_summary" as never, {
+          _start: range.start, _end: range.end, _vendedor_id: null, _team_id: teamId,
+        } as never);
+        if (Array.isArray(data)) setLive(data as unknown as ProductivityRow[]);
+      })();
+    };
     // open to all authenticated
     const ch = supabase
       .channel("placar-diario")
-      .on("postgres_changes", { event: "*", schema: "public", table: "prospect_attempts" }, () => {
-        void (async () => {
-          const { data } = await supabase.rpc("productivity_summary" as never, {
-            _start: range.start, _end: range.end, _vendedor_id: null, _team_id: teamId,
-          } as never);
-          if (Array.isArray(data)) setLive(data as unknown as ProductivityRow[]);
-        })();
-      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "prospect_attempts" }, reloadSummary)
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "leads" }, () => {
-        void (async () => {
-          const { data } = await supabase.rpc("productivity_summary" as never, {
-            _start: range.start, _end: range.end, _vendedor_id: null, _team_id: teamId,
-          } as never);
-          if (Array.isArray(data)) setLive(data as unknown as ProductivityRow[]);
-          refreshMission();
-        })();
+        reloadSummary();
+        refreshMission();
       })
+      // Atividades automáticas de LinkedIn (LinkedIn Message Tracker)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "linkedin_message_events" }, reloadSummary)
       .on("postgres_changes", { event: "*", schema: "public", table: "lead_events" }, refreshMission)
       .on("postgres_changes", { event: "*", schema: "public", table: "seller_enrollment_goals" }, refreshMission)
       .subscribe();
+
     return () => { supabase.removeChannel(ch); };
   }, [range.start, range.end, teamId, queryClient]);
 
