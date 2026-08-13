@@ -459,6 +459,10 @@ function PlacarDiario() {
                         <span>🎯 {r.entrevistas_realizadas}</span>
                         <span>🎓 {r.matriculas}</span>
                         <span>❌ {r.perdidos}</span>
+                        <span className="inline-flex items-center gap-1">
+                          <Linkedin className="h-3 w-3" />
+                          {r.linkedins_checkout ?? 0}
+                        </span>
                       </div>
                       {/* Meta mensal — visível apenas para admin/franqueado */}
                       {isAdmin && (
