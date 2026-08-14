@@ -6,6 +6,8 @@ export type PlaybookAssistant = {
   cta: string;
   url: string;
   status: "active" | "soon";
+  icon: "graduation-cap" | "message-circle";
+  complement?: string;
 };
 
 /** Links externos dos GPTs. Para trocar, altere apenas a `url` aqui. */
@@ -19,6 +21,20 @@ export const PLAYBOOK_ASSISTANTS: PlaybookAssistant[] = [
     cta: "Avaliar minha call",
     url: "https://chatgpt.com/g/g-6a7f6d3e662c8191a7d7753468eb8b58-avaliador-de-calls-fanaticos",
     status: "active",
+    icon: "graduation-cap",
+  },
+  {
+    id: "copiloto-whatsapp",
+    title: "Copiloto WhatsApp Fanáticos",
+    description:
+      "Cole a conversa ou envie um print e receba a melhor resposta para avançar o lead no WhatsApp.",
+    complement:
+      "Ajuda com primeiro contato, qualificação, follow-up, objeções, agendamento, negociação, matrícula e resgate.",
+    category: "WhatsApp Comercial",
+    cta: "Criar resposta",
+    url: "COLOCAR_LINK_DO_COPILOTO_WHATSAPP_AQUI",
+    status: "active",
+    icon: "message-circle",
   },
 ];
 
