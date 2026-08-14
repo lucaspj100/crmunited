@@ -49,7 +49,11 @@ function PlaybookPage() {
               <CardHeader className="space-y-2 pb-2">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                    <GraduationCap className="h-5 w-5" />
+                    {a.icon === "message-circle" ? (
+                      <MessageCircle className="h-5 w-5" />
+                    ) : (
+                      <GraduationCap className="h-5 w-5" />
+                    )}
                   </div>
                   <Badge variant="outline" className="text-[10px]">
                     ChatGPT
@@ -59,7 +63,10 @@ function PlaybookPage() {
                 <span className="text-[11px] uppercase tracking-wide text-muted-foreground">{a.category}</span>
               </CardHeader>
               <CardContent className="flex flex-1 flex-col justify-between gap-3">
-                <p className="text-xs text-muted-foreground">{a.description}</p>
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground">{a.description}</p>
+                  {a.complement && <p className="text-[11px] text-muted-foreground/80">{a.complement}</p>}
+                </div>
                 <Button asChild size="sm" className="w-full" disabled={a.status !== "active"}>
                   <a href={a.url} target="_blank" rel="noopener noreferrer">
                     {a.cta}
