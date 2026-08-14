@@ -17,7 +17,7 @@ export const PLAYBOOK_ASSISTANTS: PlaybookAssistant[] = [
       "Envie a transcrição da sua call e receba uma avaliação completa baseada no Playbook Comercial: Rapport, D.I., Pré-Speech, Apresentação, Gatilho de Fechamento e Fechamento.",
     category: "Avaliação de call",
     cta: "Avaliar minha call",
-    url: "COLOCAR_LINK_DO_GPT_AQUI",
+    url: "https://chatgpt.com/g/g-6a7f6d3e662c8191a7d7753468eb8b58-avaliador-de-calls-fanaticos",
     status: "active",
   },
 ];
