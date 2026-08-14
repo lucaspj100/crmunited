@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { BookOpen, ExternalLink, GraduationCap, ChevronRight } from "lucide-react";
+import { BookOpen, ExternalLink, GraduationCap, MessageCircle, ChevronRight } from "lucide-react";
 import { PLAYBOOK_ASSISTANTS, PLAYBOOK_BLOCKS } from "@/lib/playbook";
 
 export const Route = createFileRoute("/_authenticated/playbook")({
