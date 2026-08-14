@@ -32,7 +32,7 @@ export const PLAYBOOK_ASSISTANTS: PlaybookAssistant[] = [
       "Ajuda com primeiro contato, qualificação, follow-up, objeções, agendamento, negociação, matrícula e resgate.",
     category: "WhatsApp Comercial",
     cta: "Criar resposta",
-    url: "COLOCAR_LINK_DO_COPILOTO_WHATSAPP_AQUI",
+    url: "https://chatgpt.com/g/g-6a7f763178b08191b6a6e7ad190edb2a-prompt-de-conversa",
     status: "active",
     icon: "message-circle",
   },
