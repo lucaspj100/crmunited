@@ -118,7 +118,7 @@ export function DailyScoreboard({
       const whatsStarted = whatsStartedIds.size;
       const lastActionAt = attempts[0]?.created_at ?? null;
       return {
-        calls, whats, whatsStarted, worked, interested,
+        calls, answered, whats, whatsStarted, worked, interested,
         whatsReplied: repliedRes.count ?? 0,
         interviews: interviewsRes.count ?? 0,
         lastActionAt,
@@ -133,7 +133,8 @@ export function DailyScoreboard({
     return () => clearInterval(t);
   }, []);
 
-  const stats = data ?? { calls: 0, whats: 0, whatsStarted: 0, whatsReplied: 0, worked: 0, interested: 0, interviews: 0, lastActionAt: null };
+  const stats = data ?? { calls: 0, answered: 0, whats: 0, whatsStarted: 0, whatsReplied: 0, worked: 0, interested: 0, interviews: 0, lastActionAt: null };
+  const answerRate = stats.calls > 0 ? (stats.answered / stats.calls) * 100 : 0;
   const lastDate = useMemo(() => (stats.lastActionAt ? new Date(stats.lastActionAt) : null), [stats.lastActionAt]);
   const goalProgress = Math.min(100, (stats.calls / callGoal) * 100);
   const message = rhythmMessage(stats.calls, callGoal);
