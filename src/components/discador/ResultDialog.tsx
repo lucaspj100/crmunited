@@ -300,6 +300,34 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
       <DialogContent>
         <DialogHeader><DialogTitle>Registrar resultado</DialogTitle></DialogHeader>
         <div className="space-y-3">
+          {isCall && (
+            <div className="space-y-1.5">
+              <Label>A pessoa atendeu? <span className="text-destructive">*</span></Label>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={answered === true ? "default" : "outline"}
+                  className="flex-1"
+                  onClick={() => setAnswered(true)}
+                >
+                  Sim
+                </Button>
+                <Button
+                  type="button"
+                  variant={answered === false ? "default" : "outline"}
+                  className="flex-1"
+                  onClick={() => setAnswered(false)}
+                >
+                  Não
+                </Button>
+              </div>
+              {answerConflict && (
+                <p className="text-xs text-destructive">
+                  Conflito: "Atendeu = {answered ? "Sim" : "Não"}" não combina com o resultado "{result}". Ajuste antes de salvar.
+                </p>
+              )}
+            </div>
+          )}
           <div>
             <Label>Resultado</Label>
             <Select value={result} onValueChange={(v) => setResult(v as ProspectResult)}>
