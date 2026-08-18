@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Phone, MessageCircle, Users, Sparkles, CalendarCheck, Clock, Flame, Settings2, AlertTriangle, Send } from "lucide-react";
+import { Phone, PhoneCall, Percent, MessageCircle, Users, Sparkles, CalendarCheck, Clock, Flame, Settings2, AlertTriangle, Send } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -41,6 +41,7 @@ function rhythmMessage(calls: number, goal: number): string {
 
 type DailyStats = {
   calls: number;
+  answered: number;
   whats: number;
   whatsStarted: number;
   whatsReplied: number;
@@ -85,7 +86,7 @@ export function DailyScoreboard({
       const [attemptsRes, interviewsRes, repliedRes] = await Promise.all([
         supabase
           .from("prospect_attempts")
-          .select("tipo_acao, resultado, prospect_contact_id, created_at")
+          .select("tipo_acao, resultado, atendida, prospect_contact_id, created_at")
           .eq("vendedor_id", user!.id)
           .gte("created_at", todayISO)
           .order("created_at", { ascending: false })
@@ -103,10 +104,11 @@ export function DailyScoreboard({
           .gte("responded_at", todayISO),
       ]);
       const attempts = (attemptsRes.data ?? []) as Array<{
-        tipo_acao: string; resultado: string | null; prospect_contact_id: string; created_at: string;
+        tipo_acao: string; resultado: string | null; atendida: boolean | null; prospect_contact_id: string; created_at: string;
       }>;
       const withResult = attempts.filter((a) => !!a.resultado);
       const calls = withResult.filter((a) => a.tipo_acao === "ligacao").length;
+      const answered = withResult.filter((a) => a.tipo_acao === "ligacao" && a.atendida === true).length;
       const whats = withResult.filter((a) => a.tipo_acao === "whatsapp").length;
       const worked = new Set(withResult.map((a) => a.prospect_contact_id)).size;
       const interested = withResult.filter((a) => a.resultado && INTERESTED_RESULTS.includes(a.resultado)).length;
@@ -116,7 +118,7 @@ export function DailyScoreboard({
       const whatsStarted = whatsStartedIds.size;
       const lastActionAt = attempts[0]?.created_at ?? null;
       return {
-        calls, whats, whatsStarted, worked, interested,
+        calls, answered, whats, whatsStarted, worked, interested,
         whatsReplied: repliedRes.count ?? 0,
         interviews: interviewsRes.count ?? 0,
         lastActionAt,
@@ -131,7 +133,8 @@ export function DailyScoreboard({
     return () => clearInterval(t);
   }, []);
 
-  const stats = data ?? { calls: 0, whats: 0, whatsStarted: 0, whatsReplied: 0, worked: 0, interested: 0, interviews: 0, lastActionAt: null };
+  const stats = data ?? { calls: 0, answered: 0, whats: 0, whatsStarted: 0, whatsReplied: 0, worked: 0, interested: 0, interviews: 0, lastActionAt: null };
+  const answerRate = stats.calls > 0 ? (stats.answered / stats.calls) * 100 : 0;
   const lastDate = useMemo(() => (stats.lastActionAt ? new Date(stats.lastActionAt) : null), [stats.lastActionAt]);
   const goalProgress = Math.min(100, (stats.calls / callGoal) * 100);
   const message = rhythmMessage(stats.calls, callGoal);
@@ -149,8 +152,10 @@ export function DailyScoreboard({
           </div>
         </div>
 
-        <div className="grid grid-cols-3 md:grid-cols-7 gap-2">
+        <div className="grid grid-cols-3 md:grid-cols-9 gap-2">
           <Metric icon={<Phone className="h-3.5 w-3.5" />} label="Ligações" value={stats.calls} />
+          <Metric icon={<PhoneCall className="h-3.5 w-3.5" />} label="Atendidas" value={stats.answered} />
+          <Metric icon={<Percent className="h-3.5 w-3.5" />} label="Tx. atend." value={`${answerRate.toFixed(1).replace(".", ",")}%`} />
           <Metric icon={<MessageCircle className="h-3.5 w-3.5" />} label="WhatsApp" value={stats.whats} />
           <Metric icon={<Send className="h-3.5 w-3.5" />} label="Wpp iniciados" value={stats.whatsStarted} />
           <Metric icon={<MessageCircle className="h-3.5 w-3.5" />} label="Wpp respond." value={stats.whatsReplied} />
@@ -270,7 +275,7 @@ function GoalDialog({
   );
 }
 
-function Metric({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {
+function Metric({ icon, label, value }: { icon: React.ReactNode; label: string; value: number | string }) {
   return (
     <div className="rounded-md border bg-card p-2 flex flex-col items-center text-center">
       <div className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground">

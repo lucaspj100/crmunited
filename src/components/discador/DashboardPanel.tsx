@@ -14,9 +14,9 @@ type DashboardData = {
     nao_chamar: number;
     disponiveis: number;
   };
-  attempts: { ligacoes: number; whats: number };
+  attempts: { ligacoes: number; atendidas: number; whats: number };
   by_seller: { id: string; atribuidos: number; trabalhados: number; interessados: number; convertidos: number }[];
-  by_seller_att: { id: string; ligacoes: number; whats: number }[];
+  by_seller_att: { id: string; ligacoes: number; atendidas: number; whats: number }[];
   by_origem: { k: string; total: number; tent: number; interessados: number; convertidos: number }[];
   by_ddd: { k: string; total: number; tent: number; interessados: number; convertidos: number }[];
 };
@@ -46,16 +46,19 @@ export function DashboardPanel({ sellers }: { sellers: Seller[] }) {
     const row = sellerMap.get(s.id);
     const att = sellerAttMap.get(s.id);
     const atribuidos = row?.atribuidos ?? 0;
-    const trabalhados = row?.trabalhados ?? 0;
     const interessados = row?.interessados ?? 0;
     const convertidos = row?.convertidos ?? 0;
-    const txAtend = atribuidos ? ((trabalhados / atribuidos) * 100).toFixed(0) : "0";
+    const ligacoes = att?.ligacoes ?? 0;
+    const atendidas = att?.atendidas ?? 0;
+    // Taxa de atendimento = atendidas / ligações (tentativas), nunca trabalhados/atribuídos
+    const txAtend = ligacoes ? ((atendidas / ligacoes) * 100).toFixed(1) : "0";
     const txConv = atribuidos ? ((convertidos / atribuidos) * 100).toFixed(1) : "0";
     return {
       id: s.id,
       name: s.full_name || s.email,
       atribuidos,
-      ligacoes: att?.ligacoes ?? 0,
+      ligacoes,
+      atendidas,
       whats: att?.whats ?? 0,
       interessados,
       convertidos,
@@ -73,6 +76,8 @@ export function DashboardPanel({ sellers }: { sellers: Seller[] }) {
         <Stat label="Convertidos" value={t.convertidos} />
         <Stat label="Interessados" value={t.interessados} />
         <Stat label="Ligações" value={a.ligacoes} />
+        <Stat label="Atendidas" value={a.atendidas ?? 0} />
+        <Stat label="Taxa de atendimento" value={`${(a.ligacoes ? ((a.atendidas ?? 0) / a.ligacoes) * 100 : 0).toFixed(1)}%`} />
         <Stat label="WhatsApps" value={a.whats} />
         <Stat label="Inválidos / Não chamar" value={`${t.invalidos} / ${t.nao_chamar}`} />
       </div>
@@ -86,12 +91,12 @@ export function DashboardPanel({ sellers }: { sellers: Seller[] }) {
         <CardContent className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-muted/40 text-left"><tr>
-              <th className="p-2">Vendedor</th><th className="p-2">Atribuídos</th><th className="p-2">Ligações</th><th className="p-2">WhatsApps</th><th className="p-2">Interessados</th><th className="p-2">Convertidos</th><th className="p-2">Tx. atend.</th><th className="p-2">Tx. conv.</th>
+              <th className="p-2">Vendedor</th><th className="p-2">Atribuídos</th><th className="p-2">Ligações</th><th className="p-2">Atendidas</th><th className="p-2">WhatsApps</th><th className="p-2">Interessados</th><th className="p-2">Convertidos</th><th className="p-2">Tx. atend.</th><th className="p-2">Tx. conv.</th>
             </tr></thead>
             <tbody>
               {bySeller.map((s) => (
                 <tr key={s.id} className="border-t">
-                  <td className="p-2">{s.name}</td><td className="p-2">{s.atribuidos}</td><td className="p-2">{s.ligacoes}</td><td className="p-2">{s.whats}</td><td className="p-2">{s.interessados}</td><td className="p-2">{s.convertidos}</td><td className="p-2">{s.tx_atend}</td><td className="p-2">{s.tx_conv}</td>
+                  <td className="p-2">{s.name}</td><td className="p-2">{s.atribuidos}</td><td className="p-2">{s.ligacoes}</td><td className="p-2">{s.atendidas}</td><td className="p-2">{s.whats}</td><td className="p-2">{s.interessados}</td><td className="p-2">{s.convertidos}</td><td className="p-2">{s.tx_atend}</td><td className="p-2">{s.tx_conv}</td>
                 </tr>
               ))}
             </tbody>

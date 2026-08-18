@@ -21,6 +21,17 @@ const RESULT_TO_WHATSAPP_REASON: Partial<Record<ProspectResult, WhatsappListReas
   "Ocupado": "chamou_nao_respondeu",
 };
 
+// "Atendeu" é característica da tentativa, não o resultado comercial.
+const RESULTS_IMPLY_ANSWERED: ProspectResult[] = ["Interessado", "Pediu WhatsApp", "Sem interesse", "Ligar depois"];
+const RESULTS_IMPLY_NOT_ANSWERED: ProspectResult[] = ["Não atendeu", "Caixa postal", "Ocupado", "Número inválido"];
+
+function impliedAnswered(result: ProspectResult | ""): boolean | null {
+  if (!result) return null;
+  if (RESULTS_IMPLY_ANSWERED.includes(result)) return true;
+  if (RESULTS_IMPLY_NOT_ANSWERED.includes(result)) return false;
+  return null;
+}
+
 type DialMeta = {
   telefone_para_discagem: string | null;
   ddd_origem_vendedor: string | null;
@@ -42,6 +53,7 @@ type Props = {
 
 export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialAction, dialMeta, retornoTaskId, completeRetornoFallback, onSaved }: Props) {
   const [result, setResult] = useState<ProspectResult | "">("");
+  const [answered, setAnswered] = useState<boolean | null>(null);
   const [obs, setObs] = useState("");
   const [proxima, setProxima] = useState("");
   const [addToWppList, setAddToWppList] = useState(false);
@@ -57,6 +69,21 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
     if (whatsappReason) setAddToWppList(true);
     else setAddToWppList(false);
   }, [whatsappReason]);
+
+  const isCall = initialAction === "ligacao";
+  const implied = impliedAnswered(result);
+  const answerConflict = isCall && answered !== null && implied !== null && answered !== implied;
+
+  // Ao escolher um resultado que já define o atendimento, sincroniza o campo.
+  useEffect(() => {
+    if (!isCall) return;
+    if (implied !== null) setAnswered(implied);
+  }, [implied, isCall]);
+
+  useEffect(() => {
+    if (open) setAnswered(null);
+  }, [open]);
+
 
   const completeRetornoTask = async () => {
     const completionPatch = { status: "concluida" as const };
@@ -100,6 +127,11 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
 
   const save = async (goNext: boolean) => {
     if (!result) { toast.error("Selecione o resultado"); return; }
+    if (isCall && answered === null) { toast.error("Informe se a pessoa atendeu a ligação"); return; }
+    if (answerConflict) {
+      toast.error(`Conflito: "Atendeu = ${answered ? "Sim" : "Não"}" não combina com o resultado "${result}".`);
+      return;
+    }
     if (result === "Ligar depois" && !proxima) { toast.error("Informe data/hora da próxima tentativa"); return; }
     setSaving(true);
 
@@ -126,6 +158,7 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
       telefone_normalizado: telefone,
       resultado: result,
       observacao: obs || null,
+      atendida: isCall ? answered : null,
       ...(initialAction === "ligacao" && dialMeta
         ? {
             telefone_para_discagem: dialMeta.telefone_para_discagem,
@@ -250,7 +283,7 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
     }
 
     setSaving(false);
-    setResult(""); setObs(""); setProxima(""); setAddToWppList(false);
+    setResult(""); setObs(""); setProxima(""); setAddToWppList(false); setAnswered(null);
     queryClient.invalidateQueries({ queryKey: ["my_prospect_contacts"] });
     queryClient.invalidateQueries({ queryKey: ["prospect_queue"] });
     queryClient.invalidateQueries({ queryKey: ["prospect_counts"] });
@@ -267,6 +300,34 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
       <DialogContent>
         <DialogHeader><DialogTitle>Registrar resultado</DialogTitle></DialogHeader>
         <div className="space-y-3">
+          {isCall && (
+            <div className="space-y-1.5">
+              <Label>A pessoa atendeu? <span className="text-destructive">*</span></Label>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={answered === true ? "default" : "outline"}
+                  className="flex-1"
+                  onClick={() => setAnswered(true)}
+                >
+                  Sim
+                </Button>
+                <Button
+                  type="button"
+                  variant={answered === false ? "default" : "outline"}
+                  className="flex-1"
+                  onClick={() => setAnswered(false)}
+                >
+                  Não
+                </Button>
+              </div>
+              {answerConflict && (
+                <p className="text-xs text-destructive">
+                  Conflito: "Atendeu = {answered ? "Sim" : "Não"}" não combina com o resultado "{result}". Ajuste antes de salvar.
+                </p>
+              )}
+            </div>
+          )}
           <div>
             <Label>Resultado</Label>
             <Select value={result} onValueChange={(v) => setResult(v as ProspectResult)}>
@@ -307,8 +368,8 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
 
         <DialogFooter className="gap-2">
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={saving}>Cancelar</Button>
-          <Button variant="outline" onClick={() => save(false)} disabled={saving}>Salvar</Button>
-          <Button onClick={() => save(true)} disabled={saving}>Salvar e ir para próximo</Button>
+          <Button variant="outline" onClick={() => save(false)} disabled={saving || answerConflict}>Salvar</Button>
+          <Button onClick={() => save(true)} disabled={saving || answerConflict}>Salvar e ir para próximo</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
