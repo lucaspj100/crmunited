@@ -127,6 +127,11 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
 
   const save = async (goNext: boolean) => {
     if (!result) { toast.error("Selecione o resultado"); return; }
+    if (isCall && answered === null) { toast.error("Informe se a pessoa atendeu a ligação"); return; }
+    if (answerConflict) {
+      toast.error(`Conflito: "Atendeu = ${answered ? "Sim" : "Não"}" não combina com o resultado "${result}".`);
+      return;
+    }
     if (result === "Ligar depois" && !proxima) { toast.error("Informe data/hora da próxima tentativa"); return; }
     setSaving(true);
 
