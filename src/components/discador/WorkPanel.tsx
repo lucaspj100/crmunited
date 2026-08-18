@@ -20,6 +20,7 @@ import { ReturnsDebugCard } from "./ReturnsDebugCard";
 import { DailyScoreboard } from "./DailyScoreboard";
 import { WhatsappComposer } from "./WhatsappComposer";
 import { addToWhatsappList } from "@/lib/whatsapp-list";
+import { fetchDialerSession, saveDialerSession } from "@/lib/dialer-session";
 import { toast } from "sonner";
 
 type Props = {
