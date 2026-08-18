@@ -345,9 +345,15 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
         (payload) => {
           const next =
             (payload.new as { current_contact_id?: string | null } | null)?.current_contact_id ?? null;
-          if (next === lastSyncedRef.current) return;
+          if (next === lastSyncedRef.current && next === currentContactIdRef.current) return;
           lastSyncedRef.current = next;
-          setCurrentContactId(next);
+          if (focusContactId) return; // modo tarefa/retorno tem prioridade
+          if (!next) {
+            setSyncedContact(null);
+            setCurrentContactId(null);
+            return;
+          }
+          void applyRemoteContact(next);
         },
       )
       .subscribe((status) => setSyncOnline(status === "SUBSCRIBED"));
@@ -355,7 +361,32 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
       setSyncOnline(false);
       supabase.removeChannel(channel);
     };
-  }, [user?.id]);
+  }, [user?.id, focusContactId, applyRemoteContact]);
+
+  // Fallback: mesmo com Realtime, reconcilia a sessão a cada 2s (aba suspensa, troca de rede, evento perdido).
+  useEffect(() => {
+    if (!user || focusContactId) return;
+    let stopped = false;
+    const tick = async () => {
+      const session = await fetchDialerSession(user.id);
+      if (stopped) return;
+      const remote = session?.current_contact_id ?? null;
+      if (remote === currentContactIdRef.current) return;
+      lastSyncedRef.current = remote;
+      if (!remote) {
+        setSyncedContact(null);
+        setCurrentContactId(null);
+        return;
+      }
+      await applyRemoteContact(remote);
+    };
+    const id = setInterval(() => void tick(), 2000);
+    return () => {
+      stopped = true;
+      clearInterval(id);
+    };
+  }, [user?.id, focusContactId, applyRemoteContact]);
+
 
   // Foco vindo de URL — busca sempre o contato pelo ID e só depois abre o modal.
   useEffect(() => {
