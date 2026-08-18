@@ -558,7 +558,9 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
         ) : (
           <>
             {queuePos && (
-              <div className="text-xs text-muted-foreground text-center font-medium">{queuePos}</div>
+              <div className="text-xs text-muted-foreground text-center font-medium">
+                {queuePos} <SyncBadge online={syncOnline} />
+              </div>
             )}
             <div className="w-full max-w-full rounded-lg border-2 bg-card p-3 space-y-1.5 overflow-hidden">
               <div className="text-lg font-bold leading-tight break-words">
