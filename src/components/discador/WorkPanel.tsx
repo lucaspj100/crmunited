@@ -178,26 +178,99 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
 
   const { list: activeQueue, label: activeLabel } = useMemo(() => buildActiveQueue(queue), [queue]);
 
+  // Refs para uso dentro de callbacks assíncronos (Realtime/polling) sem closures obsoletas.
+  const queueRef = useRef<ProspectContact[]>([]);
+  queueRef.current = queue;
+  const currentContactIdRef = useRef<string | null>(null);
+  currentContactIdRef.current = currentContactId;
+  // Última seleção pedida (local ou remota) — evita que resposta antiga sobrescreva navegação recente.
+  const selectionSeqRef = useRef(0);
+  // Contato sincronizado que (ainda) não está na fila ativa local — usado apenas para exibição.
+  const [syncedContact, setSyncedContact] = useState<ProspectContact | null>(null);
+
   const activeIndex = useMemo(() => {
     if (activeQueue.length === 0) return -1;
     const i = currentContactId ? activeQueue.findIndex((c) => c.id === currentContactId) : -1;
     return i >= 0 ? i : 0;
   }, [activeQueue, currentContactId]);
 
+  const currentFromQueue = useMemo(
+    () => (currentContactId ? (activeQueue.find((c) => c.id === currentContactId) ?? queue.find((c) => c.id === currentContactId) ?? null) : null),
+    [currentContactId, activeQueue, queue],
+  );
+
   const contact: ProspectContact | null =
-    focusedContact ?? (activeIndex >= 0 ? activeQueue[activeIndex]! : null);
+    focusedContact ??
+    currentFromQueue ??
+    (syncedContact && syncedContact.id === currentContactId ? syncedContact : null) ??
+    (activeQueue.length > 0 ? activeQueue[0]! : null);
 
   /** Fonte única do contato atual da fila normal: state local + sessão compartilhada. */
   const setCurrentContactSynced = useCallback(
     (contactId: string | null) => {
+      const seq = ++selectionSeqRef.current;
       setCurrentContactId(contactId);
+      setSyncedContact(null);
       if (!user) return;
       if (lastSyncedRef.current === contactId) return;
-      lastSyncedRef.current = contactId;
-      void saveDialerSession(user.id, contactId);
+      void (async () => {
+        const ok = await saveDialerSession(user.id, contactId);
+        // Só marca como sincronizado se o banco aceitou E esta ainda é a seleção mais recente.
+        if (ok && seq === selectionSeqRef.current) lastSyncedRef.current = contactId;
+      })();
     },
     [user?.id],
   );
+
+  /**
+   * Aplica um contato vindo de outro dispositivo (Realtime/polling).
+   * Nunca grava em prospect_dialer_sessions — o evento já veio do banco.
+   */
+  const applyRemoteContact = useCallback(
+    async (contactId: string) => {
+      if (!user) return;
+      const seq = ++selectionSeqRef.current;
+      const stale = () => seq !== selectionSeqRef.current;
+
+      const inQueue = queueRef.current.some((c) => c.id === contactId);
+      if (inQueue) {
+        setCurrentContactId(contactId);
+        setSyncedContact(null);
+        return;
+      }
+
+      // Recarrega a fila silenciosamente (mesmas regras de fila/elegibilidade).
+      let rows: ProspectContact[] = [];
+      try {
+        rows = await fetchDialerQueue(user.id);
+      } catch {
+        return;
+      }
+      if (stale()) return;
+      const sorted = sortQueue(rows);
+      setQueue(sorted);
+      if (sorted.some((c) => c.id === contactId)) {
+        setCurrentContactId(contactId);
+        setSyncedContact(null);
+        return;
+      }
+
+      // Ainda fora da fila: confirma se o contato existe e pertence a este vendedor.
+      const remote = await fetchProspectContactById(contactId);
+      if (stale()) return;
+      if (remote && remote.vendedor_responsavel_id === user.id) {
+        setSyncedContact(remote);
+        setCurrentContactId(contactId);
+        return;
+      }
+      // Realmente inválido/removido: cai no próximo contato prioritário.
+      const nextActive = buildActiveQueue(sorted).list;
+      setSyncedContact(null);
+      setCurrentContactId(nextActive.length > 0 ? nextActive[0]!.id : null);
+    },
+    [user?.id],
+  );
+
 
   // Carrega a fila completa do vendedor (com paginação — o Data API corta em 1000 linhas)
   const loadQueue = async (opts?: {
