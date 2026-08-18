@@ -368,8 +368,8 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
 
         <DialogFooter className="gap-2">
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={saving}>Cancelar</Button>
-          <Button variant="outline" onClick={() => save(false)} disabled={saving}>Salvar</Button>
-          <Button onClick={() => save(true)} disabled={saving}>Salvar e ir para próximo</Button>
+          <Button variant="outline" onClick={() => save(false)} disabled={saving || answerConflict}>Salvar</Button>
+          <Button onClick={() => save(true)} disabled={saving || answerConflict}>Salvar e ir para próximo</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
