@@ -158,6 +158,7 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
       telefone_normalizado: telefone,
       resultado: result,
       observacao: obs || null,
+      atendida: isCall ? answered : null,
       ...(initialAction === "ligacao" && dialMeta
         ? {
             telefone_para_discagem: dialMeta.telefone_para_discagem,
