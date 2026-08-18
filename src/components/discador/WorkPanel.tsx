@@ -340,13 +340,13 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     if (activeQueue.length === 0) return;
     exitFocus();
     const i = activeIndex <= 0 ? activeQueue.length - 1 : activeIndex - 1;
-    setCurrentContactId(activeQueue[i]!.id);
+    setCurrentContactSynced(activeQueue[i]!.id);
   };
   const goNext = () => {
     if (activeQueue.length === 0) return;
     exitFocus();
     const i = activeIndex >= activeQueue.length - 1 ? 0 : activeIndex + 1;
-    setCurrentContactId(activeQueue[i]!.id);
+    setCurrentContactSynced(activeQueue[i]!.id);
   };
 
 
