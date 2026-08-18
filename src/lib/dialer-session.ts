@@ -17,13 +17,17 @@ export async function fetchDialerSession(userId: string): Promise<DialerSession 
   return (data as DialerSession | null) ?? null;
 }
 
-/** Grava o contato atual da sessão (last write wins). Nunca lança — sincronização é best-effort. */
-export async function saveDialerSession(userId: string, contactId: string | null): Promise<void> {
+/** Grava o contato atual da sessão (last write wins). Nunca lança — retorna true quando o banco aceitou. */
+export async function saveDialerSession(userId: string, contactId: string | null): Promise<boolean> {
   const { error } = await supabase
     .from("prospect_dialer_sessions")
     .upsert(
       { user_id: userId, current_contact_id: contactId, updated_at: new Date().toISOString() },
       { onConflict: "user_id" },
     );
-  if (error) console.warn("[dialer-session] falha ao sincronizar contato atual:", error.message);
+  if (error) {
+    console.warn("[dialer-session] falha ao sincronizar contato atual:", error.message);
+    return false;
+  }
+  return true;
 }
