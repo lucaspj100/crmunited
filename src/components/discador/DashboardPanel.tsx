@@ -91,12 +91,12 @@ export function DashboardPanel({ sellers }: { sellers: Seller[] }) {
         <CardContent className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-muted/40 text-left"><tr>
-              <th className="p-2">Vendedor</th><th className="p-2">Atribuídos</th><th className="p-2">Ligações</th><th className="p-2">WhatsApps</th><th className="p-2">Interessados</th><th className="p-2">Convertidos</th><th className="p-2">Tx. atend.</th><th className="p-2">Tx. conv.</th>
+              <th className="p-2">Vendedor</th><th className="p-2">Atribuídos</th><th className="p-2">Ligações</th><th className="p-2">Atendidas</th><th className="p-2">WhatsApps</th><th className="p-2">Interessados</th><th className="p-2">Convertidos</th><th className="p-2">Tx. atend.</th><th className="p-2">Tx. conv.</th>
             </tr></thead>
             <tbody>
               {bySeller.map((s) => (
                 <tr key={s.id} className="border-t">
-                  <td className="p-2">{s.name}</td><td className="p-2">{s.atribuidos}</td><td className="p-2">{s.ligacoes}</td><td className="p-2">{s.whats}</td><td className="p-2">{s.interessados}</td><td className="p-2">{s.convertidos}</td><td className="p-2">{s.tx_atend}</td><td className="p-2">{s.tx_conv}</td>
+                  <td className="p-2">{s.name}</td><td className="p-2">{s.atribuidos}</td><td className="p-2">{s.ligacoes}</td><td className="p-2">{s.atendidas}</td><td className="p-2">{s.whats}</td><td className="p-2">{s.interessados}</td><td className="p-2">{s.convertidos}</td><td className="p-2">{s.tx_atend}</td><td className="p-2">{s.tx_conv}</td>
                 </tr>
               ))}
             </tbody>
