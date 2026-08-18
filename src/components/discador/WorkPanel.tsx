@@ -172,6 +172,9 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
   const [retornoTask, setRetornoTask] = useState<RetornoTask | null>(null);
   const [focusedContact, setFocusedContact] = useState<ProspectContact | null>(null);
   const [loadingFocus, setLoadingFocus] = useState(false);
+  const [syncOnline, setSyncOnline] = useState(false);
+  // Último ID já refletido na sessão do Supabase — evita loop de Realtime (eco do próprio evento).
+  const lastSyncedRef = useRef<string | null>(null);
 
   const { list: activeQueue, label: activeLabel } = useMemo(() => buildActiveQueue(queue), [queue]);
 
@@ -183,6 +186,18 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
 
   const contact: ProspectContact | null =
     focusedContact ?? (activeIndex >= 0 ? activeQueue[activeIndex]! : null);
+
+  /** Fonte única do contato atual da fila normal: state local + sessão compartilhada. */
+  const setCurrentContactSynced = useCallback(
+    (contactId: string | null) => {
+      setCurrentContactId(contactId);
+      if (!user) return;
+      if (lastSyncedRef.current === contactId) return;
+      lastSyncedRef.current = contactId;
+      void saveDialerSession(user.id, contactId);
+    },
+    [user?.id],
+  );
 
   // Carrega a fila completa do vendedor (com paginação — o Data API corta em 1000 linhas)
   const loadQueue = async (opts?: { keepContactId?: string; silent?: boolean; keepSelection?: boolean }) => {
@@ -202,21 +217,58 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     if (opts?.keepSelection) return;
     const nextActive = buildActiveQueue(sorted).list;
     if (nextActive.length === 0) {
-      setCurrentContactId(null);
+      setCurrentContactSynced(null);
       return;
     }
     const keepId = opts?.keepContactId;
     const keep = keepId ? nextActive.find((c) => c.id === keepId) : undefined;
-    setCurrentContactId(keep ? keep.id : nextActive[0]!.id);
+    setCurrentContactSynced(keep ? keep.id : nextActive[0]!.id);
   };
 
 
 
-  // Bootstrap
+  // Bootstrap: primeiro a sessão sincronizada, depois a fila (o contato da sessão
+  // é mantido quando ainda estiver elegível; senão cai no primeiro prioritário).
   useEffect(() => {
     if (!user) return;
-    void loadQueue();
+    let cancelled = false;
+    (async () => {
+      const session = await fetchDialerSession(user.id);
+      if (cancelled) return;
+      lastSyncedRef.current = session?.current_contact_id ?? null;
+      await loadQueue({ keepContactId: session?.current_contact_id ?? undefined });
+    })();
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  // Realtime: outro dispositivo do MESMO vendedor mudou o contato atual.
+  // Só atualiza o state local — nunca escreve de volta (evita loop).
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`dialer_session_${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "prospect_dialer_sessions",
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const next =
+            (payload.new as { current_contact_id?: string | null } | null)?.current_contact_id ?? null;
+          if (next === lastSyncedRef.current) return;
+          lastSyncedRef.current = next;
+          setCurrentContactId(next);
+        },
+      )
+      .subscribe((status) => setSyncOnline(status === "SUBSCRIBED"));
+    return () => {
+      setSyncOnline(false);
+      supabase.removeChannel(channel);
+    };
   }, [user?.id]);
 
   // Foco vindo de URL — busca sempre o contato pelo ID e só depois abre o modal.
