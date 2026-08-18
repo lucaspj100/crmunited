@@ -486,13 +486,13 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     // Preserva a posição visual do sprint: ancora a seleção no mesmo índice da fila ativa.
     setQueue((prev) => {
       const nextActive = buildActiveQueue(prev).list;
-      if (nextActive.length === 0) setCurrentContactId(null);
+      if (nextActive.length === 0) setCurrentContactSynced(null);
       else {
         const stillThere = nextActive.some((c) => c.id === savedContactId);
         const idx = stillThere
           ? nextActive.findIndex((c) => c.id === savedContactId)
           : Math.min(Math.max(prevIndex, 0), nextActive.length - 1);
-        setCurrentContactId(nextActive[idx]!.id);
+        setCurrentContactSynced(nextActive[idx]!.id);
       }
       return prev;
     });
