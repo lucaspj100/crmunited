@@ -70,6 +70,21 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
     else setAddToWppList(false);
   }, [whatsappReason]);
 
+  const isCall = initialAction === "ligacao";
+  const implied = impliedAnswered(result);
+  const answerConflict = isCall && answered !== null && implied !== null && answered !== implied;
+
+  // Ao escolher um resultado que já define o atendimento, sincroniza o campo.
+  useEffect(() => {
+    if (!isCall) return;
+    if (implied !== null) setAnswered(implied);
+  }, [implied, isCall]);
+
+  useEffect(() => {
+    if (open) setAnswered(null);
+  }, [open]);
+
+
   const completeRetornoTask = async () => {
     const completionPatch = { status: "concluida" as const };
 
