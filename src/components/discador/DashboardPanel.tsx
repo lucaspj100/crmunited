@@ -46,16 +46,19 @@ export function DashboardPanel({ sellers }: { sellers: Seller[] }) {
     const row = sellerMap.get(s.id);
     const att = sellerAttMap.get(s.id);
     const atribuidos = row?.atribuidos ?? 0;
-    const trabalhados = row?.trabalhados ?? 0;
     const interessados = row?.interessados ?? 0;
     const convertidos = row?.convertidos ?? 0;
-    const txAtend = atribuidos ? ((trabalhados / atribuidos) * 100).toFixed(0) : "0";
+    const ligacoes = att?.ligacoes ?? 0;
+    const atendidas = att?.atendidas ?? 0;
+    // Taxa de atendimento = atendidas / ligações (tentativas), nunca trabalhados/atribuídos
+    const txAtend = ligacoes ? ((atendidas / ligacoes) * 100).toFixed(1) : "0";
     const txConv = atribuidos ? ((convertidos / atribuidos) * 100).toFixed(1) : "0";
     return {
       id: s.id,
       name: s.full_name || s.email,
       atribuidos,
-      ligacoes: att?.ligacoes ?? 0,
+      ligacoes,
+      atendidas,
       whats: att?.whats ?? 0,
       interessados,
       convertidos,
@@ -73,6 +76,8 @@ export function DashboardPanel({ sellers }: { sellers: Seller[] }) {
         <Stat label="Convertidos" value={t.convertidos} />
         <Stat label="Interessados" value={t.interessados} />
         <Stat label="Ligações" value={a.ligacoes} />
+        <Stat label="Atendidas" value={a.atendidas ?? 0} />
+        <Stat label="Taxa de atendimento" value={`${(a.ligacoes ? ((a.atendidas ?? 0) / a.ligacoes) * 100 : 0).toFixed(1)}%`} />
         <Stat label="WhatsApps" value={a.whats} />
         <Stat label="Inválidos / Não chamar" value={`${t.invalidos} / ${t.nao_chamar}`} />
       </div>
