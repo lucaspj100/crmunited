@@ -53,6 +53,7 @@ type Props = {
 
 export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialAction, dialMeta, retornoTaskId, completeRetornoFallback, onSaved }: Props) {
   const [result, setResult] = useState<ProspectResult | "">("");
+  const [answered, setAnswered] = useState<boolean | null>(null);
   const [obs, setObs] = useState("");
   const [proxima, setProxima] = useState("");
   const [addToWppList, setAddToWppList] = useState(false);
