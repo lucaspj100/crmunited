@@ -1861,6 +1861,7 @@ export type Database = {
       }
       prospect_attempts: {
         Row: {
+          atendida: boolean | null
           codigo_operadora_interurbano: string | null
           created_at: string
           ddd_destino_contato: string | null
@@ -1876,6 +1877,7 @@ export type Database = {
           vendedor_id: string | null
         }
         Insert: {
+          atendida?: boolean | null
           codigo_operadora_interurbano?: string | null
           created_at?: string
           ddd_destino_contato?: string | null
@@ -1891,6 +1893,7 @@ export type Database = {
           vendedor_id?: string | null
         }
         Update: {
+          atendida?: boolean | null
           codigo_operadora_interurbano?: string | null
           created_at?: string
           ddd_destino_contato?: string | null
