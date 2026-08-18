@@ -14,9 +14,9 @@ type DashboardData = {
     nao_chamar: number;
     disponiveis: number;
   };
-  attempts: { ligacoes: number; whats: number };
+  attempts: { ligacoes: number; atendidas: number; whats: number };
   by_seller: { id: string; atribuidos: number; trabalhados: number; interessados: number; convertidos: number }[];
-  by_seller_att: { id: string; ligacoes: number; whats: number }[];
+  by_seller_att: { id: string; ligacoes: number; atendidas: number; whats: number }[];
   by_origem: { k: string; total: number; tent: number; interessados: number; convertidos: number }[];
   by_ddd: { k: string; total: number; tent: number; interessados: number; convertidos: number }[];
 };
