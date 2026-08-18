@@ -283,7 +283,7 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
     }
 
     setSaving(false);
-    setResult(""); setObs(""); setProxima(""); setAddToWppList(false);
+    setResult(""); setObs(""); setProxima(""); setAddToWppList(false); setAnswered(null);
     queryClient.invalidateQueries({ queryKey: ["my_prospect_contacts"] });
     queryClient.invalidateQueries({ queryKey: ["prospect_queue"] });
     queryClient.invalidateQueries({ queryKey: ["prospect_counts"] });
