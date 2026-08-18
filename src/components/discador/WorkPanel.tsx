@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
@@ -20,6 +20,7 @@ import { ReturnsDebugCard } from "./ReturnsDebugCard";
 import { DailyScoreboard } from "./DailyScoreboard";
 import { WhatsappComposer } from "./WhatsappComposer";
 import { addToWhatsappList } from "@/lib/whatsapp-list";
+import { fetchDialerSession, saveDialerSession } from "@/lib/dialer-session";
 import { toast } from "sonner";
 
 type Props = {
@@ -171,6 +172,9 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
   const [retornoTask, setRetornoTask] = useState<RetornoTask | null>(null);
   const [focusedContact, setFocusedContact] = useState<ProspectContact | null>(null);
   const [loadingFocus, setLoadingFocus] = useState(false);
+  const [syncOnline, setSyncOnline] = useState(false);
+  // Último ID já refletido na sessão do Supabase — evita loop de Realtime (eco do próprio evento).
+  const lastSyncedRef = useRef<string | null>(null);
 
   const { list: activeQueue, label: activeLabel } = useMemo(() => buildActiveQueue(queue), [queue]);
 
@@ -183,8 +187,25 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
   const contact: ProspectContact | null =
     focusedContact ?? (activeIndex >= 0 ? activeQueue[activeIndex]! : null);
 
+  /** Fonte única do contato atual da fila normal: state local + sessão compartilhada. */
+  const setCurrentContactSynced = useCallback(
+    (contactId: string | null) => {
+      setCurrentContactId(contactId);
+      if (!user) return;
+      if (lastSyncedRef.current === contactId) return;
+      lastSyncedRef.current = contactId;
+      void saveDialerSession(user.id, contactId);
+    },
+    [user?.id],
+  );
+
   // Carrega a fila completa do vendedor (com paginação — o Data API corta em 1000 linhas)
-  const loadQueue = async (opts?: { keepContactId?: string; silent?: boolean; keepSelection?: boolean }) => {
+  const loadQueue = async (opts?: {
+    keepContactId?: string;
+    silent?: boolean;
+    keepSelection?: boolean;
+    avoidContactId?: string;
+  }) => {
     if (!user) return;
     if (!opts?.silent) setLoadingQueue(true);
     let rows: ProspectContact[] = [];
@@ -201,21 +222,66 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     if (opts?.keepSelection) return;
     const nextActive = buildActiveQueue(sorted).list;
     if (nextActive.length === 0) {
-      setCurrentContactId(null);
+      setCurrentContactSynced(null);
       return;
     }
     const keepId = opts?.keepContactId;
     const keep = keepId ? nextActive.find((c) => c.id === keepId) : undefined;
-    setCurrentContactId(keep ? keep.id : nextActive[0]!.id);
+    if (keep) {
+      setCurrentContactSynced(keep.id);
+      return;
+    }
+    // Após salvar e avançar: nunca reabrir o contato que acabou de ser trabalhado,
+    // desde que exista outro elegível na fila ativa.
+    const avoid = opts?.avoidContactId;
+    const next = (avoid && nextActive.find((c) => c.id !== avoid)) || nextActive[0]!;
+    setCurrentContactSynced(next.id);
   };
 
 
 
-  // Bootstrap
+  // Bootstrap: primeiro a sessão sincronizada, depois a fila (o contato da sessão
+  // é mantido quando ainda estiver elegível; senão cai no primeiro prioritário).
   useEffect(() => {
     if (!user) return;
-    void loadQueue();
+    let cancelled = false;
+    (async () => {
+      const session = await fetchDialerSession(user.id);
+      if (cancelled) return;
+      lastSyncedRef.current = session?.current_contact_id ?? null;
+      await loadQueue({ keepContactId: session?.current_contact_id ?? undefined });
+    })();
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  // Realtime: outro dispositivo do MESMO vendedor mudou o contato atual.
+  // Só atualiza o state local — nunca escreve de volta (evita loop).
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`dialer_session_${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "prospect_dialer_sessions",
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const next =
+            (payload.new as { current_contact_id?: string | null } | null)?.current_contact_id ?? null;
+          if (next === lastSyncedRef.current) return;
+          lastSyncedRef.current = next;
+          setCurrentContactId(next);
+        },
+      )
+      .subscribe((status) => setSyncOnline(status === "SUBSCRIBED"));
+    return () => {
+      setSyncOnline(false);
+      supabase.removeChannel(channel);
+    };
   }, [user?.id]);
 
   // Foco vindo de URL — busca sempre o contato pelo ID e só depois abre o modal.
@@ -287,13 +353,13 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     if (activeQueue.length === 0) return;
     exitFocus();
     const i = activeIndex <= 0 ? activeQueue.length - 1 : activeIndex - 1;
-    setCurrentContactId(activeQueue[i]!.id);
+    setCurrentContactSynced(activeQueue[i]!.id);
   };
   const goNext = () => {
     if (activeQueue.length === 0) return;
     exitFocus();
     const i = activeIndex >= activeQueue.length - 1 ? 0 : activeIndex + 1;
-    setCurrentContactId(activeQueue[i]!.id);
+    setCurrentContactSynced(activeQueue[i]!.id);
   };
 
 
@@ -413,7 +479,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     // mas apenas quando o vendedor pediu para avançar.
     if (goNext) {
       exitFocus();
-      await loadQueue({ silent: true });
+      await loadQueue({ silent: true, avoidContactId: savedContactId });
       return;
     }
 
@@ -433,13 +499,13 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     // Preserva a posição visual do sprint: ancora a seleção no mesmo índice da fila ativa.
     setQueue((prev) => {
       const nextActive = buildActiveQueue(prev).list;
-      if (nextActive.length === 0) setCurrentContactId(null);
+      if (nextActive.length === 0) setCurrentContactSynced(null);
       else {
         const stillThere = nextActive.some((c) => c.id === savedContactId);
         const idx = stillThere
           ? nextActive.findIndex((c) => c.id === savedContactId)
           : Math.min(Math.max(prevIndex, 0), nextActive.length - 1);
-        setCurrentContactId(nextActive[idx]!.id);
+        setCurrentContactSynced(nextActive[idx]!.id);
       }
       return prev;
     });
@@ -492,7 +558,9 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
         ) : (
           <>
             {queuePos && (
-              <div className="text-xs text-muted-foreground text-center font-medium">{queuePos}</div>
+              <div className="text-xs text-muted-foreground text-center font-medium">
+                {queuePos} <SyncBadge online={syncOnline} />
+              </div>
             )}
             <div className="w-full max-w-full rounded-lg border-2 bg-card p-3 space-y-1.5 overflow-hidden">
               <div className="text-lg font-bold leading-tight break-words">
@@ -718,7 +786,9 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
                     <RefreshCw className="h-4 w-4 mr-2" />Atualizar fila
                   </Button>
                   {queuePos && (
-                    <span className="text-sm text-muted-foreground ml-2 font-medium">{queuePos}</span>
+                    <span className="text-sm text-muted-foreground ml-2 font-medium">
+                      {queuePos} <SyncBadge online={syncOnline} />
+                    </span>
                   )}
                 </div>
               </CardContent>
@@ -770,7 +840,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
             setQueue((q) => {
               const next = q.filter((c) => c.id !== removedId);
               const nextActive = buildActiveQueue(next).list;
-              setCurrentContactId(nextActive.length > 0 ? nextActive[0]!.id : null);
+              setCurrentContactSynced(nextActive.length > 0 ? nextActive[0]!.id : null);
               return next;
             });
           }}
@@ -788,6 +858,19 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
         />
       )}
     </>
+  );
+}
+
+/** Indicador discreto do estado da sincronização entre dispositivos. */
+function SyncBadge({ online }: { online: boolean }) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1 whitespace-nowrap ${online ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}`}
+      title={online ? "Contato atual sincronizado entre seus dispositivos" : "Reconectando a sincronização entre dispositivos"}
+    >
+      <span className={`h-1.5 w-1.5 rounded-full ${online ? "bg-emerald-500" : "bg-muted-foreground/60 animate-pulse"}`} />
+      {online ? "Sincronizado" : "Sincronizando…"}
+    </span>
   );
 }
 
