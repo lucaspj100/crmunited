@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Phone, MessageCircle, Users, Sparkles, CalendarCheck, Clock, Flame, Settings2, AlertTriangle, Send } from "lucide-react";
+import { Phone, PhoneCall, Percent, MessageCircle, Users, Sparkles, CalendarCheck, Clock, Flame, Settings2, AlertTriangle, Send } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -152,8 +152,10 @@ export function DailyScoreboard({
           </div>
         </div>
 
-        <div className="grid grid-cols-3 md:grid-cols-7 gap-2">
+        <div className="grid grid-cols-3 md:grid-cols-9 gap-2">
           <Metric icon={<Phone className="h-3.5 w-3.5" />} label="Ligações" value={stats.calls} />
+          <Metric icon={<PhoneCall className="h-3.5 w-3.5" />} label="Atendidas" value={stats.answered} />
+          <Metric icon={<Percent className="h-3.5 w-3.5" />} label="Tx. atend." value={`${answerRate.toFixed(1).replace(".", ",")}%`} />
           <Metric icon={<MessageCircle className="h-3.5 w-3.5" />} label="WhatsApp" value={stats.whats} />
           <Metric icon={<Send className="h-3.5 w-3.5" />} label="Wpp iniciados" value={stats.whatsStarted} />
           <Metric icon={<MessageCircle className="h-3.5 w-3.5" />} label="Wpp respond." value={stats.whatsReplied} />
