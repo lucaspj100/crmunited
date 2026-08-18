@@ -2018,6 +2018,35 @@ export type Database = {
           },
         ]
       }
+      prospect_dialer_sessions: {
+        Row: {
+          created_at: string
+          current_contact_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_contact_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_contact_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prospect_dialer_sessions_current_contact_id_fkey"
+            columns: ["current_contact_id"]
+            isOneToOne: false
+            referencedRelation: "prospect_contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       prospect_dialer_settings: {
         Row: {
           codigo_operadora_interurbano: string
