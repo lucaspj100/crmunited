@@ -86,7 +86,7 @@ export function DailyScoreboard({
       const [attemptsRes, interviewsRes, repliedRes] = await Promise.all([
         supabase
           .from("prospect_attempts")
-          .select("tipo_acao, resultado, prospect_contact_id, created_at")
+          .select("tipo_acao, resultado, atendida, prospect_contact_id, created_at")
           .eq("vendedor_id", user!.id)
           .gte("created_at", todayISO)
           .order("created_at", { ascending: false })
@@ -104,10 +104,11 @@ export function DailyScoreboard({
           .gte("responded_at", todayISO),
       ]);
       const attempts = (attemptsRes.data ?? []) as Array<{
-        tipo_acao: string; resultado: string | null; prospect_contact_id: string; created_at: string;
+        tipo_acao: string; resultado: string | null; atendida: boolean | null; prospect_contact_id: string; created_at: string;
       }>;
       const withResult = attempts.filter((a) => !!a.resultado);
       const calls = withResult.filter((a) => a.tipo_acao === "ligacao").length;
+      const answered = withResult.filter((a) => a.tipo_acao === "ligacao" && a.atendida === true).length;
       const whats = withResult.filter((a) => a.tipo_acao === "whatsapp").length;
       const worked = new Set(withResult.map((a) => a.prospect_contact_id)).size;
       const interested = withResult.filter((a) => a.resultado && INTERESTED_RESULTS.includes(a.resultado)).length;
