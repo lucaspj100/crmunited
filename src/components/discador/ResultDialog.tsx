@@ -21,6 +21,17 @@ const RESULT_TO_WHATSAPP_REASON: Partial<Record<ProspectResult, WhatsappListReas
   "Ocupado": "chamou_nao_respondeu",
 };
 
+// "Atendeu" é característica da tentativa, não o resultado comercial.
+const RESULTS_IMPLY_ANSWERED: ProspectResult[] = ["Interessado", "Pediu WhatsApp", "Sem interesse", "Ligar depois"];
+const RESULTS_IMPLY_NOT_ANSWERED: ProspectResult[] = ["Não atendeu", "Caixa postal", "Ocupado", "Número inválido"];
+
+function impliedAnswered(result: ProspectResult | ""): boolean | null {
+  if (!result) return null;
+  if (RESULTS_IMPLY_ANSWERED.includes(result)) return true;
+  if (RESULTS_IMPLY_NOT_ANSWERED.includes(result)) return false;
+  return null;
+}
+
 type DialMeta = {
   telefone_para_discagem: string | null;
   ddd_origem_vendedor: string | null;
