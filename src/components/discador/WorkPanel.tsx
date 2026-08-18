@@ -861,6 +861,19 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
   );
 }
 
+/** Indicador discreto do estado da sincronização entre dispositivos. */
+function SyncBadge({ online }: { online: boolean }) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1 whitespace-nowrap ${online ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}`}
+      title={online ? "Contato atual sincronizado entre seus dispositivos" : "Reconectando a sincronização entre dispositivos"}
+    >
+      <span className={`h-1.5 w-1.5 rounded-full ${online ? "bg-emerald-500" : "bg-muted-foreground/60 animate-pulse"}`} />
+      {online ? "Sincronizado" : "Sincronizando…"}
+    </span>
+  );
+}
+
 function Stat({ label, value }: { label: string; value: number }) {
   return (
     <Card>
