@@ -275,7 +275,7 @@ function GoalDialog({
   );
 }
 
-function Metric({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {
+function Metric({ icon, label, value }: { icon: React.ReactNode; label: string; value: number | string }) {
   return (
     <div className="rounded-md border bg-card p-2 flex flex-col items-center text-center">
       <div className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground">
