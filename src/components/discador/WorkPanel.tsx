@@ -786,7 +786,9 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
                     <RefreshCw className="h-4 w-4 mr-2" />Atualizar fila
                   </Button>
                   {queuePos && (
-                    <span className="text-sm text-muted-foreground ml-2 font-medium">{queuePos}</span>
+                    <span className="text-sm text-muted-foreground ml-2 font-medium">
+                      {queuePos} <SyncBadge online={syncOnline} />
+                    </span>
                   )}
                 </div>
               </CardContent>
