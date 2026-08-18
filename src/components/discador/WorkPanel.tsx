@@ -836,7 +836,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
             setQueue((q) => {
               const next = q.filter((c) => c.id !== removedId);
               const nextActive = buildActiveQueue(next).list;
-              setCurrentContactId(nextActive.length > 0 ? nextActive[0]!.id : null);
+              setCurrentContactSynced(nextActive.length > 0 ? nextActive[0]!.id : null);
               return next;
             });
           }}
