@@ -200,7 +200,12 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
   );
 
   // Carrega a fila completa do vendedor (com paginação — o Data API corta em 1000 linhas)
-  const loadQueue = async (opts?: { keepContactId?: string; silent?: boolean; keepSelection?: boolean }) => {
+  const loadQueue = async (opts?: {
+    keepContactId?: string;
+    silent?: boolean;
+    keepSelection?: boolean;
+    avoidContactId?: string;
+  }) => {
     if (!user) return;
     if (!opts?.silent) setLoadingQueue(true);
     let rows: ProspectContact[] = [];
@@ -222,7 +227,15 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     }
     const keepId = opts?.keepContactId;
     const keep = keepId ? nextActive.find((c) => c.id === keepId) : undefined;
-    setCurrentContactSynced(keep ? keep.id : nextActive[0]!.id);
+    if (keep) {
+      setCurrentContactSynced(keep.id);
+      return;
+    }
+    // Após salvar e avançar: nunca reabrir o contato que acabou de ser trabalhado,
+    // desde que exista outro elegível na fila ativa.
+    const avoid = opts?.avoidContactId;
+    const next = (avoid && nextActive.find((c) => c.id !== avoid)) || nextActive[0]!;
+    setCurrentContactSynced(next.id);
   };
 
 
