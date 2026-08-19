@@ -38,9 +38,8 @@ type RetornoTask = {
 };
 
 import {
-  QUEUE_STATUSES,
   isEligibleForDialer,
-  applyDialerEligibility,
+
   fetchDialerQueue,
   fetchProspectContactById,
   fetchActiveWhatsappContactIds,
