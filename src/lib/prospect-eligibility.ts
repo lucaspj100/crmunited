@@ -49,9 +49,34 @@ export function applyDialerEligibility<T extends { not: (...a: any[]) => T }>(qu
 const PAGE_SIZE = 1000;
 
 /**
+ * IDs de contatos que estão ATIVOS na Lista de WhatsApp do vendedor.
+ * Regra: qualquer entrada com status != "removido" bloqueia o Discador.
+ * Isolamento por vendedor via owner_id.
+ */
+export async function fetchActiveWhatsappContactIds(userId: string): Promise<Set<string>> {
+  const ids = new Set<string>();
+  for (let page = 0; page < 20; page++) {
+    const from = page * PAGE_SIZE;
+    const { data, error } = await supabase
+      .from("whatsapp_list_entries")
+      .select("prospect_contact_id, status")
+      .eq("owner_id", userId)
+      .neq("status", "removido")
+      .range(from, from + PAGE_SIZE - 1);
+    if (error) throw error;
+    const rows = data ?? [];
+    for (const r of rows) if (r.prospect_contact_id) ids.add(r.prospect_contact_id);
+    if (rows.length < PAGE_SIZE) break;
+  }
+  return ids;
+}
+
+/**
  * Busca TODA a fila do vendedor com paginação.
  * O Data API limita cada resposta a 1000 linhas — sem paginação, vendedores
  * com muitos contatos perdiam os registros mais recentes (ex.: "Aguardando ligação").
+ *
+ * Contatos ativos na Lista de WhatsApp são excluídos: Discador OU WhatsApp, nunca os dois.
  */
 export async function fetchDialerQueue(userId: string): Promise<ProspectContact[]> {
   const all: ProspectContact[] = [];
@@ -71,8 +96,15 @@ export async function fetchDialerQueue(userId: string): Promise<ProspectContact[
     all.push(...rows);
     if (rows.length < PAGE_SIZE) break;
   }
-  return all.filter((c) => isEligibleForDialer(c, userId));
+  let blocked: Set<string>;
+  try {
+    blocked = await fetchActiveWhatsappContactIds(userId);
+  } catch {
+    blocked = new Set();
+  }
+  return all.filter((c) => isEligibleForDialer(c, userId) && !blocked.has(c.id));
 }
+
 
 /** Recarrega um contato específico pelo ID (usado pelo botão "Salvar"). */
 export async function fetchProspectContactById(id: string): Promise<ProspectContact | null> {

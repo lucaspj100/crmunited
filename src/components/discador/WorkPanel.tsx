@@ -546,9 +546,10 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
 
   const addToWhatsapp = async () => {
     if (!contact || !user) return;
+    const movedId = contact.id;
     try {
       const res = await addToWhatsappList({
-        prospectContactId: contact.id,
+        prospectContactId: movedId,
         ownerId: user.id,
         reason: "manual",
       });
@@ -558,10 +559,16 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
         toast.message("Este lead já está na Lista de WhatsApp.");
       }
       qc.invalidateQueries({ queryKey: ["whatsapp_list"] });
+      qc.invalidateQueries({ queryKey: ["prospect_counts"] });
+      // Contato passa a ser trabalhado por WhatsApp: sai da fila do Discador
+      // e o próximo elegível assume automaticamente.
+      exitFocus();
+      await loadQueue({ silent: true, avoidContactId: movedId });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao adicionar à lista");
     }
   };
+
 
 
 
