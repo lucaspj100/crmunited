@@ -48,9 +48,23 @@ export function applyDialerEligibility<T extends { not: (...a: any[]) => T }>(qu
 
 const PAGE_SIZE = 1000;
 
+/** Status da Lista do WhatsApp que efetivamente bloqueiam o Discador.
+ *  `aguardando` permanece disponível nos dois canais; `removido` libera.
+ */
+const WHATSAPP_BLOCKING_STATUSES = [
+  "mensagem_gerada",
+  "mensagem_copiada",
+  "whatsapp_aberto",
+  "mensagem_enviada",
+  "respondeu",
+  "sem_resposta",
+  "numero_invalido",
+] as const;
+
 /**
  * IDs de contatos que estão ATIVOS na Lista de WhatsApp do vendedor.
- * Regra: qualquer entrada com status != "removido" bloqueia o Discador.
+ * Regra: apenas entradas cujo WhatsApp já começou a ser trabalhado bloqueiam o Discador.
+ * Status `aguardando` e `removido` não bloqueiam.
  * Isolamento por vendedor via owner_id.
  */
 export async function fetchActiveWhatsappContactIds(userId: string): Promise<Set<string>> {
@@ -61,7 +75,7 @@ export async function fetchActiveWhatsappContactIds(userId: string): Promise<Set
       .from("whatsapp_list_entries")
       .select("prospect_contact_id, status")
       .eq("owner_id", userId)
-      .neq("status", "removido")
+      .in("status", WHATSAPP_BLOCKING_STATUSES as unknown as string[])
       .range(from, from + PAGE_SIZE - 1);
     if (error) throw error;
     const rows = data ?? [];
