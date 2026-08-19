@@ -630,7 +630,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     // mas apenas quando o vendedor pediu para avançar.
     if (goNext) {
       exitFocus();
-      await loadQueue({ silent: true, avoidContactId: savedContactId });
+      await advanceFromCurrent(savedContactId);
       return;
     }
 
