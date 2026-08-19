@@ -43,6 +43,8 @@ import {
   applyDialerEligibility,
   fetchDialerQueue,
   fetchProspectContactById,
+  fetchActiveWhatsappContactIds,
+
 } from "@/lib/prospect-eligibility";
 
 
