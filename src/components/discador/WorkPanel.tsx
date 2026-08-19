@@ -603,7 +603,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
       // Contato passa a ser trabalhado por WhatsApp: sai da fila do Discador
       // e o próximo elegível assume automaticamente.
       exitFocus();
-      await loadQueue({ silent: true, avoidContactId: movedId });
+      await advanceFromCurrent(movedId);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao adicionar à lista");
     }
