@@ -985,15 +985,9 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
           vendedorId={user.id}
           onConverted={() => {
             qc.invalidateQueries({ queryKey: ["prospect_counts"] });
-            // remove o convertido da fila local e avança
             if (!contact) return;
-            const removedId = contact.id;
-            setQueue((q) => {
-              const next = q.filter((c) => c.id !== removedId);
-              const nextActive = buildActiveQueue(next).list;
-              setCurrentContactSynced(nextActive.length > 0 ? nextActive[0]!.id : null);
-              return next;
-            });
+            // Preserva a posição do sprint: abre o contato seguinte ao convertido.
+            void advanceFromCurrent(contact.id);
           }}
         />
       )}
