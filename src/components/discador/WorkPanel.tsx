@@ -311,6 +311,46 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     setCurrentContactSynced(next.id);
   };
 
+  /**
+   * Avança preservando o cursor do sprint: antes de recarregar a fila guardamos a
+   * sequência de contatos POSTERIORES ao atual. Depois do reload selecionamos o
+   * primeiro deles que ainda estiver elegível — nunca o topo da fila.
+   */
+  const advanceFromCurrent = async (currentId: string) => {
+    if (!user) return;
+    const prevActive = activeQueue;
+    const idx = prevActive.findIndex((c) => c.id === currentId);
+    const tailIds = idx >= 0 ? prevActive.slice(idx + 1).map((c) => c.id) : [];
+    const anchorIndex = idx >= 0 ? idx : 0;
+
+    let rows: ProspectContact[] = [];
+    try {
+      rows = await fetchDialerQueue(user.id);
+    } catch (err) {
+      toast.error(`Erro ao carregar fila: ${err instanceof Error ? err.message : String(err)}`);
+      return;
+    }
+    const sorted = sortQueue(rows);
+    setQueue(sorted);
+    const nextActive = buildActiveQueue(sorted).list;
+    if (nextActive.length === 0) {
+      setCurrentContactSynced(null);
+      return;
+    }
+    const available = new Set(nextActive.map((c) => c.id));
+    let targetId = tailIds.find((id) => id !== currentId && available.has(id));
+    if (!targetId) {
+      // Nenhum contato posterior sobrou: mantém a mesma região da fila pelo índice.
+      const clamped = Math.min(Math.max(anchorIndex, 0), nextActive.length - 1);
+      const candidate = nextActive[clamped]!;
+      targetId =
+        candidate.id !== currentId
+          ? candidate.id
+          : (nextActive.find((c) => c.id !== currentId)?.id ?? candidate.id);
+    }
+    setCurrentContactSynced(targetId);
+  };
+
 
 
   // Bootstrap: primeiro a sessão sincronizada, depois a fila (o contato da sessão
@@ -563,7 +603,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
       // Contato passa a ser trabalhado por WhatsApp: sai da fila do Discador
       // e o próximo elegível assume automaticamente.
       exitFocus();
-      await loadQueue({ silent: true, avoidContactId: movedId });
+      await advanceFromCurrent(movedId);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao adicionar à lista");
     }
@@ -590,7 +630,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     // mas apenas quando o vendedor pediu para avançar.
     if (goNext) {
       exitFocus();
-      await loadQueue({ silent: true, avoidContactId: savedContactId });
+      await advanceFromCurrent(savedContactId);
       return;
     }
 
@@ -945,15 +985,9 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
           vendedorId={user.id}
           onConverted={() => {
             qc.invalidateQueries({ queryKey: ["prospect_counts"] });
-            // remove o convertido da fila local e avança
             if (!contact) return;
-            const removedId = contact.id;
-            setQueue((q) => {
-              const next = q.filter((c) => c.id !== removedId);
-              const nextActive = buildActiveQueue(next).list;
-              setCurrentContactSynced(nextActive.length > 0 ? nextActive[0]!.id : null);
-              return next;
-            });
+            // Preserva a posição do sprint: abre o contato seguinte ao convertido.
+            void advanceFromCurrent(contact.id);
           }}
         />
       )}
