@@ -519,14 +519,23 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     enabled: !!user,
     queryFn: async () => {
       const base = supabase.from("prospect_contacts").select("id", { count: "exact", head: true }).eq("vendedor_responsavel_id", user!.id);
-      const [total, done, pending, interested] = await Promise.all([
+      const [total, done, interested, realQueue, wppIds] = await Promise.all([
         base,
         supabase.from("prospect_contacts").select("id", { count: "exact", head: true }).eq("vendedor_responsavel_id", user!.id).eq("convertido_em_lead", true),
-        applyDialerEligibility(supabase.from("prospect_contacts").select("id", { count: "exact", head: true }).eq("vendedor_responsavel_id", user!.id).in("status_prospeccao", QUEUE_STATUSES as unknown as string[])),
         supabase.from("prospect_contacts").select("id", { count: "exact", head: true }).eq("vendedor_responsavel_id", user!.id).eq("status_prospeccao", "Interessado"),
+        // Fonte única de verdade: mesma função que monta a fila do Discador.
+        fetchDialerQueue(user!.id),
+        fetchActiveWhatsappContactIds(user!.id).catch(() => new Set<string>()),
       ]);
-      return { total: total.count ?? 0, done: done.count ?? 0, pending: pending.count ?? 0, interested: interested.count ?? 0 };
+      return {
+        total: total.count ?? 0,
+        done: done.count ?? 0,
+        pending: realQueue.length,
+        interested: interested.count ?? 0,
+        inWhatsapp: wppIds.size,
+      };
     },
+
   });
 
   const { data: dialerSettings } = useQuery({
