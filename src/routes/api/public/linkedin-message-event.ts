@@ -98,6 +98,40 @@ export const Route = createFileRoute("/api/public/linkedin-message-event")({
           return json({ success: false, error: "user_not_seller" }, 422);
         }
 
+        // Segunda camada de idempotência: o tracker pode reenviar a MESMA mensagem
+        // com um external_event_id novo. Nesse caso, um evento do mesmo vendedor,
+        // mesma instalação, mesmo source (e mesmo tracker_user_id quando informado)
+        // dentro de uma janela de 2s é considerado duplicado.
+        // Sem installation_id somos conservadores e não deduplicamos por horário.
+        const DEDUPE_WINDOW_MS = 2000;
+        if (parsed.data.installation_id) {
+          const from = new Date(sentAt.getTime() - DEDUPE_WINDOW_MS).toISOString();
+          const to = new Date(sentAt.getTime() + DEDUPE_WINDOW_MS).toISOString();
+
+          let dupQuery = supabaseAdmin
+            .from("linkedin_message_events")
+            .select("id")
+            .eq("vendedor_id", parsed.data.crm_user_id)
+            .eq("source", source)
+            .eq("installation_id", parsed.data.installation_id)
+            .gte("sent_at", from)
+            .lte("sent_at", to)
+            .limit(1);
+
+          if (parsed.data.tracker_user_id) {
+            dupQuery = dupQuery.eq("tracker_user_id", parsed.data.tracker_user_id);
+          }
+
+          const { data: dup, error: dupError } = await dupQuery.maybeSingle();
+          if (dupError) {
+            console.error("[linkedin-tracker] erro ao checar duplicidade", dupError);
+            return json({ success: false, error: "query_error" }, 500);
+          }
+          if (dup) {
+            return json({ success: true, duplicate: true }, 200);
+          }
+        }
+
         const { error: insertError } = await supabaseAdmin.from("linkedin_message_events").insert({
           vendedor_id: parsed.data.crm_user_id,
           source,
