@@ -268,6 +268,14 @@ function RelatoriosPage() {
           </div>
         </Card>
       </div>
+
+      <LeadsFoundTable
+        leads={filteredLeads}
+        doneEvent={data.doneEvent}
+        basis={basis}
+        ownerName={(id) => profileMap.get(id) ?? "—"}
+      />
     </div>
   );
+
 }
