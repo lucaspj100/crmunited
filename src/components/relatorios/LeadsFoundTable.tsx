@@ -27,12 +27,18 @@ export function LeadsFoundTable({
   doneEvent,
   basis,
   ownerName,
+  stageFilter = null,
+  passageDate,
 }: {
   leads: ReportLead[];
   doneEvent: Map<string, string>;
   basis: DateBasis;
   ownerName: (id: string) => string;
+  stageFilter?: string | null;
+  passageDate?: (leadId: string) => string | null;
 }) {
+  const stageLabel = stageFilter ? labelFor(LEAD_STATUSES, stageFilter) : null;
+  const passedAt = (l: ReportLead) => (stageFilter ? passageDate?.(l.id) ?? null : null);
   const navigate = useNavigate();
   const [q, setQ] = useState("");
   const [sort, setSort] = useState("ref_desc");
@@ -46,7 +52,7 @@ export function LeadsFoundTable({
           [l.name, l.phone, l.company, l.company_name].some((v) => v?.toLowerCase().includes(s)),
         )
       : leads;
-    const key = (l: ReportLead) => referenceDate(l, basis, doneEvent) ?? "";
+    const key = (l: ReportLead) => (stageFilter ? passageDate?.(l.id) ?? "" : referenceDate(l, basis, doneEvent) ?? "");
     const sorted = [...filtered].sort((a, b) => {
       switch (sort) {
         case "ref_asc": return key(a).localeCompare(key(b));
@@ -65,8 +71,8 @@ export function LeadsFoundTable({
 
   const headers = [
     "Nome", "Telefone", "Empresa", "Profissão/Cargo", "Origem", "Vendedor",
-    "Status", "Entrevista realizada", "Data de referência", "Última movimentação",
-    "Motivo de perda", "Observações",
+    "Etapa pesquisada", "Data da etapa", "Status atual", "Entrevista realizada",
+    "Data de referência", "Última movimentação", "Motivo de perda", "Observações",
   ];
 
   const exportRows = () =>
@@ -77,6 +83,8 @@ export function LeadsFoundTable({
       l.profession ?? "",
       l.source ?? "",
       ownerName(l.owner_id),
+      stageLabel ?? "",
+      stageLabel ? fmt(passedAt(l)) : "",
       labelFor(LEAD_STATUSES, l.status),
       fmt(interviewDoneDate(l, doneEvent)),
       fmt(referenceDate(l, basis, doneEvent)),
@@ -103,7 +111,7 @@ export function LeadsFoundTable({
           <h3 className="font-semibold flex items-center gap-2">
             <Users className="h-4 w-4 text-primary" />Leads encontrados
           </h3>
-          <p className="text-sm text-muted-foreground">{rows.length} leads encontrados</p>
+          <p className="text-sm text-muted-foreground">{rows.length} leads encontrados{stageLabel ? ` — passaram por “${stageLabel}” no período` : ""}</p>
         </div>
         <div className="flex flex-wrap items-end gap-2">
           <div className="relative">
@@ -147,7 +155,9 @@ export function LeadsFoundTable({
               <th className="py-2 pr-3">Empresa / Cargo</th>
               <th className="py-2 pr-3">Origem</th>
               <th className="py-2 pr-3">Vendedor</th>
-              <th className="py-2 pr-3">Status</th>
+              {stageLabel && <th className="py-2 pr-3">Etapa pesquisada</th>}
+              {stageLabel && <th className="py-2 pr-3">Data da etapa</th>}
+              <th className="py-2 pr-3">Status atual</th>
               <th className="py-2 pr-3">Entrev. realizada</th>
               <th className="py-2 pr-3">Referência</th>
               <th className="py-2 pr-3">Últ. mov.</th>
@@ -157,7 +167,7 @@ export function LeadsFoundTable({
           </thead>
           <tbody>
             {pageRows.length === 0 ? (
-              <tr><td colSpan={10} className="py-6 text-center text-muted-foreground">Nenhum lead para os filtros selecionados.</td></tr>
+              <tr><td colSpan={stageLabel ? 12 : 10} className="py-6 text-center text-muted-foreground">Nenhum lead para os filtros selecionados.</td></tr>
             ) : pageRows.map((l) => (
               <tr key={l.id} className="border-t border-border/60 align-top">
                 <td className="py-2 pr-3">
@@ -170,6 +180,12 @@ export function LeadsFoundTable({
                 </td>
                 <td className="py-2 pr-3">{l.source || "—"}</td>
                 <td className="py-2 pr-3">{ownerName(l.owner_id)}</td>
+                {stageLabel && (
+                  <td className="py-2 pr-3">
+                    <Badge variant="outline" className={statusColor(stageFilter!)}>{stageLabel}</Badge>
+                  </td>
+                )}
+                {stageLabel && <td className="py-2 pr-3 whitespace-nowrap">{fmt(passedAt(l))}</td>}
                 <td className="py-2 pr-3">
                   <Badge variant="outline" className={statusColor(l.status)}>{labelFor(LEAD_STATUSES, l.status)}</Badge>
                 </td>
