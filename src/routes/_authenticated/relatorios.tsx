@@ -272,7 +272,7 @@ function RelatoriosPage() {
           </div>
         </div>
         <p className="mt-2 text-xs text-muted-foreground">
-          Com “Data real da etapa”, o período usa a data da entrevista realizada, da matrícula, da perda ou da entrevista marcada — conforme o status do lead.
+          Ao selecionar uma etapa em “Status/Etapa”, o período considera o histórico real de passagem pela etapa (lead_events + datas reais do lead) — o lead aparece mesmo que hoje esteja em outro status. Sem etapa selecionada, vale a “Base da data”.
         </p>
       </Card>
 
