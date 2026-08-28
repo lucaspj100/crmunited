@@ -10,24 +10,48 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { LEAD_STATUSES, LOST_REASONS, labelFor, statusColor } from "@/lib/constants";
 import { BarChart3 } from "lucide-react";
 import { useTeams, primaryTeamId, ALL_TEAMS } from "@/lib/teams";
+import { LeadsFoundTable } from "@/components/relatorios/LeadsFoundTable";
+import {
+  QUICK_FILTERS,
+  applyQuickFilter,
+  referenceDate,
+  type DateBasis,
+  type QuickFilter,
+  type ReportLead,
+} from "@/lib/report-leads";
 
 export const Route = createFileRoute("/_authenticated/relatorios")({ component: RelatoriosPage });
 
-type Lead = { id: string; status: string; company: string | null; source: string | null; owner_id: string; lost_reason: string | null; created_at: string };
+type Lead = ReportLead;
 type Task = { id: string; owner_id: string; status: string; due_date: string; is_rescue: boolean };
 
+const LEAD_COLS =
+  "id,name,phone,company,company_name,profession,source,status,owner_id,lost_reason,lost_type,lost_at,observation,interview_notes,interview_date,interview_done_date,enrollment_date,next_followup_at,last_contact_at,created_at,updated_at";
+
 async function fetchData() {
-  const [leadsR, tasksR, profilesR] = await Promise.all([
-    supabase.from("leads").select("id,status,company,source,owner_id,lost_reason,created_at").limit(10000),
+  const [leadsR, tasksR, profilesR, eventsR] = await Promise.all([
+    supabase.from("leads").select(LEAD_COLS).limit(10000),
     supabase.from("tasks").select("id,owner_id,status,due_date,is_rescue").limit(10000),
     supabase.from("profiles").select("id,full_name,email,team_id").limit(2000),
+    supabase
+      .from("lead_events")
+      .select("lead_id,created_at")
+      .eq("event_type", "interview_done")
+      .order("created_at", { ascending: true })
+      .limit(10000),
   ]);
+  const doneEvent = new Map<string, string>();
+  for (const e of (eventsR.data ?? []) as { lead_id: string; created_at: string }[]) {
+    if (!doneEvent.has(e.lead_id)) doneEvent.set(e.lead_id, e.created_at);
+  }
   return {
-    leads: (leadsR.data ?? []) as Lead[],
+    leads: (leadsR.data ?? []) as unknown as Lead[],
     tasks: (tasksR.data ?? []) as Task[],
     profiles: (profilesR.data ?? []) as any[],
+    doneEvent,
   };
 }
+
 
 function group<T>(arr: T[], key: (t: T) => string) {
   const m = new Map<string, number>();
@@ -49,6 +73,8 @@ function RelatoriosPage() {
   const [reason, setReason] = useState("all");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
+  const [basis, setBasis] = useState<DateBasis>("stage");
+  const [quick, setQuick] = useState<QuickFilter>("none");
 
   const profileMap = useMemo(() => new Map((data?.profiles ?? []).map((p) => [p.id, p.full_name || p.email || "—"])), [data]);
 
@@ -59,17 +85,21 @@ function RelatoriosPage() {
 
   const filteredLeads = useMemo(() => {
     if (!data) return [];
-    return data.leads.filter((l) => {
+    const today = new Date().toISOString().slice(0, 10);
+    const base = data.leads.filter((l) => {
       if (teamOwnerIds && !teamOwnerIds.has(l.owner_id)) return false;
       if (vendor !== "all" && l.owner_id !== vendor) return false;
       if (status !== "all" && l.status !== status) return false;
       if (source !== "all" && (l.source || "—") !== source) return false;
       if (reason !== "all" && l.lost_reason !== reason) return false;
-      if (from && l.created_at.slice(0, 10) < from) return false;
-      if (to && l.created_at.slice(0, 10) > to) return false;
+      const ref = referenceDate(l, basis, data.doneEvent) ?? l.created_at.slice(0, 10);
+      if (from && ref < from) return false;
+      if (to && ref > to) return false;
       return true;
     });
-  }, [data, teamOwnerIds, vendor, status, source, reason, from, to]);
+    return applyQuickFilter(base, quick, data.doneEvent, today);
+  }, [data, teamOwnerIds, vendor, status, source, reason, from, to, basis, quick]);
+
 
   const filteredTasks = useMemo(() => {
     if (!data) return [];
@@ -193,8 +223,31 @@ function RelatoriosPage() {
             <Label className="text-xs">Até</Label>
             <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
           </div>
+          <div>
+            <Label className="text-xs">Base da data</Label>
+            <Select value={basis} onValueChange={(v) => setBasis(v as DateBasis)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="stage">Data real da etapa</SelectItem>
+                <SelectItem value="created">Data de criação</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label className="text-xs">Filtro rápido</Label>
+            <Select value={quick} onValueChange={(v) => setQuick(v as QuickFilter)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {QUICK_FILTERS.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Com “Data real da etapa”, o período usa a data da entrevista realizada, da matrícula, da perda ou da entrevista marcada — conforme o status do lead.
+        </p>
       </Card>
+
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Block title="Leads por vendedor" rows={byVendedor} />
@@ -215,6 +268,14 @@ function RelatoriosPage() {
           </div>
         </Card>
       </div>
+
+      <LeadsFoundTable
+        leads={filteredLeads}
+        doneEvent={data.doneEvent}
+        basis={basis}
+        ownerName={(id) => profileMap.get(id) ?? "—"}
+      />
     </div>
   );
+
 }

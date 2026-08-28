@@ -11,7 +11,12 @@ import { LEAD_STATUSES, labelFor, statusColor, waLink, LOST_REASONS } from "@/li
 import { NewLeadDialog } from "@/components/NewLeadDialog";
 import { MessageCircle, Linkedin, Users, Search } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/leads")({ component: LeadsPage });
+export const Route = createFileRoute("/_authenticated/leads")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    q: typeof search.q === "string" ? search.q : "",
+  }),
+  component: LeadsPage,
+});
 
 type Lead = {
   id: string; name: string; phone: string | null; company: string | null; linkedin_url: string | null;
@@ -21,8 +26,10 @@ type Lead = {
 
 function LeadsPage() {
   const qc = useQueryClient();
-  const [q, setQ] = useState("");
+  const { q: initialQ } = Route.useSearch();
+  const [q, setQ] = useState(initialQ);
   const [statusFilter, setStatusFilter] = useState<string>("all");
+
 
   const { data: leads = [], isLoading } = useQuery({
     queryKey: ["leads"],
