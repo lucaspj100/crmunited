@@ -73,6 +73,8 @@ function RelatoriosPage() {
   const [reason, setReason] = useState("all");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
+  const [basis, setBasis] = useState<DateBasis>("stage");
+  const [quick, setQuick] = useState<QuickFilter>("none");
 
   const profileMap = useMemo(() => new Map((data?.profiles ?? []).map((p) => [p.id, p.full_name || p.email || "—"])), [data]);
 
@@ -83,17 +85,21 @@ function RelatoriosPage() {
 
   const filteredLeads = useMemo(() => {
     if (!data) return [];
-    return data.leads.filter((l) => {
+    const today = new Date().toISOString().slice(0, 10);
+    const base = data.leads.filter((l) => {
       if (teamOwnerIds && !teamOwnerIds.has(l.owner_id)) return false;
       if (vendor !== "all" && l.owner_id !== vendor) return false;
       if (status !== "all" && l.status !== status) return false;
       if (source !== "all" && (l.source || "—") !== source) return false;
       if (reason !== "all" && l.lost_reason !== reason) return false;
-      if (from && l.created_at.slice(0, 10) < from) return false;
-      if (to && l.created_at.slice(0, 10) > to) return false;
+      const ref = referenceDate(l, basis, data.doneEvent) ?? l.created_at.slice(0, 10);
+      if (from && ref < from) return false;
+      if (to && ref > to) return false;
       return true;
     });
-  }, [data, teamOwnerIds, vendor, status, source, reason, from, to]);
+    return applyQuickFilter(base, quick, data.doneEvent, today);
+  }, [data, teamOwnerIds, vendor, status, source, reason, from, to, basis, quick]);
+
 
   const filteredTasks = useMemo(() => {
     if (!data) return [];
