@@ -94,22 +94,39 @@ function RelatoriosPage() {
     return new Set((data?.profiles ?? []).filter((p) => p.team_id === effectiveTeam).map((p) => p.id));
   }, [data, effectiveTeam]);
 
+  // Etapa pesquisada: quando um status é selecionado, o filtro usa o histórico
+  // real de passagem pela etapa (não o status atual do lead).
+  const stageFilter = status !== "all" && (STAGE_FILTERS as readonly string[]).includes(status) ? status : null;
+
+  const passageDateFor = (leadId: string) =>
+    stageFilter && data ? stagePassageDate(data.passages, leadId, stageFilter) : null;
+
   const filteredLeads = useMemo(() => {
     if (!data) return [];
     const today = new Date().toISOString().slice(0, 10);
     const base = data.leads.filter((l) => {
       if (teamOwnerIds && !teamOwnerIds.has(l.owner_id)) return false;
       if (vendor !== "all" && l.owner_id !== vendor) return false;
-      if (status !== "all" && l.status !== status) return false;
       if (source !== "all" && (l.source || "—") !== source) return false;
       if (reason !== "all" && l.lost_reason !== reason) return false;
+
+      if (stageFilter) {
+        const passed = stagePassageDate(data.passages, l.id, stageFilter);
+        if (!passed) return false;
+        if (from && passed < from) return false;
+        if (to && passed > to) return false;
+        return true;
+      }
+      if (status !== "all" && l.status !== status) return false;
+
       const ref = referenceDate(l, basis, data.doneEvent) ?? l.created_at.slice(0, 10);
       if (from && ref < from) return false;
       if (to && ref > to) return false;
       return true;
     });
     return applyQuickFilter(base, quick, data.doneEvent, today);
-  }, [data, teamOwnerIds, vendor, status, source, reason, from, to, basis, quick]);
+  }, [data, teamOwnerIds, vendor, status, stageFilter, source, reason, from, to, basis, quick]);
+
 
 
   const filteredTasks = useMemo(() => {
