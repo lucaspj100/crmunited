@@ -10,24 +10,48 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { LEAD_STATUSES, LOST_REASONS, labelFor, statusColor } from "@/lib/constants";
 import { BarChart3 } from "lucide-react";
 import { useTeams, primaryTeamId, ALL_TEAMS } from "@/lib/teams";
+import { LeadsFoundTable } from "@/components/relatorios/LeadsFoundTable";
+import {
+  QUICK_FILTERS,
+  applyQuickFilter,
+  referenceDate,
+  type DateBasis,
+  type QuickFilter,
+  type ReportLead,
+} from "@/lib/report-leads";
 
 export const Route = createFileRoute("/_authenticated/relatorios")({ component: RelatoriosPage });
 
-type Lead = { id: string; status: string; company: string | null; source: string | null; owner_id: string; lost_reason: string | null; created_at: string };
+type Lead = ReportLead;
 type Task = { id: string; owner_id: string; status: string; due_date: string; is_rescue: boolean };
 
+const LEAD_COLS =
+  "id,name,phone,company,company_name,profession,source,status,owner_id,lost_reason,lost_type,lost_at,observation,interview_notes,interview_date,interview_done_date,enrollment_date,next_followup_at,last_contact_at,created_at,updated_at";
+
 async function fetchData() {
-  const [leadsR, tasksR, profilesR] = await Promise.all([
-    supabase.from("leads").select("id,status,company,source,owner_id,lost_reason,created_at").limit(10000),
+  const [leadsR, tasksR, profilesR, eventsR] = await Promise.all([
+    supabase.from("leads").select(LEAD_COLS).limit(10000),
     supabase.from("tasks").select("id,owner_id,status,due_date,is_rescue").limit(10000),
     supabase.from("profiles").select("id,full_name,email,team_id").limit(2000),
+    supabase
+      .from("lead_events")
+      .select("lead_id,created_at")
+      .eq("event_type", "interview_done")
+      .order("created_at", { ascending: true })
+      .limit(10000),
   ]);
+  const doneEvent = new Map<string, string>();
+  for (const e of (eventsR.data ?? []) as { lead_id: string; created_at: string }[]) {
+    if (!doneEvent.has(e.lead_id)) doneEvent.set(e.lead_id, e.created_at);
+  }
   return {
-    leads: (leadsR.data ?? []) as Lead[],
+    leads: (leadsR.data ?? []) as unknown as Lead[],
     tasks: (tasksR.data ?? []) as Task[],
     profiles: (profilesR.data ?? []) as any[],
+    doneEvent,
   };
 }
+
 
 function group<T>(arr: T[], key: (t: T) => string) {
   const m = new Map<string, number>();
