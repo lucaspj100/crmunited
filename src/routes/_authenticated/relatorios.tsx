@@ -13,12 +13,17 @@ import { useTeams, primaryTeamId, ALL_TEAMS } from "@/lib/teams";
 import { LeadsFoundTable } from "@/components/relatorios/LeadsFoundTable";
 import {
   QUICK_FILTERS,
+  STAGE_FILTERS,
   applyQuickFilter,
+  buildStagePassages,
   referenceDate,
+  stagePassageDate,
   type DateBasis,
+  type LeadEventRow,
   type QuickFilter,
   type ReportLead,
 } from "@/lib/report-leads";
+
 
 export const Route = createFileRoute("/_authenticated/relatorios")({ component: RelatoriosPage });
 
