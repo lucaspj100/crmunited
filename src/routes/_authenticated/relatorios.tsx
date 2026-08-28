@@ -26,7 +26,9 @@ type Lead = ReportLead;
 type Task = { id: string; owner_id: string; status: string; due_date: string; is_rescue: boolean };
 
 const LEAD_COLS =
-  "id,name,phone,company,company_name,profession,source,status,owner_id,lost_reason,lost_type,lost_at,observation,interview_notes,interview_date,interview_done_date,enrollment_date,next_followup_at,last_contact_at,created_at,updated_at";
+  "id,name,phone,company,company_name,profession,source,status,owner_id,lost_reason,lost_type,lost_at,observation,interview_notes,interview_date,interview_original_date,interview_done_date,enrollment_date,next_followup_at,last_contact_at,created_at,updated_at";
+
+const HISTORY_EVENTS = ["status_change", "interview_scheduled", "interview_done", "enrolled", "lost"];
 
 async function fetchData() {
   const [leadsR, tasksR, profilesR, eventsR] = await Promise.all([
@@ -35,22 +37,26 @@ async function fetchData() {
     supabase.from("profiles").select("id,full_name,email,team_id").limit(2000),
     supabase
       .from("lead_events")
-      .select("lead_id,created_at")
-      .eq("event_type", "interview_done")
+      .select("lead_id,event_type,metadata,created_at")
+      .in("event_type", HISTORY_EVENTS)
       .order("created_at", { ascending: true })
-      .limit(10000),
+      .limit(50000),
   ]);
+  const events = (eventsR.data ?? []) as unknown as LeadEventRow[];
   const doneEvent = new Map<string, string>();
-  for (const e of (eventsR.data ?? []) as { lead_id: string; created_at: string }[]) {
-    if (!doneEvent.has(e.lead_id)) doneEvent.set(e.lead_id, e.created_at);
+  for (const e of events) {
+    if (e.event_type === "interview_done" && !doneEvent.has(e.lead_id)) doneEvent.set(e.lead_id, e.created_at);
   }
+  const leads = (leadsR.data ?? []) as unknown as Lead[];
   return {
-    leads: (leadsR.data ?? []) as unknown as Lead[],
+    leads,
     tasks: (tasksR.data ?? []) as Task[],
     profiles: (profilesR.data ?? []) as any[],
     doneEvent,
+    passages: buildStagePassages(leads, events),
   };
 }
+
 
 
 function group<T>(arr: T[], key: (t: T) => string) {
