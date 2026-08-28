@@ -214,7 +214,7 @@ function RelatoriosPage() {
             </Select>
           </div>
           <div>
-            <Label className="text-xs">Status</Label>
+            <Label className="text-xs">Status/Etapa</Label>
             <Select value={status} onValueChange={setStatus}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
