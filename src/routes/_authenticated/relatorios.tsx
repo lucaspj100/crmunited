@@ -302,7 +302,10 @@ function RelatoriosPage() {
         doneEvent={data.doneEvent}
         basis={basis}
         ownerName={(id) => profileMap.get(id) ?? "—"}
+        stageFilter={stageFilter}
+        passageDate={passageDateFor}
       />
+
     </div>
   );
 
