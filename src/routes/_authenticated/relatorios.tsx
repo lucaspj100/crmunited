@@ -223,8 +223,31 @@ function RelatoriosPage() {
             <Label className="text-xs">Até</Label>
             <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
           </div>
+          <div>
+            <Label className="text-xs">Base da data</Label>
+            <Select value={basis} onValueChange={(v) => setBasis(v as DateBasis)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="stage">Data real da etapa</SelectItem>
+                <SelectItem value="created">Data de criação</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label className="text-xs">Filtro rápido</Label>
+            <Select value={quick} onValueChange={(v) => setQuick(v as QuickFilter)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {QUICK_FILTERS.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Com “Data real da etapa”, o período usa a data da entrevista realizada, da matrícula, da perda ou da entrevista marcada — conforme o status do lead.
+        </p>
       </Card>
+
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Block title="Leads por vendedor" rows={byVendedor} />
