@@ -3082,6 +3082,15 @@ export type Database = {
         Returns: boolean
       }
       career_admin_list: { Args: never; Returns: Json }
+      career_badges: {
+        Args: never
+        Returns: {
+          career_role: Database["public"]["Enums"]["career_role"]
+          career_stars: number
+          full_name: string
+          user_id: string
+        }[]
+      }
       career_overview: { Args: { _user_id?: string }; Returns: Json }
       career_points_between: {
         Args: { _end: string; _start: string; _user_id: string }
