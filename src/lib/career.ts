@@ -328,8 +328,9 @@ export function nextRole(role: CareerRole): CareerRole | null {
 
 /** Cargos cujo plano de carreira ainda está em construção. */
 export function isUnderConstruction(role: CareerRole): boolean {
-  return role === "gerente" || role === "diretor" || role === "franqueado";
+  return role === "gerente_divisional" || role === "diretor" || role === "franqueado";
 }
+
 
 export function fmtDateBR(d: string | null | undefined): string {
   if (!d) return "—";
