@@ -30,7 +30,7 @@ const BASE_NAV = [
   { to: "/agenda", label: "Agenda", icon: Calendar },
   { to: "/perdidos", label: "Perdidos", icon: TrendingDown },
   { to: "/resgates", label: "Resgates", icon: RotateCw },
-  { to: "/importar", label: "Importar", icon: Upload },
+  { to: "/plano-de-carreira", label: "Plano de carreira", icon: Award },
   { to: "/relatorios", label: "Relatórios", icon: BarChart3 },
   { to: "/checkout-do-dia", label: "Checkout do dia", icon: ClipboardCheck },
   { to: "/materiais", label: "Materiais e premiação", icon: Package },
