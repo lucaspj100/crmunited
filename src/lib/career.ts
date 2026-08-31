@@ -212,13 +212,61 @@ export function useCareerAdminList(enabled: boolean) {
   return useQuery({ queryKey: ["career-admin-list"], queryFn: fetchCareerAdminList, enabled });
 }
 
+export async function fetchCareerTree(root?: string): Promise<CareerTreeNode[]> {
+  const { data, error } = await supabase.rpc(
+    "career_tree" as never,
+    (root ? { _root: root } : {}) as never,
+  );
+  if (error) throw error;
+  return (data ?? []) as unknown as CareerTreeNode[];
+}
+
+export function useCareerTree(root?: string, enabled = true) {
+  return useQuery({
+    queryKey: ["career-tree", root ?? "all"],
+    queryFn: () => fetchCareerTree(root),
+    enabled,
+  });
+}
+
 function useCareerInvalidate() {
   const qc = useQueryClient();
   return () => {
     void qc.invalidateQueries({ queryKey: ["career-overview"] });
     void qc.invalidateQueries({ queryKey: ["career-admin-list"] });
+    void qc.invalidateQueries({ queryKey: ["career-tree"] });
+    void qc.invalidateQueries({ queryKey: ["career-badges"] });
   };
 }
+
+export function useSetCareerLeader() {
+  const invalidate = useCareerInvalidate();
+  return useMutation({
+    mutationFn: async (v: { userId: string; leaderId: string | null }) => {
+      const { error } = await supabase.rpc("career_set_leader" as never, {
+        _user_id: v.userId,
+        _leader_id: v.leaderId,
+      } as never);
+      if (error) throw error;
+    },
+    onSuccess: invalidate,
+  });
+}
+
+export function useSetCareerQuotas() {
+  const invalidate = useCareerInvalidate();
+  return useMutation({
+    mutationFn: async (v: { userId: string; total: number }) => {
+      const { error } = await supabase.rpc("career_set_quotas" as never, {
+        _user_id: v.userId,
+        _total: v.total,
+      } as never);
+      if (error) throw error;
+    },
+    onSuccess: invalidate,
+  });
+}
+
 
 export function useSetCareerRole() {
   const invalidate = useCareerInvalidate();
