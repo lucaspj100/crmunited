@@ -690,6 +690,53 @@ export type Database = {
         }
         Relationships: []
       }
+      career_monthly_quotas: {
+        Row: {
+          consolidated_at: string | null
+          created_at: string
+          id: string
+          month: number
+          quota_earned: boolean
+          role_snapshot: Database["public"]["Enums"]["career_role"] | null
+          structure_points: number
+          updated_at: string
+          user_id: string
+          year: number
+        }
+        Insert: {
+          consolidated_at?: string | null
+          created_at?: string
+          id?: string
+          month: number
+          quota_earned?: boolean
+          role_snapshot?: Database["public"]["Enums"]["career_role"] | null
+          structure_points?: number
+          updated_at?: string
+          user_id: string
+          year: number
+        }
+        Update: {
+          consolidated_at?: string | null
+          created_at?: string
+          id?: string
+          month?: number
+          quota_earned?: boolean
+          role_snapshot?: Database["public"]["Enums"]["career_role"] | null
+          structure_points?: number
+          updated_at?: string
+          user_id?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "career_monthly_quotas_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       career_role_history: {
         Row: {
           automatic: boolean
@@ -1938,6 +1985,8 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          career_quotas: number
+          career_quotas_adjust: number
           career_role: Database["public"]["Enums"]["career_role"]
           career_role_since: string | null
           career_stars: number
@@ -1947,10 +1996,13 @@ export type Database = {
           email: string | null
           full_name: string
           id: string
+          leader_id: string | null
           team_id: string | null
         }
         Insert: {
           avatar_url?: string | null
+          career_quotas?: number
+          career_quotas_adjust?: number
           career_role?: Database["public"]["Enums"]["career_role"]
           career_role_since?: string | null
           career_stars?: number
@@ -1960,10 +2012,13 @@ export type Database = {
           email?: string | null
           full_name?: string
           id: string
+          leader_id?: string | null
           team_id?: string | null
         }
         Update: {
           avatar_url?: string | null
+          career_quotas?: number
+          career_quotas_adjust?: number
           career_role?: Database["public"]["Enums"]["career_role"]
           career_role_since?: string | null
           career_stars?: number
@@ -1973,9 +2028,17 @@ export type Database = {
           email?: string | null
           full_name?: string
           id?: string
+          leader_id?: string | null
           team_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "profiles_leader_id_fkey"
+            columns: ["leader_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profiles_team_id_fkey"
             columns: ["team_id"]
@@ -3091,10 +3154,25 @@ export type Database = {
           user_id: string
         }[]
       }
+      career_descendants: {
+        Args: { _user_id: string }
+        Returns: {
+          depth: number
+          user_id: string
+        }[]
+      }
       career_overview: { Args: { _user_id?: string }; Returns: Json }
       career_points_between: {
         Args: { _end: string; _start: string; _user_id: string }
         Returns: number
+      }
+      career_set_leader: {
+        Args: { _leader_id: string; _user_id: string }
+        Returns: undefined
+      }
+      career_set_quotas: {
+        Args: { _total: number; _user_id: string }
+        Returns: undefined
       }
       career_set_role: {
         Args: {
@@ -3108,7 +3186,13 @@ export type Database = {
         Args: { _stars: number; _user_id: string }
         Returns: undefined
       }
+      career_structure_points_between: {
+        Args: { _end: string; _start: string; _user_id: string }
+        Returns: number
+      }
+      career_sync_quotas: { Args: { _user_id: string }; Returns: undefined }
       career_sync_user: { Args: { _user_id: string }; Returns: undefined }
+      career_tree: { Args: { _root?: string }; Returns: Json }
       career_upsert_goal: {
         Args: {
           _month: number
@@ -3301,6 +3385,8 @@ export type Database = {
         | "consultor_master"
         | "supervisor"
         | "gerente"
+        | "gerente_master"
+        | "gerente_divisional"
         | "diretor"
         | "franqueado"
       lead_status:
@@ -3524,6 +3610,8 @@ export const Constants = {
         "consultor_master",
         "supervisor",
         "gerente",
+        "gerente_master",
+        "gerente_divisional",
         "diretor",
         "franqueado",
       ],

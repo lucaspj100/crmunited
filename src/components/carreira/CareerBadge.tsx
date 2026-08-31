@@ -6,8 +6,11 @@ const ROLE_STYLES: Record<string, string> = {
   consultor_master: "border-violet-400/40 bg-violet-400/15 text-violet-100",
   supervisor: "border-emerald-400/40 bg-emerald-400/15 text-emerald-100",
   gerente: "border-amber-400/40 bg-amber-400/15 text-amber-100",
+  gerente_master: "border-orange-400/40 bg-orange-400/15 text-orange-100",
+  gerente_divisional: "border-fuchsia-400/40 bg-fuchsia-400/15 text-fuchsia-100",
   diretor: "border-rose-400/40 bg-rose-400/15 text-rose-100",
   franqueado: "border-white/30 bg-white/10 text-white",
+
 };
 
 /** Selo de carreira (cargo + estrelas) reutilizando os dados do Plano de Carreira. */
