@@ -37,6 +37,8 @@ import { MyGoalBanner } from "@/components/metas/MyGoalBanner";
 import { TeamMissionCard } from "@/components/metas/TeamMissionCard";
 import { referenceMonthOf } from "@/lib/team-mission";
 import { InterestedAuditCard } from "@/components/processos/InterestedAuditCard";
+import { useCareerBadges, type CareerBadgeInfo } from "@/lib/career";
+import { CareerBadge } from "@/components/carreira/CareerBadge";
 
 
 
@@ -143,6 +145,9 @@ function PlacarDiario() {
       return true;
     });
   }, [rowsAll]);
+
+  // Cargo + estrelas do Plano de Carreira (sem duplicar dados)
+  const careerBadges = useCareerBadges();
 
   const { points: scorePoints } = useScoreSettings();
   const scoreLegend = useMemo(() => buildLegend(scorePoints), [scorePoints]);
@@ -451,6 +456,9 @@ function PlacarDiario() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className={`truncate font-bold ${idx === 0 ? "text-2xl" : "text-xl"}`}>{r.nome}</div>
+                      <div className="mt-1">
+                        <CareerBadge info={careerBadges.get(r.vendedor_id)} size={idx === 0 ? "lg" : "sm"} />
+                      </div>
                       <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-white/70 mt-1">
                         <span>📞 {r.ligacoes_feitas}</span>
                         <span>✅ {r.ligacoes_atendidas}</span>
@@ -519,6 +527,7 @@ function PlacarDiario() {
             goalsLoading={teamGoalsQ.isLoading}
             goalsError={!!teamGoalsQ.error}
             goalMonthLabel={monthLabel(nowMY.month, nowMY.year)}
+            careerBadges={careerBadges}
           />
         )}
 
@@ -802,8 +811,9 @@ function GoalHighlight({ best, loading, error }: {
 
 type RankedRow = ProductivityRow & { score: number };
 
-function FullRanking({ ranked, onSelect, goalsBySeller, monthDoneById, goalsLoading, goalsError, goalMonthLabel }: {
+function FullRanking({ ranked, onSelect, goalsBySeller, monthDoneById, goalsLoading, goalsError, goalMonthLabel, careerBadges }: {
   ranked: RankedRow[];
+  careerBadges: Map<string, CareerBadgeInfo>;
   onSelect: (r: RankedRow) => void;
   goalsBySeller: Map<string, EnrollmentGoal>;
   monthDoneById: Map<string, number>;
@@ -854,7 +864,10 @@ function FullRanking({ ranked, onSelect, goalsBySeller, monthDoneById, goalsLoad
                           ? <img src={r.avatar_url} alt="" className="h-full w-full object-cover" />
                           : <span>{initials(r.nome)}</span>}
                       </div>
-                      <span className="font-semibold truncate">{r.nome}</span>
+                      <div className="min-w-0">
+                        <div className="font-semibold truncate">{r.nome}</div>
+                        <div className="mt-0.5"><CareerBadge info={careerBadges.get(r.vendedor_id)} /></div>
+                      </div>
                     </div>
                   </td>
                   <td className="py-3 px-2 text-right tabular-nums">{r.ligacoes_feitas}</td>
