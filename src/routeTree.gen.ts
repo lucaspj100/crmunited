@@ -19,6 +19,7 @@ import { Route as AuthenticatedResgatesRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authenticated/relatorios'
 import { Route as AuthenticatedProcessosComerciaisRouteImport } from './routes/_authenticated/processos-comerciais'
 import { Route as AuthenticatedPlaybookRouteImport } from './routes/_authenticated/playbook'
+import { Route as AuthenticatedPlanoDeCarreiraRouteImport } from './routes/_authenticated/plano-de-carreira'
 import { Route as AuthenticatedPlacarHallDaFamaRouteImport } from './routes/_authenticated/placar-hall-da-fama'
 import { Route as AuthenticatedPlacarDiarioRouteImport } from './routes/_authenticated/placar-diario'
 import { Route as AuthenticatedPerdidosRouteImport } from './routes/_authenticated/perdidos'
@@ -100,6 +101,12 @@ const AuthenticatedPlaybookRoute = AuthenticatedPlaybookRouteImport.update({
   path: '/playbook',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPlanoDeCarreiraRoute =
+  AuthenticatedPlanoDeCarreiraRouteImport.update({
+    id: '/plano-de-carreira',
+    path: '/plano-de-carreira',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedPlacarHallDaFamaRoute =
   AuthenticatedPlacarHallDaFamaRouteImport.update({
     id: '/placar-hall-da-fama',
@@ -291,6 +298,7 @@ export interface FileRoutesByFullPath {
   '/perdidos': typeof AuthenticatedPerdidosRoute
   '/placar-diario': typeof AuthenticatedPlacarDiarioRoute
   '/placar-hall-da-fama': typeof AuthenticatedPlacarHallDaFamaRoute
+  '/plano-de-carreira': typeof AuthenticatedPlanoDeCarreiraRoute
   '/playbook': typeof AuthenticatedPlaybookRoute
   '/processos-comerciais': typeof AuthenticatedProcessosComerciaisRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
@@ -331,6 +339,7 @@ export interface FileRoutesByTo {
   '/perdidos': typeof AuthenticatedPerdidosRoute
   '/placar-diario': typeof AuthenticatedPlacarDiarioRoute
   '/placar-hall-da-fama': typeof AuthenticatedPlacarHallDaFamaRoute
+  '/plano-de-carreira': typeof AuthenticatedPlanoDeCarreiraRoute
   '/playbook': typeof AuthenticatedPlaybookRoute
   '/processos-comerciais': typeof AuthenticatedProcessosComerciaisRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
@@ -373,6 +382,7 @@ export interface FileRoutesById {
   '/_authenticated/perdidos': typeof AuthenticatedPerdidosRoute
   '/_authenticated/placar-diario': typeof AuthenticatedPlacarDiarioRoute
   '/_authenticated/placar-hall-da-fama': typeof AuthenticatedPlacarHallDaFamaRoute
+  '/_authenticated/plano-de-carreira': typeof AuthenticatedPlanoDeCarreiraRoute
   '/_authenticated/playbook': typeof AuthenticatedPlaybookRoute
   '/_authenticated/processos-comerciais': typeof AuthenticatedProcessosComerciaisRoute
   '/_authenticated/relatorios': typeof AuthenticatedRelatoriosRoute
@@ -415,6 +425,7 @@ export interface FileRouteTypes {
     | '/perdidos'
     | '/placar-diario'
     | '/placar-hall-da-fama'
+    | '/plano-de-carreira'
     | '/playbook'
     | '/processos-comerciais'
     | '/relatorios'
@@ -455,6 +466,7 @@ export interface FileRouteTypes {
     | '/perdidos'
     | '/placar-diario'
     | '/placar-hall-da-fama'
+    | '/plano-de-carreira'
     | '/playbook'
     | '/processos-comerciais'
     | '/relatorios'
@@ -496,6 +508,7 @@ export interface FileRouteTypes {
     | '/_authenticated/perdidos'
     | '/_authenticated/placar-diario'
     | '/_authenticated/placar-hall-da-fama'
+    | '/_authenticated/plano-de-carreira'
     | '/_authenticated/playbook'
     | '/_authenticated/processos-comerciais'
     | '/_authenticated/relatorios'
@@ -587,6 +600,13 @@ declare module '@tanstack/react-router' {
       path: '/playbook'
       fullPath: '/playbook'
       preLoaderRoute: typeof AuthenticatedPlaybookRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/plano-de-carreira': {
+      id: '/_authenticated/plano-de-carreira'
+      path: '/plano-de-carreira'
+      fullPath: '/plano-de-carreira'
+      preLoaderRoute: typeof AuthenticatedPlanoDeCarreiraRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/placar-hall-da-fama': {
@@ -822,6 +842,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPerdidosRoute: typeof AuthenticatedPerdidosRoute
   AuthenticatedPlacarDiarioRoute: typeof AuthenticatedPlacarDiarioRoute
   AuthenticatedPlacarHallDaFamaRoute: typeof AuthenticatedPlacarHallDaFamaRoute
+  AuthenticatedPlanoDeCarreiraRoute: typeof AuthenticatedPlanoDeCarreiraRoute
   AuthenticatedPlaybookRoute: typeof AuthenticatedPlaybookRoute
   AuthenticatedProcessosComerciaisRoute: typeof AuthenticatedProcessosComerciaisRoute
   AuthenticatedRelatoriosRoute: typeof AuthenticatedRelatoriosRoute
@@ -858,6 +879,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPerdidosRoute: AuthenticatedPerdidosRoute,
   AuthenticatedPlacarDiarioRoute: AuthenticatedPlacarDiarioRoute,
   AuthenticatedPlacarHallDaFamaRoute: AuthenticatedPlacarHallDaFamaRoute,
+  AuthenticatedPlanoDeCarreiraRoute: AuthenticatedPlanoDeCarreiraRoute,
   AuthenticatedPlaybookRoute: AuthenticatedPlaybookRoute,
   AuthenticatedProcessosComerciaisRoute: AuthenticatedProcessosComerciaisRoute,
   AuthenticatedRelatoriosRoute: AuthenticatedRelatoriosRoute,

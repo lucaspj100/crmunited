@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.17"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -639,6 +639,120 @@ export type Database = {
           id?: boolean
           logo_path?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      career_monthly_goals: {
+        Row: {
+          achieved_points: number
+          created_at: string
+          created_by: string | null
+          id: string
+          month: number
+          notes: string | null
+          promoted_to: Database["public"]["Enums"]["career_role"] | null
+          role_snapshot: Database["public"]["Enums"]["career_role"]
+          status: Database["public"]["Enums"]["career_goal_status"]
+          target_points: number
+          updated_at: string
+          user_id: string
+          year: number
+        }
+        Insert: {
+          achieved_points?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          month: number
+          notes?: string | null
+          promoted_to?: Database["public"]["Enums"]["career_role"] | null
+          role_snapshot: Database["public"]["Enums"]["career_role"]
+          status?: Database["public"]["Enums"]["career_goal_status"]
+          target_points: number
+          updated_at?: string
+          user_id: string
+          year: number
+        }
+        Update: {
+          achieved_points?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          month?: number
+          notes?: string | null
+          promoted_to?: Database["public"]["Enums"]["career_role"] | null
+          role_snapshot?: Database["public"]["Enums"]["career_role"]
+          status?: Database["public"]["Enums"]["career_goal_status"]
+          target_points?: number
+          updated_at?: string
+          user_id?: string
+          year?: number
+        }
+        Relationships: []
+      }
+      career_role_history: {
+        Row: {
+          automatic: boolean
+          changed_by: string | null
+          created_at: string
+          from_role: Database["public"]["Enums"]["career_role"] | null
+          id: string
+          reason: string | null
+          to_role: Database["public"]["Enums"]["career_role"]
+          user_id: string
+        }
+        Insert: {
+          automatic?: boolean
+          changed_by?: string | null
+          created_at?: string
+          from_role?: Database["public"]["Enums"]["career_role"] | null
+          id?: string
+          reason?: string | null
+          to_role: Database["public"]["Enums"]["career_role"]
+          user_id: string
+        }
+        Update: {
+          automatic?: boolean
+          changed_by?: string | null
+          created_at?: string
+          from_role?: Database["public"]["Enums"]["career_role"] | null
+          id?: string
+          reason?: string | null
+          to_role?: Database["public"]["Enums"]["career_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      career_week_results: {
+        Row: {
+          created_at: string
+          id: string
+          points: number
+          role_snapshot: Database["public"]["Enums"]["career_role"] | null
+          stars_awarded: number
+          user_id: string
+          week_end: string
+          week_start: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          points?: number
+          role_snapshot?: Database["public"]["Enums"]["career_role"] | null
+          stars_awarded?: number
+          user_id: string
+          week_end: string
+          week_start: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          points?: number
+          role_snapshot?: Database["public"]["Enums"]["career_role"] | null
+          stars_awarded?: number
+          user_id?: string
+          week_end?: string
+          week_start?: string
         }
         Relationships: []
       }
@@ -1824,6 +1938,10 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          career_role: Database["public"]["Enums"]["career_role"]
+          career_role_since: string | null
+          career_stars: number
+          career_stars_synced_through: string | null
           created_at: string
           eligible_for_hall_of_fame: boolean
           email: string | null
@@ -1833,6 +1951,10 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          career_role?: Database["public"]["Enums"]["career_role"]
+          career_role_since?: string | null
+          career_stars?: number
+          career_stars_synced_through?: string | null
           created_at?: string
           eligible_for_hall_of_fame?: boolean
           email?: string | null
@@ -1842,6 +1964,10 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          career_role?: Database["public"]["Enums"]["career_role"]
+          career_role_since?: string | null
+          career_stars?: number
+          career_stars_synced_through?: string | null
           created_at?: string
           eligible_for_hall_of_fame?: boolean
           email?: string | null
@@ -2955,6 +3081,35 @@ export type Database = {
         Args: { _contact_id: string }
         Returns: boolean
       }
+      career_admin_list: { Args: never; Returns: Json }
+      career_overview: { Args: { _user_id?: string }; Returns: Json }
+      career_points_between: {
+        Args: { _end: string; _start: string; _user_id: string }
+        Returns: number
+      }
+      career_set_role: {
+        Args: {
+          _reason?: string
+          _role: Database["public"]["Enums"]["career_role"]
+          _user_id: string
+        }
+        Returns: undefined
+      }
+      career_set_stars: {
+        Args: { _stars: number; _user_id: string }
+        Returns: undefined
+      }
+      career_sync_user: { Args: { _user_id: string }; Returns: undefined }
+      career_upsert_goal: {
+        Args: {
+          _month: number
+          _notes?: string
+          _target: number
+          _user_id: string
+          _year: number
+        }
+        Returns: string
+      }
       debug_entrevistas_marcadas: {
         Args: { _end: string; _start: string; _vendedor_id?: string }
         Returns: {
@@ -3131,6 +3286,14 @@ export type Database = {
         | "criterio"
         | "comportamento"
       app_role: "admin" | "franqueado" | "vendedor"
+      career_goal_status: "em_andamento" | "atingida" | "nao_atingida"
+      career_role:
+        | "consultor"
+        | "consultor_master"
+        | "supervisor"
+        | "gerente"
+        | "diretor"
+        | "franqueado"
       lead_status:
         | "novo"
         | "interessado"
@@ -3346,6 +3509,15 @@ export const Constants = {
         "comportamento",
       ],
       app_role: ["admin", "franqueado", "vendedor"],
+      career_goal_status: ["em_andamento", "atingida", "nao_atingida"],
+      career_role: [
+        "consultor",
+        "consultor_master",
+        "supervisor",
+        "gerente",
+        "diretor",
+        "franqueado",
+      ],
       lead_status: [
         "novo",
         "interessado",
