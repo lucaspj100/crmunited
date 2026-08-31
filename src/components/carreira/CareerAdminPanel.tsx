@@ -160,7 +160,69 @@ export function CareerAdminPanel() {
                   </Button>
                 </div>
               </div>
+
+              <div className="space-y-2">
+                <Label>Líder direto</Label>
+                <Select
+                  value={current.leader_id ?? "__none__"}
+                  onValueChange={(v) =>
+                    setLeader.mutate(
+                      { userId: current.user_id, leaderId: v === "__none__" ? null : v },
+                      {
+                        onSuccess: () => toast.success("Líder direto atualizado"),
+                        onError: (e) => toast.error((e as Error).message),
+                      },
+                    )
+                  }
+                >
+                  <SelectTrigger><SelectValue placeholder="Sem líder direto" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">Sem líder direto</SelectItem>
+                    {(rows ?? [])
+                      .filter((r) => r.user_id !== current.user_id)
+                      .map((r) => (
+                        <SelectItem key={r.user_id} value={r.user_id}>
+                          {r.full_name}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {isLeaderRole(current.career_role) && (
+                <div className="space-y-2">
+                  <Label>Cotas acumuladas (máx. {QUOTAS_TO_MASTER} para Gerente Master)</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="number"
+                      min={0}
+                      value={quotasInput}
+                      onChange={(e) => setQuotasInput(e.target.value)}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() =>
+                        setQuotas.mutate(
+                          { userId: current.user_id, total: Math.max(0, Number(quotasInput) || 0) },
+                          {
+                            onSuccess: () => toast.success("Cotas atualizadas"),
+                            onError: (e) => toast.error((e as Error).message),
+                          },
+                        )
+                      }
+                    >
+                      Salvar
+                    </Button>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Pontos da estrutura no mês:{" "}
+                    <strong className="text-foreground">{current.structure_month_points}</strong>
+                  </div>
+                </div>
+              )}
             </div>
+
 
             {(current.career_role === "consultor_master" || current.career_role === "supervisor") && (
               <div className="rounded-md border p-4 space-y-3">
