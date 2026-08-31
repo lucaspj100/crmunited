@@ -5,6 +5,8 @@ import { Progress } from "@/components/ui/progress";
 import { Star, Construction, TrendingUp, Target, Sparkles } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { CareerAdminPanel } from "@/components/carreira/CareerAdminPanel";
+import { LeadershipCareerCard } from "@/components/carreira/LeadershipCareerCard";
+import { LeadershipTree } from "@/components/carreira/LeadershipTree";
 import {
   CAREER_ROLE_LABELS,
   CAREER_TRACK,
@@ -12,12 +14,14 @@ import {
   POINTS_PER_STAR,
   STARS_TO_MASTER,
   fmtDateBR,
+  isLeaderRole,
   isUnderConstruction,
   monthLabel,
   nextRole,
   useCareerOverview,
   type CareerOverview,
 } from "@/lib/career";
+
 
 export const Route = createFileRoute("/_authenticated/plano-de-carreira")({
   component: CareerPage,
