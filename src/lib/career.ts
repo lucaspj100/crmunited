@@ -219,3 +219,35 @@ export function fmtDateBR(d: string | null | undefined): string {
   const [y, m, day] = d.slice(0, 10).split("-");
   return `${day}/${m}/${y}`;
 }
+
+/** Cargos da trilha de consultoria — os únicos que exibem estrelas. */
+export function showsStars(role: CareerRole): boolean {
+  return role === "consultor" || role === "consultor_master";
+}
+
+export type CareerBadgeInfo = {
+  user_id: string;
+  full_name: string | null;
+  career_role: CareerRole;
+  career_stars: number;
+};
+
+export async function fetchCareerBadges(): Promise<CareerBadgeInfo[]> {
+  const { data, error } = await supabase.rpc("career_badges" as never);
+  if (error) throw error;
+  return (data ?? []) as unknown as CareerBadgeInfo[];
+}
+
+/** Mapa user_id -> cargo/estrelas, reutilizando o Plano de Carreira. */
+export function useCareerBadges(enabled = true) {
+  const q = useQuery({
+    queryKey: ["career-badges"],
+    queryFn: fetchCareerBadges,
+    enabled,
+    staleTime: 5 * 60_000,
+  });
+  const map = new Map<string, CareerBadgeInfo>();
+  for (const b of q.data ?? []) map.set(b.user_id, b);
+  return map;
+}
+
