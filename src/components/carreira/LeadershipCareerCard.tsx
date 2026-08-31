@@ -32,9 +32,13 @@ export function LeadershipCareerCard({ o }: { o: CareerOverview }) {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="secondary">No cargo desde {fmtDateBR(o.career_role_since)}</Badge>
-            <Badge>
-              Próximo cargo: {isMaster ? "Gerente Divisional" : CAREER_ROLE_LABELS["gerente_master"]}
-            </Badge>
+            {isMaster ? (
+              <Badge variant="outline">
+                Próximo nível: {CAREER_ROLE_LABELS["gerente_divisional"]} · critérios em construção
+              </Badge>
+            ) : (
+              <Badge>Próximo cargo: {CAREER_ROLE_LABELS["gerente_master"]}</Badge>
+            )}
           </div>
         </div>
         {o.leader_name && (
