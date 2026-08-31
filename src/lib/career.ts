@@ -336,6 +336,15 @@ export function isUnderConstruction(role: CareerRole): boolean {
   return role === "gerente_divisional" || role === "diretor" || role === "franqueado";
 }
 
+/**
+ * Cargos cujo critério de promoção já está definido no sistema.
+ * Gerente Master → Gerente Divisional ainda NÃO foi desenhado: nenhuma meta,
+ * cota ou promoção automática deve ser exibida ou calculada para esse passo.
+ */
+export function hasDefinedNextStep(role: CareerRole): boolean {
+  return role === "consultor" || role === "consultor_master" || role === "supervisor" || role === "gerente";
+}
+
 
 export function fmtDateBR(d: string | null | undefined): string {
   if (!d) return "—";
