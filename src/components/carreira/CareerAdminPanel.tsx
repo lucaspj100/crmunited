@@ -75,8 +75,10 @@ export function CareerAdminPanel() {
                 onClick={() => {
                   setSelected(r.user_id);
                   setStarsInput(String(r.career_stars));
+                  setQuotasInput(String(r.career_quotas ?? 0));
                   setGoalTarget(r.goal ? String(r.goal.target_points) : "");
                 }}
+
                 className={`flex w-full items-center justify-between gap-2 p-3 text-left text-sm hover:bg-accent ${
                   selected === r.user_id ? "bg-accent" : ""
                 }`}
