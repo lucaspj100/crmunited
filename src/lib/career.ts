@@ -46,6 +46,11 @@ export const CAREER_ROLES: CareerRole[] = [
 export const STARS_TO_MASTER = 5;
 export const POINTS_PER_STAR = 3;
 
+/** Pontuação por matrícula (mesma regra usada no cálculo do backend). */
+export const POINTS_PER_ENROLLMENT = 1;
+/** Matrícula com material pago na mesma semana. */
+export const POINTS_PER_ENROLLMENT_WITH_MATERIAL = 2;
+
 /** Liderança: 1 cota por mês em que a estrutura atinge este total de pontos. */
 export const QUOTA_POINTS_TARGET = 25;
 /** Cotas necessárias para Gerente virar Gerente Master. */
