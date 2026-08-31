@@ -12,15 +12,20 @@ import {
   CAREER_ROLE_LABELS,
   GOAL_STATUS_LABELS,
   MONTH_LABELS,
+  QUOTAS_TO_MASTER,
   fmtDateBR,
+  isLeaderRole,
   monthLabel,
   useCareerAdminList,
   useCareerOverview,
+  useSetCareerLeader,
+  useSetCareerQuotas,
   useSetCareerRole,
   useSetCareerStars,
   useUpsertCareerGoal,
   type CareerRole,
 } from "@/lib/career";
+
 
 export function CareerAdminPanel() {
   const { data: rows, isLoading } = useCareerAdminList(true);
