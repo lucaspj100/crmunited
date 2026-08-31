@@ -32,9 +32,13 @@ export function LeadershipCareerCard({ o }: { o: CareerOverview }) {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="secondary">No cargo desde {fmtDateBR(o.career_role_since)}</Badge>
-            <Badge>
-              Próximo cargo: {isMaster ? "Gerente Divisional" : CAREER_ROLE_LABELS["gerente_master"]}
-            </Badge>
+            {isMaster ? (
+              <Badge variant="outline">
+                Próximo nível: {CAREER_ROLE_LABELS["gerente_divisional"]} · critérios em construção
+              </Badge>
+            ) : (
+              <Badge>Próximo cargo: {CAREER_ROLE_LABELS["gerente_master"]}</Badge>
+            )}
           </div>
         </div>
         {o.leader_name && (
@@ -51,15 +55,19 @@ export function LeadershipCareerCard({ o }: { o: CareerOverview }) {
       {isMaster ? (
         <Card className="p-6 space-y-2">
           <div className="flex items-center gap-2 text-sm font-semibold">
-            <Construction className="h-4 w-4 text-amber-500" /> Próximo nível: Gerente Divisional
+            <Construction className="h-4 w-4 text-amber-500" /> Próximo nível:{" "}
+            {CAREER_ROLE_LABELS["gerente_divisional"]}
           </div>
-          <p className="text-sm text-muted-foreground">Regras de progressão em construção.</p>
+          <p className="text-sm text-muted-foreground">
+            As regras para evolução ao cargo de {CAREER_ROLE_LABELS["gerente_divisional"]} ainda estão
+            sendo definidas.
+          </p>
           <div className="pt-2 text-sm">
             Pontos da estrutura em {monthLabel(now.getMonth() + 1, now.getFullYear())}:{" "}
             <strong>{points}</strong>
           </div>
           <div className="text-xs text-muted-foreground">
-            Cotas conquistadas até a promoção: {quotas}
+            Cotas já conquistadas como Gerente: {quotas}
           </div>
         </Card>
       ) : (

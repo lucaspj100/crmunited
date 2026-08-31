@@ -46,6 +46,11 @@ export const CAREER_ROLES: CareerRole[] = [
 export const STARS_TO_MASTER = 5;
 export const POINTS_PER_STAR = 3;
 
+/** Pontuação por matrícula (mesma regra usada no cálculo do backend). */
+export const POINTS_PER_ENROLLMENT = 1;
+/** Matrícula com material pago na mesma semana. */
+export const POINTS_PER_ENROLLMENT_WITH_MATERIAL = 2;
+
 /** Liderança: 1 cota por mês em que a estrutura atinge este total de pontos. */
 export const QUOTA_POINTS_TARGET = 25;
 /** Cotas necessárias para Gerente virar Gerente Master. */
@@ -329,6 +334,15 @@ export function nextRole(role: CareerRole): CareerRole | null {
 /** Cargos cujo plano de carreira ainda está em construção. */
 export function isUnderConstruction(role: CareerRole): boolean {
   return role === "gerente_divisional" || role === "diretor" || role === "franqueado";
+}
+
+/**
+ * Cargos cujo critério de promoção já está definido no sistema.
+ * Gerente Master → Gerente Divisional ainda NÃO foi desenhado: nenhuma meta,
+ * cota ou promoção automática deve ser exibida ou calculada para esse passo.
+ */
+export function hasDefinedNextStep(role: CareerRole): boolean {
+  return role === "consultor" || role === "consultor_master" || role === "supervisor" || role === "gerente";
 }
 
 

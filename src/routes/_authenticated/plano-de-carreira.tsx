@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Star, Construction, TrendingUp, Target, Sparkles } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { CareerAdminPanel } from "@/components/carreira/CareerAdminPanel";
+import { CareerGuide } from "@/components/carreira/CareerGuide";
 import { LeadershipCareerCard } from "@/components/carreira/LeadershipCareerCard";
 import { LeadershipTree } from "@/components/carreira/LeadershipTree";
 import {
@@ -253,9 +254,11 @@ function UnderConstructionView({ o }: { o: CareerOverview }) {
       <div className="text-xs uppercase tracking-wide text-muted-foreground">Cargo atual</div>
       <div className="text-2xl font-bold">{CAREER_ROLE_LABELS[o.career_role]}</div>
       <Construction className="h-10 w-10 text-amber-500" />
-      <div className="text-lg font-semibold">🚧 Seu plano de carreira está em construção.</div>
+      <div className="text-lg font-semibold">
+        Próximos passos do plano de carreira em construção.
+      </div>
       <p className="max-w-md text-sm text-muted-foreground">
-        Em breve você poderá acompanhar aqui os próximos passos da sua evolução dentro da empresa.
+        As regras de evolução para este cargo ainda estão sendo definidas.
       </p>
     </Card>
   );
@@ -281,6 +284,8 @@ function CareerPage() {
           Não foi possível carregar sua carreira: {(error as Error).message}
         </Card>
       )}
+
+      {overview && <CareerGuide role={overview.career_role} />}
 
       {overview &&
         (isUnderConstruction(overview.career_role) ? (
