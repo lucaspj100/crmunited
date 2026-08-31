@@ -93,12 +93,39 @@ export type CareerRoleHistory = {
   automatic: boolean;
 };
 
+export type CareerQuotaMonth = {
+  month: number;
+  year: number;
+  role_snapshot?: CareerRole | null;
+  structure_points: number;
+  quota_earned: boolean;
+  consolidated_at: string | null;
+};
+
+export type CareerDirectReport = {
+  user_id: string;
+  full_name: string;
+  career_role: CareerRole;
+  career_stars: number;
+  month_points: number;
+};
+
 export type CareerOverview = {
   user_id: string;
   full_name: string;
   career_role: CareerRole;
   career_stars: number;
   career_role_since: string | null;
+  leader_id: string | null;
+  leader_name: string | null;
+  career_quotas: number;
+  quota_points_target: number;
+  quotas_to_master: number;
+  structure_month_points: number;
+  structure_size: number;
+  quota_current_month: CareerQuotaMonth | null;
+  quotas_history: CareerQuotaMonth[];
+  direct_reports: CareerDirectReport[];
   week_start: string;
   week_end: string;
   week_points: number;
@@ -117,10 +144,26 @@ export type CareerAdminRow = {
   career_role: CareerRole;
   career_stars: number;
   career_role_since: string | null;
+  leader_id: string | null;
+  career_quotas: number;
   week_points: number;
   month_points: number;
+  structure_month_points: number;
   goal: CareerGoal | null;
 };
+
+export type CareerTreeNode = {
+  user_id: string;
+  full_name: string;
+  email: string | null;
+  career_role: CareerRole;
+  career_stars: number;
+  career_quotas: number;
+  leader_id: string | null;
+  month_points: number;
+  structure_month_points: number;
+};
+
 
 export const MONTH_LABELS = [
   "janeiro",
