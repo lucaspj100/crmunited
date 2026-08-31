@@ -6,6 +6,8 @@ export type CareerRole =
   | "consultor_master"
   | "supervisor"
   | "gerente"
+  | "gerente_master"
+  | "gerente_divisional"
   | "diretor"
   | "franqueado";
 
@@ -14,24 +16,48 @@ export const CAREER_ROLE_LABELS: Record<CareerRole, string> = {
   consultor_master: "Consultor Master",
   supervisor: "Supervisor",
   gerente: "Gerente",
+  gerente_master: "Gerente Master",
+  gerente_divisional: "Gerente Divisional",
   diretor: "Diretor",
   franqueado: "Franqueado",
 };
 
 /** Trilha visível nesta primeira versão. */
-export const CAREER_TRACK: CareerRole[] = ["consultor", "consultor_master", "supervisor", "gerente"];
+export const CAREER_TRACK: CareerRole[] = [
+  "consultor",
+  "consultor_master",
+  "supervisor",
+  "gerente",
+  "gerente_master",
+  "gerente_divisional",
+];
 
 export const CAREER_ROLES: CareerRole[] = [
   "consultor",
   "consultor_master",
   "supervisor",
   "gerente",
+  "gerente_master",
+  "gerente_divisional",
   "diretor",
   "franqueado",
 ];
 
 export const STARS_TO_MASTER = 5;
 export const POINTS_PER_STAR = 3;
+
+/** Liderança: 1 cota por mês em que a estrutura atinge este total de pontos. */
+export const QUOTA_POINTS_TARGET = 25;
+/** Cotas necessárias para Gerente virar Gerente Master. */
+export const QUOTAS_TO_MASTER = 20;
+
+/** Cargos cuja pontuação considera toda a estrutura abaixo. */
+export const LEADER_ROLES: CareerRole[] = ["gerente", "gerente_master", "gerente_divisional"];
+
+export function isLeaderRole(role: CareerRole): boolean {
+  return LEADER_ROLES.includes(role);
+}
+
 
 export type GoalStatus = "em_andamento" | "atingida" | "nao_atingida";
 
