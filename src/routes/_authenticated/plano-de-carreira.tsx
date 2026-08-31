@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Star, Construction, TrendingUp, Target, Sparkles } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { CareerAdminPanel } from "@/components/carreira/CareerAdminPanel";
+import { CareerGuide } from "@/components/carreira/CareerGuide";
 import { LeadershipCareerCard } from "@/components/carreira/LeadershipCareerCard";
 import { LeadershipTree } from "@/components/carreira/LeadershipTree";
 import {
