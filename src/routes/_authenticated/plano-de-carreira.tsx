@@ -285,13 +285,18 @@ function CareerPage() {
       {overview &&
         (isUnderConstruction(overview.career_role) ? (
           <UnderConstructionView o={overview} />
+        ) : isLeaderRole(overview.career_role) ? (
+          <LeadershipCareerCard o={overview} />
         ) : overview.career_role === "consultor" ? (
           <ConsultorView o={overview} />
         ) : (
           <GoalView o={overview} />
         ))}
 
+      <LeadershipTree editable={isAdmin} />
+
       {isAdmin && <CareerAdminPanel />}
+
     </div>
   );
 }
