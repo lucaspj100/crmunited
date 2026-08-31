@@ -284,6 +284,8 @@ function CareerPage() {
         </Card>
       )}
 
+      {overview && <CareerGuide role={overview.career_role} />}
+
       {overview &&
         (isUnderConstruction(overview.career_role) ? (
           <UnderConstructionView o={overview} />
