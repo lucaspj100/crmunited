@@ -36,6 +36,8 @@ export function CareerAdminPanel() {
 
   const setRole = useSetCareerRole();
   const setStars = useSetCareerStars();
+  const setLeader = useSetCareerLeader();
+  const setQuotas = useSetCareerQuotas();
   const upsertGoal = useUpsertCareerGoal();
 
   const now = new Date();
@@ -43,6 +45,8 @@ export function CareerAdminPanel() {
   const [goalYear, setGoalYear] = useState(now.getFullYear());
   const [goalTarget, setGoalTarget] = useState("");
   const [starsInput, setStarsInput] = useState("");
+  const [quotasInput, setQuotasInput] = useState("");
+
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
