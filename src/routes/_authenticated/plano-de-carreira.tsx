@@ -253,9 +253,11 @@ function UnderConstructionView({ o }: { o: CareerOverview }) {
       <div className="text-xs uppercase tracking-wide text-muted-foreground">Cargo atual</div>
       <div className="text-2xl font-bold">{CAREER_ROLE_LABELS[o.career_role]}</div>
       <Construction className="h-10 w-10 text-amber-500" />
-      <div className="text-lg font-semibold">🚧 Seu plano de carreira está em construção.</div>
+      <div className="text-lg font-semibold">
+        Próximos passos do plano de carreira em construção.
+      </div>
       <p className="max-w-md text-sm text-muted-foreground">
-        Em breve você poderá acompanhar aqui os próximos passos da sua evolução dentro da empresa.
+        As regras de evolução para este cargo ainda estão sendo definidas.
       </p>
     </Card>
   );
