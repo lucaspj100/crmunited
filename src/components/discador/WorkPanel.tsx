@@ -190,7 +190,56 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
   // Último ID já refletido na sessão do Supabase — evita loop de Realtime (eco do próprio evento).
   const lastSyncedRef = useRef<string | null>(null);
 
-  const { list: activeQueue, label: activeLabel } = useMemo(() => buildActiveQueue(queue), [queue]);
+  // ---------- Segunda camada: filtros da fila (por vendedor, sem alterar dados) ----------
+  const [filters, setFilters] = useState<DialerFilters>(EMPTY_FILTERS);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const filtersRef = useRef<DialerFilters>(EMPTY_FILTERS);
+  filtersRef.current = filters;
+  const filtersActive = hasActiveFilters(filters);
+
+  useEffect(() => {
+    if (user) setFilters(loadFilters(user.id));
+  }, [user?.id]);
+
+  const historyQueryOptions = useMemo(
+    () => ({
+      queryKey: ["dialer_history", user?.id] as const,
+      queryFn: () => fetchQueueHistory(user!.id),
+      enabled: !!user,
+      staleTime: 30_000,
+    }),
+    [user?.id],
+  );
+  const { data: history, isFetching: loadingHistory } = useQuery(historyQueryOptions);
+  const historyRef = useRef<QueueHistory | undefined>(undefined);
+  historyRef.current = history;
+
+  /**
+   * Fila exibida = fila elegível (1ª camada) → filtros do vendedor (2ª camada)
+   * → agrupamento de prioridade já existente.
+   */
+  const buildView = useCallback(
+    (rows: ProspectContact[], historyOverride?: QueueHistory) => {
+      const f = filtersRef.current;
+      const filtered = applyDialerFilters(rows, historyOverride ?? historyRef.current, f);
+      const res = buildActiveQueue(filtered);
+      return hasActiveFilters(f) ? { list: res.list, label: "contatos filtrados" } : res;
+    },
+    [],
+  );
+
+  const { list: activeQueue, label: activeLabel } = useMemo(
+    () => buildView(queue),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [queue, filters, history, buildView],
+  );
+
+  /** Contagem da prévia dentro do modal (usa a mesma fila elegível já carregada). */
+  const previewCount = useCallback(
+    (f: DialerFilters) => applyDialerFilters(queue, history, f).length,
+    [queue, history],
+  );
+
 
   // Refs para uso dentro de callbacks assíncronos (Realtime/polling) sem closures obsoletas.
   const queueRef = useRef<ProspectContact[]>([]);
