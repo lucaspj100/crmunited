@@ -708,6 +708,8 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
       }
       qc.invalidateQueries({ queryKey: ["whatsapp_list"] });
       qc.invalidateQueries({ queryKey: ["prospect_counts"] });
+      qc.invalidateQueries({ queryKey: ["dialer_history", user.id] });
+
       // Contato passa a ser trabalhado por WhatsApp: sai da fila do Discador
       // e o próximo elegível assume automaticamente.
       exitFocus();
