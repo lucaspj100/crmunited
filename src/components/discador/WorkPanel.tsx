@@ -357,7 +357,8 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     const sorted = sortQueue(rows);
     setQueue(sorted);
     if (opts?.keepSelection) return;
-    const nextActive = buildActiveQueue(sorted).list;
+    const nextActive = buildView(sorted).list;
+
     if (nextActive.length === 0) {
       setCurrentContactSynced(null);
       return;
