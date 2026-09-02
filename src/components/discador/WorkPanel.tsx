@@ -841,16 +841,25 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
         {!contact ? (
           <div className="rounded-lg border bg-card p-6 flex flex-col items-center gap-3 text-center">
             <Inbox className="h-8 w-8 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">{loadingQueue ? "Carregando fila…" : "Nenhum contato pendente na sua fila."}</p>
+            <p className="text-sm text-muted-foreground">
+              {loadingQueue
+                ? "Carregando fila…"
+                : filtersActive
+                  ? "Nenhum contato atende aos filtros ativos."
+                  : "Nenhum contato pendente na sua fila."}
+            </p>
+            <div className="flex justify-center">{filterBar}</div>
             <Button onClick={refreshQueue} disabled={loadingQueue} size="sm"><RefreshCw className="h-4 w-4 mr-2" />Atualizar fila</Button>
           </div>
         ) : (
           <>
+            <div className="flex justify-center">{filterBar}</div>
             {queuePos && (
               <div className="text-xs text-muted-foreground text-center font-medium">
                 {queuePos} <SyncBadge online={syncOnline} />
               </div>
             )}
+
             <div className="w-full max-w-full rounded-lg border-2 bg-card p-3 space-y-1.5 overflow-hidden">
               <div className="text-lg font-bold leading-tight break-words">
                 {contact.nome || <span className="text-muted-foreground italic font-normal">Nome não informado</span>}
