@@ -389,15 +389,26 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     const anchorIndex = idx >= 0 ? idx : 0;
 
     let rows: ProspectContact[] = [];
+    let freshHistory: QueueHistory | undefined;
     try {
-      rows = await fetchDialerQueue(user.id);
+      // Com filtro ativo, o histórico precisa estar atualizado para que o contato
+      // trabalhado saia imediatamente da fila filtrada.
+      const [queueRows, hist] = await Promise.all([
+        fetchDialerQueue(user.id),
+        filtersRef.current && hasActiveFilters(filtersRef.current)
+          ? qc.fetchQuery({ ...historyQueryOptions, staleTime: 0 })
+          : Promise.resolve(undefined),
+      ]);
+      rows = queueRows;
+      freshHistory = hist as QueueHistory | undefined;
     } catch (err) {
       toast.error(`Erro ao carregar fila: ${err instanceof Error ? err.message : String(err)}`);
       return;
     }
     const sorted = sortQueue(rows);
     setQueue(sorted);
-    const nextActive = buildActiveQueue(sorted).list;
+    const nextActive = buildView(sorted, freshHistory).list;
+
     if (nextActive.length === 0) {
       setCurrentContactSynced(null);
       return;
