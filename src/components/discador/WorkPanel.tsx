@@ -1116,6 +1116,16 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
       </div>
 
       {/* Dialogs */}
+      <QueueFilterDialog
+        open={filterOpen}
+        onOpenChange={setFilterOpen}
+        value={filters}
+        onApply={applyFilters}
+        onClear={clearFilters}
+        previewCount={previewCount}
+        loadingHistory={loadingHistory && !history}
+      />
+
       {contact && user && (
         <ResultDialog
           open={resultOpen}
