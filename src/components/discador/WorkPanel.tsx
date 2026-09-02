@@ -327,7 +327,8 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
         return;
       }
       // Realmente inválido/removido: cai no próximo contato prioritário.
-      const nextActive = buildActiveQueue(sorted).list;
+      const nextActive = buildView(sorted).list;
+
       setSyncedContact(null);
       setCurrentContactId(nextActive.length > 0 ? nextActive[0]!.id : null);
     },
