@@ -585,9 +585,32 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
 
   const refreshQueue = async () => {
     exitFocus();
-    await loadQueue();
-    toast.success("Fila atualizada. Primeiro contato prioritário carregado.");
+    // Filtro ativo é preservado: apenas revalidamos fila + histórico.
+    await Promise.all([
+      loadQueue(),
+      qc.invalidateQueries({ queryKey: ["dialer_history", user?.id] }),
+    ]);
+    toast.success(
+      filtersActive
+        ? "Fila filtrada atualizada."
+        : "Fila atualizada. Primeiro contato prioritário carregado.",
+    );
   };
+
+  /** Aplica filtros e posiciona no primeiro contato da fila filtrada. */
+  const applyFilters = (next: DialerFilters) => {
+    if (user) saveFilters(user.id, next);
+    filtersRef.current = next;
+    setFilters(next);
+    exitFocus();
+    const list = buildView(queueRef.current).list;
+    setCurrentContactSynced(list.length > 0 ? list[0]!.id : null);
+    toast.success(hasActiveFilters(next) ? `Filtro aplicado · ${list.length} contatos` : "Filtros limpos.");
+  };
+
+  const clearFilters = () => applyFilters(EMPTY_FILTERS);
+
+
 
 
   const { data: counts } = useQuery({
