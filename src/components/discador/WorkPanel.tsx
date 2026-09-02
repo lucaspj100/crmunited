@@ -996,10 +996,18 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
             <Card>
               <CardContent className="flex flex-col items-center justify-center gap-3 py-12">
                 <Inbox className="h-10 w-10 text-muted-foreground" />
-                <p className="text-muted-foreground">{loadingQueue ? "Carregando fila…" : "Nenhum contato pendente na sua fila."}</p>
+                <p className="text-muted-foreground">
+                  {loadingQueue
+                    ? "Carregando fila…"
+                    : filtersActive
+                      ? "Nenhum contato atende aos filtros ativos."
+                      : "Nenhum contato pendente na sua fila."}
+                </p>
+                {filterBar}
                 <Button onClick={refreshQueue} disabled={loadingQueue}><RefreshCw className="h-4 w-4 mr-2" />Atualizar fila</Button>
               </CardContent>
             </Card>
+
           ) : (
             <Card className="border-2">
               <CardHeader className="flex flex-row items-start justify-between gap-3">
