@@ -774,9 +774,35 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     });
   };
 
-
+  /** Barra de filtros da fila (mesma em mobile e desktop). */
+  const filterBar = (
+    <div className="flex flex-wrap items-center gap-1.5">
+      <Button
+        size="sm"
+        variant={filtersActive ? "default" : "outline"}
+        className="h-7 px-2 text-xs"
+        onClick={() => setFilterOpen(true)}
+      >
+        <Filter className="h-3.5 w-3.5 mr-1" />Filtrar fila
+      </Button>
+      {filtersActive && (
+        <>
+          <span className="text-xs font-semibold text-primary">
+            Filtro ativo · {activeQueue.length} contatos
+          </span>
+          {filterChips(filters).map((c) => (
+            <Badge key={c} variant="secondary" className="text-[10px] font-normal">{c}</Badge>
+          ))}
+          <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={clearFilters}>
+            <X className="h-3.5 w-3.5 mr-1" />Limpar filtros
+          </Button>
+        </>
+      )}
+    </div>
+  );
 
   return (
+
     <>
       <div className="mb-3"><ReturnsDebugCard contact={contact} /></div>
       {retornoTask && contact && (
