@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Phone, MessageCircle, ListChecks, UserPlus, Inbox, Pencil, ChevronDown, Linkedin, ArrowLeft, ArrowRight, RefreshCw } from "lucide-react";
+import { Phone, MessageCircle, ListChecks, UserPlus, Inbox, Pencil, ChevronDown, Linkedin, ArrowLeft, ArrowRight, RefreshCw, Filter, X } from "lucide-react";
 import type { ProspectContact } from "@/lib/prospect-queue";
 import { statusBadgeClass, getWhatsappTemplate, renderWhatsappTemplate } from "@/lib/prospect-status";
 import { buildDialNumber, DEFAULT_DIALER_SETTINGS, type DialerSettings } from "@/lib/prospect-dial";
@@ -19,9 +19,22 @@ import { AttemptHistory } from "./AttemptHistory";
 import { ReturnsDebugCard } from "./ReturnsDebugCard";
 import { DailyScoreboard } from "./DailyScoreboard";
 import { WhatsappComposer } from "./WhatsappComposer";
+import { QueueFilterDialog } from "./QueueFilterDialog";
+import {
+  EMPTY_FILTERS,
+  applyDialerFilters,
+  fetchQueueHistory,
+  filterChips,
+  hasActiveFilters,
+  loadFilters,
+  saveFilters,
+  type DialerFilters,
+  type QueueHistory,
+} from "@/lib/dialer-filters";
 import { addToWhatsappList } from "@/lib/whatsapp-list";
 import { fetchDialerSession, saveDialerSession } from "@/lib/dialer-session";
 import { toast } from "sonner";
+
 
 type Props = {
   focusContactId?: string;
@@ -177,7 +190,56 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
   // Último ID já refletido na sessão do Supabase — evita loop de Realtime (eco do próprio evento).
   const lastSyncedRef = useRef<string | null>(null);
 
-  const { list: activeQueue, label: activeLabel } = useMemo(() => buildActiveQueue(queue), [queue]);
+  // ---------- Segunda camada: filtros da fila (por vendedor, sem alterar dados) ----------
+  const [filters, setFilters] = useState<DialerFilters>(EMPTY_FILTERS);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const filtersRef = useRef<DialerFilters>(EMPTY_FILTERS);
+  filtersRef.current = filters;
+  const filtersActive = hasActiveFilters(filters);
+
+  useEffect(() => {
+    if (user) setFilters(loadFilters(user.id));
+  }, [user?.id]);
+
+  const historyQueryOptions = useMemo(
+    () => ({
+      queryKey: ["dialer_history", user?.id] as const,
+      queryFn: () => fetchQueueHistory(user!.id),
+      enabled: !!user,
+      staleTime: 30_000,
+    }),
+    [user?.id],
+  );
+  const { data: history, isFetching: loadingHistory } = useQuery(historyQueryOptions);
+  const historyRef = useRef<QueueHistory | undefined>(undefined);
+  historyRef.current = history;
+
+  /**
+   * Fila exibida = fila elegível (1ª camada) → filtros do vendedor (2ª camada)
+   * → agrupamento de prioridade já existente.
+   */
+  const buildView = useCallback(
+    (rows: ProspectContact[], historyOverride?: QueueHistory) => {
+      const f = filtersRef.current;
+      const filtered = applyDialerFilters(rows, historyOverride ?? historyRef.current, f);
+      const res = buildActiveQueue(filtered);
+      return hasActiveFilters(f) ? { list: res.list, label: "contatos filtrados" } : res;
+    },
+    [],
+  );
+
+  const { list: activeQueue, label: activeLabel } = useMemo(
+    () => buildView(queue),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [queue, filters, history, buildView],
+  );
+
+  /** Contagem da prévia dentro do modal (usa a mesma fila elegível já carregada). */
+  const previewCount = useCallback(
+    (f: DialerFilters) => applyDialerFilters(queue, history, f).length,
+    [queue, history],
+  );
+
 
   // Refs para uso dentro de callbacks assíncronos (Realtime/polling) sem closures obsoletas.
   const queueRef = useRef<ProspectContact[]>([]);
@@ -265,7 +327,8 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
         return;
       }
       // Realmente inválido/removido: cai no próximo contato prioritário.
-      const nextActive = buildActiveQueue(sorted).list;
+      const nextActive = buildView(sorted).list;
+
       setSyncedContact(null);
       setCurrentContactId(nextActive.length > 0 ? nextActive[0]!.id : null);
     },
@@ -294,7 +357,8 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     const sorted = sortQueue(rows);
     setQueue(sorted);
     if (opts?.keepSelection) return;
-    const nextActive = buildActiveQueue(sorted).list;
+    const nextActive = buildView(sorted).list;
+
     if (nextActive.length === 0) {
       setCurrentContactSynced(null);
       return;
@@ -325,15 +389,26 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     const anchorIndex = idx >= 0 ? idx : 0;
 
     let rows: ProspectContact[] = [];
+    let freshHistory: QueueHistory | undefined;
     try {
-      rows = await fetchDialerQueue(user.id);
+      // Com filtro ativo, o histórico precisa estar atualizado para que o contato
+      // trabalhado saia imediatamente da fila filtrada.
+      const [queueRows, hist] = await Promise.all([
+        fetchDialerQueue(user.id),
+        filtersRef.current && hasActiveFilters(filtersRef.current)
+          ? qc.fetchQuery({ ...historyQueryOptions, staleTime: 0 })
+          : Promise.resolve(undefined),
+      ]);
+      rows = queueRows;
+      freshHistory = hist as QueueHistory | undefined;
     } catch (err) {
       toast.error(`Erro ao carregar fila: ${err instanceof Error ? err.message : String(err)}`);
       return;
     }
     const sorted = sortQueue(rows);
     setQueue(sorted);
-    const nextActive = buildActiveQueue(sorted).list;
+    const nextActive = buildView(sorted, freshHistory).list;
+
     if (nextActive.length === 0) {
       setCurrentContactSynced(null);
       return;
@@ -510,9 +585,32 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
 
   const refreshQueue = async () => {
     exitFocus();
-    await loadQueue();
-    toast.success("Fila atualizada. Primeiro contato prioritário carregado.");
+    // Filtro ativo é preservado: apenas revalidamos fila + histórico.
+    await Promise.all([
+      loadQueue(),
+      qc.invalidateQueries({ queryKey: ["dialer_history", user?.id] }),
+    ]);
+    toast.success(
+      filtersActive
+        ? "Fila filtrada atualizada."
+        : "Fila atualizada. Primeiro contato prioritário carregado.",
+    );
   };
+
+  /** Aplica filtros e posiciona no primeiro contato da fila filtrada. */
+  const applyFilters = (next: DialerFilters) => {
+    if (user) saveFilters(user.id, next);
+    filtersRef.current = next;
+    setFilters(next);
+    exitFocus();
+    const list = buildView(queueRef.current).list;
+    setCurrentContactSynced(list.length > 0 ? list[0]!.id : null);
+    toast.success(hasActiveFilters(next) ? `Filtro aplicado · ${list.length} contatos` : "Filtros limpos.");
+  };
+
+  const clearFilters = () => applyFilters(EMPTY_FILTERS);
+
+
 
 
   const { data: counts } = useQuery({
@@ -610,6 +708,8 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
       }
       qc.invalidateQueries({ queryKey: ["whatsapp_list"] });
       qc.invalidateQueries({ queryKey: ["prospect_counts"] });
+      qc.invalidateQueries({ queryKey: ["dialer_history", user.id] });
+
       // Contato passa a ser trabalhado por WhatsApp: sai da fila do Discador
       // e o próximo elegível assume automaticamente.
       exitFocus();
@@ -625,7 +725,9 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
   const onResultSaved = async (goNext: boolean) => {
     qc.invalidateQueries({ queryKey: ["prospect_counts"] });
     qc.invalidateQueries({ queryKey: ["prospect_attempts", contact?.id] });
+    qc.invalidateQueries({ queryKey: ["dialer_history", user?.id] });
     qc.invalidateQueries({ queryKey: ["daily_scoreboard"] });
+
     qc.invalidateQueries({ queryKey: ["my_prospect_contacts"] });
     qc.invalidateQueries({ queryKey: ["leads"] });
     qc.invalidateQueries({ queryKey: ["tasks"] });
@@ -659,7 +761,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     }
     // Preserva a posição visual do sprint: ancora a seleção no mesmo índice da fila ativa.
     setQueue((prev) => {
-      const nextActive = buildActiveQueue(prev).list;
+      const nextActive = buildView(prev).list;
       if (nextActive.length === 0) setCurrentContactSynced(null);
       else {
         const stillThere = nextActive.some((c) => c.id === savedContactId);
@@ -672,9 +774,35 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     });
   };
 
-
+  /** Barra de filtros da fila (mesma em mobile e desktop). */
+  const filterBar = (
+    <div className="flex flex-wrap items-center gap-1.5">
+      <Button
+        size="sm"
+        variant={filtersActive ? "default" : "outline"}
+        className="h-7 px-2 text-xs"
+        onClick={() => setFilterOpen(true)}
+      >
+        <Filter className="h-3.5 w-3.5 mr-1" />Filtrar fila
+      </Button>
+      {filtersActive && (
+        <>
+          <span className="text-xs font-semibold text-primary">
+            Filtro ativo · {activeQueue.length} contatos
+          </span>
+          {filterChips(filters).map((c) => (
+            <Badge key={c} variant="secondary" className="text-[10px] font-normal">{c}</Badge>
+          ))}
+          <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={clearFilters}>
+            <X className="h-3.5 w-3.5 mr-1" />Limpar filtros
+          </Button>
+        </>
+      )}
+    </div>
+  );
 
   return (
+
     <>
       <div className="mb-3"><ReturnsDebugCard contact={contact} /></div>
       {retornoTask && contact && (
@@ -713,16 +841,25 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
         {!contact ? (
           <div className="rounded-lg border bg-card p-6 flex flex-col items-center gap-3 text-center">
             <Inbox className="h-8 w-8 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">{loadingQueue ? "Carregando fila…" : "Nenhum contato pendente na sua fila."}</p>
+            <p className="text-sm text-muted-foreground">
+              {loadingQueue
+                ? "Carregando fila…"
+                : filtersActive
+                  ? "Nenhum contato atende aos filtros ativos."
+                  : "Nenhum contato pendente na sua fila."}
+            </p>
+            <div className="flex justify-center">{filterBar}</div>
             <Button onClick={refreshQueue} disabled={loadingQueue} size="sm"><RefreshCw className="h-4 w-4 mr-2" />Atualizar fila</Button>
           </div>
         ) : (
           <>
+            <div className="flex justify-center">{filterBar}</div>
             {queuePos && (
               <div className="text-xs text-muted-foreground text-center font-medium">
                 {queuePos} <SyncBadge online={syncOnline} />
               </div>
             )}
+
             <div className="w-full max-w-full rounded-lg border-2 bg-card p-3 space-y-1.5 overflow-hidden">
               <div className="text-lg font-bold leading-tight break-words">
                 {contact.nome || <span className="text-muted-foreground italic font-normal">Nome não informado</span>}
@@ -859,10 +996,18 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
             <Card>
               <CardContent className="flex flex-col items-center justify-center gap-3 py-12">
                 <Inbox className="h-10 w-10 text-muted-foreground" />
-                <p className="text-muted-foreground">{loadingQueue ? "Carregando fila…" : "Nenhum contato pendente na sua fila."}</p>
+                <p className="text-muted-foreground">
+                  {loadingQueue
+                    ? "Carregando fila…"
+                    : filtersActive
+                      ? "Nenhum contato atende aos filtros ativos."
+                      : "Nenhum contato pendente na sua fila."}
+                </p>
+                {filterBar}
                 <Button onClick={refreshQueue} disabled={loadingQueue}><RefreshCw className="h-4 w-4 mr-2" />Atualizar fila</Button>
               </CardContent>
             </Card>
+
           ) : (
             <Card className="border-2">
               <CardHeader className="flex flex-row items-start justify-between gap-3">
@@ -952,6 +1097,9 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
                     </span>
                   )}
                 </div>
+
+                {filterBar}
+
               </CardContent>
             </Card>
           )}
@@ -968,6 +1116,16 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
       </div>
 
       {/* Dialogs */}
+      <QueueFilterDialog
+        open={filterOpen}
+        onOpenChange={setFilterOpen}
+        value={filters}
+        onApply={applyFilters}
+        onClear={clearFilters}
+        previewCount={previewCount}
+        loadingHistory={loadingHistory && !history}
+      />
+
       {contact && user && (
         <ResultDialog
           open={resultOpen}
