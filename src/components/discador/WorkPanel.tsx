@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Phone, MessageCircle, ListChecks, UserPlus, Inbox, Pencil, ChevronDown, Linkedin, ArrowLeft, ArrowRight, RefreshCw } from "lucide-react";
+import { Phone, MessageCircle, ListChecks, UserPlus, Inbox, Pencil, ChevronDown, Linkedin, ArrowLeft, ArrowRight, RefreshCw, Filter, X } from "lucide-react";
 import type { ProspectContact } from "@/lib/prospect-queue";
 import { statusBadgeClass, getWhatsappTemplate, renderWhatsappTemplate } from "@/lib/prospect-status";
 import { buildDialNumber, DEFAULT_DIALER_SETTINGS, type DialerSettings } from "@/lib/prospect-dial";
@@ -19,9 +19,22 @@ import { AttemptHistory } from "./AttemptHistory";
 import { ReturnsDebugCard } from "./ReturnsDebugCard";
 import { DailyScoreboard } from "./DailyScoreboard";
 import { WhatsappComposer } from "./WhatsappComposer";
+import { QueueFilterDialog } from "./QueueFilterDialog";
+import {
+  EMPTY_FILTERS,
+  applyDialerFilters,
+  fetchQueueHistory,
+  filterChips,
+  hasActiveFilters,
+  loadFilters,
+  saveFilters,
+  type DialerFilters,
+  type QueueHistory,
+} from "@/lib/dialer-filters";
 import { addToWhatsappList } from "@/lib/whatsapp-list";
 import { fetchDialerSession, saveDialerSession } from "@/lib/dialer-session";
 import { toast } from "sonner";
+
 
 type Props = {
   focusContactId?: string;
