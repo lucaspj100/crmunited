@@ -1097,6 +1097,9 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
                     </span>
                   )}
                 </div>
+
+                {filterBar}
+
               </CardContent>
             </Card>
           )}
