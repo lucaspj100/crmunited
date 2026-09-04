@@ -38,6 +38,7 @@ import {
   ChevronRight,
   PlayCircle,
 } from "lucide-react";
+import { openWhatsapp } from "@/lib/whatsapp";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -327,10 +328,7 @@ export function WhatsappListPanel() {
       return;
     }
     const msg = built?.message ?? "";
-    const url = msg
-      ? `https://wa.me/${norm.phone}?text=${encodeURIComponent(msg)}`
-      : `https://wa.me/${norm.phone}`;
-    window.open(url, "_blank");
+    openWhatsapp(norm.phone, msg || undefined);
 
     // Registrar 1x por lead por dia (baseado em whatsapp_opened_at)
     const todayStr = new Date().toDateString();

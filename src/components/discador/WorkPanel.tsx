@@ -33,6 +33,7 @@ import {
 } from "@/lib/dialer-filters";
 import { addToWhatsappList } from "@/lib/whatsapp-list";
 import { fetchDialerSession, saveDialerSession } from "@/lib/dialer-session";
+import { openWhatsapp } from "@/lib/whatsapp";
 import { toast } from "sonner";
 
 
@@ -688,7 +689,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
       telefone: contact.telefone_normalizado ? `+${contact.telefone_normalizado}` : contact.telefone_original,
     });
     // NÃO inserir em prospect_attempts aqui: o registro único é criado no ResultDialog ao salvar.
-    window.open(`https://wa.me/${contact.telefone_normalizado}?text=${encodeURIComponent(message)}`, "_blank");
+    openWhatsapp(contact.telefone_normalizado, message);
     setResultOpen(true);
   };
 
