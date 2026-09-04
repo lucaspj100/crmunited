@@ -48,7 +48,7 @@ type Profile = { id: string; full_name: string | null; email: string | null };
 function FunilPage() {
   const qc = useQueryClient();
   const { leadId } = Route.useSearch();
-  const navigate = useNavigate({ from: "/_authenticated/funil" });
+  const navigate = useNavigate();
   useEffect(() => {
     if (leadId) setDetailsId(leadId);
   }, [leadId]);
@@ -348,7 +348,7 @@ function FunilPage() {
         onClose={() => setCancelEnrollment(null)}
         onDone={() => qc.invalidateQueries()}
       />
-      <LeadDetailsDialog leadId={detailsId} onClose={() => { setDetailsId(null); navigate({ search: {} }); }} />
+      <LeadDetailsDialog leadId={detailsId} onClose={() => { setDetailsId(null); navigate({ to: "/funil", search: () => ({ leadId: undefined }), replace: true }); }} />
       {quickTaskLead && (
         <QuickTaskDialog
           leadId={quickTaskLead.id}
