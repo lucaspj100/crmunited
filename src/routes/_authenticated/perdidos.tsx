@@ -235,7 +235,7 @@ function PerdidosPage() {
                   <Button size="sm" variant="outline" title="Copiar mensagem de resgate" onClick={() => copyToClipboard(waRescueMessage(l.name), "Mensagem de resgate copiada")}>
                     <Copy className="h-4 w-4 mr-1" />Msg
                   </Button>
-                  <Button asChild size="sm" variant="ghost"><Link to="/funil">Ver no funil</Link></Button>
+                  <Button asChild size="sm" variant="ghost"><Link to="/funil" search={{ leadId: l.id }}>Ver no funil</Link></Button>
                   <Button size="sm" onClick={() => moveToRescue([l.id])}>
                     <RotateCw className="h-4 w-4 mr-1" />Mover p/ Resgate
                   </Button>

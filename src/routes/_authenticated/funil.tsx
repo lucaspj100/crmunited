@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,7 +29,12 @@ import { toast } from "sonner";
 import { ScholarshipCardBadges, type ScholarshipLead } from "@/components/scholarship/ScholarshipSection";
 import { SCHOLARSHIP_FILTERS, matchesScholarshipFilter } from "@/lib/scholarship";
 
-export const Route = createFileRoute("/_authenticated/funil")({ component: FunilPage });
+export const Route = createFileRoute("/_authenticated/funil")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    leadId: typeof search.leadId === "string" ? search.leadId : undefined,
+  }),
+  component: FunilPage,
+});
 
 type Lead = {
   id: string; name: string; phone: string | null; company: string | null;
@@ -42,6 +47,11 @@ type Profile = { id: string; full_name: string | null; email: string | null };
 
 function FunilPage() {
   const qc = useQueryClient();
+  const { leadId } = Route.useSearch();
+  const navigate = useNavigate({ from: "/_authenticated/funil" });
+  useEffect(() => {
+    if (leadId) setDetailsId(leadId);
+  }, [leadId]);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [interviewLead, setInterviewLead] = useState<Lead | null>(null);
   const [rescheduleLead, setRescheduleLead] = useState<Lead | null>(null);
@@ -338,7 +348,7 @@ function FunilPage() {
         onClose={() => setCancelEnrollment(null)}
         onDone={() => qc.invalidateQueries()}
       />
-      <LeadDetailsDialog leadId={detailsId} onClose={() => setDetailsId(null)} />
+      <LeadDetailsDialog leadId={detailsId} onClose={() => { setDetailsId(null); navigate({ search: {} }); }} />
       {quickTaskLead && (
         <QuickTaskDialog
           leadId={quickTaskLead.id}
