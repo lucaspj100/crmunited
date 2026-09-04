@@ -12,6 +12,7 @@ import { LEAD_STATUSES, LOST_REASONS } from "@/lib/constants";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { LeadTimeline } from "@/components/LeadTimeline";
+import { WhatsappAction } from "@/components/WhatsappAction";
 import { logLeadEvent } from "@/lib/lead-events";
 import { ensureEnrollmentSentToArena } from "@/lib/enrollment";
 import { LeadMaterialSection } from "@/components/materiais/LeadMaterialSection";
