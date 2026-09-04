@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiFindLeadByPhoneRouteImport } from './routes/api/find-lead-by-phone'
 import { Route as AuthenticatedUsuariosAcessosRouteImport } from './routes/_authenticated/usuarios-acessos'
 import { Route as AuthenticatedTarefasRouteImport } from './routes/_authenticated/tarefas'
 import { Route as AuthenticatedScriptsRouteImport } from './routes/_authenticated/scripts'
@@ -62,6 +63,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiFindLeadByPhoneRoute = ApiFindLeadByPhoneRouteImport.update({
+  id: '/api/find-lead-by-phone',
+  path: '/api/find-lead-by-phone',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedUsuariosAcessosRoute =
@@ -306,6 +312,7 @@ export interface FileRoutesByFullPath {
   '/scripts': typeof AuthenticatedScriptsRoute
   '/tarefas': typeof AuthenticatedTarefasRoute
   '/usuarios-acessos': typeof AuthenticatedUsuariosAcessosRoute
+  '/api/find-lead-by-phone': typeof ApiFindLeadByPhoneRoute
   '/api/public/find-seller-by-email': typeof ApiPublicFindSellerByEmailRoute
   '/api/public/linkedin-message-event': typeof ApiPublicLinkedinMessageEventRoute
   '/api/public/receive-scholarship-lead': typeof ApiPublicReceiveScholarshipLeadRoute
@@ -347,6 +354,7 @@ export interface FileRoutesByTo {
   '/scripts': typeof AuthenticatedScriptsRoute
   '/tarefas': typeof AuthenticatedTarefasRoute
   '/usuarios-acessos': typeof AuthenticatedUsuariosAcessosRoute
+  '/api/find-lead-by-phone': typeof ApiFindLeadByPhoneRoute
   '/api/public/find-seller-by-email': typeof ApiPublicFindSellerByEmailRoute
   '/api/public/linkedin-message-event': typeof ApiPublicLinkedinMessageEventRoute
   '/api/public/receive-scholarship-lead': typeof ApiPublicReceiveScholarshipLeadRoute
@@ -390,6 +398,7 @@ export interface FileRoutesById {
   '/_authenticated/scripts': typeof AuthenticatedScriptsRoute
   '/_authenticated/tarefas': typeof AuthenticatedTarefasRoute
   '/_authenticated/usuarios-acessos': typeof AuthenticatedUsuariosAcessosRoute
+  '/api/find-lead-by-phone': typeof ApiFindLeadByPhoneRoute
   '/api/public/find-seller-by-email': typeof ApiPublicFindSellerByEmailRoute
   '/api/public/linkedin-message-event': typeof ApiPublicLinkedinMessageEventRoute
   '/api/public/receive-scholarship-lead': typeof ApiPublicReceiveScholarshipLeadRoute
@@ -433,6 +442,7 @@ export interface FileRouteTypes {
     | '/scripts'
     | '/tarefas'
     | '/usuarios-acessos'
+    | '/api/find-lead-by-phone'
     | '/api/public/find-seller-by-email'
     | '/api/public/linkedin-message-event'
     | '/api/public/receive-scholarship-lead'
@@ -474,6 +484,7 @@ export interface FileRouteTypes {
     | '/scripts'
     | '/tarefas'
     | '/usuarios-acessos'
+    | '/api/find-lead-by-phone'
     | '/api/public/find-seller-by-email'
     | '/api/public/linkedin-message-event'
     | '/api/public/receive-scholarship-lead'
@@ -516,6 +527,7 @@ export interface FileRouteTypes {
     | '/_authenticated/scripts'
     | '/_authenticated/tarefas'
     | '/_authenticated/usuarios-acessos'
+    | '/api/find-lead-by-phone'
     | '/api/public/find-seller-by-email'
     | '/api/public/linkedin-message-event'
     | '/api/public/receive-scholarship-lead'
@@ -525,6 +537,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiFindLeadByPhoneRoute: typeof ApiFindLeadByPhoneRoute
   ApiPublicFindSellerByEmailRoute: typeof ApiPublicFindSellerByEmailRoute
   ApiPublicLinkedinMessageEventRoute: typeof ApiPublicLinkedinMessageEventRoute
   ApiPublicReceiveScholarshipLeadRoute: typeof ApiPublicReceiveScholarshipLeadRoute
@@ -551,6 +564,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/find-lead-by-phone': {
+      id: '/api/find-lead-by-phone'
+      path: '/api/find-lead-by-phone'
+      fullPath: '/api/find-lead-by-phone'
+      preLoaderRoute: typeof ApiFindLeadByPhoneRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/usuarios-acessos': {
@@ -896,6 +916,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiFindLeadByPhoneRoute: ApiFindLeadByPhoneRoute,
   ApiPublicFindSellerByEmailRoute: ApiPublicFindSellerByEmailRoute,
   ApiPublicLinkedinMessageEventRoute: ApiPublicLinkedinMessageEventRoute,
   ApiPublicReceiveScholarshipLeadRoute: ApiPublicReceiveScholarshipLeadRoute,
