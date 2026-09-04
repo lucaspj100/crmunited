@@ -203,15 +203,14 @@ export function LeadsFoundTable({
                     <Button size="icon" variant="ghost" title="Abrir detalhes" onClick={() => setDetailId(l.id)}>
                       <Eye className="h-4 w-4" />
                     </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      title="Abrir WhatsApp"
-                      disabled={!l.phone}
-                      asChild={!!l.phone}
-                    >
-                      <MessageCircle className="h-4 w-4" />
-                    </Button>
+                    {l.phone ? (
+                      <WhatsappAction phone={l.phone} size="icon" variant="ghost" />
+                    ) : (
+                      <Button size="icon" variant="ghost" title="Sem telefone" disabled>
+                        <MessageCircle className="h-4 w-4" />
+                      </Button>
+                    )}
+
                     <Button
                       size="icon"
                       variant="ghost"
