@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { LEAD_STATUSES, labelFor, statusColor, waLink, LOST_REASONS } from "@/lib/constants";
+import { LEAD_STATUSES, labelFor, statusColor, LOST_REASONS } from "@/lib/constants";
 import { NewLeadDialog } from "@/components/NewLeadDialog";
 import { MessageCircle, Linkedin, Users, Search } from "lucide-react";
 

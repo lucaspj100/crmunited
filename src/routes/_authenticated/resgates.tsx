@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { LEAD_STATUSES, LOST_REASONS, labelFor, waLink } from "@/lib/constants";
+import { LEAD_STATUSES, LOST_REASONS, labelFor } from "@/lib/constants";
 import { copyToClipboard, waRescueMessage, rawPhoneDigits } from "@/lib/messages";
 import { ensureTaskForStatus } from "@/lib/task-automation";
 import { logLeadEvent } from "@/lib/lead-events";
