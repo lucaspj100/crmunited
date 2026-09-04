@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { WhatsappAction } from "@/components/WhatsappAction";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -107,7 +108,7 @@ function ResgatesPage() {
             {lead.observation && <p className="mt-1 text-xs italic text-muted-foreground line-clamp-2">{lead.observation}</p>}
           </div>
           <div className="flex flex-wrap gap-1">
-            {lead.phone && <Button asChild size="sm" variant="outline"><a href={waLink(lead.phone)} target="_blank" rel="noreferrer"><MessageCircle className="h-4 w-4" /></a></Button>}
+            <WhatsappAction phone={lead.phone} />
             {lead.linkedin_url && <Button asChild size="sm" variant="outline"><a href={lead.linkedin_url} target="_blank" rel="noreferrer"><Linkedin className="h-4 w-4" /></a></Button>}
             <Button size="sm" onClick={() => setResgateTask(t)}><Check className="h-4 w-4 mr-1" />Resgatar</Button>
             <Button size="sm" variant="ghost" onClick={() => setReagendarTask(t)} title="Reagendar"><Calendar className="h-4 w-4" /></Button>
@@ -170,7 +171,7 @@ function ResgatesPage() {
                       <div className="flex flex-wrap gap-1">
                         {l.phone && (
                           <>
-                            <Button asChild size="sm" variant="outline"><a href={waLink(l.phone)} target="_blank" rel="noreferrer"><MessageCircle className="h-4 w-4" /></a></Button>
+                            <WhatsappAction phone={l.phone} />
                             <Button size="sm" variant="outline" title="Copiar telefone" onClick={() => copyToClipboard(rawPhoneDigits(l.phone), "Telefone copiado")}><Phone className="h-4 w-4" /></Button>
                           </>
                         )}

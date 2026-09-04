@@ -210,11 +210,7 @@ export function LeadsFoundTable({
                       disabled={!l.phone}
                       asChild={!!l.phone}
                     >
-                      {l.phone ? (
-                        <a href={waLink(l.phone)} target="_blank" rel="noreferrer"><MessageCircle className="h-4 w-4" /></a>
-                      ) : (
-                        <MessageCircle className="h-4 w-4" />
-                      )}
+                      <MessageCircle className="h-4 w-4" />
                     </Button>
                     <Button
                       size="icon"

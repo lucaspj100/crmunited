@@ -7,7 +7,7 @@ type Props = {
   phone: string | null | undefined;
   message?: string;
   label?: string;
-  size?: "sm" | "default" | "icon";
+  size?: "sm" | "default" | "lg" | "icon";
   variant?: "outline" | "ghost" | "default" | "secondary";
   className?: string;
   stopPropagation?: boolean;

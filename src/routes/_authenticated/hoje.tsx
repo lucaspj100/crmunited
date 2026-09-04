@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate, useLocation } from "@tanstack/react-router";
+import { WhatsappAction } from "@/components/WhatsappAction";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 
@@ -262,9 +263,7 @@ function NextBestAction({ item, onWork, onDetails }: { item: QueueItem | undefin
         <div className="flex flex-wrap gap-2">
           <Button size="lg" onClick={onWork}><Zap className="h-4 w-4 mr-2" />Trabalhar agora</Button>
           {phone && (
-            <Button asChild size="lg" variant="outline">
-              <a href={waLink(phone)} target="_blank" rel="noreferrer"><MessageCircle className="h-4 w-4 mr-1" />WhatsApp</a>
-            </Button>
+            <WhatsappAction phone={phone} label="WhatsApp" size="lg" />
           )}
           {item.lead && (
             <Button size="lg" variant="ghost" onClick={() => onDetails(item.lead!.id)}><Eye className="h-4 w-4 mr-1" />Ver lead</Button>
@@ -415,7 +414,7 @@ function WorkLeadDialog({
 
             <div className="flex flex-wrap gap-2">
               {lead.phone && (
-                <Button asChild variant="outline"><a href={waLink(lead.phone)} target="_blank" rel="noreferrer"><MessageCircle className="h-4 w-4 mr-1" />WhatsApp</a></Button>
+                <WhatsappAction phone={lead.phone} label="WhatsApp" size="default" />
               )}
               {lead.phone && (
                 <Button variant="outline" onClick={() => copyToClipboard(rawPhoneDigits(lead.phone), "Telefone copiado")}><Phone className="h-4 w-4 mr-1" />Telefone</Button>
