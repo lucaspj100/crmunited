@@ -12,6 +12,7 @@ import { LEAD_STATUSES, LOST_REASONS } from "@/lib/constants";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { LeadTimeline } from "@/components/LeadTimeline";
+import { WhatsappAction } from "@/components/WhatsappAction";
 import { logLeadEvent } from "@/lib/lead-events";
 import { ensureEnrollmentSentToArena } from "@/lib/enrollment";
 import { LeadMaterialSection } from "@/components/materiais/LeadMaterialSection";
@@ -196,9 +197,16 @@ export function LeadDetailsDialog({
             <ScholarshipSection lead={lead as unknown as ScholarshipLead} onChanged={onClose} />
             <div><Label>Nome *</Label><Input value={name} onChange={(e) => setName(e.target.value)} required maxLength={200} /></div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div><Label>WhatsApp / Telefone</Label><Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(11) 99999-9999" /></div>
+              <div>
+                <Label>WhatsApp / Telefone</Label>
+                <div className="flex gap-2">
+                  <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(11) 99999-9999" />
+                  <WhatsappAction phone={phone} size="icon" />
+                </div>
+              </div>
               <div><Label>Empresa</Label><Input value={company} onChange={(e) => setCompany(e.target.value)} /></div>
             </div>
+
             <div><Label>E-mail</Label><Input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="nome@empresa.com" /></div>
             <div><Label>LinkedIn</Label><Input value={linkedin} onChange={(e) => setLinkedin(e.target.value)} type="url" placeholder="https://linkedin.com/in/…" /></div>
             <div><Label>Observação</Label><Textarea value={observation} onChange={(e) => setObservation(e.target.value)} rows={3} /></div>

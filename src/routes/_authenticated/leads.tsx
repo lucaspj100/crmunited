@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { WhatsappAction } from "@/components/WhatsappAction";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { LEAD_STATUSES, labelFor, statusColor, waLink, LOST_REASONS } from "@/lib/constants";
+import { LEAD_STATUSES, labelFor, statusColor, LOST_REASONS } from "@/lib/constants";
 import { NewLeadDialog } from "@/components/NewLeadDialog";
 import { MessageCircle, Linkedin, Users, Search } from "lucide-react";
 
@@ -101,9 +102,7 @@ function LeadsPage() {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {l.phone && (
-                    <Button asChild size="sm" variant="outline">
-                      <a href={waLink(l.phone)} target="_blank" rel="noreferrer"><MessageCircle className="h-4 w-4 mr-1" />WhatsApp</a>
-                    </Button>
+                    <WhatsappAction phone={l.phone} label="WhatsApp" />
                   )}
                   {l.linkedin_url && (
                     <Button asChild size="sm" variant="outline">

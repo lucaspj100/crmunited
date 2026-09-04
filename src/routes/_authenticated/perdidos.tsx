@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { WhatsappAction } from "@/components/WhatsappAction";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { LOST_REASONS, labelFor, waLink } from "@/lib/constants";
+import { LOST_REASONS, labelFor } from "@/lib/constants";
 import { copyToClipboard, waRescueMessage, leadSummary, rawPhoneDigits } from "@/lib/messages";
 import { TrendingDown, MessageCircle, Copy, RotateCw, Download, FileSpreadsheet, User } from "lucide-react";
 import { toast } from "sonner";
@@ -224,9 +225,7 @@ function PerdidosPage() {
                 <div className="flex flex-wrap gap-1">
                   {l.phone && (
                     <>
-                      <Button asChild size="sm" variant="outline" title="WhatsApp">
-                        <a href={waLink(l.phone)} target="_blank" rel="noreferrer"><MessageCircle className="h-4 w-4" /></a>
-                      </Button>
+                      <WhatsappAction phone={l.phone} />
                       <Button size="sm" variant="outline" title="Copiar telefone" onClick={() => copyToClipboard(rawPhoneDigits(l.phone), "Telefone copiado")}>
                         <Copy className="h-4 w-4" />
                       </Button>

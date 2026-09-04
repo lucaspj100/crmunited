@@ -11,7 +11,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Copy, MessageCircle } from "lucide-react";
-import { waLink } from "@/lib/constants";
+import { openWhatsapp } from "@/lib/whatsapp";
 
 export function ScholarshipMessageDialog({
   open,
@@ -46,12 +46,10 @@ export function ScholarshipMessageDialog({
   };
 
   const openWa = () => {
-    const url = waLink(phone, text);
-    if (url === "#") {
+    if (!openWhatsapp(phone, text)) {
       toast.error("Lead sem telefone válido");
       return;
     }
-    window.open(url, "_blank", "noopener,noreferrer");
     onOpenWhatsapp?.();
     onOpenChange(false);
   };

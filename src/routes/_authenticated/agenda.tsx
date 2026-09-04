@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { WhatsappAction } from "@/components/WhatsappAction";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { waLink, labelFor, statusColor, LOST_REASONS, LEAD_STATUSES } from "@/lib/constants";
+import { labelFor, statusColor, LOST_REASONS, LEAD_STATUSES } from "@/lib/constants";
 import { buildMessage, pickPresetKey, copyToClipboard, rawPhoneDigits, MESSAGE_LIBRARY } from "@/lib/messages";
 import { LeadDetailsDialog } from "@/components/LeadDetailsDialog";
 import { logLeadEvent } from "@/lib/lead-events";
@@ -397,9 +398,7 @@ function InterviewCard({
 
       <div className="flex flex-wrap gap-2 pt-1">
         {phoneDigits && (
-          <Button size="sm" variant="outline" asChild>
-            <a href={waLink(lead.phone)} target="_blank" rel="noreferrer"><MessageCircle className="h-4 w-4 mr-1" />WhatsApp</a>
-          </Button>
+          <WhatsappAction phone={lead.phone} label="WhatsApp" />
         )}
         <Button size="sm" variant="outline" onClick={onCopyConfirm}><Copy className="h-4 w-4 mr-1" />Confirmação</Button>
         {phoneDigits && <Button size="sm" variant="outline" onClick={() => copyToClipboard(phoneDigits, "Telefone copiado")}><Phone className="h-4 w-4" /></Button>}

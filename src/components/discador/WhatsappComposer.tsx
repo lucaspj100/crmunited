@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MessageCircle, Copy, RefreshCw, Send, Sparkles } from "lucide-react";
+import { openWhatsapp } from "@/lib/whatsapp";
 import { toast } from "sonner";
 import {
   fetchActiveTemplates,
@@ -109,10 +110,7 @@ export function WhatsappComposer({ contact }: Props) {
 
   const abrirWhatsapp = () => {
     if (!message || !contact.telefone_normalizado) return;
-    window.open(
-      `https://wa.me/${contact.telefone_normalizado}?text=${encodeURIComponent(message)}`,
-      "_blank",
-    );
+    openWhatsapp(contact.telefone_normalizado, message);
     void logAction("enviado");
   };
 

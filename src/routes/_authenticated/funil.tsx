@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { WhatsappAction } from "@/components/WhatsappAction";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { LEAD_STATUSES, LOST_REASONS, RESCUE_OPTIONS, waLink } from "@/lib/constants";
+import { LEAD_STATUSES, LOST_REASONS, RESCUE_OPTIONS } from "@/lib/constants";
 import { Kanban, MessageCircle, Linkedin, User, FileSpreadsheet, CalendarClock, CalendarPlus, AlertCircle, Clock, RotateCw } from "lucide-react";
 import { leadTemperature, TEMPERATURE_META, daysAgoLabel } from "@/lib/lead-temperature";
 import { exportRowsToXlsx } from "@/lib/xlsx-export";
@@ -303,9 +304,7 @@ function FunilPage() {
 
                       <div className="mt-2 flex gap-1" onClick={(e) => e.stopPropagation()}>
                         {l.phone && (
-                          <Button asChild size="icon" variant="ghost" className="h-7 w-7">
-                            <a href={waLink(l.phone)} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}><MessageCircle className="h-3.5 w-3.5" /></a>
-                          </Button>
+                          <WhatsappAction phone={l.phone} size="icon" variant="ghost" className="h-7 w-7" stopPropagation />
                         )}
                         {l.linkedin_url && (
                           <Button asChild size="icon" variant="ghost" className="h-7 w-7">

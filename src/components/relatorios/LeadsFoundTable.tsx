@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { LEAD_STATUSES, LOST_REASONS, labelFor, statusColor, waLink } from "@/lib/constants";
+import { LEAD_STATUSES, LOST_REASONS, labelFor, statusColor } from "@/lib/constants";
+import { WhatsappAction } from "@/components/WhatsappAction";
 import { LeadDetailsDialog } from "@/components/LeadDetailsDialog";
 import { exportRowsToXlsx } from "@/lib/xlsx-export";
 import { Eye, MessageCircle, ExternalLink, Download, Search, Users } from "lucide-react";
@@ -203,19 +204,14 @@ export function LeadsFoundTable({
                     <Button size="icon" variant="ghost" title="Abrir detalhes" onClick={() => setDetailId(l.id)}>
                       <Eye className="h-4 w-4" />
                     </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      title="Abrir WhatsApp"
-                      disabled={!l.phone}
-                      asChild={!!l.phone}
-                    >
-                      {l.phone ? (
-                        <a href={waLink(l.phone)} target="_blank" rel="noreferrer"><MessageCircle className="h-4 w-4" /></a>
-                      ) : (
+                    {l.phone ? (
+                      <WhatsappAction phone={l.phone} size="icon" variant="ghost" />
+                    ) : (
+                      <Button size="icon" variant="ghost" title="Sem telefone" disabled>
                         <MessageCircle className="h-4 w-4" />
-                      )}
-                    </Button>
+                      </Button>
+                    )}
+
                     <Button
                       size="icon"
                       variant="ghost"
