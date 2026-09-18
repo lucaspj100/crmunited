@@ -42,6 +42,7 @@ import { Route as AuthenticatedFeedbackIndividualRouteImport } from './routes/_a
 import { Route as AuthenticatedEquipesRouteImport } from './routes/_authenticated/equipes'
 import { Route as AuthenticatedDiscadorRouteImport } from './routes/_authenticated/discador'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedContasWhatsappRouteImport } from './routes/_authenticated/contas-whatsapp'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
 import { Route as AuthenticatedComissaoVendedoresRouteImport } from './routes/_authenticated/comissao-vendedores'
 import { Route as AuthenticatedComissaoLiderancaRouteImport } from './routes/_authenticated/comissao-lideranca'
@@ -228,6 +229,12 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedContasWhatsappRoute =
+  AuthenticatedContasWhatsappRouteImport.update({
+    id: '/contas-whatsapp',
+    path: '/contas-whatsapp',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedConfiguracoesRoute =
   AuthenticatedConfiguracoesRouteImport.update({
     id: '/configuracoes',
@@ -297,6 +304,7 @@ export interface FileRoutesByFullPath {
   '/comissao-lideranca': typeof AuthenticatedComissaoLiderancaRoute
   '/comissao-vendedores': typeof AuthenticatedComissaoVendedoresRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
+  '/contas-whatsapp': typeof AuthenticatedContasWhatsappRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/discador': typeof AuthenticatedDiscadorRoute
   '/equipes': typeof AuthenticatedEquipesRoute
@@ -341,6 +349,7 @@ export interface FileRoutesByTo {
   '/comissao-lideranca': typeof AuthenticatedComissaoLiderancaRoute
   '/comissao-vendedores': typeof AuthenticatedComissaoVendedoresRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
+  '/contas-whatsapp': typeof AuthenticatedContasWhatsappRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/discador': typeof AuthenticatedDiscadorRoute
   '/equipes': typeof AuthenticatedEquipesRoute
@@ -387,6 +396,7 @@ export interface FileRoutesById {
   '/_authenticated/comissao-lideranca': typeof AuthenticatedComissaoLiderancaRoute
   '/_authenticated/comissao-vendedores': typeof AuthenticatedComissaoVendedoresRoute
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
+  '/_authenticated/contas-whatsapp': typeof AuthenticatedContasWhatsappRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/discador': typeof AuthenticatedDiscadorRoute
   '/_authenticated/equipes': typeof AuthenticatedEquipesRoute
@@ -433,6 +443,7 @@ export interface FileRouteTypes {
     | '/comissao-lideranca'
     | '/comissao-vendedores'
     | '/configuracoes'
+    | '/contas-whatsapp'
     | '/dashboard'
     | '/discador'
     | '/equipes'
@@ -477,6 +488,7 @@ export interface FileRouteTypes {
     | '/comissao-lideranca'
     | '/comissao-vendedores'
     | '/configuracoes'
+    | '/contas-whatsapp'
     | '/dashboard'
     | '/discador'
     | '/equipes'
@@ -522,6 +534,7 @@ export interface FileRouteTypes {
     | '/_authenticated/comissao-lideranca'
     | '/_authenticated/comissao-vendedores'
     | '/_authenticated/configuracoes'
+    | '/_authenticated/contas-whatsapp'
     | '/_authenticated/dashboard'
     | '/_authenticated/discador'
     | '/_authenticated/equipes'
@@ -802,6 +815,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/contas-whatsapp': {
+      id: '/_authenticated/contas-whatsapp'
+      path: '/contas-whatsapp'
+      fullPath: '/contas-whatsapp'
+      preLoaderRoute: typeof AuthenticatedContasWhatsappRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/configuracoes': {
       id: '/_authenticated/configuracoes'
       path: '/configuracoes'
@@ -882,6 +902,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedComissaoLiderancaRoute: typeof AuthenticatedComissaoLiderancaRoute
   AuthenticatedComissaoVendedoresRoute: typeof AuthenticatedComissaoVendedoresRoute
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
+  AuthenticatedContasWhatsappRoute: typeof AuthenticatedContasWhatsappRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDiscadorRoute: typeof AuthenticatedDiscadorRoute
   AuthenticatedEquipesRoute: typeof AuthenticatedEquipesRoute
@@ -919,6 +940,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedComissaoLiderancaRoute: AuthenticatedComissaoLiderancaRoute,
   AuthenticatedComissaoVendedoresRoute: AuthenticatedComissaoVendedoresRoute,
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
+  AuthenticatedContasWhatsappRoute: AuthenticatedContasWhatsappRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDiscadorRoute: AuthenticatedDiscadorRoute,
   AuthenticatedEquipesRoute: AuthenticatedEquipesRoute,
