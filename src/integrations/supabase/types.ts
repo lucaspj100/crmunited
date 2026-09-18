@@ -3020,6 +3020,42 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_accounts: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+          last_seen_at: string | null
+          normalized_phone: string
+          phone: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          last_seen_at?: string | null
+          normalized_phone: string
+          phone: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          last_seen_at?: string | null
+          normalized_phone?: string
+          phone?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       whatsapp_list_entries: {
         Row: {
           created_at: string
