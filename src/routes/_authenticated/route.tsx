@@ -3,7 +3,7 @@ import { createFileRoute, Outlet, useNavigate, useLocation, Link } from "@tansta
 import { useCallback, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useBrand } from "@/lib/brand";
-import { LayoutDashboard, Users, Kanban, RotateCw, BarChart3, LogOut, Settings, Award, TrendingDown, Sparkles, Trophy, Calendar, PhoneCall, Link2, ClipboardCheck, Activity, Tv, User as UserIcon, Shield, Package, Wallet, MessageSquare, Target, GraduationCap, BookOpen } from "lucide-react";
+import { LayoutDashboard, Users, Kanban, RotateCw, BarChart3, LogOut, Settings, Award, TrendingDown, Sparkles, Trophy, Calendar, PhoneCall, Link2, ClipboardCheck, Activity, Tv, User as UserIcon, Shield, Package, Wallet, MessageSquare, Target, GraduationCap, BookOpen, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ChangePasswordDialog } from "@/components/ChangePasswordDialog";
 import { Badge } from "@/components/ui/badge";
@@ -35,6 +35,7 @@ const BASE_NAV = [
   { to: "/checkout-do-dia", label: "Checkout do dia", icon: ClipboardCheck },
   { to: "/materiais", label: "Materiais e premiação", icon: Package },
   { to: "/placar-diario", label: "Placar (Telão)", icon: Tv },
+  { to: "/contas-whatsapp", label: "Contas WhatsApp", icon: Smartphone },
   { to: "/meu-perfil", label: "Meu perfil", icon: UserIcon },
 ] as const;
 
