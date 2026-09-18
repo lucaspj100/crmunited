@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiWhatsappAccountsRouteImport } from './routes/api/whatsapp-accounts'
 import { Route as ApiFindLeadByPhoneRouteImport } from './routes/api/find-lead-by-phone'
 import { Route as AuthenticatedUsuariosAcessosRouteImport } from './routes/_authenticated/usuarios-acessos'
 import { Route as AuthenticatedTarefasRouteImport } from './routes/_authenticated/tarefas'
@@ -41,12 +42,14 @@ import { Route as AuthenticatedFeedbackIndividualRouteImport } from './routes/_a
 import { Route as AuthenticatedEquipesRouteImport } from './routes/_authenticated/equipes'
 import { Route as AuthenticatedDiscadorRouteImport } from './routes/_authenticated/discador'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedContasWhatsappRouteImport } from './routes/_authenticated/contas-whatsapp'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
 import { Route as AuthenticatedComissaoVendedoresRouteImport } from './routes/_authenticated/comissao-vendedores'
 import { Route as AuthenticatedComissaoLiderancaRouteImport } from './routes/_authenticated/comissao-lideranca'
 import { Route as AuthenticatedCheckoutDoDiaRouteImport } from './routes/_authenticated/checkout-do-dia'
 import { Route as AuthenticatedAssistentesIaRouteImport } from './routes/_authenticated/assistentes-ia'
 import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
+import { Route as ApiWhatsappAccountsResolveRouteImport } from './routes/api/whatsapp-accounts/resolve'
 import { Route as ApiPublicReceiveScholarshipLeadRouteImport } from './routes/api/public/receive-scholarship-lead'
 import { Route as ApiPublicLinkedinMessageEventRouteImport } from './routes/api/public/linkedin-message-event'
 import { Route as ApiPublicFindSellerByEmailRouteImport } from './routes/api/public/find-seller-by-email'
@@ -63,6 +66,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiWhatsappAccountsRoute = ApiWhatsappAccountsRouteImport.update({
+  id: '/api/whatsapp-accounts',
+  path: '/api/whatsapp-accounts',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiFindLeadByPhoneRoute = ApiFindLeadByPhoneRouteImport.update({
@@ -221,6 +229,12 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedContasWhatsappRoute =
+  AuthenticatedContasWhatsappRouteImport.update({
+    id: '/contas-whatsapp',
+    path: '/contas-whatsapp',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedConfiguracoesRoute =
   AuthenticatedConfiguracoesRouteImport.update({
     id: '/configuracoes',
@@ -256,6 +270,12 @@ const AuthenticatedAgendaRoute = AuthenticatedAgendaRouteImport.update({
   path: '/agenda',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiWhatsappAccountsResolveRoute =
+  ApiWhatsappAccountsResolveRouteImport.update({
+    id: '/resolve',
+    path: '/resolve',
+    getParentRoute: () => ApiWhatsappAccountsRoute,
+  } as any)
 const ApiPublicReceiveScholarshipLeadRoute =
   ApiPublicReceiveScholarshipLeadRouteImport.update({
     id: '/api/public/receive-scholarship-lead',
@@ -284,6 +304,7 @@ export interface FileRoutesByFullPath {
   '/comissao-lideranca': typeof AuthenticatedComissaoLiderancaRoute
   '/comissao-vendedores': typeof AuthenticatedComissaoVendedoresRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
+  '/contas-whatsapp': typeof AuthenticatedContasWhatsappRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/discador': typeof AuthenticatedDiscadorRoute
   '/equipes': typeof AuthenticatedEquipesRoute
@@ -313,9 +334,11 @@ export interface FileRoutesByFullPath {
   '/tarefas': typeof AuthenticatedTarefasRoute
   '/usuarios-acessos': typeof AuthenticatedUsuariosAcessosRoute
   '/api/find-lead-by-phone': typeof ApiFindLeadByPhoneRoute
+  '/api/whatsapp-accounts': typeof ApiWhatsappAccountsRouteWithChildren
   '/api/public/find-seller-by-email': typeof ApiPublicFindSellerByEmailRoute
   '/api/public/linkedin-message-event': typeof ApiPublicLinkedinMessageEventRoute
   '/api/public/receive-scholarship-lead': typeof ApiPublicReceiveScholarshipLeadRoute
+  '/api/whatsapp-accounts/resolve': typeof ApiWhatsappAccountsResolveRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -326,6 +349,7 @@ export interface FileRoutesByTo {
   '/comissao-lideranca': typeof AuthenticatedComissaoLiderancaRoute
   '/comissao-vendedores': typeof AuthenticatedComissaoVendedoresRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
+  '/contas-whatsapp': typeof AuthenticatedContasWhatsappRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/discador': typeof AuthenticatedDiscadorRoute
   '/equipes': typeof AuthenticatedEquipesRoute
@@ -355,9 +379,11 @@ export interface FileRoutesByTo {
   '/tarefas': typeof AuthenticatedTarefasRoute
   '/usuarios-acessos': typeof AuthenticatedUsuariosAcessosRoute
   '/api/find-lead-by-phone': typeof ApiFindLeadByPhoneRoute
+  '/api/whatsapp-accounts': typeof ApiWhatsappAccountsRouteWithChildren
   '/api/public/find-seller-by-email': typeof ApiPublicFindSellerByEmailRoute
   '/api/public/linkedin-message-event': typeof ApiPublicLinkedinMessageEventRoute
   '/api/public/receive-scholarship-lead': typeof ApiPublicReceiveScholarshipLeadRoute
+  '/api/whatsapp-accounts/resolve': typeof ApiWhatsappAccountsResolveRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -370,6 +396,7 @@ export interface FileRoutesById {
   '/_authenticated/comissao-lideranca': typeof AuthenticatedComissaoLiderancaRoute
   '/_authenticated/comissao-vendedores': typeof AuthenticatedComissaoVendedoresRoute
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
+  '/_authenticated/contas-whatsapp': typeof AuthenticatedContasWhatsappRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/discador': typeof AuthenticatedDiscadorRoute
   '/_authenticated/equipes': typeof AuthenticatedEquipesRoute
@@ -399,9 +426,11 @@ export interface FileRoutesById {
   '/_authenticated/tarefas': typeof AuthenticatedTarefasRoute
   '/_authenticated/usuarios-acessos': typeof AuthenticatedUsuariosAcessosRoute
   '/api/find-lead-by-phone': typeof ApiFindLeadByPhoneRoute
+  '/api/whatsapp-accounts': typeof ApiWhatsappAccountsRouteWithChildren
   '/api/public/find-seller-by-email': typeof ApiPublicFindSellerByEmailRoute
   '/api/public/linkedin-message-event': typeof ApiPublicLinkedinMessageEventRoute
   '/api/public/receive-scholarship-lead': typeof ApiPublicReceiveScholarshipLeadRoute
+  '/api/whatsapp-accounts/resolve': typeof ApiWhatsappAccountsResolveRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -414,6 +443,7 @@ export interface FileRouteTypes {
     | '/comissao-lideranca'
     | '/comissao-vendedores'
     | '/configuracoes'
+    | '/contas-whatsapp'
     | '/dashboard'
     | '/discador'
     | '/equipes'
@@ -443,9 +473,11 @@ export interface FileRouteTypes {
     | '/tarefas'
     | '/usuarios-acessos'
     | '/api/find-lead-by-phone'
+    | '/api/whatsapp-accounts'
     | '/api/public/find-seller-by-email'
     | '/api/public/linkedin-message-event'
     | '/api/public/receive-scholarship-lead'
+    | '/api/whatsapp-accounts/resolve'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -456,6 +488,7 @@ export interface FileRouteTypes {
     | '/comissao-lideranca'
     | '/comissao-vendedores'
     | '/configuracoes'
+    | '/contas-whatsapp'
     | '/dashboard'
     | '/discador'
     | '/equipes'
@@ -485,9 +518,11 @@ export interface FileRouteTypes {
     | '/tarefas'
     | '/usuarios-acessos'
     | '/api/find-lead-by-phone'
+    | '/api/whatsapp-accounts'
     | '/api/public/find-seller-by-email'
     | '/api/public/linkedin-message-event'
     | '/api/public/receive-scholarship-lead'
+    | '/api/whatsapp-accounts/resolve'
   id:
     | '__root__'
     | '/'
@@ -499,6 +534,7 @@ export interface FileRouteTypes {
     | '/_authenticated/comissao-lideranca'
     | '/_authenticated/comissao-vendedores'
     | '/_authenticated/configuracoes'
+    | '/_authenticated/contas-whatsapp'
     | '/_authenticated/dashboard'
     | '/_authenticated/discador'
     | '/_authenticated/equipes'
@@ -528,9 +564,11 @@ export interface FileRouteTypes {
     | '/_authenticated/tarefas'
     | '/_authenticated/usuarios-acessos'
     | '/api/find-lead-by-phone'
+    | '/api/whatsapp-accounts'
     | '/api/public/find-seller-by-email'
     | '/api/public/linkedin-message-event'
     | '/api/public/receive-scholarship-lead'
+    | '/api/whatsapp-accounts/resolve'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -538,6 +576,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ApiFindLeadByPhoneRoute: typeof ApiFindLeadByPhoneRoute
+  ApiWhatsappAccountsRoute: typeof ApiWhatsappAccountsRouteWithChildren
   ApiPublicFindSellerByEmailRoute: typeof ApiPublicFindSellerByEmailRoute
   ApiPublicLinkedinMessageEventRoute: typeof ApiPublicLinkedinMessageEventRoute
   ApiPublicReceiveScholarshipLeadRoute: typeof ApiPublicReceiveScholarshipLeadRoute
@@ -564,6 +603,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/whatsapp-accounts': {
+      id: '/api/whatsapp-accounts'
+      path: '/api/whatsapp-accounts'
+      fullPath: '/api/whatsapp-accounts'
+      preLoaderRoute: typeof ApiWhatsappAccountsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/find-lead-by-phone': {
@@ -769,6 +815,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/contas-whatsapp': {
+      id: '/_authenticated/contas-whatsapp'
+      path: '/contas-whatsapp'
+      fullPath: '/contas-whatsapp'
+      preLoaderRoute: typeof AuthenticatedContasWhatsappRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/configuracoes': {
       id: '/_authenticated/configuracoes'
       path: '/configuracoes'
@@ -811,6 +864,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAgendaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/whatsapp-accounts/resolve': {
+      id: '/api/whatsapp-accounts/resolve'
+      path: '/resolve'
+      fullPath: '/api/whatsapp-accounts/resolve'
+      preLoaderRoute: typeof ApiWhatsappAccountsResolveRouteImport
+      parentRoute: typeof ApiWhatsappAccountsRoute
+    }
     '/api/public/receive-scholarship-lead': {
       id: '/api/public/receive-scholarship-lead'
       path: '/api/public/receive-scholarship-lead'
@@ -842,6 +902,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedComissaoLiderancaRoute: typeof AuthenticatedComissaoLiderancaRoute
   AuthenticatedComissaoVendedoresRoute: typeof AuthenticatedComissaoVendedoresRoute
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
+  AuthenticatedContasWhatsappRoute: typeof AuthenticatedContasWhatsappRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDiscadorRoute: typeof AuthenticatedDiscadorRoute
   AuthenticatedEquipesRoute: typeof AuthenticatedEquipesRoute
@@ -879,6 +940,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedComissaoLiderancaRoute: AuthenticatedComissaoLiderancaRoute,
   AuthenticatedComissaoVendedoresRoute: AuthenticatedComissaoVendedoresRoute,
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
+  AuthenticatedContasWhatsappRoute: AuthenticatedContasWhatsappRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDiscadorRoute: AuthenticatedDiscadorRoute,
   AuthenticatedEquipesRoute: AuthenticatedEquipesRoute,
@@ -912,11 +974,23 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface ApiWhatsappAccountsRouteChildren {
+  ApiWhatsappAccountsResolveRoute: typeof ApiWhatsappAccountsResolveRoute
+}
+
+const ApiWhatsappAccountsRouteChildren: ApiWhatsappAccountsRouteChildren = {
+  ApiWhatsappAccountsResolveRoute: ApiWhatsappAccountsResolveRoute,
+}
+
+const ApiWhatsappAccountsRouteWithChildren =
+  ApiWhatsappAccountsRoute._addFileChildren(ApiWhatsappAccountsRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ApiFindLeadByPhoneRoute: ApiFindLeadByPhoneRoute,
+  ApiWhatsappAccountsRoute: ApiWhatsappAccountsRouteWithChildren,
   ApiPublicFindSellerByEmailRoute: ApiPublicFindSellerByEmailRoute,
   ApiPublicLinkedinMessageEventRoute: ApiPublicLinkedinMessageEventRoute,
   ApiPublicReceiveScholarshipLeadRoute: ApiPublicReceiveScholarshipLeadRoute,
