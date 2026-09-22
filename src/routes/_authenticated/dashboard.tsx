@@ -5,10 +5,23 @@ import { useAuth } from "@/lib/auth-context";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { LayoutDashboard, Users, CalendarCheck, GraduationCap, TrendingDown, ListChecks, AlertTriangle, RotateCw, Sparkles, Clock } from "lucide-react";
+import { ConsultantDashboard, type DashboardData, type DashboardInterview } from "@/components/dashboard/ConsultantDashboard";
 
-export const Route = createFileRoute("/_authenticated/dashboard")({ component: Dashboard });
+export const Route = createFileRoute("/_authenticated/dashboard")({
+  component: Dashboard,
+  head: () => ({
+    meta: [
+      { title: "Dashboard comercial · CRM United" },
+      { name: "description", content: "Acompanhe sua performance, carreira, entrevistas e operação comercial." },
+      { property: "og:title", content: "Dashboard comercial · CRM United" },
+      { property: "og:description", content: "Painel de performance e operação comercial do CRM United." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+});
 
-async function fetchDashboard() {
+async function fetchDashboard(): Promise<DashboardData> {
   const today = new Date().toISOString().slice(0, 10);
   const last7 = new Date(); last7.setDate(last7.getDate() - 7);
   const last7Iso = last7.toISOString();
@@ -106,7 +119,7 @@ function Dashboard() {
   const { roles } = useAuth();
   const isAdmin = roles.includes("admin") || roles.includes("franqueado");
   const { data, isLoading } = useQuery({ queryKey: ["dashboard"], queryFn: fetchDashboard });
-  const { data: interviews } = useQuery({
+  const { data: interviews = [] } = useQuery({
     queryKey: ["dashboard-interviews-today"],
     queryFn: async () => {
       const today = new Date().toISOString().slice(0, 10);
@@ -131,10 +144,12 @@ function Dashboard() {
           ownerName: x.owner_id ? (profMap.get(x.owner_id) ?? "Vendedor") : "Vendedor",
           done: x.status === "entrevista_realizada",
         }))
-        .sort((a, b) => a.time.localeCompare(b.time));
+        .sort((a, b) => a.time.localeCompare(b.time)) as DashboardInterview[];
     },
   });
   if (isLoading || !data) return <div className="text-muted-foreground">Carregando…</div>;
+
+  if (!isAdmin) return <ConsultantDashboard data={data} interviews={interviews} />;
 
   const anyAlert = data.novosSemContato + data.tasksLate + data.entrevistasHoje + data.leadsNoTask + data.rescuesToday > 0;
 
