@@ -114,21 +114,21 @@ function PerformanceItem({
   const active = value > 0;
   return (
     <div
-      className={`group relative min-h-28 overflow-hidden rounded-md border p-3.5 transition-all motion-safe:hover:-translate-y-0.5 ${
+      className={`group relative min-h-24 overflow-hidden rounded-md p-3.5 transition-all motion-safe:hover:-translate-y-0.5 ${
         completed
-          ? "border-success/40 bg-success/10 shadow-sm shadow-success/10"
+          ? "bg-success/10 shadow-sm shadow-success/10 ring-1 ring-success/35"
           : active
-            ? "border-primary/25 bg-primary/5 hover:border-primary/45 hover:shadow-sm"
-            : "border-border/70 bg-background/55 hover:border-primary/25"
+            ? "bg-primary/[0.07] ring-1 ring-primary/30"
+            : "bg-muted/45 ring-1 ring-border/60"
       }`}
     >
       <div className={`absolute inset-y-0 left-0 w-0.5 ${completed ? "bg-success" : active ? "bg-primary" : "bg-border"}`} />
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs font-medium text-muted-foreground">{label}</span>
-        {completed ? <CheckCircle2 className="h-4 w-4 text-success motion-safe:animate-pulse" /> : <Icon className={`h-4 w-4 ${active ? "text-primary" : "text-muted-foreground"}`} />}
+        {completed ? <CheckCircle2 className="h-4 w-4 text-success motion-safe:animate-pulse" /> : <Icon className={`h-4 w-4 ${active ? "text-primary" : "text-muted-foreground/70"}`} />}
       </div>
-      <div className="mt-3 text-3xl font-black tabular-nums">{value}</div>
-      <div className={`mt-1 text-[10px] font-semibold uppercase ${completed ? "text-success" : active ? "text-primary" : "text-muted-foreground"}`}>
+      <div className="mt-2.5 text-3xl font-black tabular-nums">{value}</div>
+      <div className={`mt-0.5 text-[10px] font-semibold uppercase ${completed ? "text-success" : active ? "text-primary" : "text-muted-foreground/70"}`}>
         {completed ? "Concluído" : active ? "Em andamento" : "Pendente"}
       </div>
     </div>
@@ -136,52 +136,61 @@ function PerformanceItem({
 }
 
 function CareerProgress({ overview }: { overview: NonNullable<ReturnType<typeof useCareerOverview>["data"]> }) {
+  let label = "";
+  let current = 0;
+  let goal = 0;
+  let achieved = false;
+  let achievedText = "";
+  let pendingText = "";
+
   if (showsStars(overview.career_role)) {
     const pointsInStar = overview.week_points % POINTS_PER_STAR;
-    const missing = pointsInStar === 0 ? POINTS_PER_STAR : POINTS_PER_STAR - pointsInStar;
-    const percentage = (pointsInStar / POINTS_PER_STAR) * 100;
-    return (
-      <div className="space-y-2.5 border-t border-primary/10 pt-4">
-        <div className="flex items-center justify-between gap-3 text-xs">
-          <span className="font-medium text-muted-foreground">Próxima estrela</span>
-          <span className="font-bold tabular-nums">{pointsInStar} / {POINTS_PER_STAR} pts · {percentage.toFixed(0)}%</span>
-        </div>
-        <Progress value={percentage} className="h-3.5 bg-primary/10" />
-        <p className="text-[11px] text-muted-foreground">Faltam {missing} pt{missing === 1 ? "" : "s"} para avançar.</p>
-      </div>
-    );
-  }
-
-  if (isLeaderRole(overview.career_role)) {
+    label = "Próxima estrela";
+    current = pointsInStar;
+    goal = POINTS_PER_STAR;
+    achieved = pointsInStar === 0 && overview.week_points > 0;
+    achievedText = "Estrela conquistada nesta semana.";
+    pendingText = `Faltam ${POINTS_PER_STAR - current} pt${POINTS_PER_STAR - current === 1 ? "" : "s"} para avançar.`;
+  } else if (isLeaderRole(overview.career_role)) {
     const target = overview.quota_points_target || QUOTA_POINTS_TARGET;
-    const percentage = Math.min(100, (overview.structure_month_points / target) * 100);
-    return (
-      <div className="space-y-2.5 border-t border-primary/10 pt-4">
-        <div className="flex items-center justify-between gap-3 text-xs">
-          <span className="font-medium text-muted-foreground">Produção da estrutura no mês</span>
-          <span className="font-bold tabular-nums">{overview.structure_month_points} / {target} pts · {percentage.toFixed(0)}%</span>
-        </div>
-        <Progress value={percentage} className="h-3.5 bg-primary/10" />
-        <p className="text-[11px] text-muted-foreground">Progresso da sua estrutura no ciclo atual.</p>
-      </div>
-    );
+    label = "Produção da estrutura no mês";
+    current = overview.structure_month_points;
+    goal = target;
+    achieved = current >= target;
+    achievedText = "Meta do ciclo atingida.";
+    pendingText = "Progresso da sua estrutura no ciclo atual.";
+  } else if (overview.goal) {
+    label = "Meta de carreira do mês";
+    current = overview.month_points;
+    goal = overview.goal.target_points;
+    achieved = current >= goal;
+    achievedText = "Meta de carreira atingida.";
+    pendingText = "Continue avançando na sua meta de carreira.";
+  } else {
+    return <p className="text-xs text-muted-foreground">{overview.month_points} pontos de carreira no mês.</p>;
   }
 
-  if (overview.goal) {
-    const percentage = Math.min(100, (overview.month_points / overview.goal.target_points) * 100);
-    return (
-      <div className="space-y-2.5 border-t border-primary/10 pt-4">
-        <div className="flex items-center justify-between gap-3 text-xs">
-          <span className="font-medium text-muted-foreground">Meta de carreira do mês</span>
-          <span className="font-bold tabular-nums">{overview.month_points} / {overview.goal.target_points} pts · {percentage.toFixed(0)}%</span>
-        </div>
-        <Progress value={percentage} className="h-3.5 bg-primary/10" />
-        <p className="text-[11px] text-muted-foreground">Continue avançando na sua meta de carreira.</p>
-      </div>
-    );
-  }
+  const percentage = goal > 0 ? Math.min(100, (current / goal) * 100) : 0;
 
-  return <p className="text-xs text-muted-foreground">{overview.month_points} pontos de carreira no mês.</p>;
+  return (
+    <div className="space-y-2 border-t border-primary/10 pt-3.5">
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</span>
+        {achieved ? (
+          <span className="flex items-center gap-1 rounded-full border border-success/30 bg-success/10 px-2 py-0.5 text-[10px] font-bold uppercase text-success">
+            <CheckCircle2 className="h-3 w-3" /> Meta atingida
+          </span>
+        ) : (
+          <span className="text-sm font-black tabular-nums text-primary">{percentage.toFixed(0)}%</span>
+        )}
+      </div>
+      <Progress value={achieved ? 100 : percentage} className="h-4 bg-primary/10" />
+      <div className="flex flex-wrap items-baseline justify-between gap-x-2 text-xs">
+        <span className="font-black tabular-nums text-foreground">{current} <span className="text-xs font-medium text-muted-foreground">/ {goal} pts</span></span>
+        <span className="text-[11px] text-muted-foreground">{achieved ? achievedText : pendingText}</span>
+      </div>
+    </div>
+  );
 }
 
 function AlertChip({ count, label, tone, to }: { count: number; label: string; tone: "danger" | "warning" | "info"; to: "/tarefas" | "/resgates" }) {
@@ -257,14 +266,20 @@ export function ConsultantDashboard({ data, interviews }: Props) {
     : null;
   const displayName = profile?.full_name || career?.full_name || profile?.email || user?.email || "Consultor";
   const hasAlerts = data.tasksLate + data.novosSemContato + data.leadsNoTask + data.rescuesToday + data.entrevistasHoje > 0;
+  const missionActive = [
+    mine?.entrevistas_marcadas ?? 0,
+    mine?.entrevistas_realizadas ?? 0,
+    mine?.matriculas ?? 0,
+    data.tasksDoneToday,
+  ].filter((value) => value > 0).length;
 
   return (
-    <div className="mx-auto max-w-[1500px] space-y-4 rounded-lg bg-muted/35 p-3 sm:p-4 lg:p-5">
+    <div className="mx-auto max-w-[1500px] space-y-4 rounded-lg bg-gradient-to-b from-primary/[0.07] via-muted/40 to-muted/35 p-3 sm:p-4 lg:p-5">
       <div className="grid gap-4 xl:grid-cols-[0.82fr_1.18fr]">
-        <Card className="relative overflow-hidden border-primary/20 bg-gradient-to-br from-primary/15 via-card/95 to-accent/30 p-5 shadow-md shadow-primary/5 md:p-6">
+        <Card className="relative overflow-hidden border-primary/25 bg-gradient-to-br from-primary/20 via-card/95 to-accent/40 p-4 shadow-lg shadow-primary/10 ring-1 ring-primary/10 md:p-5">
           <div className="absolute inset-y-0 left-0 w-1 bg-primary" />
           <div className="absolute -right-16 -top-20 h-48 w-48 rounded-full bg-accent/20 blur-3xl" />
-          <div className="relative flex flex-col gap-5 sm:flex-row sm:items-start xl:flex-col xl:items-center xl:text-center 2xl:flex-row 2xl:items-start 2xl:text-left">
+          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-start xl:flex-col xl:items-center xl:text-center 2xl:flex-row 2xl:items-start 2xl:text-left">
             <div className="flex h-32 w-32 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-background bg-primary text-4xl font-black text-primary-foreground shadow-lg shadow-primary/15 ring-2 ring-primary/30 md:h-36 md:w-36">
               {profile?.avatar_url ? (
                 <img src={profile.avatar_url} alt={`Foto de ${displayName}`} className="h-full w-full object-cover" />
@@ -272,23 +287,32 @@ export function ConsultantDashboard({ data, interviews }: Props) {
                 initials(displayName)
               )}
             </div>
-            <div className="min-w-0 flex-1 space-y-4">
+            <div className="min-w-0 flex-1 space-y-3">
               <div>
-                <div className="flex items-center gap-2 text-[11px] font-bold uppercase text-primary xl:justify-center 2xl:justify-start">
-                  <UserRound className="h-4 w-4" /> Painel de performance
+                <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wide text-primary xl:justify-center 2xl:justify-start">
+                  <UserRound className="h-3.5 w-3.5" /> Painel de performance
                 </div>
-                <h1 className="mt-1 break-words text-3xl font-black leading-tight md:text-4xl">{displayName}</h1>
-                <div className="mt-2 flex xl:justify-center 2xl:justify-start"><CareerBadge info={careerInfo} size="lg" /></div>
+                <h1 className="mt-1 line-clamp-2 break-words text-2xl font-black leading-tight md:text-3xl">{displayName}</h1>
+                <div className="mt-1.5 flex xl:justify-center 2xl:justify-start"><CareerBadge info={careerInfo} size="lg" /></div>
               </div>
               <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
-                <div className="rounded-md border border-primary/15 bg-background/65 px-3 py-2.5 text-left">
+                <div className="flex flex-col justify-center rounded-md bg-background/70 px-3 py-2.5 text-left ring-1 ring-primary/15">
                   <div className="text-[10px] font-semibold uppercase text-muted-foreground">Placar de hoje</div>
-                  <div className="mt-0.5 text-xl font-black tabular-nums">{fmtScore(mine?.score ?? 0)} <span className="text-xs font-medium text-muted-foreground">pontos</span></div>
+                  <div className="mt-0.5 text-2xl font-black leading-none tabular-nums text-foreground">
+                    {fmtScore(mine?.score ?? 0)} <span className="text-xs font-semibold text-muted-foreground">pts</span>
+                  </div>
                 </div>
-                {rank >= 0 && (
-                  <div className="flex items-center justify-between rounded-md border border-primary/25 bg-primary px-3 py-2.5 text-primary-foreground shadow-sm shadow-primary/20">
-                    <div className="text-left"><div className="text-[10px] font-semibold uppercase opacity-80">Ranking diário</div><div className="text-2xl font-black tabular-nums">#{rank + 1}</div></div>
-                    <Medal className="h-7 w-7" />
+                {rank >= 0 ? (
+                  <div className="flex flex-col justify-center rounded-md bg-primary px-3 py-2.5 text-left text-primary-foreground shadow-md shadow-primary/30 ring-1 ring-primary/60">
+                    <div className="text-[10px] font-semibold uppercase opacity-80">Ranking diário</div>
+                    <div className="mt-0.5 flex items-center gap-1.5 text-2xl font-black leading-none tabular-nums">
+                      #{rank + 1} <Medal className="h-5 w-5 opacity-90" />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col justify-center rounded-md bg-background/40 px-3 py-2.5 text-left ring-1 ring-dashed ring-border/60">
+                    <div className="text-[10px] font-semibold uppercase text-muted-foreground">Ranking diário</div>
+                    <div className="mt-0.5 text-2xl font-black leading-none text-muted-foreground/60">—</div>
                   </div>
                 )}
               </div>
@@ -301,19 +325,27 @@ export function ConsultantDashboard({ data, interviews }: Props) {
           </div>
         </Card>
 
-        <Card className="border-primary/15 bg-card/95 p-5 shadow-md shadow-primary/5 transition-shadow hover:shadow-lg md:p-6">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <SectionTitle icon={Target}>Missão de hoje</SectionTitle>
-              <p className="mt-1 text-xs text-muted-foreground">Cada avanço fortalece sua posição no placar.</p>
+        <Card className="border-primary/15 bg-card/95 p-4 shadow-md shadow-primary/5 transition-shadow hover:shadow-lg md:p-5">
+          <div className="flex items-start justify-between gap-3 border-b border-primary/10 pb-3">
+            <div className="relative pl-3.5">
+              <div className="absolute inset-y-0.5 left-0 w-1 rounded-full bg-primary" />
+              <h2 className="flex items-center gap-1.5 text-base font-black uppercase tracking-wide"><Target className="h-4 w-4 text-primary" /> Missão de hoje</h2>
+              <p className="mt-0.5 text-xs text-muted-foreground">Cada avanço fortalece sua posição no placar.</p>
             </div>
             <div className="flex h-10 w-10 items-center justify-center rounded-md border border-primary/20 bg-primary/10"><Trophy className="h-5 w-5 text-primary" /></div>
           </div>
-          <div className="mt-5 grid grid-cols-2 gap-2.5 sm:gap-3">
+          <div className="mt-4 grid grid-cols-2 gap-2.5 sm:gap-3">
             <PerformanceItem icon={CalendarCheck} label="Entrevistas marcadas" value={mine?.entrevistas_marcadas ?? 0} />
             <PerformanceItem icon={CheckCircle2} label="Entrevistas realizadas" value={mine?.entrevistas_realizadas ?? 0} />
             <PerformanceItem icon={GraduationCap} label="Matrículas" value={mine?.matriculas ?? 0} completed={!!goalProgress && goalProgress.done >= goalProgress.target} />
             <PerformanceItem icon={ListChecks} label="Tarefas concluídas" value={data.tasksDoneToday} />
+          </div>
+          <div className="mt-4 space-y-1.5">
+            <div className="flex items-center justify-between text-[11px] font-semibold">
+              <span className="uppercase tracking-wide text-muted-foreground">Progresso da missão</span>
+              <span className="tabular-nums text-primary">{missionActive}/4 indicadores em atividade</span>
+            </div>
+            <Progress value={(missionActive / 4) * 100} className="h-2 bg-primary/10" />
           </div>
           {goalProgress && (
             <div className="mt-4 space-y-2.5 rounded-md border border-primary/15 bg-primary/5 p-4">
