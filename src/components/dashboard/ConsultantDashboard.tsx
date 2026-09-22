@@ -351,7 +351,7 @@ export function ConsultantDashboard({ data, interviews }: Props) {
             <h2 className="text-sm font-semibold">Seu funil atual</h2>
             <p className="text-xs text-muted-foreground">Distribuição dos seus leads por etapa.</p>
           </div>
-          <Button asChild size="sm" variant="ghost"><Link to="/funil">Ver funil <ArrowRight /></Link></Button>
+          <Button asChild size="sm" variant="ghost"><Link to="/funil" search={{ leadId: undefined }}>Ver funil <ArrowRight /></Link></Button>
         </div>
         <div className="grid grid-cols-2 overflow-hidden rounded-lg border bg-card sm:grid-cols-3 lg:grid-cols-6">
           <FunnelStage icon={Sparkles} label="Novos" value={data.novos} />
