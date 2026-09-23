@@ -3,7 +3,7 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { normalizePhone } from "@/lib/phone";
 import {
-  AUTO_DISQUALIFY_CLASSIFICATIONS,
+  decideFormStageChange,
   CONFIRMATION_STATUS,
   LOST_REASON_FORM,
   SCHEDULING_SOURCE_FORM,
