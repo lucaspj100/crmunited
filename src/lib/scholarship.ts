@@ -91,9 +91,40 @@ export const AUTO_DISQUALIFY_CLASSIFICATIONS = ["curioso", "sem_fit_financeiro"]
 export function shouldAutoDisqualify(lead: ScholarshipLeadFields | null | undefined): boolean {
   if (!lead || !isScholarshipLead(lead)) return false;
   if (hasFormScheduling(lead)) return false;
+  // Classificações parciais (formulário incompleto) nunca descartam o lead.
+  if (!(lead as { form_completed?: boolean | null }).form_completed) return false;
   return (AUTO_DISQUALIFY_CLASSIFICATIONS as readonly string[]).includes(
     lead.scholarship_classification ?? "",
   );
+}
+
+/**
+ * Decide a mudança automática de etapa no recebimento do formulário.
+ * - "reactivate": perdido por desqualificado_formulario + agendamento válido → volta para "novo".
+ * - "disqualify": formulário concluído + curioso/sem_fit_financeiro + sem agendamento + lead em "novo".
+ * - null: não mexe na etapa.
+ */
+export function decideFormStageChange(input: {
+  created: boolean;
+  currentStatus: string | null | undefined;
+  currentLostReason: string | null | undefined;
+  classification: string | null | undefined;
+  formCompleted: boolean;
+  hasSchedule: boolean;
+}): "reactivate" | "disqualify" | null {
+  const status = input.created ? "novo" : input.currentStatus;
+  if (input.hasSchedule) {
+    if (status === "perdido" && input.currentLostReason === LOST_REASON_FORM) return "reactivate";
+    return null;
+  }
+  if (
+    status === "novo" &&
+    input.formCompleted &&
+    (AUTO_DISQUALIFY_CLASSIFICATIONS as readonly string[]).includes(input.classification ?? "")
+  ) {
+    return "disqualify";
+  }
+  return null;
 }
 
 /**
