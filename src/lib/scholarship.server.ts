@@ -3,7 +3,9 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { normalizePhone } from "@/lib/phone";
 import {
+  AUTO_DISQUALIFY_CLASSIFICATIONS,
   CONFIRMATION_STATUS,
+  LOST_REASON_FORM,
   SCHEDULING_SOURCE_FORM,
   SCHOLARSHIP_SOURCE,
   SCHOLARSHIP_SYSTEM,
@@ -80,12 +82,12 @@ export async function receiveScholarshipLead(input: ScholarshipPayload): Promise
     const email = clean(input.email, 200)?.toLowerCase() ?? null;
 
     // 1) external_lead_id → 2) telefone do mesmo vendedor → 3) e-mail do mesmo vendedor
-    let existing: { id: string; owner_id: string; scholarship_task_created: boolean; confirmation_status: string | null; requested_interview_at: string | null; form_completed: boolean; high_priority: boolean; observation: string | null } | null = null;
+    let existing: { id: string; owner_id: string; status: string; scholarship_task_created: boolean; confirmation_status: string | null; requested_interview_at: string | null; form_completed: boolean; high_priority: boolean; observation: string | null } | null = null;
 
     if (externalId) {
       const { data } = await supabaseAdmin
         .from("leads")
-        .select("id, owner_id, scholarship_task_created, confirmation_status, requested_interview_at, form_completed, high_priority, observation")
+        .select("id, owner_id, status, scholarship_task_created, confirmation_status, requested_interview_at, form_completed, high_priority, observation")
         .eq("external_lead_id", externalId)
         .maybeSingle();
       existing = data ?? null;
@@ -93,7 +95,7 @@ export async function receiveScholarshipLead(input: ScholarshipPayload): Promise
     if (!existing) {
       const { data } = await supabaseAdmin
         .from("leads")
-        .select("id, owner_id, scholarship_task_created, confirmation_status, requested_interview_at, form_completed, high_priority, observation")
+        .select("id, owner_id, status, scholarship_task_created, confirmation_status, requested_interview_at, form_completed, high_priority, observation")
         .eq("phone_normalized", phone.normalized)
         .eq("owner_id", sellerId)
         .limit(1)
@@ -103,7 +105,7 @@ export async function receiveScholarshipLead(input: ScholarshipPayload): Promise
     if (!existing && email) {
       const { data } = await supabaseAdmin
         .from("leads")
-        .select("id, owner_id, scholarship_task_created, confirmation_status, requested_interview_at, form_completed, high_priority, observation")
+        .select("id, owner_id, status, scholarship_task_created, confirmation_status, requested_interview_at, form_completed, high_priority, observation")
         .eq("email", email)
         .eq("owner_id", sellerId)
         .limit(1)
