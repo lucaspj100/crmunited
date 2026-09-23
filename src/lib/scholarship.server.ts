@@ -196,13 +196,41 @@ export async function receiveScholarshipLead(input: ScholarshipPayload): Promise
       created = true;
     }
 
-    // Desqualificação automática (curioso / sem fit financeiro) — nunca para quem agendou
-    // pelo formulário e, em leads já existentes, apenas enquanto estiver em "novo".
+    // Mudança automática de etapa: desqualifica só com formulário concluído e sem agendamento;
+    // reativa lead perdido por desqualificado_formulario quando chega agendamento.
     const classification = fields.scholarship_classification ?? "";
-    const autoDisqualify =
-      !requestedIso &&
-      (AUTO_DISQUALIFY_CLASSIFICATIONS as readonly string[]).includes(classification) &&
-      (created || existing?.status === "novo");
+    const stageChange = decideFormStageChange({
+      created,
+      currentStatus: existing?.status,
+      currentLostReason: existing?.lost_reason,
+      classification,
+      formCompleted: formCompleted || !!existing?.form_completed,
+      hasSchedule: !!requestedIso,
+    });
+    const autoDisqualify = stageChange === "disqualify";
+
+    if (stageChange === "reactivate") {
+      const { error: reErr } = await supabaseAdmin
+        .from("leads")
+        .update({ status: "novo", lost_reason: null, lost_type: null, rescue_date: null } as never)
+        .eq("id", leadId)
+        .eq("status", "perdido")
+        .eq("lost_reason", LOST_REASON_FORM);
+      if (!reErr) {
+        await supabaseAdmin.from("lead_events").insert({
+          lead_id: leadId,
+          user_id: sellerId,
+          event_type: "status_change",
+          description: "Lead reativado após agendamento no Processo Bolsista",
+          metadata: {
+            from: "perdido",
+            to: "novo",
+            previous_lost_reason: LOST_REASON_FORM,
+            requested_interview_at: requestedIso,
+          },
+        } as never);
+      }
+    }
 
     if (autoDisqualify) {
       const { error: lostErr } = await supabaseAdmin
