@@ -5,11 +5,11 @@ const base = { source_system: SCHOLARSHIP_SYSTEM, status: "novo" } as const;
 
 describe("triagem do processo bolsista", () => {
   it("A: curioso sem agendamento → desqualificação automática", () => {
-    expect(shouldAutoDisqualify({ ...base, scholarship_classification: "curioso" })).toBe(true);
+    expect(shouldAutoDisqualify({ ...base, scholarship_classification: "curioso", form_completed: true })).toBe(true);
   });
 
   it("B: sem_fit_financeiro sem agendamento → desqualificação automática", () => {
-    expect(shouldAutoDisqualify({ ...base, scholarship_classification: "sem_fit_financeiro" })).toBe(true);
+    expect(shouldAutoDisqualify({ ...base, scholarship_classification: "sem_fit_financeiro", form_completed: true })).toBe(true);
   });
 
   it("C: morno concluído sem agendar → fica em Novo e aparece na triagem", () => {
