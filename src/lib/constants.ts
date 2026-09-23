@@ -20,6 +20,7 @@ export const LOST_REASONS = [
   { value: "sem_perfil", label: "Não tem perfil", suggestRescueDays: null },
   { value: "fechou_concorrente", label: "Fechou com concorrente", suggestRescueDays: 180 },
   { value: "nao_chamar", label: "Pediu para não chamar mais", suggestRescueDays: null },
+  { value: "desqualificado_formulario", label: "Desqualificado pelo formulário", suggestRescueDays: null },
   { value: "outro", label: "Outro", suggestRescueDays: null },
 ] as const;
 

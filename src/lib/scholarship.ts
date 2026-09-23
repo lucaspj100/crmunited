@@ -78,6 +78,36 @@ export function hasCompletedFormWithoutScheduling(lead: ScholarshipLeadFields | 
   return !!lead && isScholarshipLead(lead) && lead.form_completed === true && !hasFormScheduling(lead);
 }
 
+/** Motivo de perda usado na desqualificação pelo formulário. */
+export const LOST_REASON_FORM = "desqualificado_formulario";
+
+/** Classificações que desqualificam o lead automaticamente na chegada. */
+export const AUTO_DISQUALIFY_CLASSIFICATIONS = ["curioso", "sem_fit_financeiro"] as const;
+
+/**
+ * Desqualificação automática: apenas leads do processo bolsista, classificados
+ * como curioso/sem fit financeiro e SEM agendamento pelo formulário.
+ */
+export function shouldAutoDisqualify(lead: ScholarshipLeadFields | null | undefined): boolean {
+  if (!lead || !isScholarshipLead(lead)) return false;
+  if (hasFormScheduling(lead)) return false;
+  return (AUTO_DISQUALIFY_CLASSIFICATIONS as readonly string[]).includes(
+    lead.scholarship_classification ?? "",
+  );
+}
+
+/**
+ * Triagem manual: lead do processo bolsista ainda em "novo" e sem agendamento
+ * pelo formulário (formulário incompleto, concluído sem agendar, frio etc.).
+ */
+export function needsFormTriage(
+  lead: (ScholarshipLeadFields & { status?: string | null }) | null | undefined,
+): boolean {
+  if (!lead || !isScholarshipLead(lead)) return false;
+  if (lead.status !== "novo") return false;
+  return !hasFormScheduling(lead);
+}
+
 export function formatRequestedInterview(iso: string | null | undefined): string {
   if (!iso) return "—";
   const d = new Date(iso);

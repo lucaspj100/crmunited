@@ -28,7 +28,10 @@ import { registerEnrollmentAndSyncArena, cancelEnrollmentAndSyncArena } from "@/
 import { labelFor, TASK_TYPES } from "@/lib/constants";
 import { toast } from "sonner";
 import { ScholarshipCardBadges, type ScholarshipLead } from "@/components/scholarship/ScholarshipSection";
-import { SCHOLARSHIP_FILTERS, matchesScholarshipFilter } from "@/lib/scholarship";
+import { SCHOLARSHIP_FILTERS, matchesScholarshipFilter, needsFormTriage } from "@/lib/scholarship";
+import { bulkMoveToLostByForm } from "@/lib/scholarship-triage";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Brush } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/funil")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -65,6 +68,10 @@ function FunilPage() {
   const [scholarshipFilter, setScholarshipFilter] = useState<string>("all");
   const [quickTaskLead, setQuickTaskLead] = useState<Lead | null>(null);
   const [cancelEnrollment, setCancelEnrollment] = useState<{ lead: Lead; newStatus: string } | null>(null);
+  const [triageMode, setTriageMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [confirmBulk, setConfirmBulk] = useState(false);
+  const [bulkSaving, setBulkSaving] = useState(false);
 
 
   const { data: leads = [] } = useQuery({
@@ -126,7 +133,27 @@ function FunilPage() {
         interview_date: l.interview_date, updated_at: l.updated_at,
         next: nextByLead.get(l.id) ?? null,
       }) === tempFilter);
-  const filteredLeads = tempFiltered.filter((l) => matchesScholarshipFilter(l as never, scholarshipFilter));
+  const scholarshipFiltered = tempFiltered.filter((l) => matchesScholarshipFilter(l as never, scholarshipFilter));
+  // Triagem: leads do processo bolsista ainda em "novo" e sem agendamento pelo formulário.
+  const triageLeads = useMemo(() => tempFiltered.filter((l) => needsFormTriage(l as never)), [tempFiltered]);
+  const triageIds = useMemo(() => new Set(triageLeads.map((l) => l.id)), [triageLeads]);
+  const filteredLeads = triageMode ? triageLeads : scholarshipFiltered;
+  const selectedVisible = useMemo(() => selectedIds.filter((id) => triageIds.has(id)), [selectedIds, triageIds]);
+
+  useEffect(() => {
+    if (!triageMode) setSelectedIds([]);
+  }, [triageMode]);
+
+  const runBulkLost = async () => {
+    setBulkSaving(true);
+    const res = await bulkMoveToLostByForm(selectedVisible);
+    setBulkSaving(false);
+    setConfirmBulk(false);
+    if (res.error) { toast.error(res.error); return; }
+    toast.success(`${res.moved} ${res.moved === 1 ? "lead movido" : "leads movidos"} para Perdidos`);
+    setSelectedIds([]);
+    qc.invalidateQueries();
+  };
 
 
   const moveLead = async (lead: Lead, newStatus: string) => {
@@ -185,6 +212,13 @@ function FunilPage() {
             </SelectContent>
           </Select>
           <Button
+            variant={triageMode ? "default" : "outline"}
+            onClick={() => setTriageMode((v) => !v)}
+            title="Leads do Processo Bolsista que precisam de decisão manual"
+          >
+            <Brush className="h-4 w-4 mr-1" />Triagem do formulário ({triageLeads.length})
+          </Button>
+          <Button
             variant="outline"
             onClick={() => {
               const novos = filteredLeads.filter((l) => l.status === "novo");
@@ -202,6 +236,26 @@ function FunilPage() {
           <NewLeadDialog />
         </div>
       </div>
+
+      {triageMode && (
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-sky-500/40 bg-sky-500/5 px-3 py-2 text-sm">
+          <span className="font-medium">Triagem do formulário</span>
+          <span className="text-muted-foreground">
+            {triageLeads.length} {triageLeads.length === 1 ? "lead pendente" : "leads pendentes"} de decisão manual
+          </span>
+          <div className="ml-auto flex flex-wrap items-center gap-2">
+            <Button size="sm" variant="outline" onClick={() => setSelectedIds(triageLeads.map((l) => l.id))}>
+              Selecionar todos os visíveis
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setSelectedIds([])} disabled={selectedVisible.length === 0}>
+              Desmarcar todos
+            </Button>
+            <Button size="sm" variant="destructive" onClick={() => setConfirmBulk(true)} disabled={selectedVisible.length === 0}>
+              Mover selecionados para Perdidos ({selectedVisible.length})
+            </Button>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3 lg:grid-cols-5">
         {LEAD_STATUSES.map((col) => {
@@ -252,7 +306,21 @@ function FunilPage() {
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <div className="font-medium text-sm truncate">{l.name}</div>
+                          <div className="flex items-start gap-2">
+                            {triageMode && (
+                              <span onClick={(e) => { e.stopPropagation(); }}>
+                                <Checkbox
+                                  className="mt-0.5"
+                                  checked={selectedIds.includes(l.id)}
+                                  onCheckedChange={(v) =>
+                                    setSelectedIds((prev) => (v ? Array.from(new Set([...prev, l.id])) : prev.filter((x) => x !== l.id)))
+                                  }
+                                  aria-label={`Selecionar ${l.name}`}
+                                />
+                              </span>
+                            )}
+                            <div className="font-medium text-sm truncate">{l.name}</div>
+                          </div>
                           {l.company && <div className="text-xs text-muted-foreground truncate">{l.company}</div>}
                           {l.source === "Discador" && (
                             <span className="mt-1 inline-flex items-center rounded-full border border-purple-500/40 bg-purple-500/10 px-1.5 py-0 text-[9px] font-medium text-purple-700 dark:text-purple-300">
@@ -347,6 +415,22 @@ function FunilPage() {
         onClose={() => setCancelEnrollment(null)}
         onDone={() => qc.invalidateQueries()}
       />
+      <Dialog open={confirmBulk} onOpenChange={(o) => !o && setConfirmBulk(false)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Mover para Perdidos</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            {selectedVisible.length} {selectedVisible.length === 1 ? "lead será movido" : "leads serão movidos"} para Perdidos
+            com o motivo “Desqualificado pelo formulário”. As tarefas pendentes desses leads serão canceladas.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmBulk(false)} disabled={bulkSaving}>Cancelar</Button>
+            <Button variant="destructive" onClick={runBulkLost} disabled={bulkSaving}>
+              {bulkSaving ? "Movendo..." : "Confirmar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <LeadDetailsDialog leadId={detailsId} onClose={() => { setDetailsId(null); navigate({ to: "/funil", search: () => ({ leadId: undefined }), replace: true }); }} />
       {quickTaskLead && (
         <QuickTaskDialog
