@@ -3453,6 +3453,7 @@ export type Database = {
         | "fechou_concorrente"
         | "nao_chamar"
         | "outro"
+        | "desqualificado_formulario"
       lost_type: "definitivo" | "com_resgate"
       material_bonus_reason:
         | "eligible"
@@ -3681,6 +3682,7 @@ export const Constants = {
         "fechou_concorrente",
         "nao_chamar",
         "outro",
+        "desqualificado_formulario",
       ],
       lost_type: ["definitivo", "com_resgate"],
       material_bonus_reason: [

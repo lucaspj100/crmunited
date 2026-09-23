@@ -1,0 +1,1 @@
+ALTER TYPE public.lost_reason ADD VALUE IF NOT EXISTS 'desqualificado_formulario';
