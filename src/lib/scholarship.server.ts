@@ -39,7 +39,7 @@ export type ScholarshipPayload = {
 };
 
 export type ScholarshipResult =
-  | { ok: true; lead_id: string; created: boolean; status: "novo" }
+  | { ok: true; lead_id: string; created: boolean; status: "novo" | "perdido" }
   | { ok: false; code: "invalid_slug" | "invalid_phone" | "server_error"; message: string };
 
 const clean = (v: unknown, max = 500): string | null => {
@@ -196,6 +196,47 @@ export async function receiveScholarshipLead(input: ScholarshipPayload): Promise
       created = true;
     }
 
+    // Desqualificação automática (curioso / sem fit financeiro) — nunca para quem agendou
+    // pelo formulário e, em leads já existentes, apenas enquanto estiver em "novo".
+    const classification = fields.scholarship_classification ?? "";
+    const autoDisqualify =
+      !requestedIso &&
+      (AUTO_DISQUALIFY_CLASSIFICATIONS as readonly string[]).includes(classification) &&
+      (created || existing?.status === "novo");
+
+    if (autoDisqualify) {
+      const { error: lostErr } = await supabaseAdmin
+        .from("leads")
+        .update({
+          status: "perdido",
+          lost_reason: LOST_REASON_FORM,
+          lost_type: "definitivo",
+          rescue_date: null,
+        } as never)
+        .eq("id", leadId);
+      if (!lostErr) {
+        // Mesma rotina usada no CRM ao perder um lead: cancela tarefas pendentes (exceto resgate).
+        await supabaseAdmin
+          .from("tasks")
+          .update({ status: "cancelada" } as never)
+          .eq("lead_id", leadId)
+          .eq("status", "pendente")
+          .eq("is_rescue", false);
+        await supabaseAdmin.from("lead_events").insert({
+          lead_id: leadId,
+          user_id: sellerId,
+          event_type: "lost",
+          description: "Desqualificado automaticamente pelo formulário do Processo Bolsista",
+          metadata: {
+            reason: LOST_REASON_FORM,
+            classificacao: classification,
+            source_system: SCHOLARSHIP_SYSTEM,
+            automatic: true,
+          },
+        } as never);
+      }
+    }
+
     const events: { event_type: string; description: string; metadata: Record<string, unknown> }[] = [];
     if (created) {
       events.push({
@@ -265,7 +306,7 @@ export async function receiveScholarshipLead(input: ScholarshipPayload): Promise
       }
     }
 
-    return { ok: true, lead_id: leadId, created, status: "novo" };
+    return { ok: true, lead_id: leadId, created, status: autoDisqualify ? "perdido" : "novo" };
   } catch (e) {
     console.error("[scholarship] erro ao processar lead", e);
     return { ok: false, code: "server_error", message: "Erro interno." };
