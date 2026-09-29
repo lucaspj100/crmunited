@@ -62,7 +62,6 @@ function AuthedLayout() {
         { to: "/comissao-vendedores", label: "Comissão dos vendedores", icon: Wallet } as const,
         { to: "/feedback-individual", label: "Feedback Individual", icon: MessageSquare } as const,
         { to: "/links-bolsista", label: "Links do Processo Bolsista", icon: GraduationCap } as const,
-        { to: "/integracao-arena", label: "Integração Arena", icon: Link2 } as const,
         { to: "/usuarios-acessos", label: "Usuários e Acessos", icon: Shield } as const,
         { to: "/equipes", label: "Equipes", icon: Users } as const,
         { to: "/metas-matricula", label: "Metas de matrícula", icon: Target } as const,
