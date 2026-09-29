@@ -41,6 +41,22 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
   --font-display: "Inter", system-ui, sans-serif;
+  --color-telao-bg: var(--telao-bg);
+  --color-telao-card: var(--telao-card);
+  --color-telao-border: var(--telao-border);
+  --color-telao-blue: var(--telao-blue);
+  --color-telao-cyan: var(--telao-cyan);
+  --color-telao-violet: var(--telao-violet);
+  --color-telao-green: var(--telao-green);
+  --color-telao-gold: var(--telao-gold);
+  --color-telao-orange: var(--telao-orange);
+  --color-telao-red: var(--telao-red);
+  --animate-telao-glow: telao-glow 4s ease-in-out infinite;
+}
+
+@keyframes telao-glow {
+  0%, 100% { box-shadow: 0 0 24px -10px var(--telao-gold); }
+  50% { box-shadow: 0 0 34px -6px var(--telao-gold); }
 }
 
 :root {
@@ -76,6 +92,21 @@
   --sidebar-accent-foreground: oklch(0.98 0 0);
   --sidebar-border: oklch(0.22 0.03 255);
   --sidebar-ring: oklch(0.6 0.22 258);
+  /* Telão comercial (placar ao vivo) */
+  --telao-bg: #070B18;
+  --telao-card: #10182B;
+  --telao-border: #1C2740;
+  --telao-blue: #3B82F6;
+  --telao-cyan: #22D3EE;
+  --telao-violet: #8B5CF6;
+  --telao-green: #22C55E;
+  --telao-gold: #F59E0B;
+  --telao-orange: #F97316;
+  --telao-red: #EF4444;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-telao-glow { animation: none; }
 }
 
 @layer base {
