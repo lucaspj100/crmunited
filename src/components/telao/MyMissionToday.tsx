@@ -45,10 +45,10 @@ export function MyMissionToday({ userId, rankedToday }: { userId: string | undef
     { label: "📞 Ligações", done: ligacoes, target: callTarget },
   ];
   const secondary = [
-    { label: "📅 Entrevistas marcadas", value: me?.entrevistas_marcadas ?? 0 },
-    { label: "🎯 Entrevistas realizadas", value: me?.entrevistas_realizadas ?? 0 },
+    { label: "📅 Marcadas", value: me?.entrevistas_marcadas ?? 0 },
+    { label: "🎯 Realizadas", value: me?.entrevistas_realizadas ?? 0 },
     { label: "🔥 Interessados", value: me?.interessados_gerados ?? 0 },
-    { label: "💼 Mensagens no LinkedIn", value: me?.linkedins_checkout ?? 0 },
+    { label: "💼 LinkedIn", value: me?.linkedins_checkout ?? 0 },
   ];
   const gapAhead = me && ahead ? ahead.score - me.score : 0;
 
