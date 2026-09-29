@@ -19,7 +19,6 @@ import {
   isScholarshipLead,
   qualificationValue,
 } from "@/lib/scholarship";
-import { notifyArena } from "@/lib/arena-dispatch";
 import { ScholarshipMessageDialog } from "@/components/scholarship/ScholarshipMessageDialog";
 import {
   buildFinalConfirmationMessage,
@@ -177,7 +176,6 @@ export function ScholarshipSection({
       description: "novo → entrevista_marcada (confirmação manual)",
       metadata: { from: lead.status, to: "entrevista_marcada", origin: "processo_bolsista" },
     });
-    await notifyArena(lead.id, "crm_interview_scheduled");
     setBusy(false);
     toast.success("Entrevista confirmada e lead movido para Entrevista marcada");
     qc.invalidateQueries();

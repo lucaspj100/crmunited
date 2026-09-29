@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Trash2, AlertTriangle, RefreshCw } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,7 +14,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { LeadTimeline } from "@/components/LeadTimeline";
 import { WhatsappAction } from "@/components/WhatsappAction";
 import { logLeadEvent } from "@/lib/lead-events";
-import { ensureEnrollmentSentToArena } from "@/lib/enrollment";
 import { LeadMaterialSection } from "@/components/materiais/LeadMaterialSection";
 import { ConfirmPaymentDialog } from "@/components/materiais/MaterialDialogs";
 import { fetchBonusRules, type MaterialSaleRow } from "@/lib/materials";
@@ -80,8 +79,6 @@ export function LeadDetailsDialog({
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [arenaSent, setArenaSent] = useState<boolean | null>(null);
-  const [resending, setResending] = useState(false);
   // Modal de pagamento do material vive fora do modal de detalhes (não é desmontado por rerender)
   const [paymentTarget, setPaymentTarget] = useState<MaterialSaleRow | null>(null);
   const { data: materialRules } = useQuery({ queryKey: ["material-rules"], queryFn: fetchBonusRules });
@@ -95,9 +92,8 @@ export function LeadDetailsDialog({
   const [observation, setObservation] = useState("");
 
   useEffect(() => {
-    if (!leadId) { setLead(null); setOwnerName(""); setArenaSent(null); return; }
+    if (!leadId) { setLead(null); setOwnerName(""); return; }
     setLoading(true);
-    setArenaSent(null);
     supabase.from("leads").select("*").eq("id", leadId).single().then(async ({ data, error }) => {
       setLoading(false);
       if (error || !data) { toast.error(error?.message || "Lead não encontrado"); onClose(); return; }
@@ -113,31 +109,8 @@ export function LeadDetailsDialog({
         const { data: p } = await supabase.from("profiles").select("full_name, email").eq("id", l.owner_id).maybeSingle();
         setOwnerName(p?.full_name || p?.email || "—");
       }
-      if (l.status === "matricula") {
-        const { data: ev } = await supabase
-          .from("crm_outbound_events")
-          .select("id")
-          .eq("crm_lead_id", l.id)
-          .eq("event_type", "crm_enrollment_created")
-          .eq("status", "sent")
-          .maybeSingle();
-        setArenaSent(!!ev);
-      }
     });
   }, [leadId]);
-
-  const onResendEnrollment = async () => {
-    if (!lead) return;
-    setResending(true);
-    const res = await ensureEnrollmentSentToArena(lead.id);
-    setResending(false);
-    if (res.ok) {
-      toast.success(res.skipped ? "Já havia sido enviado anteriormente." : "Matrícula enviada para a Arena.");
-      setArenaSent(true);
-    } else {
-      toast.error(`Falha ao enviar para a Arena: ${res.error ?? "erro desconhecido"}`);
-    }
-  };
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -226,28 +199,6 @@ export function LeadDetailsDialog({
 
 
 
-            {lead.status === "matricula" && arenaSent === false && (
-              <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3 space-y-2">
-                <div className="flex items-start gap-2 text-sm text-amber-800 dark:text-amber-200">
-                  <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
-                  <div>
-                    <div className="font-medium">Matrícula registrada no CRM, mas ainda não existe envio para Arena.</div>
-                    <div className="text-xs mt-0.5 opacity-90">Reenvie agora para garantir que a matrícula apareça na Arena.</div>
-                  </div>
-                </div>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={onResendEnrollment}
-                  disabled={resending}
-                  className="gap-1.5"
-                >
-                  <RefreshCw className={`h-3.5 w-3.5 ${resending ? "animate-spin" : ""}`} />
-                  {resending ? "Enviando…" : "Enviar matrícula para Arena agora"}
-                </Button>
-              </div>
-            )}
 
             {(lead.interview_date || lead.interview_time || lead.interview_notes) && (
               <div className="rounded-md border p-3 space-y-1 bg-muted/30">

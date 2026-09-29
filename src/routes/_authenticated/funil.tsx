@@ -23,8 +23,7 @@ import { MaterialFormFields, emptyMaterialForm, parseValue, type MaterialFormSta
 import { fetchBonusRules, saveMaterialSale } from "@/lib/materials";
 import { ensureTaskForStatus } from "@/lib/task-automation";
 import { logLeadEvent } from "@/lib/lead-events";
-import { notifyArena } from "@/lib/arena-dispatch";
-import { registerEnrollmentAndSyncArena, cancelEnrollmentAndSyncArena } from "@/lib/enrollment";
+import { registerEnrollment, cancelEnrollment } from "@/lib/enrollment";
 import { labelFor, TASK_TYPES } from "@/lib/constants";
 import { toast } from "sonner";
 import { ScholarshipCardBadges, type ScholarshipLead } from "@/components/scholarship/ScholarshipSection";
@@ -158,7 +157,7 @@ function FunilPage() {
 
   const moveLead = async (lead: Lead, newStatus: string) => {
     if (lead.status === newStatus) return;
-    // Saindo de matrícula → exige confirmação e cancela na Arena
+    // Saindo de matrícula → exige confirmação
     if (lead.status === "matricula" && newStatus !== "matricula") {
       setCancelEnrollment({ lead, newStatus });
       return;
@@ -479,7 +478,6 @@ function InterviewDialog({ lead, onClose, onSaved }: { lead: Lead | null; onClos
     if (error) toast.error(error.message);
     else {
       await logLeadEvent({ leadId: lead.id, type: "interview_scheduled", description: `Entrevista marcada para ${date}${time ? " às " + time : ""}` });
-      notifyArena(lead.id, "crm_interview_scheduled");
       toast.success("Entrevista marcada"); onSaved(); onClose();
     }
   };
@@ -526,12 +524,7 @@ function InterviewDoneDialog({ lead, onClose, onSaved }: { lead: Lead | null; on
       description: `Entrevista realizada em ${date}`,
       metadata: { from: lead.status, to: "entrevista_realizada", interview_done_date: date },
     });
-    if (!alreadyDone) {
-      notifyArena(lead.id, "crm_interview_done", { interview_done_date: date });
-      toast.success("Entrevista realizada enviada para a Arena.");
-    } else {
-      toast.success("Data atualizada");
-    }
+    toast.success(alreadyDone ? "Data atualizada" : "Entrevista realizada registrada.");
     onSaved(); onClose();
   };
   return (
@@ -542,7 +535,6 @@ function InterviewDoneDialog({ lead, onClose, onSaved }: { lead: Lead | null; on
           <div>
             <Label>Data da realização *</Label>
             <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
-            <p className="text-xs text-muted-foreground mt-1">A Arena contabiliza pela data real da realização.</p>
           </div>
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={onClose}>Cancelar</Button>
@@ -600,7 +592,6 @@ function RescheduleInterviewDialog({ lead, onClose, onSaved }: { lead: Lead | nu
         reschedule_count: nextCount,
       },
     });
-    notifyArena(lead.id, "crm_interview_rescheduled");
     toast.success("Entrevista reagendada");
     onSaved();
     onClose();
@@ -700,8 +691,6 @@ function LostDialog({ lead, onClose, onSaved }: { lead: Lead | null; onClose: ()
     if (error) toast.error(error.message);
     else {
       await logLeadEvent({ leadId: lead.id, type: "lost", description: `Motivo: ${reason}${rescueDate ? ` · Resgate em ${rescueDate}` : ""}`, metadata: { reason, lostType, rescueDate } });
-      // Apenas notifica perda à Arena quando já houve entrevista no histórico
-      if (lead.interview_date) notifyArena(lead.id, "crm_lost_after_interview");
       toast.success("Lead marcado como perdido"); onSaved(); onClose();
     }
   };
@@ -774,7 +763,7 @@ function MatriculaDialog({ lead, onClose, onSaved }: { lead: Lead | null; onClos
 
     const fDate = computeFollowupDate(followup, followupDate);
 
-    const res = await registerEnrollmentAndSyncArena(lead.id, ev, mv, mt, enrollmentDate);
+    const res = await registerEnrollment(lead.id, ev, mv, mt, enrollmentDate);
 
     if (!res.saved) {
       setSaving(false);
@@ -813,16 +802,7 @@ function MatriculaDialog({ lead, onClose, onSaved }: { lead: Lead | null; onClos
 
     setSaving(false);
 
-    if (res.alreadySent) {
-      toast.success("Matrícula registrada (Arena já havia sido notificada).");
-    } else if (res.arena?.ok) {
-      toast.success("Matrícula registrada e enviada para a Arena.");
-    } else {
-      toast.warning(
-        `Matrícula salva no CRM, mas não entrou na Arena. Vá em Integração Arena para reenviar.${res.arena?.error ? ` (${res.arena.error})` : ""}`,
-        { duration: 8000 },
-      );
-    }
+    toast.success("Matrícula registrada.");
     onSaved(); onClose();
   };
 
@@ -881,7 +861,7 @@ function CancelEnrollmentDialog({
 
   const onConfirm = async () => {
     setSaving(true);
-    const res = await cancelEnrollmentAndSyncArena(lead.id, newStatus, {
+    const res = await cancelEnrollment(lead.id, newStatus, {
       reason: reason.trim() || undefined,
       clearValues,
       previousStatus: lead.status,
@@ -892,16 +872,7 @@ function CancelEnrollmentDialog({
       return;
     }
     await ensureTaskForStatus({ leadId: lead.id, ownerId: lead.owner_id, status: newStatus });
-    if (res.noPriorEnrollment) {
-      toast.success("Matrícula desfeita (sem envio anterior à Arena).");
-    } else if (res.arena?.ok) {
-      toast.success("Matrícula cancelada e Arena notificada.");
-    } else {
-      toast.warning(
-        `Lead movido, mas o cancelamento não chegou na Arena. Vá em Integração Arena para reenviar.${res.arena?.error ? ` (${res.arena.error})` : ""}`,
-        { duration: 8000 },
-      );
-    }
+    toast.success("Matrícula desfeita.");
     onDone();
     onClose();
   };
@@ -914,9 +885,7 @@ function CancelEnrollmentDialog({
         </DialogHeader>
         <div className="space-y-3 text-sm">
           <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-amber-900 dark:text-amber-200">
-            Este lead já foi enviado como <strong>matrícula</strong> para a Arena.
-            Se você mover para <strong>{newStatusLabel}</strong>, a matrícula será
-            cancelada na Arena. Deseja continuar?
+            Este lead está como <strong>matrícula</strong>. Se você mover para <strong>{newStatusLabel}</strong>, a matrícula deixa de contar nos placares, metas, comissões, material e estrelas. Deseja continuar?
           </div>
           <div>
             <Label>Motivo (opcional)</Label>

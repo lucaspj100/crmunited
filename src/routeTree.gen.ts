@@ -33,7 +33,6 @@ import { Route as AuthenticatedMetasMatriculaRouteImport } from './routes/_authe
 import { Route as AuthenticatedMateriaisRouteImport } from './routes/_authenticated/materiais'
 import { Route as AuthenticatedLinksBolsistaRouteImport } from './routes/_authenticated/links-bolsista'
 import { Route as AuthenticatedLeadsRouteImport } from './routes/_authenticated/leads'
-import { Route as AuthenticatedIntegracaoArenaRouteImport } from './routes/_authenticated/integracao-arena'
 import { Route as AuthenticatedImportarRouteImport } from './routes/_authenticated/importar'
 import { Route as AuthenticatedHojeRouteImport } from './routes/_authenticated/hoje'
 import { Route as AuthenticatedFunilRouteImport } from './routes/_authenticated/funil'
@@ -182,12 +181,6 @@ const AuthenticatedLeadsRoute = AuthenticatedLeadsRouteImport.update({
   path: '/leads',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedIntegracaoArenaRoute =
-  AuthenticatedIntegracaoArenaRouteImport.update({
-    id: '/integracao-arena',
-    path: '/integracao-arena',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedImportarRoute = AuthenticatedImportarRouteImport.update({
   id: '/importar',
   path: '/importar',
@@ -313,7 +306,6 @@ export interface FileRoutesByFullPath {
   '/funil': typeof AuthenticatedFunilRoute
   '/hoje': typeof AuthenticatedHojeRoute
   '/importar': typeof AuthenticatedImportarRoute
-  '/integracao-arena': typeof AuthenticatedIntegracaoArenaRoute
   '/leads': typeof AuthenticatedLeadsRoute
   '/links-bolsista': typeof AuthenticatedLinksBolsistaRoute
   '/materiais': typeof AuthenticatedMateriaisRoute
@@ -358,7 +350,6 @@ export interface FileRoutesByTo {
   '/funil': typeof AuthenticatedFunilRoute
   '/hoje': typeof AuthenticatedHojeRoute
   '/importar': typeof AuthenticatedImportarRoute
-  '/integracao-arena': typeof AuthenticatedIntegracaoArenaRoute
   '/leads': typeof AuthenticatedLeadsRoute
   '/links-bolsista': typeof AuthenticatedLinksBolsistaRoute
   '/materiais': typeof AuthenticatedMateriaisRoute
@@ -405,7 +396,6 @@ export interface FileRoutesById {
   '/_authenticated/funil': typeof AuthenticatedFunilRoute
   '/_authenticated/hoje': typeof AuthenticatedHojeRoute
   '/_authenticated/importar': typeof AuthenticatedImportarRoute
-  '/_authenticated/integracao-arena': typeof AuthenticatedIntegracaoArenaRoute
   '/_authenticated/leads': typeof AuthenticatedLeadsRoute
   '/_authenticated/links-bolsista': typeof AuthenticatedLinksBolsistaRoute
   '/_authenticated/materiais': typeof AuthenticatedMateriaisRoute
@@ -452,7 +442,6 @@ export interface FileRouteTypes {
     | '/funil'
     | '/hoje'
     | '/importar'
-    | '/integracao-arena'
     | '/leads'
     | '/links-bolsista'
     | '/materiais'
@@ -497,7 +486,6 @@ export interface FileRouteTypes {
     | '/funil'
     | '/hoje'
     | '/importar'
-    | '/integracao-arena'
     | '/leads'
     | '/links-bolsista'
     | '/materiais'
@@ -543,7 +531,6 @@ export interface FileRouteTypes {
     | '/_authenticated/funil'
     | '/_authenticated/hoje'
     | '/_authenticated/importar'
-    | '/_authenticated/integracao-arena'
     | '/_authenticated/leads'
     | '/_authenticated/links-bolsista'
     | '/_authenticated/materiais'
@@ -752,13 +739,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLeadsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/integracao-arena': {
-      id: '/_authenticated/integracao-arena'
-      path: '/integracao-arena'
-      fullPath: '/integracao-arena'
-      preLoaderRoute: typeof AuthenticatedIntegracaoArenaRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/importar': {
       id: '/_authenticated/importar'
       path: '/importar'
@@ -911,7 +891,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFunilRoute: typeof AuthenticatedFunilRoute
   AuthenticatedHojeRoute: typeof AuthenticatedHojeRoute
   AuthenticatedImportarRoute: typeof AuthenticatedImportarRoute
-  AuthenticatedIntegracaoArenaRoute: typeof AuthenticatedIntegracaoArenaRoute
   AuthenticatedLeadsRoute: typeof AuthenticatedLeadsRoute
   AuthenticatedLinksBolsistaRoute: typeof AuthenticatedLinksBolsistaRoute
   AuthenticatedMateriaisRoute: typeof AuthenticatedMateriaisRoute
@@ -949,7 +928,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedFunilRoute: AuthenticatedFunilRoute,
   AuthenticatedHojeRoute: AuthenticatedHojeRoute,
   AuthenticatedImportarRoute: AuthenticatedImportarRoute,
-  AuthenticatedIntegracaoArenaRoute: AuthenticatedIntegracaoArenaRoute,
   AuthenticatedLeadsRoute: AuthenticatedLeadsRoute,
   AuthenticatedLinksBolsistaRoute: AuthenticatedLinksBolsistaRoute,
   AuthenticatedMateriaisRoute: AuthenticatedMateriaisRoute,
