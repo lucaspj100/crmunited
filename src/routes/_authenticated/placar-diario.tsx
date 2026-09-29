@@ -39,6 +39,12 @@ import { referenceMonthOf } from "@/lib/team-mission";
 import { InterestedAuditCard } from "@/components/processos/InterestedAuditCard";
 import { useCareerBadges, type CareerBadgeInfo } from "@/lib/career";
 import { CareerBadge } from "@/components/carreira/CareerBadge";
+import { useRankedRows, useTeamMissionNumbers, type RankTab } from "@/components/telao/shared";
+import { TeamMissionHero } from "@/components/telao/TeamMissionHero";
+import { MyMissionToday } from "@/components/telao/MyMissionToday";
+import { RankingBoard } from "@/components/telao/RankingBoard";
+import { DailyHighlights, CareerStrip } from "@/components/telao/HighlightsAndCareer";
+import { TelaoTicker } from "@/components/telao/TelaoTicker";
 
 
 
@@ -253,10 +259,27 @@ function PlacarDiario() {
   const lastUpdate = new Date(dataUpdatedAt || now);
   const dateLabel = now.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long", year: "numeric" });
 
+  // ---- Telão: ranking Hoje / Semana / Mês e números da missão (mesmas fontes) ----
+  const [rankTab, setRankTab] = useState<RankTab>("hoje");
+  const rankToday = useRankedRows("hoje", effectiveTeam, teamId);
+  const rankWeek = useRankedRows("semana", effectiveTeam, teamId);
+  const rankMonth = useRankedRows("mes", effectiveTeam, teamId);
+  const activeRank = rankTab === "hoje" ? rankToday : rankTab === "semana" ? rankWeek : rankMonth;
+  const missionNums = useTeamMissionNumbers(teamId);
+
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-telao-bg bg-[radial-gradient(ellipse_at_top,color-mix(in_oklab,var(--telao-blue)_14%,transparent),transparent_60%)] text-white">
       {/* Top bar */}
-      <div className="sticky top-0 z-10 border-b border-white/10 bg-slate-950/80 px-6 py-3 backdrop-blur">
+      <div className="sticky top-0 z-10 border-b border-telao-border bg-telao-bg/85 backdrop-blur">
+      <TelaoTicker
+        today={rankToday.ranked}
+        week={rankWeek.ranked}
+        month={rankMonth.ranked}
+        careerBadges={careerBadges}
+        weekTarget={missionNums.weekTarget}
+        weekRemaining={missionNums.weekRemaining}
+      />
+      <div className="px-3 py-3 md:px-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <Trophy className="h-6 w-6 text-amber-400" />
@@ -346,22 +369,45 @@ function PlacarDiario() {
           )}
         </div>
       </div>
+      </div>
 
-      <div className="px-6 py-6 space-y-6 max-w-[1800px] mx-auto">
+      <div className="px-3 py-5 md:px-6 space-y-5 max-w-[1800px] mx-auto">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <div className="text-sm uppercase tracking-wider text-white/60">{dateLabel}</div>
-            <h1 className="text-3xl md:text-5xl font-black tracking-tight">Vamos bater a meta de hoje 🚀</h1>
+            <div className="text-xs uppercase tracking-[0.25em] text-white/50">{dateLabel}</div>
+            <h1 className="flex items-center gap-3 text-2xl md:text-4xl font-black tracking-tight">
+              <span className="relative flex h-3 w-3">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-telao-red opacity-60" />
+                <span className="relative inline-flex h-3 w-3 rounded-full bg-telao-red" />
+              </span>
+              Placar Comercial ao vivo
+            </h1>
           </div>
-          <div className="text-right text-xs text-white/60">
+          <div className="text-right text-xs text-white/50">
             <div>Atualizado em tempo real</div>
             <div>Última atualização: {lastUpdate.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</div>
           </div>
         </div>
 
-        {/* Totais do time — apenas ADM/Franqueado */}
+        {/* 1. Missão */}
+        <TeamMissionHero teamId={teamId} teamName={teams.find((t) => t.id === effectiveTeam)?.name ?? "Equipe"} />
+        <MyMissionToday userId={user?.id} rankedToday={rankToday.ranked} />
+
+        {/* 2. Ranking */}
+        <RankingBoard
+          tab={rankTab}
+          onTab={setRankTab}
+          ranked={activeRank.ranked}
+          loading={activeRank.isLoading}
+          userId={user?.id}
+          careerBadges={careerBadges}
+          onSelect={isAdmin ? (r) => setSelectedSeller(r) : undefined}
+        />
+
+        {/* 3. Produção do time — apenas ADM/Franqueado */}
         {isAdmin && (
-          <>
+          <div className="space-y-3">
+            <div className="text-xs font-black uppercase tracking-[0.18em] text-white/70">Produção do time · {PERIOD_LABELS[period]}</div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
               <BigStat icon={<Phone className="h-5 w-5" />} label="Ligações" value={totals.ligacoes} prev={compareEnabled ? totalsPrev.ligacoes : undefined} color="from-sky-500/30 to-sky-700/10" />
               <BigStat icon={<PhoneCall className="h-5 w-5" />} label="Atendidas" value={totals.atendidas} prev={compareEnabled ? totalsPrev.atendidas : undefined} color="from-emerald-500/30 to-emerald-700/10" />
@@ -370,12 +416,39 @@ function PlacarDiario() {
               <BigStat icon={<CalendarCheck className="h-5 w-5" />} label="Realizadas" value={totals.realizadas} prev={compareEnabled ? totalsPrev.realizadas : undefined} color="from-fuchsia-500/30 to-fuchsia-700/10" />
               <BigStat icon={<GraduationCap className="h-5 w-5" />} label="Matrículas" value={totals.matriculas} prev={compareEnabled ? totalsPrev.matriculas : undefined} color="from-rose-500/30 to-rose-700/10" />
             </div>
-            <RatesPanel totals={totals} prev={compareEnabled ? totalsPrev : undefined} />
-          </>
+          </div>
         )}
 
+        {/* 4. Reconhecimento */}
+        <DailyHighlights rows={rows} periodLabel={PERIOD_LABELS[period]} />
 
-        {/* Metas — apenas ADM/Franqueado (dados consolidados da equipe) */}
+        {/* 5. Carreira */}
+        <CareerStrip ranked={rankMonth.ranked} careerBadges={careerBadges} />
+
+        {/* 6. Análises */}
+        <div className="pt-2 text-xs font-black uppercase tracking-[0.18em] text-white/50">Análises e projeções</div>
+        <MyGoalBanner
+          rows={rows}
+          monthDoneById={monthDoneById}
+          goal={myGoal}
+          month={nowMY.month}
+          year={nowMY.year}
+          userId={user?.id}
+          periodLabel={PERIOD_LABELS[period]}
+        />
+        <TeamMissionCard
+          month={missionRef.month}
+          year={missionRef.year}
+          teamId={teamId}
+          teamName={teams.find((t) => t.id === effectiveTeam)?.name ?? "Equipe"}
+          isAdmin={isAdmin}
+          periodLabel={PERIOD_LABELS[period]}
+          periodRange={range}
+          periodEnrollments={totals.matriculas}
+          showPeriodLine={period !== "mes"}
+          telao={fullscreen}
+        />
+        {isAdmin && <RatesPanel totals={totals} prev={compareEnabled ? totalsPrev : undefined} />}
         {isAdmin && period === "hoje" && (
           <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
             <div className="flex items-center gap-2 mb-4">
@@ -389,135 +462,9 @@ function PlacarDiario() {
             </div>
           </div>
         )}
-
-        {/* Mensagem motivacional (todos) */}
-        {!isAdmin && (
-          <div className="rounded-2xl border border-white/10 bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-transparent p-5">
-            <div className="flex items-center gap-3">
-              <Flame className="h-6 w-6 text-orange-400" />
-              <div>
-                <div className="text-xs uppercase tracking-widest text-white/60">Foco do dia</div>
-                <div className="text-xl md:text-2xl font-bold">Cada ligação é uma nova chance. Bora fazer acontecer! 🚀</div>
-              </div>
-            </div>
-          </div>
+        {isAdmin && bestGoalPct !== undefined && (
+          <GoalHighlight best={bestGoalPct} loading={teamGoalsQ.isLoading} error={!!teamGoalsQ.error} />
         )}
-
-        {/* Card fixo "Minha meta" — acima do pódio, para todo vendedor */}
-        <MyGoalBanner
-          rows={rows}
-          monthDoneById={monthDoneById}
-          goal={myGoal}
-          month={nowMY.month}
-          year={nowMY.year}
-          userId={user?.id}
-          periodLabel={PERIOD_LABELS[period]}
-        />
-
-        {/* Missão da equipe — meta coletiva mensal (visível a todos os perfis) */}
-        <TeamMissionCard
-          month={missionRef.month}
-          year={missionRef.year}
-          teamId={teamId}
-          teamName={teams.find((t) => t.id === effectiveTeam)?.name ?? "Equipe"}
-          isAdmin={isAdmin}
-          periodLabel={PERIOD_LABELS[period]}
-          periodRange={range}
-
-          periodEnrollments={totals.matriculas}
-          showPeriodLine={period !== "mes"}
-          telao={fullscreen}
-        />
-
-
-
-        <div className="grid grid-cols-1 xl:grid-cols-[2fr_1fr] gap-5">
-          {/* Pódio - Top 3 */}
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <Crown className="h-5 w-5 text-amber-400" />
-              <h2 className="text-lg font-bold">Pódio de hoje — Top 3</h2>
-              <span className="text-xs text-white/50 ml-2">Pontuação: {scoreLegend}</span>
-            </div>
-            <div className="space-y-3">
-              {ranked.length === 0 && <p className="text-white/60 text-sm">Sem dados ainda.</p>}
-              {ranked.slice(0, 3).map((r, idx) => {
-                const medal = idx === 0 ? "bg-amber-400 text-slate-900" : idx === 1 ? "bg-slate-300 text-slate-900" : "bg-amber-700 text-white";
-                const size = idx === 0 ? "h-20 w-20 text-2xl" : "h-16 w-16 text-xl";
-                return (
-                  <div key={r.vendedor_id} className={`flex items-center gap-4 rounded-xl border border-white/10 p-4 ${idx === 0 ? "bg-gradient-to-r from-amber-500/25 to-transparent" : "bg-white/5"}`}>
-                    <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full font-black text-xl ${medal}`}>
-                      {idx + 1}
-                    </div>
-                    <div className={`shrink-0 overflow-hidden rounded-full border-2 ${idx === 0 ? "border-amber-400" : "border-white/20"} bg-gradient-to-br from-sky-500 to-violet-600 ${size} flex items-center justify-center font-bold`}>
-                      {r.avatar_url
-                        ? <img src={r.avatar_url} alt="" className="h-full w-full object-cover" />
-                        : <span>{initials(r.nome)}</span>}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className={`truncate font-bold ${idx === 0 ? "text-2xl" : "text-xl"}`}>{r.nome}</div>
-                      <div className="mt-1">
-                        <CareerBadge info={careerBadges.get(r.vendedor_id)} size={idx === 0 ? "lg" : "sm"} />
-                      </div>
-                      <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-white/70 mt-1">
-                        <span>📞 {r.ligacoes_feitas}</span>
-                        <span>✅ {r.ligacoes_atendidas}</span>
-                        <span>✨ {r.interessados_gerados}</span>
-                        <span>📅 {r.entrevistas_marcadas}</span>
-                        <span>🎯 {r.entrevistas_realizadas}</span>
-                        <span>🎓 {r.matriculas}</span>
-                        <span>❌ {r.perdidos}</span>
-                        <span className="inline-flex items-center gap-1">
-                          <Linkedin className="h-3 w-3" />
-                          {r.linkedins_checkout ?? 0}
-                        </span>
-                      </div>
-                      {/* Meta mensal — visível apenas para admin/franqueado */}
-                      {isAdmin && (
-                        <GoalMini
-                          goal={goalsBySeller.get(r.vendedor_id) ?? null}
-                          done={monthDoneById.get(r.vendedor_id) ?? 0}
-                          loading={teamGoalsQ.isLoading}
-                          error={!!teamGoalsQ.error}
-                        />
-                      )}
-                    </div>
-                    <div className="text-right">
-                      <div className={`font-black tabular-nums ${idx === 0 ? "text-5xl" : "text-4xl"}`}>{fmtScore(r.score)}</div>
-                      <div className="text-[10px] uppercase tracking-wider text-white/50">pontos</div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-
-          {/* Destaques */}
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <Flame className="h-5 w-5 text-orange-400" />
-              <h2 className="text-lg font-bold">Destaques</h2>
-            </div>
-            <div className="space-y-3">
-              <Highlight title="Mais ligações" row={top("ligacoes_feitas")} field="ligacoes_feitas" />
-              <Highlight title="Mais atendidas" row={top("ligacoes_atendidas")} field="ligacoes_atendidas" />
-              <Highlight title="Mais interessados" row={top("interessados_gerados")} field="interessados_gerados" />
-              <Highlight title="Mais entrevistas marcadas" row={top("entrevistas_marcadas")} field="entrevistas_marcadas" />
-              <Highlight title="Mais entrevistas realizadas" row={top("entrevistas_realizadas")} field="entrevistas_realizadas" />
-              <Highlight title="Mais matrículas" row={top("matriculas")} field="matriculas" />
-              {isAdmin && (
-                <GoalHighlight
-                  best={bestGoalPct}
-                  loading={teamGoalsQ.isLoading}
-                  error={!!teamGoalsQ.error}
-                />
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Ranking completo da equipe — apenas ADM/Franqueado */}
         {isAdmin && (
           <FullRanking
             ranked={ranked}
@@ -531,12 +478,23 @@ function PlacarDiario() {
           />
         )}
 
+        {/* Hall da Fama */}
+        <Link to="/placar-hall-da-fama" className="block">
+          <div className="flex items-center justify-between gap-3 rounded-2xl border border-telao-gold/30 bg-gradient-to-r from-telao-gold/10 to-telao-card p-4 hover:border-telao-gold/60 transition-colors">
+            <div className="flex items-center gap-3">
+              <Trophy className="h-6 w-6 text-telao-gold" />
+              <div>
+                <div className="font-bold">🏛️ Hall da Fama</div>
+                <div className="text-xs text-white/60">Histórico de campeões de cada mês</div>
+              </div>
+            </div>
+            <span className="text-sm text-telao-gold">Ver →</span>
+          </div>
+        </Link>
 
-        {/* Diagnóstico Comercial — apenas ADM/Franqueado */}
         {isAdmin && <AdmDiagnostic totals={totals} rows={rows} />}
         {isAdmin && <DebugEntrevistasMarcadas start={range.start} end={range.end} rows={rows} />}
         {isAdmin && <InterestedAuditCard start={range.start} end={range.end} />}
-
       </div>
 
       <SellerDetailDialog
