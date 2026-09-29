@@ -4,6 +4,8 @@ import type { CareerBadgeInfo } from "@/lib/career";
 import { CareerBadge } from "@/components/carreira/CareerBadge";
 import { TelaoCard, SectionTitle, initials, type RankTab, type RankedRow } from "./shared";
 
+const TOP_N = 5;
+
 const TABS: { key: RankTab; label: string }[] = [
   { key: "hoje", label: "Hoje" },
   { key: "semana", label: "Semana" },
@@ -31,7 +33,7 @@ export function RankingBoard({
     <TelaoCard>
       <SectionTitle
         icon={<Crown className="h-5 w-5 text-telao-gold" />}
-        title="Ranking ao vivo"
+        title="Top 5 ao vivo"
         right={
           <div role="tablist" className="flex rounded-xl border border-telao-border bg-telao-bg p-1">
             {TABS.map((t) => (
@@ -48,16 +50,17 @@ export function RankingBoard({
           </div>
         }
       />
-      <div className="hidden grid-cols-[48px_1fr_repeat(4,84px)_110px] gap-2 px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-white/40 lg:grid">
+      <div className="hidden grid-cols-[48px_1fr_repeat(6,72px)_104px] gap-2 px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-white/40 lg:grid">
         <span>#</span><span>Vendedor</span>
         <span className="text-right">Matrículas</span><span className="text-right">Realizadas</span>
-        <span className="text-right">Interessados</span><span className="text-right">Ligações</span>
+        <span className="text-right">Marcadas</span><span className="text-right">Interessados</span>
+        <span className="text-right">Ligações</span><span className="text-right">LinkedIn</span>
         <span className="text-right">Pontos</span>
       </div>
       {loading && ranked.length === 0 && <p className="text-sm text-white/60">Carregando ranking…</p>}
       {!loading && ranked.length === 0 && <p className="text-sm text-white/60">Sem dados neste período.</p>}
       <ol className="space-y-2">
-        {ranked.map((r, i) => {
+        {ranked.slice(0, TOP_N).map((r, i) => {
           const st = PLACE_STYLE[r.position];
           const ahead = i > 0 ? ranked[i - 1] : null;
           const gap = ahead ? ahead.score - r.score : 0;
@@ -68,7 +71,7 @@ export function RankingBoard({
               onClick={onSelect ? () => onSelect(r) : undefined}
               className={`animate-fade-in rounded-xl border p-3 transition-colors ${st?.card ?? "border-telao-border bg-telao-bg/50"} ${isMe ? "ring-2 ring-telao-blue/70" : ""} ${onSelect ? "cursor-pointer hover:border-telao-blue/50" : ""}`}
             >
-              <div className="grid grid-cols-[40px_1fr_auto] items-center gap-3 lg:grid-cols-[48px_1fr_repeat(4,84px)_110px] lg:gap-2">
+              <div className="grid grid-cols-[40px_1fr_auto] items-center gap-3 lg:grid-cols-[48px_1fr_repeat(6,72px)_104px] lg:gap-2">
                 <div className={`flex h-9 w-9 items-center justify-center rounded-full text-base font-black ${st?.medal ?? "bg-telao-border text-white/80"}`}>{r.position}</div>
                 <div className="flex min-w-0 items-center gap-3">
                   <div className="hidden h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-telao-blue to-telao-violet text-sm font-bold sm:flex">
@@ -88,19 +91,23 @@ export function RankingBoard({
                 </div>
                 <Stat v={r.matriculas} />
                 <Stat v={r.entrevistas_realizadas ?? 0} />
+                <Stat v={r.entrevistas_marcadas} />
                 <Stat v={r.interessados_gerados} />
                 <Stat v={r.ligacoes_feitas} />
+                <Stat v={r.linkedins_checkout ?? 0} />
                 <div className="text-right">
                   <div className={`text-2xl font-black tabular-nums ${st?.score ?? "text-white"}`}>{fmtScore(r.score)}</div>
                   <div className="text-[10px] uppercase tracking-wider text-white/40">pts</div>
                 </div>
               </div>
               {/* Mobile: números principais em linha */}
-              <div className="mt-2 grid grid-cols-4 gap-1 text-center text-[11px] text-white/60 lg:hidden">
-                <span>🎓 <b className="text-white">{r.matriculas}</b></span>
-                <span>🎯 <b className="text-white">{r.entrevistas_realizadas ?? 0}</b></span>
-                <span>🔥 <b className="text-white">{r.interessados_gerados}</b></span>
-                <span>📞 <b className="text-white">{r.ligacoes_feitas}</b></span>
+              <div className="mt-2 grid grid-cols-3 gap-1 text-center text-[11px] text-white/60 sm:grid-cols-6 lg:hidden">
+                <span>🎓 Matr. <b className="text-white">{r.matriculas}</b></span>
+                <span>🎯 Realiz. <b className="text-white">{r.entrevistas_realizadas ?? 0}</b></span>
+                <span>📅 Marc. <b className="text-white">{r.entrevistas_marcadas}</b></span>
+                <span>🔥 Inter. <b className="text-white">{r.interessados_gerados}</b></span>
+                <span>📞 Lig. <b className="text-white">{r.ligacoes_feitas}</b></span>
+                <span>💼 LinkedIn <b className="text-white">{r.linkedins_checkout ?? 0}</b></span>
               </div>
             </li>
           );
