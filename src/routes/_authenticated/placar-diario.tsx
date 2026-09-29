@@ -369,6 +369,7 @@ function PlacarDiario() {
           )}
         </div>
       </div>
+      </div>
 
       <div className="px-3 py-5 md:px-6 space-y-5 max-w-[1800px] mx-auto">
         <div className="flex flex-wrap items-end justify-between gap-3">
