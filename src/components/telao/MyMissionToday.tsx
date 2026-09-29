@@ -44,42 +44,46 @@ export function MyMissionToday({ userId, rankedToday }: { userId: string | undef
     { label: "🎓 Matrículas", done: matriculas, target: enrollTarget },
     { label: "📞 Ligações", done: ligacoes, target: callTarget },
   ];
-  const plainItems = [
+  const secondary = [
+    { label: "📅 Entrevistas marcadas", value: me?.entrevistas_marcadas ?? 0 },
     { label: "🎯 Entrevistas realizadas", value: me?.entrevistas_realizadas ?? 0 },
     { label: "🔥 Interessados", value: me?.interessados_gerados ?? 0 },
+    { label: "💼 Mensagens no LinkedIn", value: me?.linkedins_checkout ?? 0 },
   ];
+  const gapAhead = me && ahead ? ahead.score - me.score : 0;
 
   return (
     <TelaoCard className="border-telao-blue/30">
-      <SectionTitle icon={<Crosshair className="h-5 w-5 text-telao-blue" />} title="Sua missão hoje" />
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+      <SectionTitle icon={<Crosshair className="h-5 w-5 text-telao-blue" />} title="Sua missão hoje" right={<span className="text-[11px] text-white/40">Só você vê sua posição</span>} />
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {goalItems.map((g) => (
-          <div key={g.label} className="rounded-xl border border-telao-border bg-telao-bg/60 p-3">
+          <div key={g.label} className="rounded-xl border border-telao-border bg-telao-bg/60 p-3 md:p-4">
             <div className="text-xs text-white/60">{g.label}</div>
             <div className="mt-1 flex items-baseline gap-1">
-              <span className="text-3xl font-black tabular-nums">{g.done}</span>
+              <span className="text-3xl md:text-4xl font-black tabular-nums">{g.done}</span>
               {g.target > 0 ? <span className="text-lg font-bold text-white/40 tabular-nums">/ {g.target}</span> : <span className="text-xs text-white/50">hoje</span>}
             </div>
             {g.target > 0 && <div className="mt-2"><TelaoBar value={g.done} max={g.target} tone={progressTone(g.done, g.target)} /></div>}
           </div>
         ))}
-        {plainItems.map((p) => (
-          <div key={p.label} className="rounded-xl border border-telao-border bg-telao-bg/60 p-3">
-            <div className="text-xs text-white/60">{p.label}</div>
-            <div className="mt-1 flex items-baseline gap-1">
-              <span className="text-3xl font-black tabular-nums">{p.value}</span>
-              <span className="text-xs text-white/50">hoje</span>
-            </div>
+        <div className="rounded-xl border border-telao-border bg-telao-bg/60 p-3 md:p-4">
+          <div className="text-xs text-white/60">⚡ Pontuação</div>
+          <div className="mt-1 text-3xl md:text-4xl font-black tabular-nums text-telao-cyan">{fmtScore(me?.score ?? 0)}<span className="ml-1 text-sm text-white/50">pts</span></div>
+        </div>
+        <div className="rounded-xl border border-telao-gold/30 bg-telao-gold/5 p-3 md:p-4">
+          <div className="text-xs text-white/60">🏆 Sua posição</div>
+          <div className="mt-1 text-3xl md:text-4xl font-black tabular-nums text-telao-gold">{me ? `${me.position}º` : "—"}<span className="ml-1 text-sm text-white/50">{me ? "lugar" : ""}</span></div>
+          {me && ahead && <div className="text-[11px] text-white/60">{gapAhead > 0 ? `a ${fmtScore(gapAhead)} pts do ${idx}º` : `empatado com o ${idx}º`}</div>}
+          {me && !ahead && <div className="text-[11px] text-telao-gold/80">liderando hoje</div>}
+        </div>
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-2 md:grid-cols-4">
+        {secondary.map((p) => (
+          <div key={p.label} className="flex items-center justify-between gap-2 rounded-lg border border-telao-border bg-telao-bg/40 px-3 py-2">
+            <span className="truncate text-xs text-white/60">{p.label}</span>
+            <span className="text-xl font-black tabular-nums">{p.value}</span>
           </div>
         ))}
-        <div className="rounded-xl border border-telao-border bg-telao-bg/60 p-3">
-          <div className="text-xs text-white/60">⚡ Pontuação</div>
-          <div className="mt-1 text-3xl font-black tabular-nums text-telao-cyan">{fmtScore(me?.score ?? 0)}<span className="ml-1 text-sm text-white/50">pts</span></div>
-        </div>
-        <div className="rounded-xl border border-telao-gold/30 bg-telao-gold/5 p-3">
-          <div className="text-xs text-white/60">🏆 Ranking</div>
-          <div className="mt-1 text-3xl font-black tabular-nums text-telao-gold">{me ? `${me.position}º` : "—"}<span className="ml-1 text-sm text-white/50">{me ? "lugar" : ""}</span></div>
-        </div>
       </div>
       {messages.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-2">
