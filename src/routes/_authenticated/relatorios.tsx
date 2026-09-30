@@ -1,3 +1,4 @@
+import { fetchAll } from "@/lib/fetch-all";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
@@ -37,8 +38,8 @@ const HISTORY_EVENTS = ["status_change", "interview_scheduled", "interview_done"
 
 async function fetchData() {
   const [leadsR, tasksR, profilesR, eventsR] = await Promise.all([
-    supabase.from("leads").select(LEAD_COLS).limit(10000),
-    supabase.from("tasks").select("id,owner_id,status,due_date,is_rescue").limit(10000),
+    fetchAll(() => supabase.from("leads").select(LEAD_COLS)),
+    fetchAll(() => supabase.from("tasks").select("id,owner_id,status,due_date,is_rescue")),
     supabase.from("profiles").select("id,full_name,email,team_id").limit(2000),
     supabase
       .from("lead_events")

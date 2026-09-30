@@ -1,3 +1,4 @@
+import { fetchAll } from "@/lib/fetch-all";
 import { createFileRoute } from "@tanstack/react-router";
 import { WhatsappAction } from "@/components/WhatsappAction";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -26,9 +27,9 @@ type Profile = { id: string; full_name: string | null; email: string | null };
 async function fetchResgates() {
   const [tasksR, leadsR, profR, rescueLeadsR] = await Promise.all([
     supabase.from("tasks").select("*").eq("is_rescue", true).eq("status", "pendente").order("due_date").limit(2000),
-    supabase.from("leads").select("id,name,phone,company,linkedin_url,owner_id,status,observation,lost_reason,lost_at,rescued_at,in_rescue").limit(2000),
+    fetchAll(() => supabase.from("leads").select("id,name,phone,company,linkedin_url,owner_id,status,observation,lost_reason,lost_at,rescued_at,in_rescue")),
     supabase.from("profiles").select("id, full_name, email").limit(2000),
-    supabase.from("leads").select("*").eq("in_rescue", true).limit(2000),
+    fetchAll(() => supabase.from("leads").select("*").eq("in_rescue", true)),
   ]);
   const today = new Date().toISOString().slice(0, 10);
   const addDays = (n: number) => { const d = new Date(); d.setDate(d.getDate() + n); return d.toISOString().slice(0,10); };

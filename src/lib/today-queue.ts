@@ -1,3 +1,4 @@
+import { fetchAll } from "@/lib/fetch-all";
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -62,8 +63,8 @@ export function useHojeData() {
     queryKey: ["hoje"],
     queryFn: async (): Promise<HojeData> => {
       const [leadsR, tasksR, profR, prospectsR] = await Promise.all([
-        supabase.from("leads").select("id,name,phone,company,status,owner_id,observation,interview_date,interview_time,last_contact_at,next_followup_at,lost_reason,in_rescue,created_at").limit(5000),
-        supabase.from("tasks").select("id,lead_id,type,due_date,due_time,observation,status,owner_id,is_rescue,prospect_contact_id").eq("status", "pendente").limit(5000),
+        fetchAll(() => supabase.from("leads").select("id,name,phone,company,status,owner_id,observation,interview_date,interview_time,last_contact_at,next_followup_at,lost_reason,in_rescue,created_at")),
+        fetchAll(() => supabase.from("tasks").select("id,lead_id,type,due_date,due_time,observation,status,owner_id,is_rescue,prospect_contact_id").eq("status", "pendente")),
         supabase.from("profiles").select("id, full_name, email").limit(2000),
         supabase.from("prospect_contacts").select("id,nome,empresa,cargo,telefone_normalizado,telefone_original,observacao,vendedor_responsavel_id").limit(5000),
       ]);

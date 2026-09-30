@@ -1,3 +1,4 @@
+import { fetchAll } from "@/lib/fetch-all";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,9 +27,9 @@ async function fetchDashboard(): Promise<DashboardData> {
   const last7 = new Date(); last7.setDate(last7.getDate() - 7);
   const last7Iso = last7.toISOString();
   const [leadsR, tasksR, pendingTasksR] = await Promise.all([
-    supabase.from("leads").select("id,status,in_rescue,rescued_at").limit(5000),
-    supabase.from("tasks").select("id,due_date,status,is_rescue,lead_id,type").limit(5000),
-    supabase.from("tasks").select("lead_id").eq("status", "pendente").gte("due_date", today).limit(5000),
+    fetchAll(() => supabase.from("leads").select("id,status,in_rescue,rescued_at")),
+    fetchAll(() => supabase.from("tasks").select("id,due_date,status,is_rescue,lead_id,type")),
+    fetchAll(() => supabase.from("tasks").select("lead_id").eq("status", "pendente").gte("due_date", today)),
   ]);
   const leads = (leadsR.data ?? []) as { id: string; status: string; in_rescue: boolean; rescued_at: string | null }[];
   const tasks = (tasksR.data ?? []) as { id: string; due_date: string; status: string; is_rescue: boolean; lead_id: string; type: string }[];
