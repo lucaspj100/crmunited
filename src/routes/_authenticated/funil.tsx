@@ -1,4 +1,4 @@
-import { fetchAll } from "@/lib/fetch-all";
+import { fetchAll, fetchFunnelLeads, FUNNEL_LEADS_KEY } from "@/lib/fetch-all";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { WhatsappAction } from "@/components/WhatsappAction";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -75,12 +75,8 @@ function FunilPage() {
 
 
   const { data: leads = [] } = useQuery({
-    queryKey: ["leads-funil"],
-    queryFn: async () => {
-      const { data, error } = await fetchAll(() => supabase.from("leads").select("*"));
-      if (error) throw error;
-      return data as Lead[];
-    },
+    queryKey: FUNNEL_LEADS_KEY,
+    queryFn: async () => (await fetchFunnelLeads()) as Lead[],
   });
 
   const { data: profiles = [] } = useQuery({

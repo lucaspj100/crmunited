@@ -18,3 +18,12 @@ export async function fetchAll<T = any>(build: () => any): Promise<{ data: T[]; 
 
 /** Etapas ativas do funil (fora de Matrícula e Perdido). */
 export const ACTIVE_STATUSES = ["novo", "interessado", "entrevista_marcada", "entrevista_realizada"] as const;
+
+/** Consulta compartilhada por Funil e Forecast (mesma chave = mesmos dados). */
+export const FUNNEL_LEADS_KEY = ["leads-funil"] as const;
+export async function fetchFunnelLeads() {
+  const { supabase } = await import("@/integrations/supabase/client");
+  const { data, error } = await fetchAll(() => supabase.from("leads").select("*"));
+  if (error) throw error;
+  return data;
+}
