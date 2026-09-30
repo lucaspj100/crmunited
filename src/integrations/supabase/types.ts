@@ -3115,6 +3115,92 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_campaign_contacts: {
+        Row: {
+          campaign_id: string
+          company: string | null
+          created_at: string
+          error: string | null
+          id: string
+          name: string | null
+          normalized_phone: string
+          phone: string
+          sent_at: string | null
+          sent_by_account_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          campaign_id: string
+          company?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          name?: string | null
+          normalized_phone: string
+          phone: string
+          sent_at?: string | null
+          sent_by_account_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          campaign_id?: string
+          company?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          name?: string | null
+          normalized_phone?: string
+          phone?: string
+          sent_at?: string | null
+          sent_by_account_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_campaign_contacts_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_campaigns: {
+        Row: {
+          closed_at: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          paused_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          closed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          paused_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          closed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          paused_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       whatsapp_list_entries: {
         Row: {
           created_at: string
@@ -3479,6 +3565,17 @@ export type Database = {
         Returns: Json
       }
       teams_overview: { Args: never; Returns: Json }
+      whatsapp_campaign_stats: {
+        Args: never
+        Returns: {
+          campaign_id: string
+          cancelled: number
+          failed: number
+          pending: number
+          sent: number
+          total: number
+        }[]
+      }
     }
     Enums: {
       ai_assistant_kind: "prospeccao" | "entrevista" | "negociacao"
