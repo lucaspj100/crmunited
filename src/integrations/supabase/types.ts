@@ -2591,6 +2591,65 @@ export type Database = {
           },
         ]
       }
+      seller_monthly_performance: {
+        Row: {
+          atendidas: number
+          best_day_matriculas: number
+          best_day_realizadas: number
+          best_week_matriculas: number
+          closed_at: string
+          interessados: number
+          ligacoes: number
+          linkedin: number
+          marcadas: number
+          matriculas: number
+          month: number
+          realizadas: number
+          user_id: string
+          year: number
+        }
+        Insert: {
+          atendidas?: number
+          best_day_matriculas?: number
+          best_day_realizadas?: number
+          best_week_matriculas?: number
+          closed_at?: string
+          interessados?: number
+          ligacoes?: number
+          linkedin?: number
+          marcadas?: number
+          matriculas?: number
+          month: number
+          realizadas?: number
+          user_id: string
+          year: number
+        }
+        Update: {
+          atendidas?: number
+          best_day_matriculas?: number
+          best_day_realizadas?: number
+          best_week_matriculas?: number
+          closed_at?: string
+          interessados?: number
+          ligacoes?: number
+          linkedin?: number
+          marcadas?: number
+          matriculas?: number
+          month?: number
+          realizadas?: number
+          user_id?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seller_monthly_performance_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       share_phrases: {
         Row: {
           created_at: string
@@ -3176,6 +3235,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_set_avatar: {
+        Args: { _avatar_url: string; _user_id: string }
+        Returns: undefined
+      }
       can_view_contact_via_whatsapp_list: {
         Args: { _contact_id: string }
         Returns: boolean
@@ -3238,6 +3301,10 @@ export type Database = {
           _year: number
         }
         Returns: string
+      }
+      close_performance_month: {
+        Args: { _month: number; _year: number }
+        Returns: number
       }
       debug_entrevistas_marcadas: {
         Args: { _end: string; _start: string; _vendedor_id?: string }
@@ -3317,6 +3384,20 @@ export type Database = {
           shared_at: string
           viewed_at: string
           viewed_by_collaborator: boolean
+        }[]
+      }
+      performance_daily: {
+        Args: { _end: string; _start: string }
+        Returns: {
+          atendidas: number
+          day: string
+          interessados: number
+          ligacoes: number
+          linkedin: number
+          marcadas: number
+          matriculas: number
+          realizadas: number
+          user_id: string
         }[]
       }
       productivity_summary: {
