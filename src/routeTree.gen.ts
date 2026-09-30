@@ -36,6 +36,7 @@ import { Route as AuthenticatedLeadsRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedImportarRouteImport } from './routes/_authenticated/importar'
 import { Route as AuthenticatedHojeRouteImport } from './routes/_authenticated/hoje'
 import { Route as AuthenticatedFunilRouteImport } from './routes/_authenticated/funil'
+import { Route as AuthenticatedForecastRouteImport } from './routes/_authenticated/forecast'
 import { Route as AuthenticatedFilaRouteImport } from './routes/_authenticated/fila'
 import { Route as AuthenticatedFeedbackIndividualRouteImport } from './routes/_authenticated/feedback-individual'
 import { Route as AuthenticatedEquipesRouteImport } from './routes/_authenticated/equipes'
@@ -196,6 +197,11 @@ const AuthenticatedFunilRoute = AuthenticatedFunilRouteImport.update({
   path: '/funil',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedForecastRoute = AuthenticatedForecastRouteImport.update({
+  id: '/forecast',
+  path: '/forecast',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedFilaRoute = AuthenticatedFilaRouteImport.update({
   id: '/fila',
   path: '/fila',
@@ -303,6 +309,7 @@ export interface FileRoutesByFullPath {
   '/equipes': typeof AuthenticatedEquipesRoute
   '/feedback-individual': typeof AuthenticatedFeedbackIndividualRoute
   '/fila': typeof AuthenticatedFilaRoute
+  '/forecast': typeof AuthenticatedForecastRoute
   '/funil': typeof AuthenticatedFunilRoute
   '/hoje': typeof AuthenticatedHojeRoute
   '/importar': typeof AuthenticatedImportarRoute
@@ -347,6 +354,7 @@ export interface FileRoutesByTo {
   '/equipes': typeof AuthenticatedEquipesRoute
   '/feedback-individual': typeof AuthenticatedFeedbackIndividualRoute
   '/fila': typeof AuthenticatedFilaRoute
+  '/forecast': typeof AuthenticatedForecastRoute
   '/funil': typeof AuthenticatedFunilRoute
   '/hoje': typeof AuthenticatedHojeRoute
   '/importar': typeof AuthenticatedImportarRoute
@@ -393,6 +401,7 @@ export interface FileRoutesById {
   '/_authenticated/equipes': typeof AuthenticatedEquipesRoute
   '/_authenticated/feedback-individual': typeof AuthenticatedFeedbackIndividualRoute
   '/_authenticated/fila': typeof AuthenticatedFilaRoute
+  '/_authenticated/forecast': typeof AuthenticatedForecastRoute
   '/_authenticated/funil': typeof AuthenticatedFunilRoute
   '/_authenticated/hoje': typeof AuthenticatedHojeRoute
   '/_authenticated/importar': typeof AuthenticatedImportarRoute
@@ -439,6 +448,7 @@ export interface FileRouteTypes {
     | '/equipes'
     | '/feedback-individual'
     | '/fila'
+    | '/forecast'
     | '/funil'
     | '/hoje'
     | '/importar'
@@ -483,6 +493,7 @@ export interface FileRouteTypes {
     | '/equipes'
     | '/feedback-individual'
     | '/fila'
+    | '/forecast'
     | '/funil'
     | '/hoje'
     | '/importar'
@@ -528,6 +539,7 @@ export interface FileRouteTypes {
     | '/_authenticated/equipes'
     | '/_authenticated/feedback-individual'
     | '/_authenticated/fila'
+    | '/_authenticated/forecast'
     | '/_authenticated/funil'
     | '/_authenticated/hoje'
     | '/_authenticated/importar'
@@ -760,6 +772,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFunilRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/forecast': {
+      id: '/_authenticated/forecast'
+      path: '/forecast'
+      fullPath: '/forecast'
+      preLoaderRoute: typeof AuthenticatedForecastRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/fila': {
       id: '/_authenticated/fila'
       path: '/fila'
@@ -888,6 +907,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedEquipesRoute: typeof AuthenticatedEquipesRoute
   AuthenticatedFeedbackIndividualRoute: typeof AuthenticatedFeedbackIndividualRoute
   AuthenticatedFilaRoute: typeof AuthenticatedFilaRoute
+  AuthenticatedForecastRoute: typeof AuthenticatedForecastRoute
   AuthenticatedFunilRoute: typeof AuthenticatedFunilRoute
   AuthenticatedHojeRoute: typeof AuthenticatedHojeRoute
   AuthenticatedImportarRoute: typeof AuthenticatedImportarRoute
@@ -925,6 +945,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedEquipesRoute: AuthenticatedEquipesRoute,
   AuthenticatedFeedbackIndividualRoute: AuthenticatedFeedbackIndividualRoute,
   AuthenticatedFilaRoute: AuthenticatedFilaRoute,
+  AuthenticatedForecastRoute: AuthenticatedForecastRoute,
   AuthenticatedFunilRoute: AuthenticatedFunilRoute,
   AuthenticatedHojeRoute: AuthenticatedHojeRoute,
   AuthenticatedImportarRoute: AuthenticatedImportarRoute,
