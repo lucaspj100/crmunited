@@ -1,3 +1,4 @@
+import { fetchAll } from "@/lib/fetch-all";
 import { createFileRoute } from "@tanstack/react-router";
 import { WhatsappAction } from "@/components/WhatsappAction";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -35,7 +36,8 @@ function LeadsPage() {
   const { data: leads = [], isLoading } = useQuery({
     queryKey: ["leads"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("leads").select("*").order("created_at", { ascending: false }).limit(1000);
+      const { data, error } = await fetchAll(() => supabase.from("leads").select("*"));
+      data.sort((a: any, b: any) => b.created_at.localeCompare(a.created_at));
       if (error) throw error;
       return data as Lead[];
     },

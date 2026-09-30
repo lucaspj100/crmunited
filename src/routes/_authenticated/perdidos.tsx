@@ -1,3 +1,4 @@
+import { fetchAll } from "@/lib/fetch-all";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { WhatsappAction } from "@/components/WhatsappAction";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -49,7 +50,7 @@ function PerdidosPage() {
     queryKey: ["perdidos"],
     queryFn: async () => {
       const [leadsR, profR] = await Promise.all([
-        supabase.from("leads").select("*").eq("status", "perdido").limit(5000),
+        fetchAll(() => supabase.from("leads").select("*").eq("status", "perdido")),
         supabase.from("profiles").select("id, full_name, email").limit(2000),
       ]);
       return {

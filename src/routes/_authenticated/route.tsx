@@ -57,6 +57,7 @@ function AuthedLayout() {
     ? [
         ...BASE_NAV,
         { to: "/painel-adm", label: "Painel ADM", icon: Trophy } as const,
+        { to: "/forecast", label: "Forecast", icon: Target } as const,
         { to: "/processos-comerciais", label: "Processos", icon: Activity } as const,
         { to: "/comissao-lideranca", label: "Comissão da Liderança", icon: Wallet } as const,
         { to: "/comissao-vendedores", label: "Comissão dos vendedores", icon: Wallet } as const,

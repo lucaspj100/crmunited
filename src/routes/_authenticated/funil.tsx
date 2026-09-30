@@ -1,3 +1,4 @@
+import { fetchAll, fetchFunnelLeads, FUNNEL_LEADS_KEY } from "@/lib/fetch-all";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { WhatsappAction } from "@/components/WhatsappAction";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -74,12 +75,8 @@ function FunilPage() {
 
 
   const { data: leads = [] } = useQuery({
-    queryKey: ["leads-funil"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("leads").select("*").order("created_at", { ascending: false }).limit(2000);
-      if (error) throw error;
-      return data as Lead[];
-    },
+    queryKey: FUNNEL_LEADS_KEY,
+    queryFn: async () => (await fetchFunnelLeads()) as Lead[],
   });
 
   const { data: profiles = [] } = useQuery({
@@ -94,13 +91,12 @@ function FunilPage() {
   const { data: nextTasks = [] } = useQuery({
     queryKey: ["funil-next-tasks"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await fetchAll(() => supabase
         .from("tasks")
         .select("lead_id, type, due_date, due_time")
-        .eq("status", "pendente")
-        .order("due_date", { ascending: true })
-        .order("due_time", { ascending: true, nullsFirst: true });
+        .eq("status", "pendente"));
       if (error) throw error;
+      data.sort((a: any, b: any) => (a.due_date + (a.due_time ?? "")).localeCompare(b.due_date + (b.due_time ?? "")));
       return data as { lead_id: string; type: string; due_date: string; due_time: string | null }[];
     },
   });
