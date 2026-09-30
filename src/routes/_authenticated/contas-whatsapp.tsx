@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/select";
 import { Smartphone } from "lucide-react";
 import { type WhatsappAccountRow } from "@/lib/whatsapp-accounts";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { WhatsappCampaigns } from "@/components/whatsapp/WhatsappCampaigns";
 
 export const Route = createFileRoute("/_authenticated/contas-whatsapp")({
   head: () => ({
@@ -77,7 +79,7 @@ function WhatsappAccountsPage() {
   const rows =
     isAdmin && userFilter !== ALL ? allRows.filter((r) => r.user_id === userFilter) : allRows;
 
-  return (
+  const accountsView = (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
@@ -156,5 +158,20 @@ function WhatsappAccountsPage() {
         )}
       </Card>
     </div>
+  );
+
+  if (!isAdmin) return accountsView;
+
+  return (
+    <Tabs defaultValue="contas" className="space-y-4">
+      <TabsList>
+        <TabsTrigger value="contas">Contas</TabsTrigger>
+        <TabsTrigger value="campanhas">Campanhas</TabsTrigger>
+      </TabsList>
+      <TabsContent value="contas">{accountsView}</TabsContent>
+      <TabsContent value="campanhas">
+        <WhatsappCampaigns />
+      </TabsContent>
+    </Tabs>
   );
 }
