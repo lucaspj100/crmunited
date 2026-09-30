@@ -3117,48 +3117,70 @@ export type Database = {
       }
       whatsapp_campaign_contacts: {
         Row: {
+          attempts: number
           campaign_id: string
           company: string | null
           created_at: string
           error: string | null
+          failed_at: string | null
           id: string
+          last_error: string | null
           name: string | null
           normalized_phone: string
           phone: string
+          reserved_at: string | null
           sent_at: string | null
           sent_by_account_id: string | null
           status: string
           updated_at: string
+          whatsapp_account_id: string | null
         }
         Insert: {
+          attempts?: number
           campaign_id: string
           company?: string | null
           created_at?: string
           error?: string | null
+          failed_at?: string | null
           id?: string
+          last_error?: string | null
           name?: string | null
           normalized_phone: string
           phone: string
+          reserved_at?: string | null
           sent_at?: string | null
           sent_by_account_id?: string | null
           status?: string
           updated_at?: string
+          whatsapp_account_id?: string | null
         }
         Update: {
+          attempts?: number
           campaign_id?: string
           company?: string | null
           created_at?: string
           error?: string | null
+          failed_at?: string | null
           id?: string
+          last_error?: string | null
           name?: string | null
           normalized_phone?: string
           phone?: string
+          reserved_at?: string | null
           sent_at?: string | null
           sent_by_account_id?: string | null
           status?: string
           updated_at?: string
+          whatsapp_account_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "wcc_account_fk"
+            columns: ["whatsapp_account_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_accounts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "whatsapp_campaign_contacts_campaign_id_fkey"
             columns: ["campaign_id"]
@@ -3565,6 +3587,31 @@ export type Database = {
         Returns: Json
       }
       teams_overview: { Args: never; Returns: Json }
+      wa_campaign_mark_failed: {
+        Args: { _account_id: string; _contact_id: string; _error_code: string }
+        Returns: Json
+      }
+      wa_campaign_mark_sent: {
+        Args: { _account_id: string; _contact_id: string }
+        Returns: Json
+      }
+      wa_campaign_own_active_account: {
+        Args: { _account_id: string }
+        Returns: boolean
+      }
+      wa_campaign_reserve: {
+        Args: { _account_id: string; _campaign_id: string; _limit: number }
+        Returns: Json
+      }
+      whatsapp_campaign_account_stats: {
+        Args: { _campaign_id: string }
+        Returns: {
+          failed: number
+          reserved: number
+          sent: number
+          whatsapp_account_id: string
+        }[]
+      }
       whatsapp_campaign_stats: {
         Args: never
         Returns: {
@@ -3572,6 +3619,19 @@ export type Database = {
           cancelled: number
           failed: number
           pending: number
+          sent: number
+          total: number
+        }[]
+      }
+      whatsapp_campaign_status_counts: {
+        Args: never
+        Returns: {
+          campaign_id: string
+          cancelled: number
+          failed: number
+          pending: number
+          reserved: number
+          sending: number
           sent: number
           total: number
         }[]

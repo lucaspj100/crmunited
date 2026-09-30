@@ -53,6 +53,9 @@ import { Route as ApiWhatsappAccountsResolveRouteImport } from './routes/api/wha
 import { Route as ApiPublicReceiveScholarshipLeadRouteImport } from './routes/api/public/receive-scholarship-lead'
 import { Route as ApiPublicLinkedinMessageEventRouteImport } from './routes/api/public/linkedin-message-event'
 import { Route as ApiPublicFindSellerByEmailRouteImport } from './routes/api/public/find-seller-by-email'
+import { Route as ApiWhatsappCampaignsCampaignIdReserveRouteImport } from './routes/api/whatsapp-campaigns/$campaignId.reserve'
+import { Route as ApiWhatsappCampaignsContactsContactIdSentRouteImport } from './routes/api/whatsapp-campaigns/contacts/$contactId.sent'
+import { Route as ApiWhatsappCampaignsContactsContactIdFailedRouteImport } from './routes/api/whatsapp-campaigns/contacts/$contactId.failed'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -293,6 +296,24 @@ const ApiPublicFindSellerByEmailRoute =
     path: '/api/public/find-seller-by-email',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiWhatsappCampaignsCampaignIdReserveRoute =
+  ApiWhatsappCampaignsCampaignIdReserveRouteImport.update({
+    id: '/api/whatsapp-campaigns/$campaignId/reserve',
+    path: '/api/whatsapp-campaigns/$campaignId/reserve',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiWhatsappCampaignsContactsContactIdSentRoute =
+  ApiWhatsappCampaignsContactsContactIdSentRouteImport.update({
+    id: '/api/whatsapp-campaigns/contacts/$contactId/sent',
+    path: '/api/whatsapp-campaigns/contacts/$contactId/sent',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiWhatsappCampaignsContactsContactIdFailedRoute =
+  ApiWhatsappCampaignsContactsContactIdFailedRouteImport.update({
+    id: '/api/whatsapp-campaigns/contacts/$contactId/failed',
+    path: '/api/whatsapp-campaigns/contacts/$contactId/failed',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -338,6 +359,9 @@ export interface FileRoutesByFullPath {
   '/api/public/linkedin-message-event': typeof ApiPublicLinkedinMessageEventRoute
   '/api/public/receive-scholarship-lead': typeof ApiPublicReceiveScholarshipLeadRoute
   '/api/whatsapp-accounts/resolve': typeof ApiWhatsappAccountsResolveRoute
+  '/api/whatsapp-campaigns/$campaignId/reserve': typeof ApiWhatsappCampaignsCampaignIdReserveRoute
+  '/api/whatsapp-campaigns/contacts/$contactId/failed': typeof ApiWhatsappCampaignsContactsContactIdFailedRoute
+  '/api/whatsapp-campaigns/contacts/$contactId/sent': typeof ApiWhatsappCampaignsContactsContactIdSentRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -383,6 +407,9 @@ export interface FileRoutesByTo {
   '/api/public/linkedin-message-event': typeof ApiPublicLinkedinMessageEventRoute
   '/api/public/receive-scholarship-lead': typeof ApiPublicReceiveScholarshipLeadRoute
   '/api/whatsapp-accounts/resolve': typeof ApiWhatsappAccountsResolveRoute
+  '/api/whatsapp-campaigns/$campaignId/reserve': typeof ApiWhatsappCampaignsCampaignIdReserveRoute
+  '/api/whatsapp-campaigns/contacts/$contactId/failed': typeof ApiWhatsappCampaignsContactsContactIdFailedRoute
+  '/api/whatsapp-campaigns/contacts/$contactId/sent': typeof ApiWhatsappCampaignsContactsContactIdSentRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -430,6 +457,9 @@ export interface FileRoutesById {
   '/api/public/linkedin-message-event': typeof ApiPublicLinkedinMessageEventRoute
   '/api/public/receive-scholarship-lead': typeof ApiPublicReceiveScholarshipLeadRoute
   '/api/whatsapp-accounts/resolve': typeof ApiWhatsappAccountsResolveRoute
+  '/api/whatsapp-campaigns/$campaignId/reserve': typeof ApiWhatsappCampaignsCampaignIdReserveRoute
+  '/api/whatsapp-campaigns/contacts/$contactId/failed': typeof ApiWhatsappCampaignsContactsContactIdFailedRoute
+  '/api/whatsapp-campaigns/contacts/$contactId/sent': typeof ApiWhatsappCampaignsContactsContactIdSentRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -477,6 +507,9 @@ export interface FileRouteTypes {
     | '/api/public/linkedin-message-event'
     | '/api/public/receive-scholarship-lead'
     | '/api/whatsapp-accounts/resolve'
+    | '/api/whatsapp-campaigns/$campaignId/reserve'
+    | '/api/whatsapp-campaigns/contacts/$contactId/failed'
+    | '/api/whatsapp-campaigns/contacts/$contactId/sent'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -522,6 +555,9 @@ export interface FileRouteTypes {
     | '/api/public/linkedin-message-event'
     | '/api/public/receive-scholarship-lead'
     | '/api/whatsapp-accounts/resolve'
+    | '/api/whatsapp-campaigns/$campaignId/reserve'
+    | '/api/whatsapp-campaigns/contacts/$contactId/failed'
+    | '/api/whatsapp-campaigns/contacts/$contactId/sent'
   id:
     | '__root__'
     | '/'
@@ -568,6 +604,9 @@ export interface FileRouteTypes {
     | '/api/public/linkedin-message-event'
     | '/api/public/receive-scholarship-lead'
     | '/api/whatsapp-accounts/resolve'
+    | '/api/whatsapp-campaigns/$campaignId/reserve'
+    | '/api/whatsapp-campaigns/contacts/$contactId/failed'
+    | '/api/whatsapp-campaigns/contacts/$contactId/sent'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -579,6 +618,9 @@ export interface RootRouteChildren {
   ApiPublicFindSellerByEmailRoute: typeof ApiPublicFindSellerByEmailRoute
   ApiPublicLinkedinMessageEventRoute: typeof ApiPublicLinkedinMessageEventRoute
   ApiPublicReceiveScholarshipLeadRoute: typeof ApiPublicReceiveScholarshipLeadRoute
+  ApiWhatsappCampaignsCampaignIdReserveRoute: typeof ApiWhatsappCampaignsCampaignIdReserveRoute
+  ApiWhatsappCampaignsContactsContactIdFailedRoute: typeof ApiWhatsappCampaignsContactsContactIdFailedRoute
+  ApiWhatsappCampaignsContactsContactIdSentRoute: typeof ApiWhatsappCampaignsContactsContactIdSentRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -891,6 +933,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicFindSellerByEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/whatsapp-campaigns/$campaignId/reserve': {
+      id: '/api/whatsapp-campaigns/$campaignId/reserve'
+      path: '/api/whatsapp-campaigns/$campaignId/reserve'
+      fullPath: '/api/whatsapp-campaigns/$campaignId/reserve'
+      preLoaderRoute: typeof ApiWhatsappCampaignsCampaignIdReserveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/whatsapp-campaigns/contacts/$contactId/sent': {
+      id: '/api/whatsapp-campaigns/contacts/$contactId/sent'
+      path: '/api/whatsapp-campaigns/contacts/$contactId/sent'
+      fullPath: '/api/whatsapp-campaigns/contacts/$contactId/sent'
+      preLoaderRoute: typeof ApiWhatsappCampaignsContactsContactIdSentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/whatsapp-campaigns/contacts/$contactId/failed': {
+      id: '/api/whatsapp-campaigns/contacts/$contactId/failed'
+      path: '/api/whatsapp-campaigns/contacts/$contactId/failed'
+      fullPath: '/api/whatsapp-campaigns/contacts/$contactId/failed'
+      preLoaderRoute: typeof ApiWhatsappCampaignsContactsContactIdFailedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -993,6 +1056,12 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicFindSellerByEmailRoute: ApiPublicFindSellerByEmailRoute,
   ApiPublicLinkedinMessageEventRoute: ApiPublicLinkedinMessageEventRoute,
   ApiPublicReceiveScholarshipLeadRoute: ApiPublicReceiveScholarshipLeadRoute,
+  ApiWhatsappCampaignsCampaignIdReserveRoute:
+    ApiWhatsappCampaignsCampaignIdReserveRoute,
+  ApiWhatsappCampaignsContactsContactIdFailedRoute:
+    ApiWhatsappCampaignsContactsContactIdFailedRoute,
+  ApiWhatsappCampaignsContactsContactIdSentRoute:
+    ApiWhatsappCampaignsContactsContactIdSentRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
