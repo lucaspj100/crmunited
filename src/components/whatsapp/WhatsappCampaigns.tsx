@@ -27,16 +27,21 @@ type Campaign = {
   created_at: string;
   closed_at: string | null;
 };
-type Stats = { total: number; pending: number; sent: number; failed: number; cancelled: number };
-const EMPTY: Stats = { total: 0, pending: 0, sent: 0, failed: 0, cancelled: 0 };
+type Stats = { total: number; pending: number; reserved: number; sending: number; sent: number; failed: number; cancelled: number };
+const EMPTY: Stats = { total: 0, pending: 0, reserved: 0, sending: 0, sent: 0, failed: 0, cancelled: 0 };
 
 const CAMPAIGN_STATUS: Record<string, string> = { active: "Ativa", paused: "Pausada", closed: "Encerrada" };
 const CONTACT_STATUS: Record<string, string> = {
   pending: "Pendente",
+  reserved: "Reservado",
+  sending: "Enviando",
   sent: "Enviado",
   failed: "Falha",
   cancelled: "Cancelado",
 };
+
+const fmt = (d: string | null) =>
+  d ? new Date(d).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "—";
 
 function CampaignBadge({ status }: { status: string }) {
   const label = CAMPAIGN_STATUS[status] ?? status;
@@ -112,13 +117,15 @@ function useStats() {
   return useQuery({
     queryKey: ["whatsapp-campaign-stats"],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("whatsapp_campaign_stats");
+      const { data, error } = await supabase.rpc("whatsapp_campaign_status_counts");
       if (error) throw error;
       const m = new Map<string, Stats>();
       (data ?? []).forEach((r) =>
         m.set(r.campaign_id, {
           total: Number(r.total),
           pending: Number(r.pending),
+          reserved: Number(r.reserved),
+          sending: Number(r.sending),
           sent: Number(r.sent),
           failed: Number(r.failed),
           cancelled: Number(r.cancelled),
@@ -274,11 +281,14 @@ function CampaignDetail({ id, onBack }: { id: string; onBack: () => void }) {
   const { data: contacts, isLoading } = useQuery({
     queryKey: ["whatsapp-campaign-contacts", id],
     queryFn: async () => {
-      const all: { id: string; name: string | null; phone: string; company: string | null; status: string }[] = [];
+      const all: {
+        id: string; name: string | null; phone: string; company: string | null; status: string;
+        whatsapp_account_id: string | null; reserved_at: string | null; sent_at: string | null; last_error: string | null;
+      }[] = [];
       for (let from = 0; ; from += 1000) {
         const { data, error } = await supabase
           .from("whatsapp_campaign_contacts")
-          .select("id, name, phone, company, status")
+          .select("id, name, phone, company, status, whatsapp_account_id, reserved_at, sent_at, last_error")
           .eq("campaign_id", id)
           .order("created_at")
           .range(from, from + 999);
@@ -290,7 +300,26 @@ function CampaignDetail({ id, onBack }: { id: string; onBack: () => void }) {
     },
   });
 
+  const { data: accounts } = useQuery({
+    queryKey: ["whatsapp-accounts-labels"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("whatsapp_accounts").select("id, display_name, phone");
+      if (error) throw error;
+      return new Map((data ?? []).map((a) => [a.id, a.display_name || a.phone]));
+    },
+  });
+  const accountLabel = (aid: string) => accounts?.get(aid) ?? "Conta removida";
+  const { data: perAccount } = useQuery({
+    queryKey: ["whatsapp-campaign-account-stats", id],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("whatsapp_campaign_account_stats", { _campaign_id: id });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
   const refresh = () => {
+    qc.invalidateQueries({ queryKey: ["whatsapp-campaign-account-stats", id] });
     qc.invalidateQueries({ queryKey: ["whatsapp-campaign", id] });
     qc.invalidateQueries({ queryKey: ["whatsapp-campaign-contacts", id] });
     qc.invalidateQueries({ queryKey: ["whatsapp-campaign-stats"] });
@@ -303,9 +332,7 @@ function CampaignDetail({ id, onBack }: { id: string; onBack: () => void }) {
     const patch =
       status === "paused" ? { status, paused_at: now } : status === "closed" ? { status, closed_at: now } : { status, paused_at: null };
     const { error } = await supabase.from("whatsapp_campaigns").update(patch).eq("id", id);
-    if (!error && status === "closed") {
-      await supabase.from("whatsapp_campaign_contacts").update({ status: "cancelled" }).eq("campaign_id", id).eq("status", "pending");
-    }
+    // Ao encerrar, o banco cancela automaticamente os contatos pendentes e reservados.
     setBusy(false);
     setConfirmClose(false);
     if (error) toast.error(error.message);
@@ -352,12 +379,15 @@ function CampaignDetail({ id, onBack }: { id: string; onBack: () => void }) {
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-7">
         {[
           ["Total", s.total],
           ["Pendentes", s.pending],
+          ["Reservados", s.reserved],
+          ["Enviando", s.sending],
           ["Enviados", s.sent],
           ["Falhas", s.failed],
+          ["Cancelados", s.cancelled],
         ].map(([label, v]) => (
           <Card key={label as string} className="p-4">
             <div className="text-xs text-muted-foreground">{label}</div>
@@ -365,6 +395,19 @@ function CampaignDetail({ id, onBack }: { id: string; onBack: () => void }) {
           </Card>
         ))}
       </div>
+
+      {!!perAccount?.length && (
+        <Card className="p-4">
+          <div className="text-sm font-medium mb-2">Por conta WhatsApp</div>
+          <div className="flex flex-wrap gap-2">
+            {perAccount.map((a) => (
+              <Badge key={a.whatsapp_account_id} variant="outline" className="font-normal">
+                {accountLabel(a.whatsapp_account_id)} · {Number(a.sent)} enviados · {Number(a.reserved)} reservados · {Number(a.failed)} falhas
+              </Badge>
+            ))}
+          </div>
+        </Card>
+      )}
 
       <Card className="p-0 overflow-x-auto">
         {isLoading ? (
@@ -379,6 +422,9 @@ function CampaignDetail({ id, onBack }: { id: string; onBack: () => void }) {
                 <th className="px-4 py-2 font-medium">Telefone</th>
                 <th className="px-4 py-2 font-medium">Empresa</th>
                 <th className="px-4 py-2 font-medium">Status</th>
+                <th className="px-4 py-2 font-medium">Conta WhatsApp</th>
+                <th className="px-4 py-2 font-medium">Reservado em</th>
+                <th className="px-4 py-2 font-medium">Enviado em</th>
               </tr>
             </thead>
             <tbody>
@@ -387,7 +433,13 @@ function CampaignDetail({ id, onBack }: { id: string; onBack: () => void }) {
                   <td className="px-4 py-2">{c.name ?? "—"}</td>
                   <td className="px-4 py-2">{c.phone}</td>
                   <td className="px-4 py-2">{c.company ?? "—"}</td>
-                  <td className="px-4 py-2">{CONTACT_STATUS[c.status] ?? c.status}</td>
+                  <td className="px-4 py-2" title={c.last_error ?? undefined}>
+                    {CONTACT_STATUS[c.status] ?? c.status}
+                    {c.last_error && <span className="ml-1 text-xs text-muted-foreground">({c.last_error})</span>}
+                  </td>
+                  <td className="px-4 py-2">{c.whatsapp_account_id ? accountLabel(c.whatsapp_account_id) : "—"}</td>
+                  <td className="px-4 py-2 whitespace-nowrap">{fmt(c.reserved_at)}</td>
+                  <td className="px-4 py-2 whitespace-nowrap">{fmt(c.sent_at)}</td>
                 </tr>
               ))}
             </tbody>
@@ -401,7 +453,7 @@ function CampaignDetail({ id, onBack }: { id: string; onBack: () => void }) {
             <DialogTitle>Encerrar campanha?</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            Os {s.pending.toLocaleString("pt-BR")} contatos pendentes passarão para "Cancelado". Essa ação não pode ser desfeita.
+            Os {(s.pending + s.reserved).toLocaleString("pt-BR")} contatos pendentes e reservados passarão para "Cancelado". Essa ação não pode ser desfeita.
           </p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirmClose(false)}>Voltar</Button>
