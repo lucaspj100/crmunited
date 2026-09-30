@@ -2,6 +2,8 @@
 import { authenticateRequest, json } from "@/lib/whatsapp-accounts.server";
 import { httpStatusFor } from "@/lib/whatsapp-campaigns";
 import type { z } from "zod";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
 
 type RpcResult = { ok: boolean; error?: string } & Record<string, unknown>;
 
@@ -9,9 +11,7 @@ export async function handleCampaignRpc<S extends z.ZodTypeAny>(
   request: Request,
   schema: S,
   call: (
-    supabase: Awaited<ReturnType<typeof authenticateRequest>> extends infer A
-      ? A extends { supabase: infer C } ? C : never
-      : never,
+    supabase: SupabaseClient<Database>,
     body: z.infer<S>,
   ) => PromiseLike<{ data: unknown; error: unknown }>,
 ): Promise<Response> {
