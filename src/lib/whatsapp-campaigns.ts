@@ -32,6 +32,22 @@ export const uuidSchema = uuid;
 export const reserveBodySchema = z.object({ whatsappAccountId: uuid, limit: z.unknown().optional() });
 export const sentBodySchema = z.object({ whatsappAccountId: uuid });
 export const failedBodySchema = z.object({ whatsappAccountId: uuid, errorCode: z.unknown().optional() });
+/** F3-A: release voluntário de UM lote (identificado pelo reservationId devolvido no reserve). */
+export const releaseBodySchema = z.object({ whatsappAccountId: uuid, reservationId: uuid });
+
+/** F3-A: item da listagem de campanhas ativas para a extensão — só estes 4 campos. */
+export type ActiveCampaignPayload = { id: string; name: string; status: string; pendingCount: number };
+
+/** Projeção defensiva do retorno de wa_campaign_list_active (nunca repassa campos extras). */
+export function toActiveCampaignsPayload(raw: unknown): ActiveCampaignPayload[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((item) => {
+    const c = item as Record<string, unknown> | null;
+    if (!c || typeof c.id !== "string" || typeof c.name !== "string" || typeof c.status !== "string") return [];
+    const n = Number(c.pendingCount);
+    return [{ id: c.id, name: c.name, status: c.status, pendingCount: Number.isFinite(n) && n >= 0 ? Math.trunc(n) : 0 }];
+  });
+}
 
 /** Mapeia o erro devolvido pelas funções do banco para o status HTTP. */
 export function httpStatusFor(error: string | undefined): number {
