@@ -43,6 +43,13 @@
       "when": 1790793640847,
       "tag": "0005_whatsapp_campaigns_f2_reservation",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790796547191,
+      "tag": "0006_whatsapp_campaigns_f3a_reservation_id_release",
+      "breakpoints": true
     }
   ]
 }
