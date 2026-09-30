@@ -15,7 +15,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Users, Shield, Search, KeyRound, History, Ban, CheckCircle2, Copy, Mail, ArrowRightLeft } from "lucide-react";
+import { Users, Shield, Search, KeyRound, History, Ban, CheckCircle2, Copy, Mail, ArrowRightLeft, ImageIcon } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { useTeams, ALL_TEAMS } from "@/lib/teams";
 import { adminMoveUsersToTeam } from "@/lib/team-admin.functions";
 
@@ -52,6 +53,24 @@ function UsersAdmin() {
   const setStatusFn = useServerFn(adminSetUserStatus);
   const setRoleFn = useServerFn(adminUpdateUserRole);
   const setHallFn = useServerFn(adminSetHallEligibility);
+
+  // Foto do usuário (reutilizada no Telão)
+  const setAvatar = async (u: UserRow, file: File) => {
+    if (!file.type.startsWith("image/")) return toast.error("Selecione uma imagem");
+    if (file.size > 5 * 1024 * 1024) return toast.error("Máximo 5MB");
+    try {
+      const bmp = await createImageBitmap(file);
+      const scale = Math.min(1, 256 / Math.max(bmp.width, bmp.height));
+      const c = document.createElement("canvas");
+      c.width = Math.round(bmp.width * scale); c.height = Math.round(bmp.height * scale);
+      c.getContext("2d")!.drawImage(bmp, 0, 0, c.width, c.height);
+      const { error } = await supabase.rpc("admin_set_avatar", { _user_id: u.id, _avatar_url: c.toDataURL("image/jpeg", 0.82) });
+      if (error) throw error;
+      toast.success(`Foto de ${u.full_name || u.email} atualizada`);
+    } catch (e) {
+      toast.error((e as Error).message ?? "Erro ao salvar foto");
+    }
+  };
 
   // Elegibilidade ao Hall da Fama — não altera placar, telão nem relatórios.
   const toggleHall = async (u: UserRow, eligible: boolean) => {
@@ -267,6 +286,11 @@ function UsersAdmin() {
                         ? <Button size="sm" variant="ghost" onClick={() => setStatusUser({ user: u, to: "inativo" })} title="Inativar"><Ban className="h-4 w-4" /></Button>
                         : <Button size="sm" variant="ghost" onClick={() => setStatusUser({ user: u, to: "ativo" })} title="Ativar"><CheckCircle2 className="h-4 w-4" /></Button>}
                       <Button size="sm" variant="ghost" onClick={() => setEditUser(u)} title="Editar perfil"><Users className="h-4 w-4" /></Button>
+                      <label className="inline-flex h-9 cursor-pointer items-center justify-center rounded-md px-3 hover:bg-accent" title="Alterar foto">
+                        <ImageIcon className="h-4 w-4" />
+                        <input type="file" accept="image/*" className="hidden"
+                          onChange={(e) => { const f = e.target.files?.[0]; if (f) void setAvatar(u, f); e.target.value = ""; }} />
+                      </label>
                     </div>
                   </td>
                 </tr>
