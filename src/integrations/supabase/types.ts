@@ -3585,6 +3585,19 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      seller_performance_series: {
+        Args: { _end: string; _start: string; _user_id: string }
+        Returns: {
+          atendidas: number
+          day: string
+          interessados: number
+          ligacoes: number
+          linkedin: number
+          marcadas: number
+          matriculas: number
+          realizadas: number
+        }[]
+      }
       team_enrollment_goal_summary: {
         Args: { _month: number; _team_id?: string; _year: number }
         Returns: Json

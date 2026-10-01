@@ -50,6 +50,13 @@
       "when": 1790796547191,
       "tag": "0006_whatsapp_campaigns_f3a_reservation_id_release",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790862891471,
+      "tag": "0007_placar_privacy_and_seller_series",
+      "breakpoints": true
     }
   ]
 }
