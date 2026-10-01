@@ -87,7 +87,7 @@ export function SellerPerformancePanel({ seller, onClose }: { seller: PanelSelle
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
-      <DialogContent className="telao-root max-w-[96vw] w-[96vw] h-[92vh] overflow-y-auto border-telao-border bg-telao-bg text-white">
+      <DialogContent className="max-w-[96vw] w-[96vw] h-[92vh] overflow-y-auto border-telao-border bg-telao-bg text-white">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-white">
             <BarChart3 className="h-5 w-5 text-telao-cyan" /> Painel de desempenho
