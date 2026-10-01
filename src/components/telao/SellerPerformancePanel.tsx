@@ -6,6 +6,7 @@ import { scoreOf, fmtScore } from "@/lib/scoring";
 import { useScoreSettings } from "@/lib/score-settings";
 import { TelaoCard, SectionTitle, initials } from "@/components/telao/shared";
 import { BarChart3, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { WeeklyCharts } from "@/components/telao/WeeklyCharts";
 
 export type SeriesDay = {
   day: string; ligacoes: number; atendidas: number; interessados: number;
@@ -67,6 +68,7 @@ export function SellerPerformancePanel({ seller, onClose }: { seller: PanelSelle
         fetchProductivity({ start: prev.start, end: prev.end, vendedorId: id }),
       ]);
       return {
+        series: sCur,
         cur: sumSeries(sCur), prev: sumSeries(sPrev),
         scoreCur: pCur[0] ? scoreOf(pCur[0], points) : 0,
         scorePrev: pPrev[0] ? scoreOf(pPrev[0], points) : 0,
@@ -138,6 +140,7 @@ export function SellerPerformancePanel({ seller, onClose }: { seller: PanelSelle
                 <p className="text-[11px] text-white/40">
                   Agendadas contam pela data em que a entrevista foi marcada e para quem marcou.
                 </p>
+                <WeeklyCharts series={d.series} />
               </>
             )}
           </div>
