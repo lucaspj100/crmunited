@@ -45,6 +45,7 @@ import { MyMissionToday } from "@/components/telao/MyMissionToday";
 import { RankingBoard } from "@/components/telao/RankingBoard";
 import { DailyHighlights, CareerStrip } from "@/components/telao/HighlightsAndCareer";
 import { TelaoTicker } from "@/components/telao/TelaoTicker";
+import { SellerPerformancePanel, type PanelSeller } from "@/components/telao/SellerPerformancePanel";
 
 
 
@@ -208,6 +209,7 @@ function PlacarDiario() {
   }, [isAdmin, rows, goalsBySeller, monthDoneById]);
 
   const [selectedSeller, setSelectedSeller] = useState<(ProductivityRow & { score: number }) | null>(null);
+  const [panelSeller, setPanelSeller] = useState<PanelSeller | null>(null);
 
   const sumTotals = (list: ProductivityRow[]) => list.reduce(
     (acc, r) => ({
@@ -346,6 +348,15 @@ function PlacarDiario() {
               {fullscreen ? <X className="h-4 w-4 mr-1" /> : <Maximize2 className="h-4 w-4 mr-1" />}
               {fullscreen ? "Sair" : "Modo Telão"}
             </Button>
+            {user && (
+              <Button size="sm" variant="outline" className="border-telao-cyan/40 bg-telao-cyan/10 text-telao-cyan hover:bg-telao-cyan/20"
+                onClick={() => {
+                  const me = rows.find((r) => r.vendedor_id === user.id);
+                  setPanelSeller({ vendedor_id: user.id, nome: me?.nome ?? "Meu desempenho", avatar_url: me?.avatar_url ?? null });
+                }}>
+                📊 Meu desempenho
+              </Button>
+            )}
             <Link to="/placar-hall-da-fama">
               <Button size="sm" variant="outline" className="border-amber-400/40 bg-amber-400/10 text-amber-200 hover:bg-amber-400/20">
                 🏛️ Hall da Fama
@@ -501,7 +512,9 @@ function PlacarDiario() {
         seller={selectedSeller}
         period={period}
         onClose={() => setSelectedSeller(null)}
+        onOpenPanel={(s) => { setSelectedSeller(null); setPanelSeller(s); }}
       />
+      <SellerPerformancePanel seller={panelSeller} onClose={() => setPanelSeller(null)} />
     </div>
   );
 }
@@ -876,11 +889,12 @@ function GoalCell({ goal, done, loading, error }: {
 
 
 function SellerDetailDialog({
-  seller, period, onClose,
+  seller, period, onClose, onOpenPanel,
 }: {
   seller: RankedRow | null;
   period: Period;
   onClose: () => void;
+  onOpenPanel: (s: PanelSeller) => void;
 }) {
   const open = !!seller;
   const periodLabel = period === "hoje" ? "hoje" : period === "semana" ? "na semana" : "no mês";
@@ -934,6 +948,9 @@ function SellerDetailDialog({
                 <ConvCard label="Fechamento" value={pct(seller.matriculas, seller.entrevistas_realizadas ?? 0)} hint="matr / realiz" />
               </div>
             </div>
+            <Button className="w-full" onClick={() => onOpenPanel({ vendedor_id: seller.vendedor_id, nome: seller.nome, avatar_url: seller.avatar_url })}>
+              📊 Abrir painel completo
+            </Button>
           </div>
         )}
       </DialogContent>
