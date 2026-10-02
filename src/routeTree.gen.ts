@@ -56,8 +56,10 @@ import { Route as ApiPublicLinkedinMessageEventRouteImport } from './routes/api/
 import { Route as ApiPublicFindSellerByEmailRouteImport } from './routes/api/public/find-seller-by-email'
 import { Route as ApiWhatsappCampaignsCampaignIdReserveRouteImport } from './routes/api/whatsapp-campaigns/$campaignId.reserve'
 import { Route as ApiWhatsappCampaignsCampaignIdReleaseRouteImport } from './routes/api/whatsapp-campaigns/$campaignId.release'
+import { Route as ApiWhatsappCampaignsContactsContactIdUnclaimRouteImport } from './routes/api/whatsapp-campaigns/contacts/$contactId.unclaim'
 import { Route as ApiWhatsappCampaignsContactsContactIdSentRouteImport } from './routes/api/whatsapp-campaigns/contacts/$contactId.sent'
 import { Route as ApiWhatsappCampaignsContactsContactIdFailedRouteImport } from './routes/api/whatsapp-campaigns/contacts/$contactId.failed'
+import { Route as ApiWhatsappCampaignsContactsContactIdClaimRouteImport } from './routes/api/whatsapp-campaigns/contacts/$contactId.claim'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -316,6 +318,12 @@ const ApiWhatsappCampaignsCampaignIdReleaseRoute =
     path: '/api/whatsapp-campaigns/$campaignId/release',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiWhatsappCampaignsContactsContactIdUnclaimRoute =
+  ApiWhatsappCampaignsContactsContactIdUnclaimRouteImport.update({
+    id: '/api/whatsapp-campaigns/contacts/$contactId/unclaim',
+    path: '/api/whatsapp-campaigns/contacts/$contactId/unclaim',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiWhatsappCampaignsContactsContactIdSentRoute =
   ApiWhatsappCampaignsContactsContactIdSentRouteImport.update({
     id: '/api/whatsapp-campaigns/contacts/$contactId/sent',
@@ -326,6 +334,12 @@ const ApiWhatsappCampaignsContactsContactIdFailedRoute =
   ApiWhatsappCampaignsContactsContactIdFailedRouteImport.update({
     id: '/api/whatsapp-campaigns/contacts/$contactId/failed',
     path: '/api/whatsapp-campaigns/contacts/$contactId/failed',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiWhatsappCampaignsContactsContactIdClaimRoute =
+  ApiWhatsappCampaignsContactsContactIdClaimRouteImport.update({
+    id: '/api/whatsapp-campaigns/contacts/$contactId/claim',
+    path: '/api/whatsapp-campaigns/contacts/$contactId/claim',
     getParentRoute: () => rootRouteImport,
   } as any)
 
@@ -376,8 +390,10 @@ export interface FileRoutesByFullPath {
   '/api/whatsapp-campaigns/active': typeof ApiWhatsappCampaignsActiveRoute
   '/api/whatsapp-campaigns/$campaignId/release': typeof ApiWhatsappCampaignsCampaignIdReleaseRoute
   '/api/whatsapp-campaigns/$campaignId/reserve': typeof ApiWhatsappCampaignsCampaignIdReserveRoute
+  '/api/whatsapp-campaigns/contacts/$contactId/claim': typeof ApiWhatsappCampaignsContactsContactIdClaimRoute
   '/api/whatsapp-campaigns/contacts/$contactId/failed': typeof ApiWhatsappCampaignsContactsContactIdFailedRoute
   '/api/whatsapp-campaigns/contacts/$contactId/sent': typeof ApiWhatsappCampaignsContactsContactIdSentRoute
+  '/api/whatsapp-campaigns/contacts/$contactId/unclaim': typeof ApiWhatsappCampaignsContactsContactIdUnclaimRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -426,8 +442,10 @@ export interface FileRoutesByTo {
   '/api/whatsapp-campaigns/active': typeof ApiWhatsappCampaignsActiveRoute
   '/api/whatsapp-campaigns/$campaignId/release': typeof ApiWhatsappCampaignsCampaignIdReleaseRoute
   '/api/whatsapp-campaigns/$campaignId/reserve': typeof ApiWhatsappCampaignsCampaignIdReserveRoute
+  '/api/whatsapp-campaigns/contacts/$contactId/claim': typeof ApiWhatsappCampaignsContactsContactIdClaimRoute
   '/api/whatsapp-campaigns/contacts/$contactId/failed': typeof ApiWhatsappCampaignsContactsContactIdFailedRoute
   '/api/whatsapp-campaigns/contacts/$contactId/sent': typeof ApiWhatsappCampaignsContactsContactIdSentRoute
+  '/api/whatsapp-campaigns/contacts/$contactId/unclaim': typeof ApiWhatsappCampaignsContactsContactIdUnclaimRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -478,8 +496,10 @@ export interface FileRoutesById {
   '/api/whatsapp-campaigns/active': typeof ApiWhatsappCampaignsActiveRoute
   '/api/whatsapp-campaigns/$campaignId/release': typeof ApiWhatsappCampaignsCampaignIdReleaseRoute
   '/api/whatsapp-campaigns/$campaignId/reserve': typeof ApiWhatsappCampaignsCampaignIdReserveRoute
+  '/api/whatsapp-campaigns/contacts/$contactId/claim': typeof ApiWhatsappCampaignsContactsContactIdClaimRoute
   '/api/whatsapp-campaigns/contacts/$contactId/failed': typeof ApiWhatsappCampaignsContactsContactIdFailedRoute
   '/api/whatsapp-campaigns/contacts/$contactId/sent': typeof ApiWhatsappCampaignsContactsContactIdSentRoute
+  '/api/whatsapp-campaigns/contacts/$contactId/unclaim': typeof ApiWhatsappCampaignsContactsContactIdUnclaimRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -530,8 +550,10 @@ export interface FileRouteTypes {
     | '/api/whatsapp-campaigns/active'
     | '/api/whatsapp-campaigns/$campaignId/release'
     | '/api/whatsapp-campaigns/$campaignId/reserve'
+    | '/api/whatsapp-campaigns/contacts/$contactId/claim'
     | '/api/whatsapp-campaigns/contacts/$contactId/failed'
     | '/api/whatsapp-campaigns/contacts/$contactId/sent'
+    | '/api/whatsapp-campaigns/contacts/$contactId/unclaim'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -580,8 +602,10 @@ export interface FileRouteTypes {
     | '/api/whatsapp-campaigns/active'
     | '/api/whatsapp-campaigns/$campaignId/release'
     | '/api/whatsapp-campaigns/$campaignId/reserve'
+    | '/api/whatsapp-campaigns/contacts/$contactId/claim'
     | '/api/whatsapp-campaigns/contacts/$contactId/failed'
     | '/api/whatsapp-campaigns/contacts/$contactId/sent'
+    | '/api/whatsapp-campaigns/contacts/$contactId/unclaim'
   id:
     | '__root__'
     | '/'
@@ -631,8 +655,10 @@ export interface FileRouteTypes {
     | '/api/whatsapp-campaigns/active'
     | '/api/whatsapp-campaigns/$campaignId/release'
     | '/api/whatsapp-campaigns/$campaignId/reserve'
+    | '/api/whatsapp-campaigns/contacts/$contactId/claim'
     | '/api/whatsapp-campaigns/contacts/$contactId/failed'
     | '/api/whatsapp-campaigns/contacts/$contactId/sent'
+    | '/api/whatsapp-campaigns/contacts/$contactId/unclaim'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -647,8 +673,10 @@ export interface RootRouteChildren {
   ApiWhatsappCampaignsActiveRoute: typeof ApiWhatsappCampaignsActiveRoute
   ApiWhatsappCampaignsCampaignIdReleaseRoute: typeof ApiWhatsappCampaignsCampaignIdReleaseRoute
   ApiWhatsappCampaignsCampaignIdReserveRoute: typeof ApiWhatsappCampaignsCampaignIdReserveRoute
+  ApiWhatsappCampaignsContactsContactIdClaimRoute: typeof ApiWhatsappCampaignsContactsContactIdClaimRoute
   ApiWhatsappCampaignsContactsContactIdFailedRoute: typeof ApiWhatsappCampaignsContactsContactIdFailedRoute
   ApiWhatsappCampaignsContactsContactIdSentRoute: typeof ApiWhatsappCampaignsContactsContactIdSentRoute
+  ApiWhatsappCampaignsContactsContactIdUnclaimRoute: typeof ApiWhatsappCampaignsContactsContactIdUnclaimRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -982,6 +1010,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiWhatsappCampaignsCampaignIdReleaseRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/whatsapp-campaigns/contacts/$contactId/unclaim': {
+      id: '/api/whatsapp-campaigns/contacts/$contactId/unclaim'
+      path: '/api/whatsapp-campaigns/contacts/$contactId/unclaim'
+      fullPath: '/api/whatsapp-campaigns/contacts/$contactId/unclaim'
+      preLoaderRoute: typeof ApiWhatsappCampaignsContactsContactIdUnclaimRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/whatsapp-campaigns/contacts/$contactId/sent': {
       id: '/api/whatsapp-campaigns/contacts/$contactId/sent'
       path: '/api/whatsapp-campaigns/contacts/$contactId/sent'
@@ -994,6 +1029,13 @@ declare module '@tanstack/react-router' {
       path: '/api/whatsapp-campaigns/contacts/$contactId/failed'
       fullPath: '/api/whatsapp-campaigns/contacts/$contactId/failed'
       preLoaderRoute: typeof ApiWhatsappCampaignsContactsContactIdFailedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/whatsapp-campaigns/contacts/$contactId/claim': {
+      id: '/api/whatsapp-campaigns/contacts/$contactId/claim'
+      path: '/api/whatsapp-campaigns/contacts/$contactId/claim'
+      fullPath: '/api/whatsapp-campaigns/contacts/$contactId/claim'
+      preLoaderRoute: typeof ApiWhatsappCampaignsContactsContactIdClaimRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -1103,10 +1145,14 @@ const rootRouteChildren: RootRouteChildren = {
     ApiWhatsappCampaignsCampaignIdReleaseRoute,
   ApiWhatsappCampaignsCampaignIdReserveRoute:
     ApiWhatsappCampaignsCampaignIdReserveRoute,
+  ApiWhatsappCampaignsContactsContactIdClaimRoute:
+    ApiWhatsappCampaignsContactsContactIdClaimRoute,
   ApiWhatsappCampaignsContactsContactIdFailedRoute:
     ApiWhatsappCampaignsContactsContactIdFailedRoute,
   ApiWhatsappCampaignsContactsContactIdSentRoute:
     ApiWhatsappCampaignsContactsContactIdSentRoute,
+  ApiWhatsappCampaignsContactsContactIdUnclaimRoute:
+    ApiWhatsappCampaignsContactsContactIdUnclaimRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

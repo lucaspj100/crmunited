@@ -3130,6 +3130,8 @@ export type Database = {
           phone: string
           reservation_id: string | null
           reserved_at: string | null
+          send_attempt_id: string | null
+          sending_at: string | null
           sent_at: string | null
           sent_by_account_id: string | null
           status: string
@@ -3150,6 +3152,8 @@ export type Database = {
           phone: string
           reservation_id?: string | null
           reserved_at?: string | null
+          send_attempt_id?: string | null
+          sending_at?: string | null
           sent_at?: string | null
           sent_by_account_id?: string | null
           status?: string
@@ -3170,6 +3174,8 @@ export type Database = {
           phone?: string
           reservation_id?: string | null
           reserved_at?: string | null
+          send_attempt_id?: string | null
+          sending_at?: string | null
           sent_at?: string | null
           sent_by_account_id?: string | null
           status?: string
@@ -3603,14 +3609,41 @@ export type Database = {
         Returns: Json
       }
       teams_overview: { Args: never; Returns: Json }
+      wa_campaign_claim: {
+        Args: {
+          _account_id: string
+          _attempt_id: string
+          _campaign_id: string
+          _contact_id: string
+          _reservation_id: string
+        }
+        Returns: Json
+      }
       wa_campaign_list_active: { Args: never; Returns: Json }
       wa_campaign_mark_failed: {
-        Args: { _account_id: string; _contact_id: string; _error_code: string }
+        Args: {
+          _account_id: string
+          _attempt_id: string
+          _campaign_id: string
+          _contact_id: string
+          _error_code: string
+          _reservation_id: string
+        }
         Returns: Json
       }
       wa_campaign_mark_sent: {
-        Args: { _account_id: string; _contact_id: string }
+        Args: {
+          _account_id: string
+          _attempt_id: string
+          _campaign_id: string
+          _contact_id: string
+          _reservation_id: string
+        }
         Returns: Json
+      }
+      wa_campaign_own_account: {
+        Args: { _account_id: string }
+        Returns: boolean
       }
       wa_campaign_own_active_account: {
         Args: { _account_id: string }
@@ -3626,6 +3659,16 @@ export type Database = {
       }
       wa_campaign_reserve: {
         Args: { _account_id: string; _campaign_id: string; _limit: number }
+        Returns: Json
+      }
+      wa_campaign_unclaim: {
+        Args: {
+          _account_id: string
+          _attempt_id: string
+          _campaign_id: string
+          _contact_id: string
+          _reservation_id: string
+        }
         Returns: Json
       }
       whatsapp_campaign_account_stats: {
