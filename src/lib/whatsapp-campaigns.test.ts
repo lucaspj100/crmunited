@@ -6,6 +6,11 @@ import {
   reserveBodySchema,
   releaseBodySchema,
   toActiveCampaignsPayload,
+  attemptBodySchema,
+  claimBodySchema,
+  failedBodySchema,
+  sentBodySchema,
+  unclaimBodySchema,
 } from "./whatsapp-campaigns";
 
 describe("F2 regras", () => {
@@ -64,5 +69,40 @@ describe("F3-A regras", () => {
     expect(httpStatusFor("unauthorized")).toBe(401);
     expect(httpStatusFor("account_not_allowed")).toBe(403);
     expect(httpStatusFor("campaign_not_found")).toBe(404);
+  });
+});
+
+describe("F3-B contratos", () => {
+  const ids = {
+    campaignId: "8a9e44f5-5479-4348-8668-df5bf133bda6",
+    whatsappAccountId: "a0000000-0000-4000-8000-00000000000a",
+    reservationId: "e0000000-0000-4000-8000-00000000000e",
+    attemptId: "f0000000-0000-4000-8000-00000000000f",
+  };
+  it("claim/unclaim/sent exigem os 4 UUIDs e descartam campos extras", () => {
+    for (const schema of [attemptBodySchema, claimBodySchema, unclaimBodySchema, sentBodySchema]) {
+      expect(schema.parse({ ...ids, status: "sent", userId: "x" })).toEqual(ids);
+      for (const k of Object.keys(ids)) {
+        const partial: Record<string, string> = { ...ids };
+        delete partial[k];
+        expect(schema.safeParse(partial).success).toBe(false);
+        expect(schema.safeParse({ ...ids, [k]: "nao-uuid" }).success).toBe(false);
+      }
+    }
+  });
+  it("failed aceita só os códigos da fila do CRM", () => {
+    for (const code of ["invalid_number", "not_on_whatsapp", "manual_confirmed_not_sent"]) {
+      expect(failedBodySchema.safeParse({ ...ids, errorCode: code }).success).toBe(true);
+    }
+    for (const code of ["timeout", "ui_error", "unknown", "manual_not_delivered", undefined]) {
+      expect(failedBodySchema.safeParse({ ...ids, errorCode: code }).success).toBe(false);
+    }
+    expect(sanitizeErrorCode("manual_confirmed_not_sent")).toBe("manual_confirmed_not_sent");
+  });
+  it("erros da F3-B mapeiam para 409/404", () => {
+    for (const e of ["reservation_mismatch", "already_sending", "already_finalized", "attempt_mismatch", "not_claimed", "reservation_expired", "campaign_not_active"]) {
+      expect(httpStatusFor(e)).toBe(409);
+    }
+    expect(httpStatusFor("contact_not_found")).toBe(404);
   });
 });

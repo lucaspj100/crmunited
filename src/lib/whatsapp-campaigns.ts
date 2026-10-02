@@ -14,6 +14,8 @@ export const ERROR_CODES = [
   "timeout",
   "ui_error",
   "unknown",
+  // F3-B: o vendedor confirmou manualmente que o ENVIO não ocorreu (terminal).
+  "manual_confirmed_not_sent",
 ] as const;
 export type ErrorCode = (typeof ERROR_CODES)[number];
 
@@ -30,8 +32,23 @@ export function sanitizeErrorCode(raw: unknown): ErrorCode {
 const uuid = z.string().uuid();
 export const uuidSchema = uuid;
 export const reserveBodySchema = z.object({ whatsappAccountId: uuid, limit: z.unknown().optional() });
-export const sentBodySchema = z.object({ whatsappAccountId: uuid });
-export const failedBodySchema = z.object({ whatsappAccountId: uuid, errorCode: z.unknown().optional() });
+/**
+ * F3-B: identificação completa da tentativa de envio de UM contato.
+ * Exigida por claim, unclaim, sent e failed — sem ela nenhuma fila velha
+ * consegue autorizar ou finalizar um contato que pertence a outra reserva.
+ */
+export const attemptBodySchema = z.object({
+  campaignId: uuid,
+  whatsappAccountId: uuid,
+  reservationId: uuid,
+  attemptId: uuid,
+});
+export const claimBodySchema = attemptBodySchema;
+export const unclaimBodySchema = attemptBodySchema;
+export const sentBodySchema = attemptBodySchema;
+/** F3-B: só os códigos que a fila do CRM usa; qualquer outro → invalid_body. */
+export const FAILED_ERROR_CODES = ["invalid_number", "not_on_whatsapp", "manual_confirmed_not_sent"] as const;
+export const failedBodySchema = attemptBodySchema.extend({ errorCode: z.enum(FAILED_ERROR_CODES) });
 /** F3-A: release voluntário de UM lote (identificado pelo reservationId devolvido no reserve). */
 export const releaseBodySchema = z.object({ whatsappAccountId: uuid, reservationId: uuid });
 
@@ -62,6 +79,11 @@ export function httpStatusFor(error: string | undefined): number {
     case "contact_not_found":
       return 404;
     case "campaign_not_active":
+    case "reservation_mismatch":
+    case "already_sending":
+    case "already_finalized":
+    case "attempt_mismatch":
+    case "not_claimed":
     case "reserved_by_other_account":
     case "reservation_expired":
     case "already_sent":

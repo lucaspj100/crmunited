@@ -1,18 +1,18 @@
-// POST /api/whatsapp-campaigns/contacts/:contactId/sent  { campaignId, whatsappAccountId, reservationId, attemptId }
-// F3-B: finaliza como enviado. Só aceita `sending` da MESMA tentativa (conta + lote + attemptId).
+// POST /api/whatsapp-campaigns/contacts/:contactId/claim  { campaignId, whatsappAccountId, reservationId, attemptId }
+// F3-B: claim atômico reserved -> sending ANTES do envio. Replay com o mesmo attemptId → { ok:true, already:true }.
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@/lib/whatsapp-accounts.server";
 import { handleCampaignRpc } from "@/lib/whatsapp-campaigns.server";
-import { sentBodySchema, uuidSchema } from "@/lib/whatsapp-campaigns";
+import { claimBodySchema, uuidSchema } from "@/lib/whatsapp-campaigns";
 
-export const Route = createFileRoute("/api/whatsapp-campaigns/contacts/$contactId/sent")({
+export const Route = createFileRoute("/api/whatsapp-campaigns/contacts/$contactId/claim")({
   server: {
     handlers: {
       POST: async ({ request, params }) => {
         const id = uuidSchema.safeParse(params.contactId);
         if (!id.success) return json({ ok: false, error: "contact_not_found" }, 404);
-        return handleCampaignRpc(request, sentBodySchema, (sb, body) =>
-          sb.rpc("wa_campaign_mark_sent", {
+        return handleCampaignRpc(request, claimBodySchema, (sb, body) =>
+          sb.rpc("wa_campaign_claim", {
             _contact_id: id.data,
             _campaign_id: body.campaignId,
             _account_id: body.whatsappAccountId,
