@@ -9,254 +9,81 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ApiWhatsappAccountsRouteImport } from './routes/api/whatsapp-accounts'
-import { Route as ApiFindLeadByPhoneRouteImport } from './routes/api/find-lead-by-phone'
-import { Route as AuthenticatedUsuariosAcessosRouteImport } from './routes/_authenticated/usuarios-acessos'
-import { Route as AuthenticatedTarefasRouteImport } from './routes/_authenticated/tarefas'
-import { Route as AuthenticatedScriptsRouteImport } from './routes/_authenticated/scripts'
-import { Route as AuthenticatedResgatesRouteImport } from './routes/_authenticated/resgates'
-import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authenticated/relatorios'
-import { Route as AuthenticatedProcessosComerciaisRouteImport } from './routes/_authenticated/processos-comerciais'
-import { Route as AuthenticatedPlaybookRouteImport } from './routes/_authenticated/playbook'
-import { Route as AuthenticatedPlanoDeCarreiraRouteImport } from './routes/_authenticated/plano-de-carreira'
-import { Route as AuthenticatedPlacarHallDaFamaRouteImport } from './routes/_authenticated/placar-hall-da-fama'
-import { Route as AuthenticatedPlacarDiarioRouteImport } from './routes/_authenticated/placar-diario'
-import { Route as AuthenticatedPerdidosRouteImport } from './routes/_authenticated/perdidos'
-import { Route as AuthenticatedPainelAdmRouteImport } from './routes/_authenticated/painel-adm'
-import { Route as AuthenticatedMinhaComissaoRouteImport } from './routes/_authenticated/minha-comissao'
-import { Route as AuthenticatedMeusFeedbacksRouteImport } from './routes/_authenticated/meus-feedbacks'
-import { Route as AuthenticatedMeuPerfilRouteImport } from './routes/_authenticated/meu-perfil'
-import { Route as AuthenticatedMetasMatriculaRouteImport } from './routes/_authenticated/metas-matricula'
-import { Route as AuthenticatedMateriaisRouteImport } from './routes/_authenticated/materiais'
-import { Route as AuthenticatedLinksBolsistaRouteImport } from './routes/_authenticated/links-bolsista'
-import { Route as AuthenticatedLeadsRouteImport } from './routes/_authenticated/leads'
-import { Route as AuthenticatedImportarRouteImport } from './routes/_authenticated/importar'
-import { Route as AuthenticatedHojeRouteImport } from './routes/_authenticated/hoje'
-import { Route as AuthenticatedFunilRouteImport } from './routes/_authenticated/funil'
-import { Route as AuthenticatedForecastRouteImport } from './routes/_authenticated/forecast'
-import { Route as AuthenticatedFilaRouteImport } from './routes/_authenticated/fila'
-import { Route as AuthenticatedFeedbackIndividualRouteImport } from './routes/_authenticated/feedback-individual'
-import { Route as AuthenticatedEquipesRouteImport } from './routes/_authenticated/equipes'
-import { Route as AuthenticatedDiscadorRouteImport } from './routes/_authenticated/discador'
-import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
-import { Route as AuthenticatedContasWhatsappRouteImport } from './routes/_authenticated/contas-whatsapp'
-import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
-import { Route as AuthenticatedComissaoVendedoresRouteImport } from './routes/_authenticated/comissao-vendedores'
-import { Route as AuthenticatedComissaoLiderancaRouteImport } from './routes/_authenticated/comissao-lideranca'
-import { Route as AuthenticatedCheckoutDoDiaRouteImport } from './routes/_authenticated/checkout-do-dia'
-import { Route as AuthenticatedAssistentesIaRouteImport } from './routes/_authenticated/assistentes-ia'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
-import { Route as ApiWhatsappCampaignsActiveRouteImport } from './routes/api/whatsapp-campaigns/active'
-import { Route as ApiWhatsappAccountsResolveRouteImport } from './routes/api/whatsapp-accounts/resolve'
-import { Route as ApiPublicReceiveScholarshipLeadRouteImport } from './routes/api/public/receive-scholarship-lead'
-import { Route as ApiPublicLinkedinMessageEventRouteImport } from './routes/api/public/linkedin-message-event'
+import { Route as AuthenticatedAssistentesIaRouteImport } from './routes/_authenticated/assistentes-ia'
+import { Route as AuthenticatedCheckoutDoDiaRouteImport } from './routes/_authenticated/checkout-do-dia'
+import { Route as AuthenticatedComissaoLiderancaRouteImport } from './routes/_authenticated/comissao-lideranca'
+import { Route as AuthenticatedComissaoVendedoresRouteImport } from './routes/_authenticated/comissao-vendedores'
+import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
+import { Route as AuthenticatedContasWhatsappRouteImport } from './routes/_authenticated/contas-whatsapp'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedDiscadorRouteImport } from './routes/_authenticated/discador'
+import { Route as AuthenticatedEquipesRouteImport } from './routes/_authenticated/equipes'
+import { Route as AuthenticatedFeedbackIndividualRouteImport } from './routes/_authenticated/feedback-individual'
+import { Route as AuthenticatedFilaRouteImport } from './routes/_authenticated/fila'
+import { Route as AuthenticatedForecastRouteImport } from './routes/_authenticated/forecast'
+import { Route as AuthenticatedFunilRouteImport } from './routes/_authenticated/funil'
+import { Route as AuthenticatedHojeRouteImport } from './routes/_authenticated/hoje'
+import { Route as AuthenticatedImportarRouteImport } from './routes/_authenticated/importar'
+import { Route as AuthenticatedLeadsRouteImport } from './routes/_authenticated/leads'
+import { Route as AuthenticatedLinksBolsistaRouteImport } from './routes/_authenticated/links-bolsista'
+import { Route as AuthenticatedMateriaisRouteImport } from './routes/_authenticated/materiais'
+import { Route as AuthenticatedMetasMatriculaRouteImport } from './routes/_authenticated/metas-matricula'
+import { Route as AuthenticatedMeuPerfilRouteImport } from './routes/_authenticated/meu-perfil'
+import { Route as AuthenticatedMeusFeedbacksRouteImport } from './routes/_authenticated/meus-feedbacks'
+import { Route as AuthenticatedMinhaComissaoRouteImport } from './routes/_authenticated/minha-comissao'
+import { Route as AuthenticatedPainelAdmRouteImport } from './routes/_authenticated/painel-adm'
+import { Route as AuthenticatedPerdidosRouteImport } from './routes/_authenticated/perdidos'
+import { Route as AuthenticatedPlacarDiarioRouteImport } from './routes/_authenticated/placar-diario'
+import { Route as AuthenticatedPlacarHallDaFamaRouteImport } from './routes/_authenticated/placar-hall-da-fama'
+import { Route as AuthenticatedPlanoDeCarreiraRouteImport } from './routes/_authenticated/plano-de-carreira'
+import { Route as AuthenticatedPlaybookRouteImport } from './routes/_authenticated/playbook'
+import { Route as AuthenticatedProcessosComerciaisRouteImport } from './routes/_authenticated/processos-comerciais'
+import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authenticated/relatorios'
+import { Route as AuthenticatedResgatesRouteImport } from './routes/_authenticated/resgates'
+import { Route as AuthenticatedScriptsRouteImport } from './routes/_authenticated/scripts'
+import { Route as AuthenticatedTarefasRouteImport } from './routes/_authenticated/tarefas'
+import { Route as AuthenticatedUsuariosAcessosRouteImport } from './routes/_authenticated/usuarios-acessos'
+import { Route as ApiFindLeadByPhoneRouteImport } from './routes/api/find-lead-by-phone'
+import { Route as ApiWhatsappAccountsRouteImport } from './routes/api/whatsapp-accounts'
 import { Route as ApiPublicFindSellerByEmailRouteImport } from './routes/api/public/find-seller-by-email'
-import { Route as ApiWhatsappCampaignsCampaignIdReserveRouteImport } from './routes/api/whatsapp-campaigns/$campaignId.reserve'
+import { Route as ApiPublicLinkedinMessageEventRouteImport } from './routes/api/public/linkedin-message-event'
+import { Route as ApiPublicReceiveScholarshipLeadRouteImport } from './routes/api/public/receive-scholarship-lead'
+import { Route as ApiWhatsappAccountsResolveRouteImport } from './routes/api/whatsapp-accounts/resolve'
+import { Route as ApiWhatsappCampaignsActiveRouteImport } from './routes/api/whatsapp-campaigns/active'
 import { Route as ApiWhatsappCampaignsCampaignIdReleaseRouteImport } from './routes/api/whatsapp-campaigns/$campaignId.release'
-import { Route as ApiWhatsappCampaignsContactsContactIdUnclaimRouteImport } from './routes/api/whatsapp-campaigns/contacts/$contactId.unclaim'
-import { Route as ApiWhatsappCampaignsContactsContactIdSentRouteImport } from './routes/api/whatsapp-campaigns/contacts/$contactId.sent'
-import { Route as ApiWhatsappCampaignsContactsContactIdFailedRouteImport } from './routes/api/whatsapp-campaigns/contacts/$contactId.failed'
+import { Route as ApiWhatsappCampaignsCampaignIdReserveRouteImport } from './routes/api/whatsapp-campaigns/$campaignId.reserve'
 import { Route as ApiWhatsappCampaignsContactsContactIdClaimRouteImport } from './routes/api/whatsapp-campaigns/contacts/$contactId.claim'
+import { Route as ApiWhatsappCampaignsContactsContactIdFailedRouteImport } from './routes/api/whatsapp-campaigns/contacts/$contactId.failed'
+import { Route as ApiWhatsappCampaignsContactsContactIdSentRouteImport } from './routes/api/whatsapp-campaigns/contacts/$contactId.sent'
+import { Route as ApiWhatsappCampaignsContactsContactIdUnclaimRouteImport } from './routes/api/whatsapp-campaigns/contacts/$contactId.unclaim'
 
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiWhatsappAccountsRoute = ApiWhatsappAccountsRouteImport.update({
-  id: '/api/whatsapp-accounts',
-  path: '/api/whatsapp-accounts',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiFindLeadByPhoneRoute = ApiFindLeadByPhoneRouteImport.update({
-  id: '/api/find-lead-by-phone',
-  path: '/api/find-lead-by-phone',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedUsuariosAcessosRoute =
-  AuthenticatedUsuariosAcessosRouteImport.update({
-    id: '/usuarios-acessos',
-    path: '/usuarios-acessos',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedTarefasRoute = AuthenticatedTarefasRouteImport.update({
-  id: '/tarefas',
-  path: '/tarefas',
+const AuthenticatedAgendaRoute = AuthenticatedAgendaRouteImport.update({
+  id: '/agenda',
+  path: '/agenda',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedScriptsRoute = AuthenticatedScriptsRouteImport.update({
-  id: '/scripts',
-  path: '/scripts',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedResgatesRoute = AuthenticatedResgatesRouteImport.update({
-  id: '/resgates',
-  path: '/resgates',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedRelatoriosRoute = AuthenticatedRelatoriosRouteImport.update({
-  id: '/relatorios',
-  path: '/relatorios',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedProcessosComerciaisRoute =
-  AuthenticatedProcessosComerciaisRouteImport.update({
-    id: '/processos-comerciais',
-    path: '/processos-comerciais',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedPlaybookRoute = AuthenticatedPlaybookRouteImport.update({
-  id: '/playbook',
-  path: '/playbook',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedPlanoDeCarreiraRoute =
-  AuthenticatedPlanoDeCarreiraRouteImport.update({
-    id: '/plano-de-carreira',
-    path: '/plano-de-carreira',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedPlacarHallDaFamaRoute =
-  AuthenticatedPlacarHallDaFamaRouteImport.update({
-    id: '/placar-hall-da-fama',
-    path: '/placar-hall-da-fama',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedPlacarDiarioRoute =
-  AuthenticatedPlacarDiarioRouteImport.update({
-    id: '/placar-diario',
-    path: '/placar-diario',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedPerdidosRoute = AuthenticatedPerdidosRouteImport.update({
-  id: '/perdidos',
-  path: '/perdidos',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedPainelAdmRoute = AuthenticatedPainelAdmRouteImport.update({
-  id: '/painel-adm',
-  path: '/painel-adm',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedMinhaComissaoRoute =
-  AuthenticatedMinhaComissaoRouteImport.update({
-    id: '/minha-comissao',
-    path: '/minha-comissao',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedMeusFeedbacksRoute =
-  AuthenticatedMeusFeedbacksRouteImport.update({
-    id: '/meus-feedbacks',
-    path: '/meus-feedbacks',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedMeuPerfilRoute = AuthenticatedMeuPerfilRouteImport.update({
-  id: '/meu-perfil',
-  path: '/meu-perfil',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedMetasMatriculaRoute =
-  AuthenticatedMetasMatriculaRouteImport.update({
-    id: '/metas-matricula',
-    path: '/metas-matricula',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedMateriaisRoute = AuthenticatedMateriaisRouteImport.update({
-  id: '/materiais',
-  path: '/materiais',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedLinksBolsistaRoute =
-  AuthenticatedLinksBolsistaRouteImport.update({
-    id: '/links-bolsista',
-    path: '/links-bolsista',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedLeadsRoute = AuthenticatedLeadsRouteImport.update({
-  id: '/leads',
-  path: '/leads',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedImportarRoute = AuthenticatedImportarRouteImport.update({
-  id: '/importar',
-  path: '/importar',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedHojeRoute = AuthenticatedHojeRouteImport.update({
-  id: '/hoje',
-  path: '/hoje',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedFunilRoute = AuthenticatedFunilRouteImport.update({
-  id: '/funil',
-  path: '/funil',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedForecastRoute = AuthenticatedForecastRouteImport.update({
-  id: '/forecast',
-  path: '/forecast',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedFilaRoute = AuthenticatedFilaRouteImport.update({
-  id: '/fila',
-  path: '/fila',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedFeedbackIndividualRoute =
-  AuthenticatedFeedbackIndividualRouteImport.update({
-    id: '/feedback-individual',
-    path: '/feedback-individual',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedEquipesRoute = AuthenticatedEquipesRouteImport.update({
-  id: '/equipes',
-  path: '/equipes',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedDiscadorRoute = AuthenticatedDiscadorRouteImport.update({
-  id: '/discador',
-  path: '/discador',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedContasWhatsappRoute =
-  AuthenticatedContasWhatsappRouteImport.update({
-    id: '/contas-whatsapp',
-    path: '/contas-whatsapp',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedConfiguracoesRoute =
-  AuthenticatedConfiguracoesRouteImport.update({
-    id: '/configuracoes',
-    path: '/configuracoes',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedComissaoVendedoresRoute =
-  AuthenticatedComissaoVendedoresRouteImport.update({
-    id: '/comissao-vendedores',
-    path: '/comissao-vendedores',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedComissaoLiderancaRoute =
-  AuthenticatedComissaoLiderancaRouteImport.update({
-    id: '/comissao-lideranca',
-    path: '/comissao-lideranca',
+const AuthenticatedAssistentesIaRoute =
+  AuthenticatedAssistentesIaRouteImport.update({
+    id: '/assistentes-ia',
+    path: '/assistentes-ia',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedCheckoutDoDiaRoute =
@@ -265,33 +92,194 @@ const AuthenticatedCheckoutDoDiaRoute =
     path: '/checkout-do-dia',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedAssistentesIaRoute =
-  AuthenticatedAssistentesIaRouteImport.update({
-    id: '/assistentes-ia',
-    path: '/assistentes-ia',
+const AuthenticatedComissaoLiderancaRoute =
+  AuthenticatedComissaoLiderancaRouteImport.update({
+    id: '/comissao-lideranca',
+    path: '/comissao-lideranca',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedAgendaRoute = AuthenticatedAgendaRouteImport.update({
-  id: '/agenda',
-  path: '/agenda',
+const AuthenticatedComissaoVendedoresRoute =
+  AuthenticatedComissaoVendedoresRouteImport.update({
+    id: '/comissao-vendedores',
+    path: '/comissao-vendedores',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedConfiguracoesRoute =
+  AuthenticatedConfiguracoesRouteImport.update({
+    id: '/configuracoes',
+    path: '/configuracoes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedContasWhatsappRoute =
+  AuthenticatedContasWhatsappRouteImport.update({
+    id: '/contas-whatsapp',
+    path: '/contas-whatsapp',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const ApiWhatsappCampaignsActiveRoute =
-  ApiWhatsappCampaignsActiveRouteImport.update({
-    id: '/api/whatsapp-campaigns/active',
-    path: '/api/whatsapp-campaigns/active',
-    getParentRoute: () => rootRouteImport,
+const AuthenticatedDiscadorRoute = AuthenticatedDiscadorRouteImport.update({
+  id: '/discador',
+  path: '/discador',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedEquipesRoute = AuthenticatedEquipesRouteImport.update({
+  id: '/equipes',
+  path: '/equipes',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedFeedbackIndividualRoute =
+  AuthenticatedFeedbackIndividualRouteImport.update({
+    id: '/feedback-individual',
+    path: '/feedback-individual',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const ApiWhatsappAccountsResolveRoute =
-  ApiWhatsappAccountsResolveRouteImport.update({
-    id: '/resolve',
-    path: '/resolve',
-    getParentRoute: () => ApiWhatsappAccountsRoute,
+const AuthenticatedFilaRoute = AuthenticatedFilaRouteImport.update({
+  id: '/fila',
+  path: '/fila',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedForecastRoute = AuthenticatedForecastRouteImport.update({
+  id: '/forecast',
+  path: '/forecast',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedFunilRoute = AuthenticatedFunilRouteImport.update({
+  id: '/funil',
+  path: '/funil',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedHojeRoute = AuthenticatedHojeRouteImport.update({
+  id: '/hoje',
+  path: '/hoje',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedImportarRoute = AuthenticatedImportarRouteImport.update({
+  id: '/importar',
+  path: '/importar',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedLeadsRoute = AuthenticatedLeadsRouteImport.update({
+  id: '/leads',
+  path: '/leads',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedLinksBolsistaRoute =
+  AuthenticatedLinksBolsistaRouteImport.update({
+    id: '/links-bolsista',
+    path: '/links-bolsista',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const ApiPublicReceiveScholarshipLeadRoute =
-  ApiPublicReceiveScholarshipLeadRouteImport.update({
-    id: '/api/public/receive-scholarship-lead',
-    path: '/api/public/receive-scholarship-lead',
+const AuthenticatedMateriaisRoute = AuthenticatedMateriaisRouteImport.update({
+  id: '/materiais',
+  path: '/materiais',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMetasMatriculaRoute =
+  AuthenticatedMetasMatriculaRouteImport.update({
+    id: '/metas-matricula',
+    path: '/metas-matricula',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMeuPerfilRoute = AuthenticatedMeuPerfilRouteImport.update({
+  id: '/meu-perfil',
+  path: '/meu-perfil',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMeusFeedbacksRoute =
+  AuthenticatedMeusFeedbacksRouteImport.update({
+    id: '/meus-feedbacks',
+    path: '/meus-feedbacks',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMinhaComissaoRoute =
+  AuthenticatedMinhaComissaoRouteImport.update({
+    id: '/minha-comissao',
+    path: '/minha-comissao',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPainelAdmRoute = AuthenticatedPainelAdmRouteImport.update({
+  id: '/painel-adm',
+  path: '/painel-adm',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPerdidosRoute = AuthenticatedPerdidosRouteImport.update({
+  id: '/perdidos',
+  path: '/perdidos',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPlacarDiarioRoute =
+  AuthenticatedPlacarDiarioRouteImport.update({
+    id: '/placar-diario',
+    path: '/placar-diario',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPlacarHallDaFamaRoute =
+  AuthenticatedPlacarHallDaFamaRouteImport.update({
+    id: '/placar-hall-da-fama',
+    path: '/placar-hall-da-fama',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPlanoDeCarreiraRoute =
+  AuthenticatedPlanoDeCarreiraRouteImport.update({
+    id: '/plano-de-carreira',
+    path: '/plano-de-carreira',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPlaybookRoute = AuthenticatedPlaybookRouteImport.update({
+  id: '/playbook',
+  path: '/playbook',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedProcessosComerciaisRoute =
+  AuthenticatedProcessosComerciaisRouteImport.update({
+    id: '/processos-comerciais',
+    path: '/processos-comerciais',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedRelatoriosRoute = AuthenticatedRelatoriosRouteImport.update({
+  id: '/relatorios',
+  path: '/relatorios',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedResgatesRoute = AuthenticatedResgatesRouteImport.update({
+  id: '/resgates',
+  path: '/resgates',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedScriptsRoute = AuthenticatedScriptsRouteImport.update({
+  id: '/scripts',
+  path: '/scripts',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTarefasRoute = AuthenticatedTarefasRouteImport.update({
+  id: '/tarefas',
+  path: '/tarefas',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedUsuariosAcessosRoute =
+  AuthenticatedUsuariosAcessosRouteImport.update({
+    id: '/usuarios-acessos',
+    path: '/usuarios-acessos',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const ApiFindLeadByPhoneRoute = ApiFindLeadByPhoneRouteImport.update({
+  id: '/api/find-lead-by-phone',
+  path: '/api/find-lead-by-phone',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiWhatsappAccountsRoute = ApiWhatsappAccountsRouteImport.update({
+  id: '/api/whatsapp-accounts',
+  path: '/api/whatsapp-accounts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicFindSellerByEmailRoute =
+  ApiPublicFindSellerByEmailRouteImport.update({
+    id: '/api/public/find-seller-by-email',
+    path: '/api/public/find-seller-by-email',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiPublicLinkedinMessageEventRoute =
@@ -300,16 +288,22 @@ const ApiPublicLinkedinMessageEventRoute =
     path: '/api/public/linkedin-message-event',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicFindSellerByEmailRoute =
-  ApiPublicFindSellerByEmailRouteImport.update({
-    id: '/api/public/find-seller-by-email',
-    path: '/api/public/find-seller-by-email',
+const ApiPublicReceiveScholarshipLeadRoute =
+  ApiPublicReceiveScholarshipLeadRouteImport.update({
+    id: '/api/public/receive-scholarship-lead',
+    path: '/api/public/receive-scholarship-lead',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiWhatsappCampaignsCampaignIdReserveRoute =
-  ApiWhatsappCampaignsCampaignIdReserveRouteImport.update({
-    id: '/api/whatsapp-campaigns/$campaignId/reserve',
-    path: '/api/whatsapp-campaigns/$campaignId/reserve',
+const ApiWhatsappAccountsResolveRoute =
+  ApiWhatsappAccountsResolveRouteImport.update({
+    id: '/resolve',
+    path: '/resolve',
+    getParentRoute: () => ApiWhatsappAccountsRoute,
+  } as any)
+const ApiWhatsappCampaignsActiveRoute =
+  ApiWhatsappCampaignsActiveRouteImport.update({
+    id: '/api/whatsapp-campaigns/active',
+    path: '/api/whatsapp-campaigns/active',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiWhatsappCampaignsCampaignIdReleaseRoute =
@@ -318,16 +312,16 @@ const ApiWhatsappCampaignsCampaignIdReleaseRoute =
     path: '/api/whatsapp-campaigns/$campaignId/release',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiWhatsappCampaignsContactsContactIdUnclaimRoute =
-  ApiWhatsappCampaignsContactsContactIdUnclaimRouteImport.update({
-    id: '/api/whatsapp-campaigns/contacts/$contactId/unclaim',
-    path: '/api/whatsapp-campaigns/contacts/$contactId/unclaim',
+const ApiWhatsappCampaignsCampaignIdReserveRoute =
+  ApiWhatsappCampaignsCampaignIdReserveRouteImport.update({
+    id: '/api/whatsapp-campaigns/$campaignId/reserve',
+    path: '/api/whatsapp-campaigns/$campaignId/reserve',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiWhatsappCampaignsContactsContactIdSentRoute =
-  ApiWhatsappCampaignsContactsContactIdSentRouteImport.update({
-    id: '/api/whatsapp-campaigns/contacts/$contactId/sent',
-    path: '/api/whatsapp-campaigns/contacts/$contactId/sent',
+const ApiWhatsappCampaignsContactsContactIdClaimRoute =
+  ApiWhatsappCampaignsContactsContactIdClaimRouteImport.update({
+    id: '/api/whatsapp-campaigns/contacts/$contactId/claim',
+    path: '/api/whatsapp-campaigns/contacts/$contactId/claim',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiWhatsappCampaignsContactsContactIdFailedRoute =
@@ -336,10 +330,16 @@ const ApiWhatsappCampaignsContactsContactIdFailedRoute =
     path: '/api/whatsapp-campaigns/contacts/$contactId/failed',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiWhatsappCampaignsContactsContactIdClaimRoute =
-  ApiWhatsappCampaignsContactsContactIdClaimRouteImport.update({
-    id: '/api/whatsapp-campaigns/contacts/$contactId/claim',
-    path: '/api/whatsapp-campaigns/contacts/$contactId/claim',
+const ApiWhatsappCampaignsContactsContactIdSentRoute =
+  ApiWhatsappCampaignsContactsContactIdSentRouteImport.update({
+    id: '/api/whatsapp-campaigns/contacts/$contactId/sent',
+    path: '/api/whatsapp-campaigns/contacts/$contactId/sent',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiWhatsappCampaignsContactsContactIdUnclaimRoute =
+  ApiWhatsappCampaignsContactsContactIdUnclaimRouteImport.update({
+    id: '/api/whatsapp-campaigns/contacts/$contactId/unclaim',
+    path: '/api/whatsapp-campaigns/contacts/$contactId/unclaim',
     getParentRoute: () => rootRouteImport,
   } as any)
 
@@ -681,11 +681,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -695,256 +695,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/whatsapp-accounts': {
-      id: '/api/whatsapp-accounts'
-      path: '/api/whatsapp-accounts'
-      fullPath: '/api/whatsapp-accounts'
-      preLoaderRoute: typeof ApiWhatsappAccountsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/find-lead-by-phone': {
-      id: '/api/find-lead-by-phone'
-      path: '/api/find-lead-by-phone'
-      fullPath: '/api/find-lead-by-phone'
-      preLoaderRoute: typeof ApiFindLeadByPhoneRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/usuarios-acessos': {
-      id: '/_authenticated/usuarios-acessos'
-      path: '/usuarios-acessos'
-      fullPath: '/usuarios-acessos'
-      preLoaderRoute: typeof AuthenticatedUsuariosAcessosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/tarefas': {
-      id: '/_authenticated/tarefas'
-      path: '/tarefas'
-      fullPath: '/tarefas'
-      preLoaderRoute: typeof AuthenticatedTarefasRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/scripts': {
-      id: '/_authenticated/scripts'
-      path: '/scripts'
-      fullPath: '/scripts'
-      preLoaderRoute: typeof AuthenticatedScriptsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/resgates': {
-      id: '/_authenticated/resgates'
-      path: '/resgates'
-      fullPath: '/resgates'
-      preLoaderRoute: typeof AuthenticatedResgatesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/relatorios': {
-      id: '/_authenticated/relatorios'
-      path: '/relatorios'
-      fullPath: '/relatorios'
-      preLoaderRoute: typeof AuthenticatedRelatoriosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/processos-comerciais': {
-      id: '/_authenticated/processos-comerciais'
-      path: '/processos-comerciais'
-      fullPath: '/processos-comerciais'
-      preLoaderRoute: typeof AuthenticatedProcessosComerciaisRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/playbook': {
-      id: '/_authenticated/playbook'
-      path: '/playbook'
-      fullPath: '/playbook'
-      preLoaderRoute: typeof AuthenticatedPlaybookRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/plano-de-carreira': {
-      id: '/_authenticated/plano-de-carreira'
-      path: '/plano-de-carreira'
-      fullPath: '/plano-de-carreira'
-      preLoaderRoute: typeof AuthenticatedPlanoDeCarreiraRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/placar-hall-da-fama': {
-      id: '/_authenticated/placar-hall-da-fama'
-      path: '/placar-hall-da-fama'
-      fullPath: '/placar-hall-da-fama'
-      preLoaderRoute: typeof AuthenticatedPlacarHallDaFamaRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/placar-diario': {
-      id: '/_authenticated/placar-diario'
-      path: '/placar-diario'
-      fullPath: '/placar-diario'
-      preLoaderRoute: typeof AuthenticatedPlacarDiarioRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/perdidos': {
-      id: '/_authenticated/perdidos'
-      path: '/perdidos'
-      fullPath: '/perdidos'
-      preLoaderRoute: typeof AuthenticatedPerdidosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/painel-adm': {
-      id: '/_authenticated/painel-adm'
-      path: '/painel-adm'
-      fullPath: '/painel-adm'
-      preLoaderRoute: typeof AuthenticatedPainelAdmRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/minha-comissao': {
-      id: '/_authenticated/minha-comissao'
-      path: '/minha-comissao'
-      fullPath: '/minha-comissao'
-      preLoaderRoute: typeof AuthenticatedMinhaComissaoRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/meus-feedbacks': {
-      id: '/_authenticated/meus-feedbacks'
-      path: '/meus-feedbacks'
-      fullPath: '/meus-feedbacks'
-      preLoaderRoute: typeof AuthenticatedMeusFeedbacksRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/meu-perfil': {
-      id: '/_authenticated/meu-perfil'
-      path: '/meu-perfil'
-      fullPath: '/meu-perfil'
-      preLoaderRoute: typeof AuthenticatedMeuPerfilRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/metas-matricula': {
-      id: '/_authenticated/metas-matricula'
-      path: '/metas-matricula'
-      fullPath: '/metas-matricula'
-      preLoaderRoute: typeof AuthenticatedMetasMatriculaRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/materiais': {
-      id: '/_authenticated/materiais'
-      path: '/materiais'
-      fullPath: '/materiais'
-      preLoaderRoute: typeof AuthenticatedMateriaisRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/links-bolsista': {
-      id: '/_authenticated/links-bolsista'
-      path: '/links-bolsista'
-      fullPath: '/links-bolsista'
-      preLoaderRoute: typeof AuthenticatedLinksBolsistaRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/leads': {
-      id: '/_authenticated/leads'
-      path: '/leads'
-      fullPath: '/leads'
-      preLoaderRoute: typeof AuthenticatedLeadsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/importar': {
-      id: '/_authenticated/importar'
-      path: '/importar'
-      fullPath: '/importar'
-      preLoaderRoute: typeof AuthenticatedImportarRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/hoje': {
-      id: '/_authenticated/hoje'
-      path: '/hoje'
-      fullPath: '/hoje'
-      preLoaderRoute: typeof AuthenticatedHojeRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/funil': {
-      id: '/_authenticated/funil'
-      path: '/funil'
-      fullPath: '/funil'
-      preLoaderRoute: typeof AuthenticatedFunilRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/forecast': {
-      id: '/_authenticated/forecast'
-      path: '/forecast'
-      fullPath: '/forecast'
-      preLoaderRoute: typeof AuthenticatedForecastRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/fila': {
-      id: '/_authenticated/fila'
-      path: '/fila'
-      fullPath: '/fila'
-      preLoaderRoute: typeof AuthenticatedFilaRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/feedback-individual': {
-      id: '/_authenticated/feedback-individual'
-      path: '/feedback-individual'
-      fullPath: '/feedback-individual'
-      preLoaderRoute: typeof AuthenticatedFeedbackIndividualRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/equipes': {
-      id: '/_authenticated/equipes'
-      path: '/equipes'
-      fullPath: '/equipes'
-      preLoaderRoute: typeof AuthenticatedEquipesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/discador': {
-      id: '/_authenticated/discador'
-      path: '/discador'
-      fullPath: '/discador'
-      preLoaderRoute: typeof AuthenticatedDiscadorRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/dashboard': {
-      id: '/_authenticated/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/contas-whatsapp': {
-      id: '/_authenticated/contas-whatsapp'
-      path: '/contas-whatsapp'
-      fullPath: '/contas-whatsapp'
-      preLoaderRoute: typeof AuthenticatedContasWhatsappRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/configuracoes': {
-      id: '/_authenticated/configuracoes'
-      path: '/configuracoes'
-      fullPath: '/configuracoes'
-      preLoaderRoute: typeof AuthenticatedConfiguracoesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/comissao-vendedores': {
-      id: '/_authenticated/comissao-vendedores'
-      path: '/comissao-vendedores'
-      fullPath: '/comissao-vendedores'
-      preLoaderRoute: typeof AuthenticatedComissaoVendedoresRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/comissao-lideranca': {
-      id: '/_authenticated/comissao-lideranca'
-      path: '/comissao-lideranca'
-      fullPath: '/comissao-lideranca'
-      preLoaderRoute: typeof AuthenticatedComissaoLiderancaRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/checkout-do-dia': {
-      id: '/_authenticated/checkout-do-dia'
-      path: '/checkout-do-dia'
-      fullPath: '/checkout-do-dia'
-      preLoaderRoute: typeof AuthenticatedCheckoutDoDiaRouteImport
+    '/_authenticated/agenda': {
+      id: '/_authenticated/agenda'
+      path: '/agenda'
+      fullPath: '/agenda'
+      preLoaderRoute: typeof AuthenticatedAgendaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/assistentes-ia': {
@@ -954,39 +716,249 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAssistentesIaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/agenda': {
-      id: '/_authenticated/agenda'
-      path: '/agenda'
-      fullPath: '/agenda'
-      preLoaderRoute: typeof AuthenticatedAgendaRouteImport
+    '/_authenticated/checkout-do-dia': {
+      id: '/_authenticated/checkout-do-dia'
+      path: '/checkout-do-dia'
+      fullPath: '/checkout-do-dia'
+      preLoaderRoute: typeof AuthenticatedCheckoutDoDiaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/api/whatsapp-campaigns/active': {
-      id: '/api/whatsapp-campaigns/active'
-      path: '/api/whatsapp-campaigns/active'
-      fullPath: '/api/whatsapp-campaigns/active'
-      preLoaderRoute: typeof ApiWhatsappCampaignsActiveRouteImport
+    '/_authenticated/comissao-lideranca': {
+      id: '/_authenticated/comissao-lideranca'
+      path: '/comissao-lideranca'
+      fullPath: '/comissao-lideranca'
+      preLoaderRoute: typeof AuthenticatedComissaoLiderancaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/comissao-vendedores': {
+      id: '/_authenticated/comissao-vendedores'
+      path: '/comissao-vendedores'
+      fullPath: '/comissao-vendedores'
+      preLoaderRoute: typeof AuthenticatedComissaoVendedoresRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/configuracoes': {
+      id: '/_authenticated/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/configuracoes'
+      preLoaderRoute: typeof AuthenticatedConfiguracoesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/contas-whatsapp': {
+      id: '/_authenticated/contas-whatsapp'
+      path: '/contas-whatsapp'
+      fullPath: '/contas-whatsapp'
+      preLoaderRoute: typeof AuthenticatedContasWhatsappRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/discador': {
+      id: '/_authenticated/discador'
+      path: '/discador'
+      fullPath: '/discador'
+      preLoaderRoute: typeof AuthenticatedDiscadorRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/equipes': {
+      id: '/_authenticated/equipes'
+      path: '/equipes'
+      fullPath: '/equipes'
+      preLoaderRoute: typeof AuthenticatedEquipesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/feedback-individual': {
+      id: '/_authenticated/feedback-individual'
+      path: '/feedback-individual'
+      fullPath: '/feedback-individual'
+      preLoaderRoute: typeof AuthenticatedFeedbackIndividualRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/fila': {
+      id: '/_authenticated/fila'
+      path: '/fila'
+      fullPath: '/fila'
+      preLoaderRoute: typeof AuthenticatedFilaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/forecast': {
+      id: '/_authenticated/forecast'
+      path: '/forecast'
+      fullPath: '/forecast'
+      preLoaderRoute: typeof AuthenticatedForecastRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/funil': {
+      id: '/_authenticated/funil'
+      path: '/funil'
+      fullPath: '/funil'
+      preLoaderRoute: typeof AuthenticatedFunilRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/hoje': {
+      id: '/_authenticated/hoje'
+      path: '/hoje'
+      fullPath: '/hoje'
+      preLoaderRoute: typeof AuthenticatedHojeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/importar': {
+      id: '/_authenticated/importar'
+      path: '/importar'
+      fullPath: '/importar'
+      preLoaderRoute: typeof AuthenticatedImportarRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/leads': {
+      id: '/_authenticated/leads'
+      path: '/leads'
+      fullPath: '/leads'
+      preLoaderRoute: typeof AuthenticatedLeadsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/links-bolsista': {
+      id: '/_authenticated/links-bolsista'
+      path: '/links-bolsista'
+      fullPath: '/links-bolsista'
+      preLoaderRoute: typeof AuthenticatedLinksBolsistaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/materiais': {
+      id: '/_authenticated/materiais'
+      path: '/materiais'
+      fullPath: '/materiais'
+      preLoaderRoute: typeof AuthenticatedMateriaisRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/metas-matricula': {
+      id: '/_authenticated/metas-matricula'
+      path: '/metas-matricula'
+      fullPath: '/metas-matricula'
+      preLoaderRoute: typeof AuthenticatedMetasMatriculaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/meu-perfil': {
+      id: '/_authenticated/meu-perfil'
+      path: '/meu-perfil'
+      fullPath: '/meu-perfil'
+      preLoaderRoute: typeof AuthenticatedMeuPerfilRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/meus-feedbacks': {
+      id: '/_authenticated/meus-feedbacks'
+      path: '/meus-feedbacks'
+      fullPath: '/meus-feedbacks'
+      preLoaderRoute: typeof AuthenticatedMeusFeedbacksRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/minha-comissao': {
+      id: '/_authenticated/minha-comissao'
+      path: '/minha-comissao'
+      fullPath: '/minha-comissao'
+      preLoaderRoute: typeof AuthenticatedMinhaComissaoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/painel-adm': {
+      id: '/_authenticated/painel-adm'
+      path: '/painel-adm'
+      fullPath: '/painel-adm'
+      preLoaderRoute: typeof AuthenticatedPainelAdmRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/perdidos': {
+      id: '/_authenticated/perdidos'
+      path: '/perdidos'
+      fullPath: '/perdidos'
+      preLoaderRoute: typeof AuthenticatedPerdidosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/placar-diario': {
+      id: '/_authenticated/placar-diario'
+      path: '/placar-diario'
+      fullPath: '/placar-diario'
+      preLoaderRoute: typeof AuthenticatedPlacarDiarioRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/placar-hall-da-fama': {
+      id: '/_authenticated/placar-hall-da-fama'
+      path: '/placar-hall-da-fama'
+      fullPath: '/placar-hall-da-fama'
+      preLoaderRoute: typeof AuthenticatedPlacarHallDaFamaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/plano-de-carreira': {
+      id: '/_authenticated/plano-de-carreira'
+      path: '/plano-de-carreira'
+      fullPath: '/plano-de-carreira'
+      preLoaderRoute: typeof AuthenticatedPlanoDeCarreiraRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/playbook': {
+      id: '/_authenticated/playbook'
+      path: '/playbook'
+      fullPath: '/playbook'
+      preLoaderRoute: typeof AuthenticatedPlaybookRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/processos-comerciais': {
+      id: '/_authenticated/processos-comerciais'
+      path: '/processos-comerciais'
+      fullPath: '/processos-comerciais'
+      preLoaderRoute: typeof AuthenticatedProcessosComerciaisRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/relatorios': {
+      id: '/_authenticated/relatorios'
+      path: '/relatorios'
+      fullPath: '/relatorios'
+      preLoaderRoute: typeof AuthenticatedRelatoriosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/resgates': {
+      id: '/_authenticated/resgates'
+      path: '/resgates'
+      fullPath: '/resgates'
+      preLoaderRoute: typeof AuthenticatedResgatesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/scripts': {
+      id: '/_authenticated/scripts'
+      path: '/scripts'
+      fullPath: '/scripts'
+      preLoaderRoute: typeof AuthenticatedScriptsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/tarefas': {
+      id: '/_authenticated/tarefas'
+      path: '/tarefas'
+      fullPath: '/tarefas'
+      preLoaderRoute: typeof AuthenticatedTarefasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/usuarios-acessos': {
+      id: '/_authenticated/usuarios-acessos'
+      path: '/usuarios-acessos'
+      fullPath: '/usuarios-acessos'
+      preLoaderRoute: typeof AuthenticatedUsuariosAcessosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/find-lead-by-phone': {
+      id: '/api/find-lead-by-phone'
+      path: '/api/find-lead-by-phone'
+      fullPath: '/api/find-lead-by-phone'
+      preLoaderRoute: typeof ApiFindLeadByPhoneRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/whatsapp-accounts/resolve': {
-      id: '/api/whatsapp-accounts/resolve'
-      path: '/resolve'
-      fullPath: '/api/whatsapp-accounts/resolve'
-      preLoaderRoute: typeof ApiWhatsappAccountsResolveRouteImport
-      parentRoute: typeof ApiWhatsappAccountsRoute
-    }
-    '/api/public/receive-scholarship-lead': {
-      id: '/api/public/receive-scholarship-lead'
-      path: '/api/public/receive-scholarship-lead'
-      fullPath: '/api/public/receive-scholarship-lead'
-      preLoaderRoute: typeof ApiPublicReceiveScholarshipLeadRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/linkedin-message-event': {
-      id: '/api/public/linkedin-message-event'
-      path: '/api/public/linkedin-message-event'
-      fullPath: '/api/public/linkedin-message-event'
-      preLoaderRoute: typeof ApiPublicLinkedinMessageEventRouteImport
+    '/api/whatsapp-accounts': {
+      id: '/api/whatsapp-accounts'
+      path: '/api/whatsapp-accounts'
+      fullPath: '/api/whatsapp-accounts'
+      preLoaderRoute: typeof ApiWhatsappAccountsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/find-seller-by-email': {
@@ -996,11 +968,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicFindSellerByEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/whatsapp-campaigns/$campaignId/reserve': {
-      id: '/api/whatsapp-campaigns/$campaignId/reserve'
-      path: '/api/whatsapp-campaigns/$campaignId/reserve'
-      fullPath: '/api/whatsapp-campaigns/$campaignId/reserve'
-      preLoaderRoute: typeof ApiWhatsappCampaignsCampaignIdReserveRouteImport
+    '/api/public/linkedin-message-event': {
+      id: '/api/public/linkedin-message-event'
+      path: '/api/public/linkedin-message-event'
+      fullPath: '/api/public/linkedin-message-event'
+      preLoaderRoute: typeof ApiPublicLinkedinMessageEventRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/receive-scholarship-lead': {
+      id: '/api/public/receive-scholarship-lead'
+      path: '/api/public/receive-scholarship-lead'
+      fullPath: '/api/public/receive-scholarship-lead'
+      preLoaderRoute: typeof ApiPublicReceiveScholarshipLeadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/whatsapp-accounts/resolve': {
+      id: '/api/whatsapp-accounts/resolve'
+      path: '/resolve'
+      fullPath: '/api/whatsapp-accounts/resolve'
+      preLoaderRoute: typeof ApiWhatsappAccountsResolveRouteImport
+      parentRoute: typeof ApiWhatsappAccountsRoute
+    }
+    '/api/whatsapp-campaigns/active': {
+      id: '/api/whatsapp-campaigns/active'
+      path: '/api/whatsapp-campaigns/active'
+      fullPath: '/api/whatsapp-campaigns/active'
+      preLoaderRoute: typeof ApiWhatsappCampaignsActiveRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/whatsapp-campaigns/$campaignId/release': {
@@ -1010,18 +1003,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiWhatsappCampaignsCampaignIdReleaseRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/whatsapp-campaigns/contacts/$contactId/unclaim': {
-      id: '/api/whatsapp-campaigns/contacts/$contactId/unclaim'
-      path: '/api/whatsapp-campaigns/contacts/$contactId/unclaim'
-      fullPath: '/api/whatsapp-campaigns/contacts/$contactId/unclaim'
-      preLoaderRoute: typeof ApiWhatsappCampaignsContactsContactIdUnclaimRouteImport
+    '/api/whatsapp-campaigns/$campaignId/reserve': {
+      id: '/api/whatsapp-campaigns/$campaignId/reserve'
+      path: '/api/whatsapp-campaigns/$campaignId/reserve'
+      fullPath: '/api/whatsapp-campaigns/$campaignId/reserve'
+      preLoaderRoute: typeof ApiWhatsappCampaignsCampaignIdReserveRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/whatsapp-campaigns/contacts/$contactId/sent': {
-      id: '/api/whatsapp-campaigns/contacts/$contactId/sent'
-      path: '/api/whatsapp-campaigns/contacts/$contactId/sent'
-      fullPath: '/api/whatsapp-campaigns/contacts/$contactId/sent'
-      preLoaderRoute: typeof ApiWhatsappCampaignsContactsContactIdSentRouteImport
+    '/api/whatsapp-campaigns/contacts/$contactId/claim': {
+      id: '/api/whatsapp-campaigns/contacts/$contactId/claim'
+      path: '/api/whatsapp-campaigns/contacts/$contactId/claim'
+      fullPath: '/api/whatsapp-campaigns/contacts/$contactId/claim'
+      preLoaderRoute: typeof ApiWhatsappCampaignsContactsContactIdClaimRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/whatsapp-campaigns/contacts/$contactId/failed': {
@@ -1031,11 +1024,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiWhatsappCampaignsContactsContactIdFailedRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/whatsapp-campaigns/contacts/$contactId/claim': {
-      id: '/api/whatsapp-campaigns/contacts/$contactId/claim'
-      path: '/api/whatsapp-campaigns/contacts/$contactId/claim'
-      fullPath: '/api/whatsapp-campaigns/contacts/$contactId/claim'
-      preLoaderRoute: typeof ApiWhatsappCampaignsContactsContactIdClaimRouteImport
+    '/api/whatsapp-campaigns/contacts/$contactId/sent': {
+      id: '/api/whatsapp-campaigns/contacts/$contactId/sent'
+      path: '/api/whatsapp-campaigns/contacts/$contactId/sent'
+      fullPath: '/api/whatsapp-campaigns/contacts/$contactId/sent'
+      preLoaderRoute: typeof ApiWhatsappCampaignsContactsContactIdSentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/whatsapp-campaigns/contacts/$contactId/unclaim': {
+      id: '/api/whatsapp-campaigns/contacts/$contactId/unclaim'
+      path: '/api/whatsapp-campaigns/contacts/$contactId/unclaim'
+      fullPath: '/api/whatsapp-campaigns/contacts/$contactId/unclaim'
+      preLoaderRoute: typeof ApiWhatsappCampaignsContactsContactIdUnclaimRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
