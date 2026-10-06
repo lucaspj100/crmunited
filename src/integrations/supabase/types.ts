@@ -1365,6 +1365,7 @@ export type Database = {
           sheets_row: number | null
           source: string | null
           source_system: string | null
+          stage_entered_at: string | null
           start_timeframe: string | null
           status: Database["public"]["Enums"]["lead_status"]
           updated_at: string
@@ -1431,6 +1432,7 @@ export type Database = {
           sheets_row?: number | null
           source?: string | null
           source_system?: string | null
+          stage_entered_at?: string | null
           start_timeframe?: string | null
           status?: Database["public"]["Enums"]["lead_status"]
           updated_at?: string
@@ -1497,6 +1499,7 @@ export type Database = {
           sheets_row?: number | null
           source?: string | null
           source_system?: string | null
+          stage_entered_at?: string | null
           start_timeframe?: string | null
           status?: Database["public"]["Enums"]["lead_status"]
           updated_at?: string
