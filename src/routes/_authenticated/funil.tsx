@@ -44,7 +44,7 @@ type Lead = {
   id: string; name: string; phone: string | null; company: string | null;
   linkedin_url: string | null; status: string; owner_id: string;
   source: string | null;
-  created_at: string; updated_at: string; last_contact_at: string | null;
+  created_at: string; updated_at: string; stage_entered_at: string | null; last_contact_at: string | null;
   interview_date: string | null; interview_time: string | null;
 };
 type Profile = { id: string; full_name: string | null; email: string | null };
@@ -254,7 +254,9 @@ function FunilPage() {
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3 lg:grid-cols-5">
         {LEAD_STATUSES.map((col) => {
-          const items = filteredLeads.filter((l) => l.status === col.value);
+          const items = filteredLeads.filter((l) => l.status === col.value).sort((a, b) =>
+            (b.stage_entered_at ?? b.updated_at ?? "").localeCompare(a.stage_entered_at ?? a.updated_at ?? "") ||
+            (b.created_at ?? "").localeCompare(a.created_at ?? "") || b.id.localeCompare(a.id));
           return (
             <div
               key={col.value}
@@ -288,7 +290,7 @@ function FunilPage() {
                   });
                   const tempMeta = TEMPERATURE_META[temp];
                   const ageLabel = daysAgoLabel(l.created_at);
-                  const stageLabel = daysAgoLabel(l.updated_at);
+                  const stageLabel = daysAgoLabel(l.stage_entered_at ?? l.updated_at);
                   const lastLabel = daysAgoLabel(l.last_contact_at);
                   return (
                     <Card
