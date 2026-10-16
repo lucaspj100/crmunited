@@ -57,22 +57,48 @@ export function localToday(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
+const PROSPECT_CHUNK = 200;
+
+/** IDs de contatos do Discador que a fila usa: retornos pendentes com vencimento até hoje. */
+export function neededProspectIds(
+  tasks: Pick<Task, "type" | "prospect_contact_id" | "due_date" | "status">[],
+  today: string,
+): string[] {
+  const ids = new Set<string>();
+  for (const t of tasks) {
+    if (t.status === "pendente" && t.type === "retorno_ligacao" && t.prospect_contact_id && t.due_date <= today) {
+      ids.add(t.prospect_contact_id);
+    }
+  }
+  return [...ids];
+}
+
 /** Fonte única de dados da página Hoje (mesma queryKey usada pelo badge do menu). */
 export function useHojeData() {
   return useQuery({
     queryKey: ["hoje"],
     queryFn: async (): Promise<HojeData> => {
-      const [leadsR, tasksR, profR, prospectsR] = await Promise.all([
+      const [leadsR, tasksR, profR] = await Promise.all([
         fetchAll(() => supabase.from("leads").select("id,name,phone,company,status,owner_id,observation,interview_date,interview_time,last_contact_at,next_followup_at,lost_reason,in_rescue,created_at")),
         fetchAll(() => supabase.from("tasks").select("id,lead_id,type,due_date,due_time,observation,status,owner_id,is_rescue,prospect_contact_id").eq("status", "pendente")),
         supabase.from("profiles").select("id, full_name, email").limit(2000),
-        supabase.from("prospect_contacts").select("id,nome,empresa,cargo,telefone_normalizado,telefone_original,observacao,vendedor_responsavel_id").limit(5000),
       ]);
+      const tasks = (tasksR.data ?? []) as Task[];
+      // Só os contatos referenciados pelos retornos pendentes até hoje (únicos usados na fila).
+      const ids = neededProspectIds(tasks, localToday());
+      const prospects: ProspectMini[] = [];
+      for (let i = 0; i < ids.length; i += PROSPECT_CHUNK) {
+        const { data } = await supabase
+          .from("prospect_contacts")
+          .select("id,nome,empresa,cargo,telefone_normalizado,telefone_original,observacao,vendedor_responsavel_id")
+          .in("id", ids.slice(i, i + PROSPECT_CHUNK));
+        prospects.push(...((data ?? []) as ProspectMini[]));
+      }
       return {
         leads: (leadsR.data ?? []) as Lead[],
-        tasks: (tasksR.data ?? []) as Task[],
+        tasks,
         profiles: (profR.data ?? []) as Profile[],
-        prospects: (prospectsR.data ?? []) as ProspectMini[],
+        prospects,
       };
     },
     refetchInterval: 60_000,
