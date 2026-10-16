@@ -300,7 +300,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
       setCurrentContactId(contactId);
       setSyncedContact(null);
       if (!user) return;
-      if (lastSyncedRef.current === contactId) { localWriteFailedRef.current = false; return; }
+      if (lastSyncedRef.current === contactId) { sessionWriterRef.current?.dispose(); localWriteFailedRef.current = false; return; }
       // Grava com no máximo 3 novas tentativas; navegação mais nova cancela a antiga.
       sessionWriterRef.current?.write(contactId);
     },
