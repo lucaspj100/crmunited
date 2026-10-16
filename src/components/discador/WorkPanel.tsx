@@ -250,6 +250,11 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
   currentContactIdRef.current = currentContactId;
   // Última seleção pedida (local ou remota) — evita que resposta antiga sobrescreva navegação recente.
   const selectionSeqRef = useRef(0);
+  // Gravações do contato atual em andamento e se a última falhou (protege contra respostas antigas).
+  const pendingSessionWritesRef = useRef(0);
+  const localWriteFailedRef = useRef(false);
+  // Contatos já trabalhados ainda não confirmados por uma recarga da fila (id → momento do salvamento).
+  const workedRef = useRef<Map<string, number>>(new Map());
   // Contato sincronizado que (ainda) não está na fila ativa local — usado apenas para exibição.
   const [syncedContact, setSyncedContact] = useState<ProspectContact | null>(null);
 
@@ -277,11 +282,20 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
       setCurrentContactId(contactId);
       setSyncedContact(null);
       if (!user) return;
-      if (lastSyncedRef.current === contactId) return;
+      if (lastSyncedRef.current === contactId) { localWriteFailedRef.current = false; return; }
+      pendingSessionWritesRef.current += 1;
       void (async () => {
-        const ok = await saveDialerSession(user.id, contactId);
+        let ok = false;
+        try {
+          ok = await saveDialerSession(user.id, contactId);
+        } finally {
+          // Libera a proteção sempre (sucesso ou falha) — nunca bloqueia a sincronização.
+          pendingSessionWritesRef.current = Math.max(0, pendingSessionWritesRef.current - 1);
+        }
+        if (seq !== selectionSeqRef.current) return; // já existe navegação mais nova
         // Só marca como sincronizado se o banco aceitou E esta ainda é a seleção mais recente.
-        if (ok && seq === selectionSeqRef.current) lastSyncedRef.current = contactId;
+        if (ok) lastSyncedRef.current = contactId;
+        localWriteFailedRef.current = !ok;
       })();
     },
     [user?.id],
