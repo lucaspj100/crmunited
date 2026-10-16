@@ -81,3 +81,91 @@ describe("buildTodayQueue com contatos reduzidos (dados fictícios)", () => {
     expect(run(needed()).length).toBe(5);
   });
 });
+
+import { loadHojeData, HOJE_RETRY, HOJE_RETRY_DELAY_MS } from "./today-queue";
+import { QueryClient, QueryObserver } from "@tanstack/react-query";
+
+// Cliente falso: nenhuma chamada ao banco real.
+function fakeClient(opts: { failProspectCall?: (n: number) => boolean; nProspects?: number } = {}) {
+  const n = opts.nProspects ?? 250;
+  const tasks = Array.from({ length: n }, (_, i) => ({ id: `t${i}`, type: "retorno_ligacao", status: "pendente", prospect_contact_id: `p${i}`, due_date: "2026-10-16", owner_id: "u1", lead_id: null, is_rescue: false, due_time: null, observation: null }));
+  let prospectCalls = 0;
+  const calls = { prospect: 0, total: 0 };
+  const builder = (table: string) => {
+    const b: Record<string, unknown> = {};
+    let ids: string[] = [];
+    let ranged = false;
+    const self = b as never;
+    Object.assign(b, {
+      select: () => self, eq: () => self, order: () => self, limit: () => self,
+      range: (from: number) => { ranged = from === 0; return self; },
+      in: (_c: string, v: string[]) => { ids = v; return self; },
+      then: (res: (v: unknown) => void, rej: (e: unknown) => void) => {
+        calls.total++;
+        let out: unknown;
+        if (table === "prospect_contacts") {
+          calls.prospect++; prospectCalls++;
+          out = opts.failProspectCall?.(prospectCalls) ? { data: null, error: { message: "timeout" } } : { data: ids.map((id) => ({ id })), error: null };
+        } else if (table === "tasks") out = { data: ranged ? tasks : [], error: null };
+        else out = { data: [], error: null };
+        return Promise.resolve(out).then(res, rej);
+      },
+    });
+    return b;
+  };
+  return { client: { from: builder }, calls };
+}
+
+describe("loadHojeData (falhas)", () => {
+  it("tudo certo: carrega todos os lotes (250 contatos = 2 lotes)", async () => {
+    const { client, calls } = fakeClient();
+    const d = await loadHojeData(client, "2026-10-16");
+    expect(d.prospects).toHaveLength(250);
+    expect(calls.prospect).toBe(2);
+  });
+  it("falha parcial (2º lote) lança erro em vez de devolver lista incompleta", async () => {
+    const { client } = fakeClient({ failProspectCall: (n) => n === 2 });
+    await expect(loadHojeData(client, "2026-10-16")).rejects.toThrow("hoje_prospects_failed");
+  });
+});
+
+describe("comportamento da consulta (React Query)", () => {
+  const today = "2026-10-16";
+  const make = (client: unknown) => {
+    const qc = new QueryClient();
+    const obs = new QueryObserver(qc, { queryKey: ["hoje"], queryFn: () => loadHojeData(client, today), retry: HOJE_RETRY, retryDelay: 10 });
+    return { qc, obs };
+  };
+  it("configuração: só 1 nova tentativa, 1,5 s", () => {
+    expect(HOJE_RETRY).toBe(1);
+    expect(HOJE_RETRY_DELAY_MS).toBe(1500);
+  });
+  it("recuperação: falha na 1ª tentativa, nova tentativa dá certo", async () => {
+    const { client, calls } = fakeClient({ failProspectCall: (n) => n === 1 });
+    const { obs } = make(client);
+    const r = await obs.refetch();
+    expect(r.isSuccess).toBe(true);
+    expect(r.data?.prospects).toHaveLength(250);
+    expect(calls.prospect).toBe(3); // 1 falha + 2 lotes da nova tentativa
+  });
+  it("falha persistente: para após 1 nova tentativa e mantém os dados bons anteriores", async () => {
+    let failing = false;
+    const { client, calls } = fakeClient({ failProspectCall: () => failing });
+    const { obs } = make(client);
+    const ok = await obs.refetch();
+    expect(ok.data?.prospects).toHaveLength(250);
+    failing = true;
+    const before = calls.prospect;
+    const r = await obs.refetch();
+    expect(r.isError).toBe(true);
+    expect(r.data?.prospects).toHaveLength(250); // fila válida preservada
+    expect(calls.prospect - before).toBe(2); // 1 tentativa + 1 nova tentativa, sem ciclo
+  });
+  it("sem requisições simultâneas duplicadas", async () => {
+    const { client, calls } = fakeClient();
+    const { qc } = make(client);
+    const fn = () => loadHojeData(client, today);
+    await Promise.all([qc.fetchQuery({ queryKey: ["hoje"], queryFn: fn }), qc.fetchQuery({ queryKey: ["hoje"], queryFn: fn }), qc.fetchQuery({ queryKey: ["hoje"], queryFn: fn })]);
+    expect(calls.prospect).toBe(2);
+  });
+});
