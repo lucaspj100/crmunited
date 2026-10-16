@@ -377,55 +377,88 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     setCurrentContactSynced(next.id);
   };
 
+  // Contatos já trabalhados ainda não confirmados por uma recarga da fila (id → momento do salvamento).
+  const workedRef = useRef<Map<string, number>>(new Map());
+  // Sequência das recargas em segundo plano: resposta antiga nunca sobrescreve uma mais nova.
+  const refreshSeqRef = useRef(0);
+
+  /** Busca fila (e histórico, se houver filtro) do banco. Lança em caso de erro. */
+  const fetchFreshQueue = async () => {
+    const [queueRows, hist] = await Promise.all([
+      fetchDialerQueue(user!.id),
+      filtersRef.current && hasActiveFilters(filtersRef.current)
+        ? qc.fetchQuery({ ...historyQueryOptions, staleTime: 0 })
+        : Promise.resolve(undefined),
+    ]);
+    return { sorted: sortQueue(queueRows), freshHistory: hist as QueueHistory | undefined };
+  };
+
   /**
-   * Avança preservando o cursor do sprint: antes de recarregar a fila guardamos a
-   * sequência de contatos POSTERIORES ao atual. Depois do reload selecionamos o
-   * primeiro deles que ainda estiver elegível — nunca o topo da fila.
+   * Avança preservando o cursor do sprint. Usa a fila já carregada para mostrar
+   * o próximo contato na hora e atualiza a fila em segundo plano. Só espera o
+   * banco quando não existe outro contato na fila local.
    */
   const advanceFromCurrent = async (currentId: string) => {
     if (!user) return;
-    const prevActive = activeQueue;
-    const idx = prevActive.findIndex((c) => c.id === currentId);
-    const tailIds = idx >= 0 ? prevActive.slice(idx + 1).map((c) => c.id) : [];
-    const anchorIndex = idx >= 0 ? idx : 0;
+    const prevActiveIds = activeQueue.map((c) => c.id);
+    workedRef.current.set(currentId, Date.now());
+    const worked = new Set(workedRef.current.keys());
 
-    let rows: ProspectContact[] = [];
-    let freshHistory: QueueHistory | undefined;
+    const localTarget = pickLocalNext(prevActiveIds, currentId, worked);
+    if (localTarget) {
+      // Tira localmente os trabalhados da fila até a recarga confirmar o novo estado.
+      setQueue((prev) => prev.filter((c) => !worked.has(c.id)));
+      setCurrentContactSynced(localTarget);
+      void backgroundRefresh(prevActiveIds, currentId);
+      return;
+    }
+
+    // Fila local acabou: busca dados novos antes de dizer que terminou.
+    const seq = ++refreshSeqRef.current;
+    const startedAt = Date.now();
+    let fresh: Awaited<ReturnType<typeof fetchFreshQueue>>;
     try {
-      // Com filtro ativo, o histórico precisa estar atualizado para que o contato
-      // trabalhado saia imediatamente da fila filtrada.
-      const [queueRows, hist] = await Promise.all([
-        fetchDialerQueue(user.id),
-        filtersRef.current && hasActiveFilters(filtersRef.current)
-          ? qc.fetchQuery({ ...historyQueryOptions, staleTime: 0 })
-          : Promise.resolve(undefined),
-      ]);
-      rows = queueRows;
-      freshHistory = hist as QueueHistory | undefined;
+      fresh = await fetchFreshQueue();
     } catch (err) {
       toast.error(`Erro ao carregar fila: ${err instanceof Error ? err.message : String(err)}`);
       return;
     }
-    const sorted = sortQueue(rows);
-    setQueue(sorted);
-    const nextActive = buildView(sorted, freshHistory).list;
+    if (seq !== refreshSeqRef.current) return;
+    applyFresh(fresh, startedAt);
+    const nextActive = buildView(fresh.sorted, fresh.freshHistory).list;
+    const targetId = pickNextContactId(prevActiveIds, currentId, nextActive.map((c) => c.id));
+    setCurrentContactSynced(targetId);
+  };
 
-    if (nextActive.length === 0) {
-      setCurrentContactSynced(null);
+  /** Grava a fila nova e libera os "trabalhados" já refletidos por ela. */
+  const applyFresh = (fresh: { sorted: ProspectContact[] }, startedAt: number) => {
+    for (const [id, at] of workedRef.current) if (at <= startedAt) workedRef.current.delete(id);
+    const pending = new Set(workedRef.current.keys());
+    setQueue(pending.size ? fresh.sorted.filter((c) => !pending.has(c.id)) : fresh.sorted);
+  };
+
+  const backgroundRefresh = async (prevActiveIds: string[], workedId: string) => {
+    const seq = ++refreshSeqRef.current;
+    const selectionAtStart = selectionSeqRef.current;
+    const startedAt = Date.now();
+    let fresh: Awaited<ReturnType<typeof fetchFreshQueue>>;
+    try {
+      fresh = await fetchFreshQueue();
+    } catch {
+      if (seq === refreshSeqRef.current) {
+        toast.warning("Não foi possível atualizar a fila agora. Seguindo com a lista carregada.");
+      }
       return;
     }
-    const available = new Set(nextActive.map((c) => c.id));
-    let targetId = tailIds.find((id) => id !== currentId && available.has(id));
-    if (!targetId) {
-      // Nenhum contato posterior sobrou: mantém a mesma região da fila pelo índice.
-      const clamped = Math.min(Math.max(anchorIndex, 0), nextActive.length - 1);
-      const candidate = nextActive[clamped]!;
-      targetId =
-        candidate.id !== currentId
-          ? candidate.id
-          : (nextActive.find((c) => c.id !== currentId)?.id ?? candidate.id);
-    }
-    setCurrentContactSynced(targetId);
+    if (seq !== refreshSeqRef.current) return; // existe recarga mais nova
+    applyFresh(fresh, startedAt);
+    // Se o contato exibido deixou de ser elegível e o vendedor não navegou desde então,
+    // escolhe o próximo pela mesma regra.
+    const current = currentContactIdRef.current;
+    const nextActive = buildView(fresh.sorted, fresh.freshHistory).list;
+    if (selectionSeqRef.current !== selectionAtStart) return;
+    if (current && nextActive.some((c) => c.id === current)) return;
+    setCurrentContactSynced(pickNextContactId(prevActiveIds, workedId, nextActive.map((c) => c.id)));
   };
 
 
