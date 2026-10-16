@@ -88,6 +88,8 @@ export function httpStatusFor(error: string | undefined): number {
     case "reservation_expired":
     case "already_sent":
     case "invalid_status":
+    // F3-B.3b (R3): a migration 0011 revoga a tentativa em andamento.
+    case "attempt_revoked":
       return 409;
     default:
       return 500;
