@@ -100,9 +100,12 @@ describe("F3-B contratos", () => {
     expect(sanitizeErrorCode("manual_confirmed_not_sent")).toBe("manual_confirmed_not_sent");
   });
   it("erros da F3-B mapeiam para 409/404", () => {
-    for (const e of ["reservation_mismatch", "already_sending", "already_finalized", "attempt_mismatch", "not_claimed", "reservation_expired", "campaign_not_active"]) {
+    for (const e of ["reservation_mismatch", "already_sending", "already_finalized", "attempt_mismatch", "not_claimed", "reservation_expired", "campaign_not_active", "attempt_revoked"]) {
       expect(httpStatusFor(e)).toBe(409);
     }
     expect(httpStatusFor("contact_not_found")).toBe(404);
+  });
+  it("F3-B.3b (R3): tentativa revogada é conflito (409)", () => {
+    expect(httpStatusFor("attempt_revoked")).toBe(409);
   });
 });
