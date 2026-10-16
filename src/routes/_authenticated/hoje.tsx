@@ -68,7 +68,7 @@ function HojePage() {
   }, [location.searchStr]);
 
 
-  const { data, isLoading } = useHojeData();
+  const { data, isLoading, isError, isFetching, dataUpdatedAt, refetch } = useHojeData();
 
   const byProfile = useMemo(() => new Map((data?.profiles ?? []).map((p) => [p.id, p])), [data]);
 
@@ -98,7 +98,29 @@ function HojePage() {
   const counts: Record<string, number> = {};
   for (const f of FILTERS) counts[f.key] = queue.filter(f.match).length;
 
+  if (!data && isError) {
+    return (
+      <div role="alert" className="rounded-md border border-destructive/40 bg-destructive/10 p-4 text-sm">
+        <div className="font-semibold">Não foi possível carregar a fila de hoje.</div>
+        <div className="text-muted-foreground">Isso não significa que a fila está vazia. Tente novamente em instantes.</div>
+        <Button size="sm" variant="outline" className="mt-2" disabled={isFetching} onClick={() => refetch()}>
+          {isFetching ? "Tentando…" : "Tentar novamente"}
+        </Button>
+      </div>
+    );
+  }
   if (isLoading || !data) return <div className="text-muted-foreground">Carregando…</div>;
+
+  const staleBanner = isError ? (
+    <div role="status" className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
+      <span>
+        Não foi possível atualizar a fila. Mostrando os dados de {new Date(dataUpdatedAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}; podem estar desatualizados.
+      </span>
+      <Button size="sm" variant="outline" disabled={isFetching} onClick={() => refetch()}>
+        {isFetching ? "Tentando…" : "Tentar novamente"}
+      </Button>
+    </div>
+  ) : null;
 
   const next = queue[0];
 
