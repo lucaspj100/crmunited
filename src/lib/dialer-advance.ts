@@ -39,3 +39,28 @@ export function pickLocalNext(
   if (remaining.length === 0) return null;
   return pickNextContactId(prevActiveIds, currentId, remaining, exclude);
 }
+
+/**
+ * Decide se o contato lido da sessão compartilhada (a cada 2s ou via Realtime)
+ * pode substituir o contato da tela. Descarta respostas antigas.
+ */
+export function shouldApplyRemoteContact(p: {
+  remote: string | null;
+  current: string | null;
+  /** selectionSeq no início da consulta (polling) — omitido no Realtime. */
+  seqAtStart?: number;
+  seqNow: number;
+  /** Gravações do contato atual ainda em andamento. */
+  pendingWrites: number;
+  /** A última gravação do contato atual falhou (banco ainda tem o valor antigo). */
+  localWriteFailed: boolean;
+  /** Contatos recém-trabalhados ainda não confirmados pela fila atualizada. */
+  worked: ReadonlySet<string>;
+}): boolean {
+  if (p.remote === p.current) return false;
+  if (p.seqAtStart !== undefined && p.seqAtStart !== p.seqNow) return false; // navegou durante a consulta
+  if (p.pendingWrites > 0) return false; // banco ainda não recebeu a navegação local
+  if (p.localWriteFailed) return false; // banco tem valor antigo; o certo é regravar
+  if (p.remote && p.worked.has(p.remote)) return false; // nunca volta ao recém-trabalhado
+  return true;
+}
