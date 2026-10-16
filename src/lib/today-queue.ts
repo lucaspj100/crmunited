@@ -73,34 +73,52 @@ export function neededProspectIds(
   return [...ids];
 }
 
+/**
+ * Carrega os dados da fila. Qualquer falha (inclusive de um único lote de contatos)
+ * lança erro: assim a fila nunca é trocada por uma lista incompleta e o React Query
+ * mantém os últimos dados carregados com sucesso.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function loadHojeData(client: any = supabase, today: string = localToday()): Promise<HojeData> {
+  const [leadsR, tasksR, profR] = await Promise.all([
+    fetchAll(() => client.from("leads").select("id,name,phone,company,status,owner_id,observation,interview_date,interview_time,last_contact_at,next_followup_at,lost_reason,in_rescue,created_at")),
+    fetchAll(() => client.from("tasks").select("id,lead_id,type,due_date,due_time,observation,status,owner_id,is_rescue,prospect_contact_id").eq("status", "pendente")),
+    client.from("profiles").select("id, full_name, email").limit(2000),
+  ]);
+  if (leadsR.error) throw new Error("hoje_leads_failed");
+  if (tasksR.error) throw new Error("hoje_tasks_failed");
+  if (profR.error) throw new Error("hoje_profiles_failed");
+  const tasks = (tasksR.data ?? []) as Task[];
+  // Só os contatos referenciados pelos retornos pendentes até hoje (únicos usados na fila).
+  const ids = neededProspectIds(tasks, today);
+  const prospects: ProspectMini[] = [];
+  for (let i = 0; i < ids.length; i += PROSPECT_CHUNK) {
+    const { data, error } = await client
+      .from("prospect_contacts")
+      .select("id,nome,empresa,cargo,telefone_normalizado,telefone_original,observacao,vendedor_responsavel_id")
+      .in("id", ids.slice(i, i + PROSPECT_CHUNK));
+    if (error) throw new Error("hoje_prospects_failed");
+    prospects.push(...((data ?? []) as ProspectMini[]));
+  }
+  return {
+    leads: (leadsR.data ?? []) as Lead[],
+    tasks,
+    profiles: (profR.data ?? []) as Profile[],
+    prospects,
+  };
+}
+
+/** Uma única nova tentativa automática, 1,5 s depois; depois só no próximo ciclo normal. */
+export const HOJE_RETRY = 1;
+export const HOJE_RETRY_DELAY_MS = 1500;
+
 /** Fonte única de dados da página Hoje (mesma queryKey usada pelo badge do menu). */
 export function useHojeData() {
   return useQuery({
     queryKey: ["hoje"],
-    queryFn: async (): Promise<HojeData> => {
-      const [leadsR, tasksR, profR] = await Promise.all([
-        fetchAll(() => supabase.from("leads").select("id,name,phone,company,status,owner_id,observation,interview_date,interview_time,last_contact_at,next_followup_at,lost_reason,in_rescue,created_at")),
-        fetchAll(() => supabase.from("tasks").select("id,lead_id,type,due_date,due_time,observation,status,owner_id,is_rescue,prospect_contact_id").eq("status", "pendente")),
-        supabase.from("profiles").select("id, full_name, email").limit(2000),
-      ]);
-      const tasks = (tasksR.data ?? []) as Task[];
-      // Só os contatos referenciados pelos retornos pendentes até hoje (únicos usados na fila).
-      const ids = neededProspectIds(tasks, localToday());
-      const prospects: ProspectMini[] = [];
-      for (let i = 0; i < ids.length; i += PROSPECT_CHUNK) {
-        const { data } = await supabase
-          .from("prospect_contacts")
-          .select("id,nome,empresa,cargo,telefone_normalizado,telefone_original,observacao,vendedor_responsavel_id")
-          .in("id", ids.slice(i, i + PROSPECT_CHUNK));
-        prospects.push(...((data ?? []) as ProspectMini[]));
-      }
-      return {
-        leads: (leadsR.data ?? []) as Lead[],
-        tasks,
-        profiles: (profR.data ?? []) as Profile[],
-        prospects,
-      };
-    },
+    queryFn: () => loadHojeData(),
+    retry: HOJE_RETRY,
+    retryDelay: HOJE_RETRY_DELAY_MS,
     refetchInterval: 60_000,
     refetchOnWindowFocus: true,
   });
