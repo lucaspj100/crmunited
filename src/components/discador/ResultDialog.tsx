@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -125,7 +125,15 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
     return finishTaskById(fallbackTask.id);
   };
 
+  const savingRef = useRef(false);
   const save = async (goNext: boolean) => {
+    // Bloqueia cliques duplicados antes mesmo do re-render do botão.
+    if (savingRef.current) return;
+    savingRef.current = true;
+    try { await saveInner(goNext); } finally { savingRef.current = false; }
+  };
+
+  const saveInner = async (goNext: boolean) => {
     if (!result) { toast.error("Selecione o resultado"); return; }
     if (isCall && answered === null) { toast.error("Informe se a pessoa atendeu a ligação"); return; }
     if (answerConflict) {
