@@ -33,7 +33,7 @@ import {
 } from "@/lib/dialer-filters";
 import { addToWhatsappList } from "@/lib/whatsapp-list";
 import { fetchDialerSession, saveDialerSession } from "@/lib/dialer-session";
-import { pickLocalNext, pickNextContactId } from "@/lib/dialer-advance";
+import { pickLocalNext, pickNextContactId, shouldApplyRemoteContact } from "@/lib/dialer-advance";
 import { openWhatsapp } from "@/lib/whatsapp";
 import { toast } from "sonner";
 
@@ -250,6 +250,11 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
   currentContactIdRef.current = currentContactId;
   // Última seleção pedida (local ou remota) — evita que resposta antiga sobrescreva navegação recente.
   const selectionSeqRef = useRef(0);
+  // Gravações do contato atual em andamento e se a última falhou (protege contra respostas antigas).
+  const pendingSessionWritesRef = useRef(0);
+  const localWriteFailedRef = useRef(false);
+  // Contatos já trabalhados ainda não confirmados por uma recarga da fila (id → momento do salvamento).
+  const workedRef = useRef<Map<string, number>>(new Map());
   // Contato sincronizado que (ainda) não está na fila ativa local — usado apenas para exibição.
   const [syncedContact, setSyncedContact] = useState<ProspectContact | null>(null);
 
@@ -277,11 +282,20 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
       setCurrentContactId(contactId);
       setSyncedContact(null);
       if (!user) return;
-      if (lastSyncedRef.current === contactId) return;
+      if (lastSyncedRef.current === contactId) { localWriteFailedRef.current = false; return; }
+      pendingSessionWritesRef.current += 1;
       void (async () => {
-        const ok = await saveDialerSession(user.id, contactId);
+        let ok = false;
+        try {
+          ok = await saveDialerSession(user.id, contactId);
+        } finally {
+          // Libera a proteção sempre (sucesso ou falha) — nunca bloqueia a sincronização.
+          pendingSessionWritesRef.current = Math.max(0, pendingSessionWritesRef.current - 1);
+        }
+        if (seq !== selectionSeqRef.current) return; // já existe navegação mais nova
         // Só marca como sincronizado se o banco aceitou E esta ainda é a seleção mais recente.
-        if (ok && seq === selectionSeqRef.current) lastSyncedRef.current = contactId;
+        if (ok) lastSyncedRef.current = contactId;
+        localWriteFailedRef.current = !ok;
       })();
     },
     [user?.id],
@@ -378,8 +392,6 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     setCurrentContactSynced(next.id);
   };
 
-  // Contatos já trabalhados ainda não confirmados por uma recarga da fila (id → momento do salvamento).
-  const workedRef = useRef<Map<string, number>>(new Map());
   // Sequência das recargas em segundo plano: resposta antiga nunca sobrescreve uma mais nova.
   const refreshSeqRef = useRef(0);
 
@@ -497,6 +509,15 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
           const next =
             (payload.new as { current_contact_id?: string | null } | null)?.current_contact_id ?? null;
           if (next === lastSyncedRef.current && next === currentContactIdRef.current) return;
+          if (focusContactId) return; // modo tarefa/retorno tem prioridade
+          if (!shouldApplyRemoteContact({
+            remote: next,
+            current: currentContactIdRef.current,
+            seqNow: selectionSeqRef.current,
+            pendingWrites: pendingSessionWritesRef.current,
+            localWriteFailed: localWriteFailedRef.current,
+            worked: new Set(workedRef.current.keys()),
+          })) return;
           lastSyncedRef.current = next;
           if (focusContactId) return; // modo tarefa/retorno tem prioridade
           if (!next) {
@@ -518,11 +539,36 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
   useEffect(() => {
     if (!user || focusContactId) return;
     let stopped = false;
+    let inFlight = false;
     const tick = async () => {
-      const session = await fetchDialerSession(user.id);
+      if (inFlight) return; // sem consultas sobrepostas
+      // Última gravação do contato atual falhou: regrava (o banco tem valor antigo) em vez de aplicá-lo.
+      if (localWriteFailedRef.current && pendingSessionWritesRef.current === 0) {
+        const cur = currentContactIdRef.current;
+        const seq = selectionSeqRef.current;
+        inFlight = true;
+        pendingSessionWritesRef.current += 1;
+        let ok = false;
+        try { ok = await saveDialerSession(user.id, cur); }
+        finally { pendingSessionWritesRef.current = Math.max(0, pendingSessionWritesRef.current - 1); inFlight = false; }
+        if (ok && seq === selectionSeqRef.current) { lastSyncedRef.current = cur; localWriteFailedRef.current = false; }
+        return;
+      }
+      const seqAtStart = selectionSeqRef.current;
+      inFlight = true;
+      let session: Awaited<ReturnType<typeof fetchDialerSession>>;
+      try { session = await fetchDialerSession(user.id); } finally { inFlight = false; }
       if (stopped) return;
       const remote = session?.current_contact_id ?? null;
-      if (remote === currentContactIdRef.current) return;
+      if (!shouldApplyRemoteContact({
+        remote,
+        current: currentContactIdRef.current,
+        seqAtStart,
+        seqNow: selectionSeqRef.current,
+        pendingWrites: pendingSessionWritesRef.current,
+        localWriteFailed: localWriteFailedRef.current,
+        worked: new Set(workedRef.current.keys()),
+      })) return;
       lastSyncedRef.current = remote;
       if (!remote) {
         setSyncedContact(null);

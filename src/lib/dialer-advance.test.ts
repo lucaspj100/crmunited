@@ -31,3 +31,30 @@ describe("pickNextContactId (após dados novos)", () => {
     expect(pickNextContactId(["a"], "a", ["a"])).toBe("a");
   });
 });
+
+import { shouldApplyRemoteContact } from "./dialer-advance";
+describe("shouldApplyRemoteContact (sincronização entre aparelhos)", () => {
+  const base = { remote: "A", current: "B", seqNow: 5, pendingWrites: 0, localWriteFailed: false, worked: new Set<string>() };
+  it("resposta antiga chegando depois do avanço é descartada", () => {
+    expect(shouldApplyRemoteContact({ ...base, seqAtStart: 4 })).toBe(false);
+  });
+  it("gravação do contato atual demorando (>2s) bloqueia a resposta", () => {
+    expect(shouldApplyRemoteContact({ ...base, seqAtStart: 5, pendingWrites: 1 })).toBe(false);
+  });
+  it("falha na gravação: não volta ao valor antigo do banco", () => {
+    expect(shouldApplyRemoteContact({ ...base, seqAtStart: 5, localWriteFailed: true })).toBe(false);
+  });
+  it("recém-trabalhado ainda elegível não volta à tela", () => {
+    expect(shouldApplyRemoteContact({ ...base, seqAtStart: 5, worked: new Set(["A"]) })).toBe(false);
+  });
+  it("mudança legítima de outro aparelho é aplicada", () => {
+    expect(shouldApplyRemoteContact({ ...base, remote: "C", seqAtStart: 5 })).toBe(true);
+    expect(shouldApplyRemoteContact({ ...base, remote: "C" })).toBe(true); // Realtime
+  });
+  it("navegação rápida: cada navegação invalida a consulta anterior", () => {
+    expect(shouldApplyRemoteContact({ ...base, seqAtStart: 2, seqNow: 7 })).toBe(false);
+  });
+  it("mesmo contato da tela não dispara nada (sem ciclo)", () => {
+    expect(shouldApplyRemoteContact({ ...base, remote: "B", seqAtStart: 5 })).toBe(false);
+  });
+});
