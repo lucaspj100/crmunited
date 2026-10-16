@@ -33,6 +33,7 @@ import {
 } from "@/lib/dialer-filters";
 import { addToWhatsappList } from "@/lib/whatsapp-list";
 import { fetchDialerSession, saveDialerSession } from "@/lib/dialer-session";
+import { pickLocalNext, pickNextContactId } from "@/lib/dialer-advance";
 import { openWhatsapp } from "@/lib/whatsapp";
 import { toast } from "sonner";
 
