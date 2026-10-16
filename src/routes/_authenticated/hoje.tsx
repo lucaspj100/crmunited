@@ -162,6 +162,8 @@ function HojePage() {
         </div>
       </div>
 
+      {staleBanner}
+
       {/* Minha meta de matrículas */}
       <MyGoalCard />
 
