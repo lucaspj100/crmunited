@@ -1,0 +1,60 @@
+area;encontrado;esperado;item;observacao;ordem;status
+RESULTADO GERAL;58 PASS / 0 FAIL / 0 REVIEW;todos PASS;P6 — 0011-R3 v4 instalada confere com a referência;Ver itens FAIL e REVIEW abaixo.;0;PASS
+função claim;wa_campaign_claim(uuid,uuid,uuid,uuid,uuid);public.wa_campaign_claim(uuid,uuid,uuid,uuid,uuid);existe com a assinatura (uuid x5);;10;PASS
+função unclaim;wa_campaign_unclaim(uuid,uuid,uuid,uuid,uuid);public.wa_campaign_unclaim(uuid,uuid,uuid,uuid,uuid);existe com a assinatura (uuid x5);;11;PASS
+função claim;1;1;sem sobrecargas com o mesmo nome em public;Mais de uma versão com o mesmo nome não quebra a assinatura usada pelo CRM, mas precisa ser explicada.;12;PASS
+função unclaim;1;1;sem sobrecargas com o mesmo nome em public;Mais de uma versão com o mesmo nome não quebra a assinatura usada pelo CRM, mas precisa ser explicada.;13;PASS
+função claim;_contact_id uuid, _campaign_id uuid, _account_id uuid, _reservation_id uuid, _attempt_id uuid;_contact_id uuid, _campaign_id uuid, _account_id uuid, _reservation_id uuid, _attempt_id uuid;nomes e tipos dos parâmetros;;14;PASS
+função unclaim;_contact_id uuid, _campaign_id uuid, _account_id uuid, _reservation_id uuid, _attempt_id uuid;_contact_id uuid, _campaign_id uuid, _account_id uuid, _reservation_id uuid, _attempt_id uuid;nomes e tipos dos parâmetros;;15;PASS
+função claim;true;true;SECURITY DEFINER;;16;PASS
+função unclaim;true;true;SECURITY DEFINER;;17;PASS
+função claim;{search_path=public};{search_path=public};SET search_path;"REVIEW = search_path definido, mas diferente da referência; avaliar se é intencional.";18;PASS
+função unclaim;{search_path=public};{search_path=public};SET search_path;"REVIEW = search_path definido, mas diferente da referência; avaliar se é intencional.";19;PASS
+função claim;plpgsql / jsonb / f / v / strict=false;plpgsql / jsonb / função / VOLATILE / não STRICT;linguagem, retorno, tipo e volatilidade;;20;PASS
+função unclaim;plpgsql / jsonb / f / v / strict=false;plpgsql / jsonb / função / VOLATILE / não STRICT;linguagem, retorno, tipo e volatilidade;;21;PASS
+função claim;md5 e2df0fedf7689acf0e5688bdd62fb306;md5 e2df0fedf7689acf0e5688bdd62fb306;"corpo comparado com a referência (byte a byte; formatação separada)";Idêntico, inclusive espaços e comentários.;30;PASS
+função unclaim;md5 5ab559d1e79d8b692fadf01ceaa23633;md5 5ab559d1e79d8b692fadf01ceaa23633;"corpo comparado com a referência (byte a byte; formatação separada)";Idêntico, inclusive espaços e comentários.;31;PASS
+função claim;md5 ebe5e37765bb1e45bd6a17b49aa7600e;md5 ebe5e37765bb1e45bd6a17b49aa7600e;corpo normalizado idêntico (sem comentários --, espaços colapsados);Diferenças, se houver, são apenas de formatação.;32;PASS
+função unclaim;md5 c15962c4a932d828dd40b4ce3611d678;md5 c15962c4a932d828dd40b4ce3611d678;corpo normalizado idêntico (sem comentários --, espaços colapsados);Diferenças, se houver, são apenas de formatação.;33;PASS
+lógica claim;1 ocorrência(s);1 ocorrência(s);M1 consulta a tabela de revogações;Trecho procurado (normalizado): FROM public.whatsapp_campaign_revoked_attempts WHERE contact_id = _contact_id AND attempt_id = _attempt_id;41;PASS
+lógica claim;1 ocorrência(s);1 ocorrência(s);M2 devolve attempt_revoked;Trecho procurado (normalizado): 'error', 'attempt_revoked';42;PASS
+lógica claim;1 ocorrência(s);1 ocorrência(s);M3 attemptId nulo também é recusado;Trecho procurado (normalizado): IF _attempt_id IS NULL OR EXISTS (;43;PASS
+lógica claim;1 ocorrência(s);1 ocorrência(s);M4 posse da conta exige conta ativa;Trecho procurado (normalizado): IF NOT public.wa_campaign_own_active_account(_account_id) THEN;44;PASS
+lógica claim;1 ocorrência(s);1 ocorrência(s);M5 contato travado com FOR UPDATE;"Trecho procurado (normalizado): WHERE id = _contact_id AND campaign_id = _campaign_id FOR UPDATE;";45;PASS
+lógica claim;1 ocorrência(s);1 ocorrência(s);M6 validade de 10 minutos da reserva;Trecho procurado (normalizado): r.reserved_at < now() - interval '10 minutes';46;PASS
+lógica claim;1 ocorrência(s);1 ocorrência(s);M7 transição reserved -> sending;Trecho procurado (normalizado): SET status = 'sending', sending_at = now(), send_attempt_id = _attempt_id;47;PASS
+lógica unclaim;2 ocorrência(s);2 ocorrência(s);U1 duas gravações em revoked_attempts;Trecho procurado (normalizado): INSERT INTO public.whatsapp_campaign_revoked_attempts (contact_id, attempt_id, campaign_id, whatsapp_account_id, reservation_id) VALUES (_contact_id, _attempt_i;48;PASS
+lógica unclaim;1 ocorrência(s);1 ocorrência(s);U2 attemptId nulo -> attempt_mismatch;"Trecho procurado (normalizado): IF _attempt_id IS NULL THEN RETURN jsonb_build_object('ok', false, 'error', 'attempt_mismatch'); END IF;";49;PASS
+lógica unclaim;1 ocorrência(s);1 ocorrência(s);U3 v3: sem posse não revoga;Trecho procurado (normalizado): IF r.whatsapp_account_id IS DISTINCT FROM _account_id OR r.reservation_id IS DISTINCT FROM _reservation_id THEN IF r.status IN ('reserved', 'sending') THEN;50;PASS
+lógica unclaim;1 ocorrência(s);1 ocorrência(s);U4 v4: sem posse ativa responde already sem registrar;"Trecho procurado (normalizado): IF r.status NOT IN ('reserved', 'sending') THEN RETURN jsonb_build_object('ok', true, 'already', true); END IF;";51;PASS
+lógica unclaim;1 ocorrência(s);1 ocorrência(s);U5 posse sem exigir conta ativa;Trecho procurado (normalizado): IF NOT public.wa_campaign_own_account(_account_id) THEN;52;PASS
+lógica unclaim;1 ocorrência(s);1 ocorrência(s);U6 transição sending -> reserved;Trecho procurado (normalizado): SET status = 'reserved', sending_at = NULL, send_attempt_id = NULL;53;PASS
+lógica claim;posições 608 / 772 / 949;FOR UPDATE < revoked_attempts < IF _cs <> 'active';ordem: trava do contato → revogação → campanha ativa;A 0011 exige que a revogação seja checada com o contato travado e antes de qualquer outra transição.;60;PASS
+dependências;wa_campaign_own_active_account(uuid) | wa_campaign_own_account(uuid);ambas;wa_campaign_own_active_account(uuid) e wa_campaign_own_account(uuid) existem;;70;PASS
+função claim;postgres;membro de postgres;dono da função é membro do dono de whatsapp_campaign_contacts;Necessário para a guarda da 0010 tratar o UPDATE da RPC como privilegiado.;71;PASS
+função unclaim;postgres;membro de postgres;dono da função é membro do dono de whatsapp_campaign_contacts;Necessário para a guarda da 0010 tratar o UPDATE da RPC como privilegiado.;72;PASS
+função claim;postgres;SELECT e INSERT;dono da função lê e grava revoked_attempts;;73;PASS
+função unclaim;postgres;SELECT e INSERT;dono da função lê e grava revoked_attempts;;74;PASS
+EXECUTE claim;{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres};sem EXECUTE;PUBLIC;;80;PASS
+EXECUTE claim;sem EXECUTE;sem EXECUTE;anon;Considera grants diretos, via PUBLIC e via herança de papéis.;81;PASS
+EXECUTE claim;com EXECUTE;com EXECUTE;authenticated;Considera grants diretos, via PUBLIC e via herança de papéis.;82;PASS
+EXECUTE claim;com EXECUTE;com EXECUTE;service_role;Considera grants diretos, via PUBLIC e via herança de papéis.;83;PASS
+EXECUTE unclaim;{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres};sem EXECUTE;PUBLIC;;84;PASS
+EXECUTE unclaim;sem EXECUTE;sem EXECUTE;anon;Considera grants diretos, via PUBLIC e via herança de papéis.;85;PASS
+EXECUTE unclaim;com EXECUTE;com EXECUTE;authenticated;Considera grants diretos, via PUBLIC e via herança de papéis.;86;PASS
+EXECUTE unclaim;com EXECUTE;com EXECUTE;service_role;Considera grants diretos, via PUBLIC e via herança de papéis.;87;PASS
+tabela;whatsapp_campaign_revoked_attempts (relkind r);public.whatsapp_campaign_revoked_attempts (relkind r);existe como tabela comum em public;;100;PASS
+tabela;contact_id uuid NOT NULL, attempt_id uuid NOT NULL, campaign_id uuid NOT NULL, whatsapp_account_id uuid, reservation_id uuid, revoked_at timestamp with time zone NOT NULL DEFAULT now();contact_id uuid NOT NULL, attempt_id uuid NOT NULL, campaign_id uuid NOT NULL, whatsapp_account_id uuid, reservation_id uuid, revoked_at timestamp with time zone NOT NULL DEFAULT now();colunas, tipos, NOT NULL e defaults;;101;PASS
+tabela;PRIMARY KEY (contact_id, attempt_id);PRIMARY KEY (contact_id, attempt_id);chave primária (contact_id, attempt_id);;102;PASS
+tabela;FOREIGN KEY (contact_id) REFERENCES whatsapp_campaign_contacts(id) ON DELETE CASCADE [validada=true];exatamente 1 FK, CASCADE no delete, NO ACTION no update, validada;FK contact_id → whatsapp_campaign_contacts(id) ON DELETE CASCADE;REVIEW = FK correta presente, mas há FK extra ou atributo diferente.;103;PASS
+tabela;0;0;nenhuma outra restrição (CHECK/UNIQUE/EXCLUDE);Restrição extra não está na referência.;104;PASS
+tabela;1;1;índices (só o da PK);"Índice extra não é funcionalmente perigoso; não está na referência.";105;PASS
+tabela;0;0;nenhum trigger;;106;PASS
+tabela;postgres;mesmo dono de whatsapp_campaign_contacts (postgres);dono;"A referência não fixa o dono; PASS = mesmo dono das tabelas de campanha.";107;PASS
+tabela;relrowsecurity=true, relforcerowsecurity=false;relrowsecurity=true, relforcerowsecurity=false;RLS habilitado e não forçado;Se o RLS fosse forçado, até o dono ficaria sem acesso (não há política) e a revogação deixaria de ser vista.;108;PASS
+tabela;0;0;nenhuma política RLS;Qualquer política abriria acesso que a 0011 deixou fechado de propósito.;109;PASS
+tabela;R3: attemptIds revogados por unclaim. Lido/escrito somente pelas funções SECURITY DEFINER de claim/unclaim.;comentário da 0011;comentário da tabela;"Não funcional; ajuda a identificar a origem.";110;PASS
+privilégios tabela;{postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres,sandbox_exec=ar/postgres};nenhum;PUBLIC sem nenhum privilégio;;120;PASS
+privilégios tabela;;nenhum;anon sem nenhum privilégio (tabela e colunas);;121;PASS
+privilégios tabela;;nenhum;authenticated sem nenhum privilégio (tabela e colunas);;122;PASS
+privilégios tabela;{postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres,sandbox_exec=ar/postgres};SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER;service_role com todos os privilégios (GRANT ALL);REVIEW = service_role com menos que a referência. Mais restrito não abre brecha, mas difere do SQL fornecido.;123;PASS

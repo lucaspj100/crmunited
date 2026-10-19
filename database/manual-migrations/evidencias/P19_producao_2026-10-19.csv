@@ -1,0 +1,69 @@
+encontrado;esperado;grupo;item;observacao;ordem;status
+65 PASS / 0 FAIL / 0 REVIEW;65 itens de referência;RESULTADO GERAL;P19 — 0012-F4-0a (+ camada 1) instalada = pacote;;0;PASS
+timestamp with time zone NOT NULL DEFAULT now();timestamp with time zone NOT NULL DEFAULT now();coluna;wa_feature_flag_events.changed_at;;1;PASS
+uuid;uuid;coluna;wa_feature_flag_events.changed_by;;1;PASS
+bigint NOT NULL DEFAULT nextval('wa_feature_flag_events_id_seq'::regclass);bigint NOT NULL DEFAULT nextval('wa_feature_flag_events_id_seq'::regclass);coluna;wa_feature_flag_events.id;;1;PASS
+text NOT NULL;text NOT NULL;coluna;wa_feature_flag_events.key;;1;PASS
+boolean NOT NULL;boolean NOT NULL;coluna;wa_feature_flag_events.new_value;;1;PASS
+boolean;boolean;coluna;wa_feature_flag_events.old_value;;1;PASS
+text NOT NULL;text NOT NULL;coluna;wa_feature_flag_events.reason;;1;PASS
+boolean NOT NULL DEFAULT false;boolean NOT NULL DEFAULT false;coluna;wa_feature_flags.enabled;;1;PASS
+text NOT NULL;text NOT NULL;coluna;wa_feature_flags.key;;1;PASS
+timestamp with time zone NOT NULL DEFAULT now();timestamp with time zone NOT NULL DEFAULT now();coluna;wa_feature_flags.updated_at;;1;PASS
+uuid;uuid;coluna;wa_feature_flags.updated_by;;1;PASS
+uuid NOT NULL;uuid NOT NULL;coluna;whatsapp_campaign_owner_events.campaign_id;;1;PASS
+timestamp with time zone NOT NULL DEFAULT now();timestamp with time zone NOT NULL DEFAULT now();coluna;whatsapp_campaign_owner_events.changed_at;;1;PASS
+uuid;uuid;coluna;whatsapp_campaign_owner_events.changed_by;;1;PASS
+bigint NOT NULL DEFAULT nextval('whatsapp_campaign_owner_events_id_seq'::regclass);bigint NOT NULL DEFAULT nextval('whatsapp_campaign_owner_events_id_seq'::regclass);coluna;whatsapp_campaign_owner_events.id;;1;PASS
+uuid;uuid;coluna;whatsapp_campaign_owner_events.new_owner;;1;PASS
+uuid;uuid;coluna;whatsapp_campaign_owner_events.previous_owner;;1;PASS
+text NOT NULL;text NOT NULL;coluna;whatsapp_campaign_owner_events.reason;;1;PASS
+text NOT NULL;text NOT NULL;coluna;whatsapp_campaign_owner_events.source;;1;PASS
+uuid;uuid;coluna;whatsapp_campaigns.owner_user_id;;1;PASS
+campaign_isolation=false;campaign_isolation=false;dado;wa_feature_flags;;1;PASS
+(só o dono);(só o dono);EXECUTE;wa_campaign_assign_owner;;1;PASS
+(só o dono);(só o dono);EXECUTE;wa_campaigns_owner_audit;;1;PASS
+(só o dono);(só o dono);EXECUTE;wa_campaigns_owner_guard;;1;PASS
+(só o dono);(só o dono);EXECUTE;wa_f4_append_only_guard;;1;PASS
+(só o dono);(só o dono);EXECUTE;wa_f4_privileged_only_guard;;1;PASS
+(só o dono);(só o dono);EXECUTE;wa_f4_truncate_guard;;1;PASS
+(só o dono);(só o dono);EXECUTE;wa_feature_flag_set;;1;PASS
+"2bb78f48b02d72e5d207b0839b1484df def=true cfg={""search_path=public, pg_temp""} args=_campaign_id uuid, _new_owner uuid, _expected_current_owner uuid, _reason text ret=jsonb lang=plpgsql";"2bb78f48b02d72e5d207b0839b1484df def=true cfg={""search_path=public, pg_temp""} args=_campaign_id uuid, _new_owner uuid, _expected_current_owner uuid, _reason text ret=jsonb lang=plpgsql";função;wa_campaign_assign_owner;;1;PASS
+"33abd57dea8f5d1c257b47ceeec89ba0 def=false cfg={""search_path=public, pg_temp""} args= ret=trigger lang=plpgsql";"33abd57dea8f5d1c257b47ceeec89ba0 def=false cfg={""search_path=public, pg_temp""} args= ret=trigger lang=plpgsql";função;wa_campaigns_owner_audit;;1;PASS
+"375cf95346aa2b9f3216ce37a178a1b1 def=false cfg={""search_path=public, pg_temp""} args= ret=trigger lang=plpgsql";"375cf95346aa2b9f3216ce37a178a1b1 def=false cfg={""search_path=public, pg_temp""} args= ret=trigger lang=plpgsql";função;wa_campaigns_owner_guard;;1;PASS
+"bb3eed32bf885e6c63cc0e8da9b382d2 def=false cfg={""search_path=public, pg_temp""} args= ret=trigger lang=plpgsql";"bb3eed32bf885e6c63cc0e8da9b382d2 def=false cfg={""search_path=public, pg_temp""} args= ret=trigger lang=plpgsql";função;wa_f4_append_only_guard;;1;PASS
+"9a23f5630dbea1da3e2e3bde86ff6867 def=false cfg={""search_path=public, pg_temp""} args= ret=trigger lang=plpgsql";"9a23f5630dbea1da3e2e3bde86ff6867 def=false cfg={""search_path=public, pg_temp""} args= ret=trigger lang=plpgsql";função;wa_f4_privileged_only_guard;;1;PASS
+"89c89a76d6e2f0ea25e3b82004c3c8b8 def=false cfg={""search_path=public, pg_temp""} args= ret=trigger lang=plpgsql";"89c89a76d6e2f0ea25e3b82004c3c8b8 def=false cfg={""search_path=public, pg_temp""} args= ret=trigger lang=plpgsql";função;wa_f4_truncate_guard;;1;PASS
+"c780e543d51aadeb024307b4fc458e60 def=true cfg={""search_path=public, pg_temp""} args=_key text, _enabled boolean, _reason text ret=jsonb lang=plpgsql";"c780e543d51aadeb024307b4fc458e60 def=true cfg={""search_path=public, pg_temp""} args=_key text, _enabled boolean, _reason text ret=jsonb lang=plpgsql";função;wa_feature_flag_set;;1;PASS
+ef3710b70a736fa85f80a5987bb461c1;ef3710b70a736fa85f80a5987bb461c1;índice;wa_feature_flag_events_pkey;;1;PASS
+d9ea7f1275e06843e2f1b31abf8dd975;d9ea7f1275e06843e2f1b31abf8dd975;índice;wa_feature_flags_pkey;;1;PASS
+f4041731855843856ddd88c1e8eb8389;f4041731855843856ddd88c1e8eb8389;índice;wcoe_campaign_idx;;1;PASS
+c805b2d8617e3fd20b86f4d3327e1165;c805b2d8617e3fd20b86f4d3327e1165;índice;whatsapp_campaign_owner_events_pkey;;1;PASS
+ef7a0046a7f01dc06ed7f5a052969444;ef7a0046a7f01dc06ed7f5a052969444;índice;whatsapp_campaigns_owner_status_idx;;1;PASS
+b5acd39366bfb8fbedb5fe4689b99f30;b5acd39366bfb8fbedb5fe4689b99f30;política;wa_feature_flag_events.wffe_select;;1;PASS
+b5acd39366bfb8fbedb5fe4689b99f30;b5acd39366bfb8fbedb5fe4689b99f30;política;wa_feature_flags.wff_select;;1;PASS
+75c8408e10b1abddb68ee10c75da1514;75c8408e10b1abddb68ee10c75da1514;política;whatsapp_campaign_owner_events.wcoe_select;;1;PASS
+authenticated:SELECT rls=true;authenticated:SELECT rls=true;privilégios;wa_feature_flag_events;;1;PASS
+(só o dono) rls=false;(só o dono) rls=false;privilégios;wa_feature_flag_events_id_seq;;1;PASS
+authenticated:SELECT rls=true;authenticated:SELECT rls=true;privilégios;wa_feature_flags;;1;PASS
+authenticated:SELECT rls=true;authenticated:SELECT rls=true;privilégios;whatsapp_campaign_owner_events;;1;PASS
+(só o dono) rls=false;(só o dono) rls=false;privilégios;whatsapp_campaign_owner_events_id_seq;;1;PASS
+4c6419b3704337bbfe50f018842a9ad3;4c6419b3704337bbfe50f018842a9ad3;restrição;wa_feature_flag_events.wa_feature_flag_events_pkey;;1;PASS
+32d34fb980d74ffd375d5499d6fab3fb;32d34fb980d74ffd375d5499d6fab3fb;restrição;wa_feature_flag_events.wa_feature_flag_events_reason_check;;1;PASS
+a993c80dccbdb95e68267b38986d75d5;a993c80dccbdb95e68267b38986d75d5;restrição;wa_feature_flags.wa_feature_flags_key_check;;1;PASS
+729d3ed6c85722f863da384d2313331e;729d3ed6c85722f863da384d2313331e;restrição;wa_feature_flags.wa_feature_flags_pkey;;1;PASS
+4c6419b3704337bbfe50f018842a9ad3;4c6419b3704337bbfe50f018842a9ad3;restrição;whatsapp_campaign_owner_events.whatsapp_campaign_owner_events_p;;1;PASS
+32d34fb980d74ffd375d5499d6fab3fb;32d34fb980d74ffd375d5499d6fab3fb;restrição;whatsapp_campaign_owner_events.whatsapp_campaign_owner_events_r;;1;PASS
+39eed576e410fc995e4b77c92b16b35a;39eed576e410fc995e4b77c92b16b35a;restrição;whatsapp_campaign_owner_events.whatsapp_campaign_owner_events_s;;1;PASS
+d0eb2d4314e37b4e83a46a1d97595c9d;d0eb2d4314e37b4e83a46a1d97595c9d;restrição;whatsapp_campaigns.whatsapp_campaigns_owner_user_id_fkey;;1;PASS
+041f6f7ce8b92d6fbbbe1a75baaab26b enabled=O;041f6f7ce8b92d6fbbbe1a75baaab26b enabled=O;trigger;wa_feature_flag_events.wffe_append_only;;1;PASS
+e6ce84afcc47cfd19b975b0d39cf88a8 enabled=O;e6ce84afcc47cfd19b975b0d39cf88a8 enabled=O;trigger;wa_feature_flag_events.wffe_truncate;;1;PASS
+04f401f24dbbeae52a9200538898ef24 enabled=O;04f401f24dbbeae52a9200538898ef24 enabled=O;trigger;wa_feature_flags.wff_privileged_only;;1;PASS
+df82f86bbc980160ab9961b543e52ca7 enabled=O;df82f86bbc980160ab9961b543e52ca7 enabled=O;trigger;wa_feature_flags.wff_truncate;;1;PASS
+77192606bf5f15492e679dc9f5169564 enabled=O;77192606bf5f15492e679dc9f5169564 enabled=O;trigger;whatsapp_campaign_owner_events.wcoe_append_only;;1;PASS
+c9ef9d62a5e2ca81b93bf93e5dd5f4d5 enabled=O;c9ef9d62a5e2ca81b93bf93e5dd5f4d5 enabled=O;trigger;whatsapp_campaign_owner_events.wcoe_truncate;;1;PASS
+a6129dbf69d94c0624776a457f45a77b enabled=O;a6129dbf69d94c0624776a457f45a77b enabled=O;trigger;whatsapp_campaigns.wc_owner_audit_ins;;1;PASS
+05c38090b2cb05c119773ba5fd22c868 enabled=O;05c38090b2cb05c119773ba5fd22c868 enabled=O;trigger;whatsapp_campaigns.wc_owner_audit_upd;;1;PASS
+92fcfc4cd98ddf8a81155fe823ef872b enabled=O;92fcfc4cd98ddf8a81155fe823ef872b enabled=O;trigger;whatsapp_campaigns.wc_owner_guard;;1;PASS
+"wa_feature_flag_events:INSERT,SELECT; wa_feature_flags:INSERT,SELECT; whatsapp_campaign_owner_events:INSERT,SELECT";SELECT, INSERT (sem escrita possível: guarda);contexto;"sandbox_exec nas tabelas novas (privilégio padrão; aceito em D6)";;2;INFO
+"17.6 / search_path=""\$user"", public, extensions";	-;contexto;servidor;;2;INFO

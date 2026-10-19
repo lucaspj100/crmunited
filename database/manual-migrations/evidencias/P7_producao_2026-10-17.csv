@@ -1,0 +1,75 @@
+area;encontrado;esperado;item;observacao;ordem;status
+RESULTADO GERAL;71 PASS / 0 FAIL / 0 REVIEW / 2 INFO;todos PASS;P7 — 0010 instalada confere com a referência;INFO não entra no resultado.;0;PASS
+função;wa_campaign_contacts_guard() / trigger / plpgsql;public.wa_campaign_contacts_guard() RETURNS trigger LANGUAGE plpgsql;wa_campaign_contacts_guard: existe (sem argumentos, RETURNS trigger, plpgsql);;11;PASS
+função;wa_campaign_contacts_schema_guard() / trigger / plpgsql;public.wa_campaign_contacts_schema_guard() RETURNS trigger LANGUAGE plpgsql;wa_campaign_contacts_schema_guard: existe (sem argumentos, RETURNS trigger, plpgsql);;12;PASS
+função;wa_campaign_contacts_truncate_guard() / trigger / plpgsql;public.wa_campaign_contacts_truncate_guard() RETURNS trigger LANGUAGE plpgsql;wa_campaign_contacts_truncate_guard: existe (sem argumentos, RETURNS trigger, plpgsql);;13;PASS
+função;wa_campaigns_delete_guard() / trigger / plpgsql;public.wa_campaigns_delete_guard() RETURNS trigger LANGUAGE plpgsql;wa_campaigns_delete_guard: existe (sem argumentos, RETURNS trigger, plpgsql);;14;PASS
+função;false;false;wa_campaign_contacts_guard: SECURITY DEFINER conforme a referência;As guardas de contato NÃO são DEFINER: dependem de current_user para distinguir RPC de escrita direta.;21;PASS
+função;false;false;wa_campaign_contacts_schema_guard: SECURITY DEFINER conforme a referência;As guardas de contato NÃO são DEFINER: dependem de current_user para distinguir RPC de escrita direta.;22;PASS
+função;false;false;wa_campaign_contacts_truncate_guard: SECURITY DEFINER conforme a referência;As guardas de contato NÃO são DEFINER: dependem de current_user para distinguir RPC de escrita direta.;23;PASS
+função;true;true;wa_campaigns_delete_guard: SECURITY DEFINER conforme a referência;Só a guarda de exclusão de campanha é DEFINER (precisa ver todos os contatos).;24;PASS
+função;"{""search_path=public, pg_temp""}";"{""search_path=public, pg_temp""}";wa_campaign_contacts_guard: SET search_path = public, pg_temp;;31;PASS
+função;"{""search_path=public, pg_temp""}";"{""search_path=public, pg_temp""}";wa_campaign_contacts_schema_guard: SET search_path = public, pg_temp;;32;PASS
+função;"{""search_path=public, pg_temp""}";"{""search_path=public, pg_temp""}";wa_campaign_contacts_truncate_guard: SET search_path = public, pg_temp;;33;PASS
+função;"{""search_path=public, pg_temp""}";"{""search_path=public, pg_temp""}";wa_campaigns_delete_guard: SET search_path = public, pg_temp;;34;PASS
+função;md5 36513a591eb88d6d5c97f3cf54a70568;md5 36513a591eb88d6d5c97f3cf54a70568;wa_campaign_contacts_guard: corpo igual à referência;Idêntico byte a byte.;41;PASS
+função;md5 b906d89d93b7e04887bf5c8be211b43c;md5 b906d89d93b7e04887bf5c8be211b43c;wa_campaign_contacts_schema_guard: corpo igual à referência;Idêntico byte a byte.;42;PASS
+função;md5 1983cfdd9c1a173a110015c0d2624766;md5 1983cfdd9c1a173a110015c0d2624766;wa_campaign_contacts_truncate_guard: corpo igual à referência;Idêntico byte a byte.;43;PASS
+função;md5 bd2e20bf7f34c70941bc9d04ee69b1ed;md5 bd2e20bf7f34c70941bc9d04ee69b1ed;wa_campaigns_delete_guard: corpo igual à referência;Idêntico byte a byte.;44;PASS
+função;postgres;postgres;wa_campaign_contacts_guard: dono = dono de whatsapp_campaign_contacts;"A guarda DEFINER de exclusão precisa ler todos os contatos; as demais só precisam existir.";51;PASS
+função;postgres;postgres;wa_campaign_contacts_schema_guard: dono = dono de whatsapp_campaign_contacts;"A guarda DEFINER de exclusão precisa ler todos os contatos; as demais só precisam existir.";52;PASS
+função;postgres;postgres;wa_campaign_contacts_truncate_guard: dono = dono de whatsapp_campaign_contacts;"A guarda DEFINER de exclusão precisa ler todos os contatos; as demais só precisam existir.";53;PASS
+função;postgres;postgres;wa_campaigns_delete_guard: dono = dono de whatsapp_campaign_contacts;"A guarda DEFINER de exclusão precisa ler todos os contatos; as demais só precisam existir.";54;PASS
+EXECUTE;sem EXECUTE;sem EXECUTE;wa_campaign_contacts_guard → anon;A 0010 revoga de PUBLIC, anon, authenticated e service_role. Para sandbox_exec, o esperado decorre da P8 (sem privilégio padrão de funções).;61;PASS
+EXECUTE;sem EXECUTE;sem EXECUTE;wa_campaign_contacts_guard → authenticated;A 0010 revoga de PUBLIC, anon, authenticated e service_role. Para sandbox_exec, o esperado decorre da P8 (sem privilégio padrão de funções).;62;PASS
+EXECUTE;sem EXECUTE;sem EXECUTE;wa_campaign_contacts_guard → sandbox_exec;A 0010 revoga de PUBLIC, anon, authenticated e service_role. Para sandbox_exec, o esperado decorre da P8 (sem privilégio padrão de funções).;63;PASS
+EXECUTE;sem EXECUTE;sem EXECUTE;wa_campaign_contacts_guard → service_role;A 0010 revoga de PUBLIC, anon, authenticated e service_role. Para sandbox_exec, o esperado decorre da P8 (sem privilégio padrão de funções).;64;PASS
+EXECUTE;sem EXECUTE;sem EXECUTE;wa_campaign_contacts_schema_guard → anon;A 0010 revoga de PUBLIC, anon, authenticated e service_role. Para sandbox_exec, o esperado decorre da P8 (sem privilégio padrão de funções).;65;PASS
+EXECUTE;sem EXECUTE;sem EXECUTE;wa_campaign_contacts_schema_guard → authenticated;A 0010 revoga de PUBLIC, anon, authenticated e service_role. Para sandbox_exec, o esperado decorre da P8 (sem privilégio padrão de funções).;66;PASS
+EXECUTE;sem EXECUTE;sem EXECUTE;wa_campaign_contacts_schema_guard → sandbox_exec;A 0010 revoga de PUBLIC, anon, authenticated e service_role. Para sandbox_exec, o esperado decorre da P8 (sem privilégio padrão de funções).;67;PASS
+EXECUTE;sem EXECUTE;sem EXECUTE;wa_campaign_contacts_schema_guard → service_role;A 0010 revoga de PUBLIC, anon, authenticated e service_role. Para sandbox_exec, o esperado decorre da P8 (sem privilégio padrão de funções).;68;PASS
+EXECUTE;sem EXECUTE;sem EXECUTE;wa_campaign_contacts_truncate_guard → anon;A 0010 revoga de PUBLIC, anon, authenticated e service_role. Para sandbox_exec, o esperado decorre da P8 (sem privilégio padrão de funções).;69;PASS
+EXECUTE;sem EXECUTE;sem EXECUTE;wa_campaign_contacts_truncate_guard → authenticated;A 0010 revoga de PUBLIC, anon, authenticated e service_role. Para sandbox_exec, o esperado decorre da P8 (sem privilégio padrão de funções).;70;PASS
+EXECUTE;sem EXECUTE;sem EXECUTE;wa_campaign_contacts_truncate_guard → sandbox_exec;A 0010 revoga de PUBLIC, anon, authenticated e service_role. Para sandbox_exec, o esperado decorre da P8 (sem privilégio padrão de funções).;71;PASS
+EXECUTE;sem EXECUTE;sem EXECUTE;wa_campaign_contacts_truncate_guard → service_role;A 0010 revoga de PUBLIC, anon, authenticated e service_role. Para sandbox_exec, o esperado decorre da P8 (sem privilégio padrão de funções).;72;PASS
+EXECUTE;sem EXECUTE;sem EXECUTE;wa_campaigns_delete_guard → anon;A 0010 revoga de PUBLIC, anon, authenticated e service_role. Para sandbox_exec, o esperado decorre da P8 (sem privilégio padrão de funções).;73;PASS
+EXECUTE;sem EXECUTE;sem EXECUTE;wa_campaigns_delete_guard → authenticated;A 0010 revoga de PUBLIC, anon, authenticated e service_role. Para sandbox_exec, o esperado decorre da P8 (sem privilégio padrão de funções).;74;PASS
+EXECUTE;sem EXECUTE;sem EXECUTE;wa_campaigns_delete_guard → sandbox_exec;A 0010 revoga de PUBLIC, anon, authenticated e service_role. Para sandbox_exec, o esperado decorre da P8 (sem privilégio padrão de funções).;75;PASS
+EXECUTE;sem EXECUTE;sem EXECUTE;wa_campaigns_delete_guard → service_role;A 0010 revoga de PUBLIC, anon, authenticated e service_role. Para sandbox_exec, o esperado decorre da P8 (sem privilégio padrão de funções).;76;PASS
+EXECUTE;{postgres=X/postgres};sem EXECUTE;wa_campaign_contacts_guard → PUBLIC;;81;PASS
+EXECUTE;{postgres=X/postgres};sem EXECUTE;wa_campaign_contacts_schema_guard → PUBLIC;;82;PASS
+EXECUTE;{postgres=X/postgres};sem EXECUTE;wa_campaign_contacts_truncate_guard → PUBLIC;;83;PASS
+EXECUTE;{postgres=X/postgres};sem EXECUTE;wa_campaigns_delete_guard → PUBLIC;;84;PASS
+trigger;wa_campaigns_delete_guard();public.wa_campaigns_delete_guard();wc_delete_guard em whatsapp_campaigns: existe e chama wa_campaigns_delete_guard;;101;PASS
+trigger;wa_campaign_contacts_truncate_guard();public.wa_campaign_contacts_truncate_guard();wc_truncate_guard em whatsapp_campaigns: existe e chama wa_campaign_contacts_truncate_guard;;102;PASS
+trigger;wa_campaign_contacts_schema_guard();public.wa_campaign_contacts_schema_guard();wcc_schema_guard em whatsapp_campaign_contacts: existe e chama wa_campaign_contacts_schema_guard;;103;PASS
+trigger;wa_campaign_contacts_guard();public.wa_campaign_contacts_guard();wcc_state_guard em whatsapp_campaign_contacts: existe e chama wa_campaign_contacts_guard;;104;PASS
+trigger;wa_campaign_contacts_truncate_guard();public.wa_campaign_contacts_truncate_guard();wcc_truncate_guard em whatsapp_campaign_contacts: existe e chama wa_campaign_contacts_truncate_guard;;105;PASS
+trigger;tgtype 11;BEFORE DELETE, FOR EACH ROW (tgtype 11);wc_delete_guard: momento, nível e eventos;Bits: ROW=1, BEFORE=2, INSERT=4, DELETE=8, UPDATE=16, TRUNCATE=32.;111;PASS
+trigger;tgtype 34;BEFORE TRUNCATE, FOR EACH STATEMENT (tgtype 34);wc_truncate_guard: momento, nível e eventos;Bits: ROW=1, BEFORE=2, INSERT=4, DELETE=8, UPDATE=16, TRUNCATE=32.;112;PASS
+trigger;tgtype 6;BEFORE INSERT, FOR EACH STATEMENT (tgtype 6);wcc_schema_guard: momento, nível e eventos;Bits: ROW=1, BEFORE=2, INSERT=4, DELETE=8, UPDATE=16, TRUNCATE=32.;113;PASS
+trigger;tgtype 31;BEFORE INSERT OR UPDATE OR DELETE, FOR EACH ROW (tgtype 31);wcc_state_guard: momento, nível e eventos;Bits: ROW=1, BEFORE=2, INSERT=4, DELETE=8, UPDATE=16, TRUNCATE=32.;114;PASS
+trigger;tgtype 34;BEFORE TRUNCATE, FOR EACH STATEMENT (tgtype 34);wcc_truncate_guard: momento, nível e eventos;Bits: ROW=1, BEFORE=2, INSERT=4, DELETE=8, UPDATE=16, TRUNCATE=32.;115;PASS
+trigger;O;O (dispara no modo normal de replicação);wc_delete_guard: habilitado;D = desabilitado (guarda inativa). R/A = só dispara em modo réplica/sempre: diferente da referência.;121;PASS
+trigger;O;O (dispara no modo normal de replicação);wc_truncate_guard: habilitado;D = desabilitado (guarda inativa). R/A = só dispara em modo réplica/sempre: diferente da referência.;122;PASS
+trigger;O;O (dispara no modo normal de replicação);wcc_schema_guard: habilitado;D = desabilitado (guarda inativa). R/A = só dispara em modo réplica/sempre: diferente da referência.;123;PASS
+trigger;O;O (dispara no modo normal de replicação);wcc_state_guard: habilitado;D = desabilitado (guarda inativa). R/A = só dispara em modo réplica/sempre: diferente da referência.;124;PASS
+trigger;O;O (dispara no modo normal de replicação);wcc_truncate_guard: habilitado;D = desabilitado (guarda inativa). R/A = só dispara em modo réplica/sempre: diferente da referência.;125;PASS
+trigger;WHEN=false, colunas=0;sem WHEN, sem UPDATE OF;wc_delete_guard: sem cláusula WHEN e sem lista de colunas;Uma condição ou lista de colunas restringiria a guarda.;131;PASS
+trigger;WHEN=false, colunas=0;sem WHEN, sem UPDATE OF;wc_truncate_guard: sem cláusula WHEN e sem lista de colunas;Uma condição ou lista de colunas restringiria a guarda.;132;PASS
+trigger;WHEN=false, colunas=0;sem WHEN, sem UPDATE OF;wcc_schema_guard: sem cláusula WHEN e sem lista de colunas;Uma condição ou lista de colunas restringiria a guarda.;133;PASS
+trigger;WHEN=false, colunas=0;sem WHEN, sem UPDATE OF;wcc_state_guard: sem cláusula WHEN e sem lista de colunas;Uma condição ou lista de colunas restringiria a guarda.;134;PASS
+trigger;WHEN=false, colunas=0;sem WHEN, sem UPDATE OF;wcc_truncate_guard: sem cláusula WHEN e sem lista de colunas;Uma condição ou lista de colunas restringiria a guarda.;135;PASS
+guarda de colunas;20 colunas;20 colunas da 0010;colunas atuais de whatsapp_campaign_contacts = lista fixada na 0010;FAIL = toda importação direta de contatos é recusada por wcc_schema_guard até a guarda ser revisada.;140;PASS
+privilégios tabela;;nenhum dos três;whatsapp_campaign_contacts → anon: sem TRUNCATE, TRIGGER, REFERENCES;;151;PASS
+privilégios tabela;;nenhum dos três;whatsapp_campaign_contacts → authenticated: sem TRUNCATE, TRIGGER, REFERENCES;;152;PASS
+privilégios tabela;;nenhum dos três;whatsapp_campaign_contacts → sandbox_exec: sem TRUNCATE, TRIGGER, REFERENCES;"A 0010 não cita sandbox_exec; a P8 mostrou só SELECT e INSERT.";153;PASS
+privilégios tabela;;nenhum dos três;whatsapp_campaign_contacts → service_role: sem TRUNCATE, TRIGGER, REFERENCES;;154;PASS
+privilégios tabela;;nenhum dos três;whatsapp_campaigns → anon: sem TRUNCATE, TRIGGER, REFERENCES;;155;PASS
+privilégios tabela;;nenhum dos três;whatsapp_campaigns → authenticated: sem TRUNCATE, TRIGGER, REFERENCES;;156;PASS
+privilégios tabela;;nenhum dos três;whatsapp_campaigns → sandbox_exec: sem TRUNCATE, TRIGGER, REFERENCES;"A 0010 não cita sandbox_exec; a P8 mostrou só SELECT e INSERT.";157;PASS
+privilégios tabela;;nenhum dos três;whatsapp_campaigns → service_role: sem TRUNCATE, TRIGGER, REFERENCES;;158;PASS
+compatibilidade;10 de 10;todas;RPCs wa_campaign_* SECURITY DEFINER com dono membro do dono das tabelas;"Só assim a guarda da 0010 trata a escrita das RPCs como privilegiada; se falhar, reserve/claim/sent quebram.";170;PASS
+compatibilidade;wcc_updated_at (whatsapp_campaign_contacts, enabled=O), wa_campaign_close_trg (whatsapp_campaigns, enabled=O), whatsapp_campaigns_updated_at (whatsapp_campaigns, enabled=O);registrar;outros triggers não internos nas duas tabelas;"Triggers adicionais não fazem parte da 0010; avaliar se interferem nas transições.";171;INFO
+compatibilidade;0;0;triggers desabilitados nas duas tabelas;;172;PASS
+ambiente;17.6 / origin;registrar;versão do servidor / session_replication_role desta sessão;"Com session_replication_role = replica, triggers ""O"" não disparam nesta sessão (não afeta outras).";173;INFO
