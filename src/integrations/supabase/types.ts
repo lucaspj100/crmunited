@@ -3082,6 +3082,57 @@ export type Database = {
         }
         Relationships: []
       }
+      wa_feature_flag_events: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          id: number
+          key: string
+          new_value: boolean
+          old_value: boolean | null
+          reason: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: number
+          key: string
+          new_value: boolean
+          old_value?: boolean | null
+          reason: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: number
+          key?: string
+          new_value?: boolean
+          old_value?: boolean | null
+          reason?: string
+        }
+        Relationships: []
+      }
+      wa_feature_flags: {
+        Row: {
+          enabled: boolean
+          key: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          enabled?: boolean
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          enabled?: boolean
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       whatsapp_accounts: {
         Row: {
           created_at: string
@@ -3202,6 +3253,74 @@ export type Database = {
           },
         ]
       }
+      whatsapp_campaign_owner_events: {
+        Row: {
+          campaign_id: string
+          changed_at: string
+          changed_by: string | null
+          id: number
+          new_owner: string | null
+          previous_owner: string | null
+          reason: string
+          source: string
+        }
+        Insert: {
+          campaign_id: string
+          changed_at?: string
+          changed_by?: string | null
+          id?: number
+          new_owner?: string | null
+          previous_owner?: string | null
+          reason: string
+          source: string
+        }
+        Update: {
+          campaign_id?: string
+          changed_at?: string
+          changed_by?: string | null
+          id?: number
+          new_owner?: string | null
+          previous_owner?: string | null
+          reason?: string
+          source?: string
+        }
+        Relationships: []
+      }
+      whatsapp_campaign_revoked_attempts: {
+        Row: {
+          attempt_id: string
+          campaign_id: string
+          contact_id: string
+          reservation_id: string | null
+          revoked_at: string
+          whatsapp_account_id: string | null
+        }
+        Insert: {
+          attempt_id: string
+          campaign_id: string
+          contact_id: string
+          reservation_id?: string | null
+          revoked_at?: string
+          whatsapp_account_id?: string | null
+        }
+        Update: {
+          attempt_id?: string
+          campaign_id?: string
+          contact_id?: string
+          reservation_id?: string | null
+          revoked_at?: string
+          whatsapp_account_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_campaign_revoked_attempts_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_campaign_contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       whatsapp_campaigns: {
         Row: {
           closed_at: string | null
@@ -3209,6 +3328,7 @@ export type Database = {
           created_by: string | null
           id: string
           name: string
+          owner_user_id: string | null
           paused_at: string | null
           status: string
           updated_at: string
@@ -3219,6 +3339,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           name: string
+          owner_user_id?: string | null
           paused_at?: string | null
           status?: string
           updated_at?: string
@@ -3229,6 +3350,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           name?: string
+          owner_user_id?: string | null
           paused_at?: string | null
           status?: string
           updated_at?: string
@@ -3612,6 +3734,15 @@ export type Database = {
         Returns: Json
       }
       teams_overview: { Args: never; Returns: Json }
+      wa_campaign_assign_owner: {
+        Args: {
+          _campaign_id: string
+          _expected_current_owner: string
+          _new_owner: string
+          _reason: string
+        }
+        Returns: Json
+      }
       wa_campaign_claim: {
         Args: {
           _account_id: string
@@ -3672,6 +3803,10 @@ export type Database = {
           _contact_id: string
           _reservation_id: string
         }
+        Returns: Json
+      }
+      wa_feature_flag_set: {
+        Args: { _enabled: boolean; _key: string; _reason: string }
         Returns: Json
       }
       whatsapp_campaign_account_stats: {
