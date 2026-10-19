@@ -1,0 +1,99 @@
+area;encontrado;esperado;item;observacao;ordem;status
+RESULTADO GERAL;88 PASS / 0 FAIL / 0 REVIEW / 9 INFO;todos PASS;P17 — reserve/release/list_active e dependências conferem com 0005/0006/0008;INFO não entra no resultado.;0;PASS
+função;wa_campaign_close_cancel_contacts() ();public.wa_campaign_close_cancel_contacts() ();wa_campaign_close_cancel_contacts: existe com a assinatura esperada;Origem esperada: migration 0008.;11;PASS
+função;wa_campaign_list_active() ();public.wa_campaign_list_active() ();wa_campaign_list_active: existe com a assinatura esperada;Origem esperada: migration 0006.;12;PASS
+função;wa_campaign_own_account(uuid) (_account_id uuid);public.wa_campaign_own_account(uuid) (_account_id uuid);wa_campaign_own_account: existe com a assinatura esperada;Origem esperada: migration 0008.;13;PASS
+função;wa_campaign_own_active_account(uuid) (_account_id uuid);public.wa_campaign_own_active_account(uuid) (_account_id uuid);wa_campaign_own_active_account: existe com a assinatura esperada;Origem esperada: migration 0005.;14;PASS
+função;wa_campaign_release(uuid,uuid,uuid) (_campaign_id uuid, _account_id uuid, _reservation_id uuid);public.wa_campaign_release(uuid,uuid,uuid) (_campaign_id uuid, _account_id uuid, _reservation_id uuid);wa_campaign_release: existe com a assinatura esperada;Origem esperada: migration 0006.;15;PASS
+função;wa_campaign_reserve(uuid,uuid,integer) (_campaign_id uuid, _account_id uuid, _limit integer);public.wa_campaign_reserve(uuid,uuid,integer) (_campaign_id uuid, _account_id uuid, _limit integer);wa_campaign_reserve: existe com a assinatura esperada;Origem esperada: migration 0006.;16;PASS
+função;1;1;wa_campaign_close_cancel_contacts: sem sobrecargas com o mesmo nome;"Uma sobrecarga (ex.: assinatura antiga da 0005) poderia ser chamada por engano; a rota usa a assinatura nomeada.";21;PASS
+função;1;1;wa_campaign_list_active: sem sobrecargas com o mesmo nome;"Uma sobrecarga (ex.: assinatura antiga da 0005) poderia ser chamada por engano; a rota usa a assinatura nomeada.";22;PASS
+função;1;1;wa_campaign_own_account: sem sobrecargas com o mesmo nome;"Uma sobrecarga (ex.: assinatura antiga da 0005) poderia ser chamada por engano; a rota usa a assinatura nomeada.";23;PASS
+função;1;1;wa_campaign_own_active_account: sem sobrecargas com o mesmo nome;"Uma sobrecarga (ex.: assinatura antiga da 0005) poderia ser chamada por engano; a rota usa a assinatura nomeada.";24;PASS
+função;1;1;wa_campaign_release: sem sobrecargas com o mesmo nome;"Uma sobrecarga (ex.: assinatura antiga da 0005) poderia ser chamada por engano; a rota usa a assinatura nomeada.";25;PASS
+função;1;1;wa_campaign_reserve: sem sobrecargas com o mesmo nome;"Uma sobrecarga (ex.: assinatura antiga da 0005) poderia ser chamada por engano; a rota usa a assinatura nomeada.";26;PASS
+função;trigger / plpgsql / v / strict=false;trigger / plpgsql / v / não STRICT;wa_campaign_close_cancel_contacts: retorno, linguagem e volatilidade;v = VOLATILE, s = STABLE.;31;PASS
+função;jsonb / plpgsql / s / strict=false;jsonb / plpgsql / s / não STRICT;wa_campaign_list_active: retorno, linguagem e volatilidade;v = VOLATILE, s = STABLE.;32;PASS
+função;boolean / sql / s / strict=false;boolean / sql / s / não STRICT;wa_campaign_own_account: retorno, linguagem e volatilidade;v = VOLATILE, s = STABLE.;33;PASS
+função;boolean / sql / s / strict=false;boolean / sql / s / não STRICT;wa_campaign_own_active_account: retorno, linguagem e volatilidade;v = VOLATILE, s = STABLE.;34;PASS
+função;jsonb / plpgsql / v / strict=false;jsonb / plpgsql / v / não STRICT;wa_campaign_release: retorno, linguagem e volatilidade;v = VOLATILE, s = STABLE.;35;PASS
+função;jsonb / plpgsql / v / strict=false;jsonb / plpgsql / v / não STRICT;wa_campaign_reserve: retorno, linguagem e volatilidade;v = VOLATILE, s = STABLE.;36;PASS
+função;true;true;wa_campaign_close_cancel_contacts: SECURITY DEFINER;;41;PASS
+função;true;true;wa_campaign_list_active: SECURITY DEFINER;;42;PASS
+função;true;true;wa_campaign_own_account: SECURITY DEFINER;;43;PASS
+função;true;true;wa_campaign_own_active_account: SECURITY DEFINER;;44;PASS
+função;true;true;wa_campaign_release: SECURITY DEFINER;;45;PASS
+função;true;true;wa_campaign_reserve: SECURITY DEFINER;;46;PASS
+função;{search_path=public};{search_path=public};wa_campaign_close_cancel_contacts: SET search_path = public;;51;PASS
+função;{search_path=public};{search_path=public};wa_campaign_list_active: SET search_path = public;;52;PASS
+função;{search_path=public};{search_path=public};wa_campaign_own_account: SET search_path = public;;53;PASS
+função;{search_path=public};{search_path=public};wa_campaign_own_active_account: SET search_path = public;;54;PASS
+função;{search_path=public};{search_path=public};wa_campaign_release: SET search_path = public;;55;PASS
+função;{search_path=public};{search_path=public};wa_campaign_reserve: SET search_path = public;;56;PASS
+corpo;md5 4b0ce2d59b1f916dbc7a3666c8a79a8d;md5 4b0ce2d59b1f916dbc7a3666c8a79a8d;wa_campaign_close_cancel_contacts: igual à referência 0008;Idêntico byte a byte.;61;PASS
+corpo;md5 8d2df02a2b0c2114f01fac00fb689fb1;md5 8d2df02a2b0c2114f01fac00fb689fb1;wa_campaign_list_active: igual à referência 0006;Idêntico byte a byte.;62;PASS
+corpo;md5 7ac5a7b41c37250009560f1c20f6619f;md5 7ac5a7b41c37250009560f1c20f6619f;wa_campaign_own_account: igual à referência 0008;Idêntico byte a byte.;63;PASS
+corpo;md5 496061b6b0ec78c3694438afc8a401d5;md5 496061b6b0ec78c3694438afc8a401d5;wa_campaign_own_active_account: igual à referência 0005;Idêntico byte a byte.;64;PASS
+corpo;md5 cab42095b47e318ced028e4faa044fd3;md5 cab42095b47e318ced028e4faa044fd3;wa_campaign_release: igual à referência 0006;Idêntico byte a byte.;65;PASS
+corpo;md5 a572c575d07ba59863e07017026a9477;md5 a572c575d07ba59863e07017026a9477;wa_campaign_reserve: igual à referência 0006;Idêntico byte a byte.;66;PASS
+lógica;1 ocorrência(s);1 ocorrência(s);wa_campaign_close_cancel_contacts CL1: encerramento cancela só pending e reserved (0008);Trecho (normalizado): status IN ('pending', 'reserved');101;PASS
+lógica;0 ocorrência(s);0 ocorrência(s);wa_campaign_close_cancel_contacts CL2: encerramento não toca em sending (0008);Trecho (normalizado): sending;102;PASS
+lógica;1 ocorrência(s);1 ocorrência(s);wa_campaign_list_active LA1: lista só campanhas active;Trecho (normalizado): WHERE c.status = 'active';103;PASS
+lógica;1 ocorrência(s);1 ocorrência(s);wa_campaign_list_active LA2: pendingCount conta só pending;Trecho (normalizado): 'pendingCount', (SELECT count(*) FROM public.whatsapp_campaign_contacts x WHERE x.campaign_id = c.id AND x.status = 'pending');104;PASS
+lógica;0 ocorrência(s);0 ocorrência(s);wa_campaign_list_active LA3: sem filtro por dono (todas as ativas a qualquer autenticado);Trecho (normalizado): created_by;105;PASS
+lógica;1 ocorrência(s);1 ocorrência(s);wa_campaign_release RL1: devolve só o lote da conta e só reserved;"Trecho (normalizado): AND whatsapp_account_id = _account_id AND reservation_id = _reservation_id AND status = 'reserved';";106;PASS
+lógica;0 ocorrência(s);0 ocorrência(s);wa_campaign_release RL2: não verifica a idade da reserva (aceita lote expirado);Trecho (normalizado): interval;107;PASS
+lógica;0 ocorrência(s);0 ocorrência(s);wa_campaign_release RL3: não incrementa attempts;Trecho (normalizado): attempts;108;PASS
+lógica;1 ocorrência(s);1 ocorrência(s);wa_campaign_release RL4: resposta released (contrato da R3);"Trecho (normalizado): RETURN jsonb_build_object('ok', true, 'released', _n);";109;PASS
+lógica;1 ocorrência(s);1 ocorrência(s);wa_campaign_release RL5: exige conta própria ativa;Trecho (normalizado): IF NOT public.wa_campaign_own_active_account(_account_id) THEN;110;PASS
+lógica;1 ocorrência(s);1 ocorrência(s);wa_campaign_reserve RV1: varredura de expiradas (10 min) antes de reservar;"Trecho (normalizado): WHERE campaign_id = _campaign_id AND status = 'reserved' AND reserved_at < now() - interval '10 minutes';";111;PASS
+lógica;1 ocorrência(s);1 ocorrência(s);wa_campaign_reserve RV2: varredura incrementa attempts e limpa posse;Trecho (normalizado): SET status = 'pending', whatsapp_account_id = NULL, reserved_at = NULL, reservation_id = NULL, attempts = attempts + 1;112;PASS
+lógica;1 ocorrência(s);1 ocorrência(s);wa_campaign_reserve RV3: limite do lote entre 1 e 50 (padrão 20);Trecho (normalizado): greatest(1, least(50, coalesce(_limit, 20)));113;PASS
+lógica;1 ocorrência(s);1 ocorrência(s);wa_campaign_reserve RV4: seleção com FOR UPDATE SKIP LOCKED;Trecho (normalizado): FOR UPDATE SKIP LOCKED;114;PASS
+lógica;1 ocorrência(s);1 ocorrência(s);wa_campaign_reserve RV5: campanha travada FOR SHARE e exigida active;"Trecho (normalizado): FOR SHARE; IF NOT FOUND THEN RETURN jsonb_build_object('ok', false, 'error', 'campaign_not_found'); END IF; IF _status <> 'active' THEN";115;PASS
+lógica;1 ocorrência(s);1 ocorrência(s);wa_campaign_reserve RV6: exige conta própria ativa;Trecho (normalizado): IF NOT public.wa_campaign_own_active_account(_account_id) THEN;116;PASS
+lógica;1 ocorrência(s);1 ocorrência(s);wa_campaign_reserve RV7: resposta com reservationId e contacts (contrato da R3);Trecho (normalizado): 'reservationId', CASE WHEN jsonb_array_length(_result) > 0 THEN _rid ELSE NULL END, 'contacts', _result;117;PASS
+lógica;0 ocorrência(s);0 ocorrência(s);wa_campaign_reserve RV8: sem filtro por dono da campanha (isolamento ainda inexistente);Trecho (normalizado): created_by;118;PASS
+dono;postgres;membro;wa_campaign_close_cancel_contacts: dono membro do dono de whatsapp_campaign_contacts;Escreve em contatos: sem isso a guarda da 0010 recusaria a varredura, a reserva ou a devolução.;131;PASS
+dono;postgres;membro;wa_campaign_list_active: dono membro do dono de whatsapp_campaign_contacts;"Não escreve em contatos; precisa só ler.";132;PASS
+dono;postgres;membro;wa_campaign_own_account: dono membro do dono de whatsapp_campaign_contacts;"Não escreve em contatos; precisa só ler.";133;PASS
+dono;postgres;membro;wa_campaign_own_active_account: dono membro do dono de whatsapp_campaign_contacts;"Não escreve em contatos; precisa só ler.";134;PASS
+dono;postgres;membro;wa_campaign_release: dono membro do dono de whatsapp_campaign_contacts;Escreve em contatos: sem isso a guarda da 0010 recusaria a varredura, a reserva ou a devolução.;135;PASS
+dono;postgres;membro;wa_campaign_reserve: dono membro do dono de whatsapp_campaign_contacts;Escreve em contatos: sem isso a guarda da 0010 recusaria a varredura, a reserva ou a devolução.;136;PASS
+EXECUTE;{postgres=X/postgres,service_role=X/postgres};sem EXECUTE;wa_campaign_close_cancel_contacts → PUBLIC;;151;PASS
+EXECUTE;{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres};sem EXECUTE;wa_campaign_list_active → PUBLIC;;152;PASS
+EXECUTE;{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres};sem EXECUTE;wa_campaign_own_account → PUBLIC;;153;PASS
+EXECUTE;{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres};sem EXECUTE;wa_campaign_own_active_account → PUBLIC;;154;PASS
+EXECUTE;{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres};sem EXECUTE;wa_campaign_release → PUBLIC;;155;PASS
+EXECUTE;{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres};sem EXECUTE;wa_campaign_reserve → PUBLIC;;156;PASS
+EXECUTE;sem EXECUTE;sem EXECUTE;wa_campaign_close_cancel_contacts → anon;;161;PASS
+EXECUTE;sem EXECUTE;sem EXECUTE;wa_campaign_close_cancel_contacts → authenticated;;162;PASS
+EXECUTE;sem EXECUTE;sem EXECUTE;wa_campaign_close_cancel_contacts → sandbox_exec;P8 (item 44) mostrou 0 de 13 funções com EXECUTE.;163;PASS
+EXECUTE;com EXECUTE;registrar;wa_campaign_close_cancel_contacts → service_role;"As migrations não concedem nem revogam; registrar.";164;INFO
+EXECUTE;sem EXECUTE;sem EXECUTE;wa_campaign_list_active → anon;;165;PASS
+EXECUTE;com EXECUTE;com EXECUTE;wa_campaign_list_active → authenticated;Sem EXECUTE, a extensão R3 recebe erro nesta rota.;166;PASS
+EXECUTE;sem EXECUTE;sem EXECUTE;wa_campaign_list_active → sandbox_exec;P8 (item 44) mostrou 0 de 13 funções com EXECUTE.;167;PASS
+EXECUTE;com EXECUTE;registrar;wa_campaign_list_active → service_role;"As migrations não concedem nem revogam; registrar.";168;INFO
+EXECUTE;sem EXECUTE;sem EXECUTE;wa_campaign_own_account → anon;;169;PASS
+EXECUTE;com EXECUTE;com EXECUTE;wa_campaign_own_account → authenticated;Sem EXECUTE, a extensão R3 recebe erro nesta rota.;170;PASS
+EXECUTE;sem EXECUTE;sem EXECUTE;wa_campaign_own_account → sandbox_exec;P8 (item 44) mostrou 0 de 13 funções com EXECUTE.;171;PASS
+EXECUTE;com EXECUTE;registrar;wa_campaign_own_account → service_role;"As migrations não concedem nem revogam; registrar.";172;INFO
+EXECUTE;sem EXECUTE;sem EXECUTE;wa_campaign_own_active_account → anon;;173;PASS
+EXECUTE;com EXECUTE;com EXECUTE;wa_campaign_own_active_account → authenticated;Sem EXECUTE, a extensão R3 recebe erro nesta rota.;174;PASS
+EXECUTE;sem EXECUTE;sem EXECUTE;wa_campaign_own_active_account → sandbox_exec;P8 (item 44) mostrou 0 de 13 funções com EXECUTE.;175;PASS
+EXECUTE;com EXECUTE;registrar;wa_campaign_own_active_account → service_role;"As migrations não concedem nem revogam; registrar.";176;INFO
+EXECUTE;sem EXECUTE;sem EXECUTE;wa_campaign_release → anon;;177;PASS
+EXECUTE;com EXECUTE;com EXECUTE;wa_campaign_release → authenticated;Sem EXECUTE, a extensão R3 recebe erro nesta rota.;178;PASS
+EXECUTE;sem EXECUTE;sem EXECUTE;wa_campaign_release → sandbox_exec;P8 (item 44) mostrou 0 de 13 funções com EXECUTE.;179;PASS
+EXECUTE;com EXECUTE;registrar;wa_campaign_release → service_role;"As migrations não concedem nem revogam; registrar.";180;INFO
+EXECUTE;sem EXECUTE;sem EXECUTE;wa_campaign_reserve → anon;;181;PASS
+EXECUTE;com EXECUTE;com EXECUTE;wa_campaign_reserve → authenticated;Sem EXECUTE, a extensão R3 recebe erro nesta rota.;182;PASS
+EXECUTE;sem EXECUTE;sem EXECUTE;wa_campaign_reserve → sandbox_exec;P8 (item 44) mostrou 0 de 13 funções com EXECUTE.;183;PASS
+EXECUTE;com EXECUTE;registrar;wa_campaign_reserve → service_role;"As migrations não concedem nem revogam; registrar.";184;INFO
+dependência;auth.uid();auth.uid();auth.uid() existe;Todas as RPCs começam por auth.uid().;190;PASS
+dependência;8 de 8;status, campaign_id, whatsapp_account_id, reserved_at, reservation_id, attempts, created_at, id;colunas usadas pelo reserve/release existem em contatos;;191;PASS
+dependência;CREATE INDEX wcc_reservation_idx ON public.whatsapp_campaign_contacts USING btree (reservation_id) WHERE (status = 'reserved'::text);presente, parcial;índice parcial wcc_reservation_idx (reservation_id) WHERE status = reserved;"Desempenho do release; a ausência não muda o resultado das RPCs.";192;PASS
+dependência;tgtype 17, enabled O, colunas {status};tgtype 17, enabled O, UPDATE OF status;trigger wa_campaign_close_trg: AFTER UPDATE OF status, por linha, habilitado, chama wa_campaign_close_cancel_contacts;"Encerrar a campanha cancela pending/reserved; afeta a recuperação se a campanha for encerrada no meio.";193;PASS
+compatibilidade;encerramento não inclui sending (0008);registrar;encerramento x guarda 0010: tratamento de contatos sending;Versão 0008: sending fica intacto e finalizável por sent/failed. Versão 0005: a 0010 recusaria sending -> cancelled e a campanha não fecharia.;194;INFO
+dependência;nenhuma registrada;registrar;funções que dependem destas (pg_depend), além das conhecidas;"Funções plpgsql/sql chamadas por outras normalmente não geram pg_depend; o item serve para achar dependências declaradas.";195;INFO
+ambiente;17.6;registrar;versão do servidor;;196;INFO
