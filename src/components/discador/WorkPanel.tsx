@@ -1229,8 +1229,8 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
       {contact && user && (
         <ResultDialog
           open={resultOpen}
-          onOpenChange={setResultOpen}
-          contact={contact}
+          onOpenChange={(v) => { setResultOpen(v); if (!v) setResultTarget(null); }}
+          contact={resultTarget ?? contact}
           vendedorId={user.id}
           initialAction={lastAction}
           retornoTaskId={activeRetornoTaskId ?? retornoTask?.id ?? undefined}
@@ -1248,25 +1248,29 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
       {contact && user && (
         <ConvertLeadDialog
           open={convertOpen}
-          onOpenChange={setConvertOpen}
-          contact={contact}
+          onOpenChange={(v) => { setConvertOpen(v); if (!v) setConvertTarget(null); }}
+          contact={convertTarget ?? contact}
           vendedorId={user.id}
           onConverted={() => {
             qc.invalidateQueries({ queryKey: ["prospect_counts"] });
-            if (!contact) return;
+            // Usa o alvo fixado na abertura — nunca o contact atual da tela.
+            const convertedId = (convertTarget ?? contact)?.id;
+            setConvertTarget(null);
+            if (!convertedId) return;
             // Preserva a posição do sprint: abre o contato seguinte ao convertido.
-            void advanceFromCurrent(contact.id);
+            void advanceFromCurrent(convertedId);
           }}
         />
       )}
       {contact && (
         <EditContactDialog
           open={editOpen}
-          onOpenChange={setEditOpen}
-          contact={contact}
+          onOpenChange={(v) => { setEditOpen(v); if (!v) setEditTarget(null); }}
+          contact={editTarget ?? contact}
           onSaved={(updated) => {
             setQueue((q) => q.map((c) => (c.id === updated.id ? updated : c)));
             qc.invalidateQueries({ queryKey: ["prospect_contacts_admin"] });
+            setEditTarget(null);
           }}
         />
       )}
