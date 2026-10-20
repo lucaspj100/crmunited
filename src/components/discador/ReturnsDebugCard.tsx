@@ -18,7 +18,7 @@ export function ReturnsDebugCard({ contact }: Props) {
   const { data: pending } = useQuery({
     enabled: !!user,
     queryKey: ["retornos_pendentes", user?.id],
-    refetchInterval: 15_000,
+    refetchInterval: 60_000,
     queryFn: async () => {
       const today = new Date().toISOString().slice(0, 10);
       const { data, error } = await supabase

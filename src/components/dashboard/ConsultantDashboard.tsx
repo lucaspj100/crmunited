@@ -236,7 +236,7 @@ export function ConsultantDashboard({ data, interviews }: Props) {
     enabled: !!user,
     queryKey: ["dashboard-performance-today", today],
     queryFn: () => fetchProductivity({ start: today, end: today, vendedorId: null, teamId: null }),
-    refetchInterval: 30_000,
+    refetchInterval: 60_000,
   });
 
   const { data: monthRows = [] } = useQuery({

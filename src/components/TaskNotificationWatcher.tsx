@@ -25,7 +25,7 @@ type LeadTask = {
 
 type LeadMini = { id: string; name: string; phone: string | null };
 
-const POLL_MS = 30_000;
+const POLL_MS = 90_000;
 
 function localToday(): string {
   const d = new Date();
