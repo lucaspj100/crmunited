@@ -48,7 +48,7 @@ type Props = {
   dialMeta?: DialMeta;
   retornoTaskId?: string;
   completeRetornoFallback?: boolean;
-  onSaved: (goNext: boolean) => void;
+  onSaved: (goNext: boolean, savedId: string) => void;
 };
 
 export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialAction, dialMeta, retornoTaskId, completeRetornoFallback, onSaved }: Props) {
@@ -60,8 +60,19 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
   const [saving, setSaving] = useState(false);
   const queryClient = useQueryClient();
 
-  const contactId = contact.id;
-  const telefone = contact.telefone_normalizado;
+  // Identidade da ligação: o contato é FIXADO na abertura do formulário e nunca
+  // muda enquanto ele estiver aberto — mesmo que a fila, o polling ou o Realtime
+  // troquem o contato exibido no painel. Todas as gravações usam `target`.
+  const pinnedRef = useRef<ProspectContact | null>(null);
+  if (open) {
+    if (!pinnedRef.current) pinnedRef.current = contact;
+  } else if (pinnedRef.current) {
+    pinnedRef.current = null;
+  }
+  const target = pinnedRef.current ?? contact;
+
+  const contactId = target.id;
+  const telefone = target.telefone_normalizado;
 
   const whatsappReason = result ? RESULT_TO_WHATSAPP_REASON[result as ProspectResult] : undefined;
   useEffect(() => {
