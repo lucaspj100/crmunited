@@ -56,7 +56,10 @@ export function shouldApplyRemoteContact(p: {
   localWriteFailed: boolean;
   /** Contatos recém-trabalhados ainda não confirmados pela fila atualizada. */
   worked: ReadonlySet<string>;
+  /** Formulário de resultado/edição/conversão aberto: nunca trocar o contato da tela. */
+  dialogOpen?: boolean;
 }): boolean {
+  if (p.dialogOpen) return false; // ligação/registro em andamento: a troca fica para o próximo ciclo
   if (p.remote === p.current) return false;
   if (p.seqAtStart !== undefined && p.seqAtStart !== p.seqNow) return false; // navegou durante a consulta
   if (p.pendingWrites > 0) return false; // banco ainda não recebeu a navegação local

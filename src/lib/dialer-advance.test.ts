@@ -57,6 +57,14 @@ describe("shouldApplyRemoteContact (sincronização entre aparelhos)", () => {
   it("mesmo contato da tela não dispara nada (sem ciclo)", () => {
     expect(shouldApplyRemoteContact({ ...base, remote: "B", seqAtStart: 5 })).toBe(false);
   });
+  it("formulário aberto bloqueia troca remota (registro nunca muda de contato)", () => {
+    expect(shouldApplyRemoteContact({ ...base, remote: "C", seqAtStart: 5, dialogOpen: true })).toBe(false);
+    expect(shouldApplyRemoteContact({ ...base, remote: "C", dialogOpen: true })).toBe(false); // Realtime
+    expect(shouldApplyRemoteContact({ ...base, remote: null, seqAtStart: 5, dialogOpen: true })).toBe(false);
+  });
+  it("após fechar o formulário, a mudança legítima volta a ser aplicada", () => {
+    expect(shouldApplyRemoteContact({ ...base, remote: "C", seqAtStart: 5, dialogOpen: false })).toBe(true);
+  });
 });
 
 import { vi } from "vitest";

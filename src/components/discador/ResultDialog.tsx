@@ -48,7 +48,7 @@ type Props = {
   dialMeta?: DialMeta;
   retornoTaskId?: string;
   completeRetornoFallback?: boolean;
-  onSaved: (goNext: boolean) => void;
+  onSaved: (goNext: boolean, savedId: string) => void;
 };
 
 export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialAction, dialMeta, retornoTaskId, completeRetornoFallback, onSaved }: Props) {
@@ -60,8 +60,19 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
   const [saving, setSaving] = useState(false);
   const queryClient = useQueryClient();
 
-  const contactId = contact.id;
-  const telefone = contact.telefone_normalizado;
+  // Identidade da ligação: o contato é FIXADO na abertura do formulário e nunca
+  // muda enquanto ele estiver aberto — mesmo que a fila, o polling ou o Realtime
+  // troquem o contato exibido no painel. Todas as gravações usam `target`.
+  const pinnedRef = useRef<ProspectContact | null>(null);
+  if (open) {
+    if (!pinnedRef.current) pinnedRef.current = contact;
+  } else if (pinnedRef.current) {
+    pinnedRef.current = null;
+  }
+  const target = pinnedRef.current ?? contact;
+
+  const contactId = target.id;
+  const telefone = target.telefone_normalizado;
 
   const whatsappReason = result ? RESULT_TO_WHATSAPP_REASON[result as ProspectResult] : undefined;
   useEffect(() => {
@@ -135,6 +146,11 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
 
   const saveInner = async (goNext: boolean) => {
     if (!result) { toast.error("Selecione o resultado"); return; }
+    // Valida a identidade fixada: o contato ainda precisa estar atribuído a este vendedor.
+    if (target.vendedor_responsavel_id && target.vendedor_responsavel_id !== vendedorId) {
+      toast.error("Este contato não está mais atribuído a você. Feche o formulário e atualize a fila.");
+      return;
+    }
     if (isCall && answered === null) { toast.error("Informe se a pessoa atendeu a ligação"); return; }
     if (answerConflict) {
       toast.error(`Conflito: "Atendeu = ${answered ? "Sim" : "Não"}" não combina com o resultado "${result}".`);
@@ -159,7 +175,7 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
     const { error: e1 } = await supabase.from("prospect_contacts").update(patch as never).eq("id", contactId);
     if (e1) { setSaving(false); toast.error(e1.message); return; }
 
-    await supabase.from("prospect_attempts").insert({
+    const { error: eAtt } = await supabase.from("prospect_attempts").insert({
       prospect_contact_id: contactId,
       vendedor_id: vendedorId,
       tipo_acao: initialAction ?? "edicao",
@@ -176,6 +192,11 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
           }
         : {}),
     });
+    if (eAtt) {
+      setSaving(false);
+      toast.error(`Falha ao registrar a tentativa: ${eAtt.message}`);
+      return;
+    }
 
     // Sincroniza observação mais recente em prospect_contacts.observacao (preserva histórico anterior)
     const obsTrim = obs.trim();
@@ -183,7 +204,13 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
       const stamp = format(new Date(), "dd/MM HH:mm");
       const tipoLabel = (initialAction ?? "edicao") === "whatsapp" ? "WhatsApp" : (initialAction === "ligacao" ? "Ligação" : "Registro");
       const newEntry = `[${stamp}] ${tipoLabel} - ${result}: ${obsTrim}`;
-      const prev = (contact.observacao ?? "").trim();
+      // Relê a observação atual do banco para não sobrescrever edições concorrentes.
+      const { data: freshObs } = await supabase
+        .from("prospect_contacts")
+        .select("observacao")
+        .eq("id", contactId)
+        .maybeSingle();
+      const prev = ((freshObs as { observacao?: string | null } | null)?.observacao ?? "").trim();
       const merged = prev ? `${newEntry}\n${prev}` : newEntry;
       // Limita tamanho para evitar crescimento infinito (mantém ~4000 chars)
       const capped = merged.length > 4000 ? merged.slice(0, 4000) : merged;
@@ -214,10 +241,10 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
 
     // 1) Ligar depois → criar tarefa de retorno
     if (result === "Ligar depois" && due_date) {
-      const nome = contact.nome || "Contato sem nome";
-      const tel = contact.telefone_original || `+${telefone}`;
-      const empresa = contact.empresa?.trim() || "Empresa não informada";
-      const cargo = contact.cargo?.trim() || "Cargo não informado";
+      const nome = target.nome || "Contato sem nome";
+      const tel = target.telefone_original || `+${telefone}`;
+      const empresa = target.empresa?.trim() || "Empresa não informada";
+      const cargo = target.cargo?.trim() || "Cargo não informado";
       const sellerNote = obs.trim() || "(nenhuma)";
       const observation = [
         "Retorno solicitado pelo lead.",
@@ -230,7 +257,7 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
       const payload = {
         owner_id: vendedorId,
         prospect_contact_id: contactId,
-        lead_id: contact.lead_id ?? null,
+        lead_id: target.lead_id ?? null,
         type: "retorno_ligacao",
         status: "pendente",
         due_date,
@@ -257,7 +284,7 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
     // 2) Interessado / Pediu WhatsApp → auto-converter em lead
     if (result === "Interessado" || result === "Pediu WhatsApp") {
       const conv = await autoConvertProspectToLead({
-        contact,
+        contact: target,
         vendedorId,
         resultLabel: result,
         latestObservation: obs.trim() || undefined,
@@ -299,14 +326,19 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
     queryClient.invalidateQueries({ queryKey: ["tasks"] });
     if (completedRetornoTask) toast.success("Resultado salvo e tarefa concluída");
     onOpenChange(false);
-    onSaved(goNext);
+    onSaved(goNext, contactId);
   };
 
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!saving) onOpenChange(v); }}>
       <DialogContent>
-        <DialogHeader><DialogTitle>Registrar resultado</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>Registrar resultado</DialogTitle>
+          <p className="text-sm text-muted-foreground">
+            {target.nome || "Contato sem nome"} · +{target.telefone_normalizado}
+          </p>
+        </DialogHeader>
         <div className="space-y-3">
           {isCall && (
             <div className="space-y-1.5">

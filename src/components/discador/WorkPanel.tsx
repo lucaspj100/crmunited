@@ -181,6 +181,12 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
   const [resultOpen, setResultOpen] = useState(false);
   const [convertOpen, setConvertOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  // Identidade fixada no momento em que cada diálogo é aberto: as gravações
+  // usam SOMENTE estes alvos, nunca o `contact` vivo (que pode trocar via
+  // polling/Realtime/atualização de fila durante a ligação).
+  const [resultTarget, setResultTarget] = useState<ProspectContact | null>(null);
+  const [convertTarget, setConvertTarget] = useState<ProspectContact | null>(null);
+  const [editTarget, setEditTarget] = useState<ProspectContact | null>(null);
   const [lastAction, setLastAction] = useState<"ligacao" | "whatsapp" | undefined>();
   const [contextOpen, setContextOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -248,6 +254,10 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
   queueRef.current = queue;
   const currentContactIdRef = useRef<string | null>(null);
   currentContactIdRef.current = currentContactId;
+  // Qualquer diálogo de registro aberto bloqueia trocas de contato vindas da
+  // sincronização (polling/Realtime/refresh) até o formulário ser fechado.
+  const dialogOpenRef = useRef(false);
+  dialogOpenRef.current = resultOpen || convertOpen || editOpen;
   // Última seleção pedida (local ou remota) — evita que resposta antiga sobrescreva navegação recente.
   const selectionSeqRef = useRef(0);
   // Gravações do contato atual em andamento e se a última falhou (protege contra respostas antigas).
@@ -476,6 +486,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     const current = currentContactIdRef.current;
     const nextActive = buildView(fresh.sorted, fresh.freshHistory).list;
     if (selectionSeqRef.current !== selectionAtStart) return;
+    if (dialogOpenRef.current) return; // formulário aberto: nunca trocar o contato da tela
     if (current && nextActive.some((c) => c.id === current)) return;
     setCurrentContactSynced(pickNextContactId(prevActiveIds, workedId, nextActive.map((c) => c.id)));
   };
@@ -523,6 +534,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
             pendingWrites: sessionWriterRef.current?.busy ? 1 : 0,
             localWriteFailed: localWriteFailedRef.current,
             worked: new Set(workedRef.current.keys()),
+            dialogOpen: dialogOpenRef.current,
           })) return;
           lastSyncedRef.current = next;
           if (focusContactId) return; // modo tarefa/retorno tem prioridade
@@ -565,6 +577,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
         pendingWrites: sessionWriterRef.current?.busy ? 1 : 0,
         localWriteFailed: localWriteFailedRef.current,
         worked: new Set(workedRef.current.keys()),
+        dialogOpen: dialogOpenRef.current,
       })) return;
       lastSyncedRef.current = remote;
       if (!remote) {
@@ -613,6 +626,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
 
       if (autoOpenResult) {
         setLastAction(undefined);
+        setResultTarget(loaded); // fixa a identidade do contato da tarefa
         setResultOpen(true);
       }
       onFocusConsumed?.();
@@ -740,15 +754,20 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
 
   const ligar = async () => {
     if (!contact || !user) return;
+    // Fixa a identidade da ligação NO CLIQUE: status "Ligando" e formulário
+    // de resultado usam exclusivamente este contato, mesmo que a sincronização
+    // troque o contato exibido durante o await ou com o formulário aberto.
+    const target = contact;
     setLastAction("ligacao");
+    setResultTarget(target);
     await supabase
       .from("prospect_contacts")
       .update({
         status_prospeccao: "Ligando",
         ultima_tentativa: new Date().toISOString(),
-        quantidade_tentativas: contact.quantidade_tentativas + 1,
+        quantidade_tentativas: target.quantidade_tentativas + 1,
       })
-      .eq("id", contact.id);
+      .eq("id", target.id);
     // NÃO inserir em prospect_attempts aqui: o registro único é criado no ResultDialog ao salvar.
     window.location.href = `tel:${dialNumber}`;
     setResultOpen(true);
@@ -756,17 +775,19 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
 
   const whats = async () => {
     if (!contact || !user) return;
+    const target = contact; // mesma fixação de identidade da ligação
     setLastAction("whatsapp");
+    setResultTarget(target);
     const template = getWhatsappTemplate();
     const message = renderWhatsappTemplate(template, {
-      nome: contact.nome,
-      empresa: contact.empresa,
-      cargo: contact.cargo,
-      origem: contact.origem,
-      telefone: contact.telefone_normalizado ? `+${contact.telefone_normalizado}` : contact.telefone_original,
+      nome: target.nome,
+      empresa: target.empresa,
+      cargo: target.cargo,
+      origem: target.origem,
+      telefone: target.telefone_normalizado ? `+${target.telefone_normalizado}` : target.telefone_original,
     });
     // NÃO inserir em prospect_attempts aqui: o registro único é criado no ResultDialog ao salvar.
-    openWhatsapp(contact.telefone_normalizado, message);
+    openWhatsapp(target.telefone_normalizado, message);
     setResultOpen(true);
   };
 
@@ -800,9 +821,9 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
 
 
 
-  const onResultSaved = async (goNext: boolean) => {
+  const onResultSaved = async (goNext: boolean, savedId: string) => {
     qc.invalidateQueries({ queryKey: ["prospect_counts"] });
-    qc.invalidateQueries({ queryKey: ["prospect_attempts", contact?.id] });
+    qc.invalidateQueries({ queryKey: ["prospect_attempts", savedId] });
     qc.invalidateQueries({ queryKey: ["dialer_history", user?.id] });
     qc.invalidateQueries({ queryKey: ["daily_scoreboard"] });
 
@@ -810,8 +831,9 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     qc.invalidateQueries({ queryKey: ["leads"] });
     qc.invalidateQueries({ queryKey: ["tasks"] });
     qc.invalidateQueries({ queryKey: ["hoje"] });
-    if (!contact) return;
-    const savedContactId = contact.id;
+    // Usa EXCLUSIVAMENTE o ID que o diálogo salvou — nunca o contact atual da tela.
+    const savedContactId = savedId;
+    setResultTarget(null);
     const wasRetorno = !!activeRetornoTaskId || !!retornoTask;
     const prevIndex = activeIndex;
 
@@ -1005,13 +1027,13 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
               <Button
                 size="sm"
                 variant={contact.status_prospeccao === "Interessado" ? "default" : "outline"}
-                onClick={() => setConvertOpen(true)}
+                onClick={() => { setConvertTarget(contact); setConvertOpen(true); }}
                 disabled={contact.convertido_em_lead}
                 className={`h-10 min-w-0 px-2 text-xs ${contact.status_prospeccao === "Interessado" ? "bg-emerald-600 hover:bg-emerald-700 text-white" : ""}`}
               >
                 <UserPlus className="h-3.5 w-3.5 mr-1 shrink-0" /><span className="truncate">Converter</span>
               </Button>
-              <Button variant="outline" size="sm" onClick={() => setEditOpen(true)} className="h-10 min-w-0 px-2 text-xs">
+              <Button variant="outline" size="sm" onClick={() => { setEditTarget(contact); setEditOpen(true); }} className="h-10 min-w-0 px-2 text-xs">
                 <Pencil className="h-3.5 w-3.5 mr-1 shrink-0" /><span className="truncate">Editar</span>
               </Button>
             </div>
@@ -1039,7 +1061,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
               <Button onClick={ligar} className="h-12 min-w-0 px-1">
                 <Phone className="h-4 w-4 shrink-0" /><span className="truncate text-[10px] ml-1">Ligar</span>
               </Button>
-              <Button variant="outline" onClick={() => { setLastAction(undefined); setResultOpen(true); }} className="h-12 min-w-0 px-1">
+              <Button variant="outline" onClick={() => { setLastAction(undefined); setResultTarget(contact); setResultOpen(true); }} className="h-12 min-w-0 px-1">
                 <ListChecks className="h-4 w-4 shrink-0" /><span className="truncate text-[10px] ml-1">Reg.</span>
               </Button>
               <Button variant="ghost" onClick={goPrev} disabled={activeQueue.length < 2} className="h-12 min-w-0 px-1">
@@ -1135,12 +1157,12 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
                   <Button size="lg" variant="secondary" onClick={whats} className="h-14 text-base">
                     <MessageCircle className="h-5 w-5 mr-2" />WhatsApp
                   </Button>
-                  <Button size="lg" variant="outline" onClick={() => { setLastAction(undefined); setResultOpen(true); }} className="h-14">
+                  <Button size="lg" variant="outline" onClick={() => { setLastAction(undefined); setResultTarget(contact); setResultOpen(true); }} className="h-14">
                     <ListChecks className="h-5 w-5 mr-2" />Registrar
                   </Button>
                   <Button
                     size="lg"
-                    onClick={() => setConvertOpen(true)}
+                    onClick={() => { setConvertTarget(contact); setConvertOpen(true); }}
                     disabled={contact.convertido_em_lead}
                     className={`h-14 text-base ${contact.status_prospeccao === "Interessado" ? "bg-emerald-600 hover:bg-emerald-700 text-white" : ""}`}
                     variant={contact.status_prospeccao === "Interessado" ? "default" : "outline"}
@@ -1154,7 +1176,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
 
 
                 <div className="flex flex-wrap items-center gap-2">
-                  <Button variant="outline" onClick={() => setEditOpen(true)}>
+                  <Button variant="outline" onClick={() => { setEditTarget(contact); setEditOpen(true); }}>
                     <Pencil className="h-4 w-4 mr-2" />Editar contato
                   </Button>
                   <Button variant="outline" onClick={addToWhatsapp}>
@@ -1207,8 +1229,8 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
       {contact && user && (
         <ResultDialog
           open={resultOpen}
-          onOpenChange={setResultOpen}
-          contact={contact}
+          onOpenChange={(v) => { setResultOpen(v); if (!v) setResultTarget(null); }}
+          contact={resultTarget ?? contact}
           vendedorId={user.id}
           initialAction={lastAction}
           retornoTaskId={activeRetornoTaskId ?? retornoTask?.id ?? undefined}
@@ -1226,25 +1248,29 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
       {contact && user && (
         <ConvertLeadDialog
           open={convertOpen}
-          onOpenChange={setConvertOpen}
-          contact={contact}
+          onOpenChange={(v) => { setConvertOpen(v); if (!v) setConvertTarget(null); }}
+          contact={convertTarget ?? contact}
           vendedorId={user.id}
           onConverted={() => {
             qc.invalidateQueries({ queryKey: ["prospect_counts"] });
-            if (!contact) return;
+            // Usa o alvo fixado na abertura — nunca o contact atual da tela.
+            const convertedId = (convertTarget ?? contact)?.id;
+            setConvertTarget(null);
+            if (!convertedId) return;
             // Preserva a posição do sprint: abre o contato seguinte ao convertido.
-            void advanceFromCurrent(contact.id);
+            void advanceFromCurrent(convertedId);
           }}
         />
       )}
       {contact && (
         <EditContactDialog
           open={editOpen}
-          onOpenChange={setEditOpen}
-          contact={contact}
+          onOpenChange={(v) => { setEditOpen(v); if (!v) setEditTarget(null); }}
+          contact={editTarget ?? contact}
           onSaved={(updated) => {
             setQueue((q) => q.map((c) => (c.id === updated.id ? updated : c)));
             qc.invalidateQueries({ queryKey: ["prospect_contacts_admin"] });
+            setEditTarget(null);
           }}
         />
       )}
