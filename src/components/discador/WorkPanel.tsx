@@ -753,15 +753,20 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
 
   const ligar = async () => {
     if (!contact || !user) return;
+    // Fixa a identidade da ligação NO CLIQUE: status "Ligando" e formulário
+    // de resultado usam exclusivamente este contato, mesmo que a sincronização
+    // troque o contato exibido durante o await ou com o formulário aberto.
+    const target = contact;
     setLastAction("ligacao");
+    setResultTarget(target);
     await supabase
       .from("prospect_contacts")
       .update({
         status_prospeccao: "Ligando",
         ultima_tentativa: new Date().toISOString(),
-        quantidade_tentativas: contact.quantidade_tentativas + 1,
+        quantidade_tentativas: target.quantidade_tentativas + 1,
       })
-      .eq("id", contact.id);
+      .eq("id", target.id);
     // NÃO inserir em prospect_attempts aqui: o registro único é criado no ResultDialog ao salvar.
     window.location.href = `tel:${dialNumber}`;
     setResultOpen(true);
@@ -769,17 +774,19 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
 
   const whats = async () => {
     if (!contact || !user) return;
+    const target = contact; // mesma fixação de identidade da ligação
     setLastAction("whatsapp");
+    setResultTarget(target);
     const template = getWhatsappTemplate();
     const message = renderWhatsappTemplate(template, {
-      nome: contact.nome,
-      empresa: contact.empresa,
-      cargo: contact.cargo,
-      origem: contact.origem,
-      telefone: contact.telefone_normalizado ? `+${contact.telefone_normalizado}` : contact.telefone_original,
+      nome: target.nome,
+      empresa: target.empresa,
+      cargo: target.cargo,
+      origem: target.origem,
+      telefone: target.telefone_normalizado ? `+${target.telefone_normalizado}` : target.telefone_original,
     });
     // NÃO inserir em prospect_attempts aqui: o registro único é criado no ResultDialog ao salvar.
-    openWhatsapp(contact.telefone_normalizado, message);
+    openWhatsapp(target.telefone_normalizado, message);
     setResultOpen(true);
   };
 
@@ -813,9 +820,9 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
 
 
 
-  const onResultSaved = async (goNext: boolean) => {
+  const onResultSaved = async (goNext: boolean, savedId: string) => {
     qc.invalidateQueries({ queryKey: ["prospect_counts"] });
-    qc.invalidateQueries({ queryKey: ["prospect_attempts", contact?.id] });
+    qc.invalidateQueries({ queryKey: ["prospect_attempts", savedId] });
     qc.invalidateQueries({ queryKey: ["dialer_history", user?.id] });
     qc.invalidateQueries({ queryKey: ["daily_scoreboard"] });
 
@@ -823,8 +830,9 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     qc.invalidateQueries({ queryKey: ["leads"] });
     qc.invalidateQueries({ queryKey: ["tasks"] });
     qc.invalidateQueries({ queryKey: ["hoje"] });
-    if (!contact) return;
-    const savedContactId = contact.id;
+    // Usa EXCLUSIVAMENTE o ID que o diálogo salvou — nunca o contact atual da tela.
+    const savedContactId = savedId;
+    setResultTarget(null);
     const wasRetorno = !!activeRetornoTaskId || !!retornoTask;
     const prevIndex = activeIndex;
 
