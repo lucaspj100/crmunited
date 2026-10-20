@@ -181,6 +181,12 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
   const [resultOpen, setResultOpen] = useState(false);
   const [convertOpen, setConvertOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  // Identidade fixada no momento em que cada diálogo é aberto: as gravações
+  // usam SOMENTE estes alvos, nunca o `contact` vivo (que pode trocar via
+  // polling/Realtime/atualização de fila durante a ligação).
+  const [resultTarget, setResultTarget] = useState<ProspectContact | null>(null);
+  const [convertTarget, setConvertTarget] = useState<ProspectContact | null>(null);
+  const [editTarget, setEditTarget] = useState<ProspectContact | null>(null);
   const [lastAction, setLastAction] = useState<"ligacao" | "whatsapp" | undefined>();
   const [contextOpen, setContextOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -248,6 +254,10 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
   queueRef.current = queue;
   const currentContactIdRef = useRef<string | null>(null);
   currentContactIdRef.current = currentContactId;
+  // Qualquer diálogo de registro aberto bloqueia trocas de contato vindas da
+  // sincronização (polling/Realtime/refresh) até o formulário ser fechado.
+  const dialogOpenRef = useRef(false);
+  dialogOpenRef.current = resultOpen || convertOpen || editOpen;
   // Última seleção pedida (local ou remota) — evita que resposta antiga sobrescreva navegação recente.
   const selectionSeqRef = useRef(0);
   // Gravações do contato atual em andamento e se a última falhou (protege contra respostas antigas).
@@ -476,6 +486,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     const current = currentContactIdRef.current;
     const nextActive = buildView(fresh.sorted, fresh.freshHistory).list;
     if (selectionSeqRef.current !== selectionAtStart) return;
+    if (dialogOpenRef.current) return; // formulário aberto: nunca trocar o contato da tela
     if (current && nextActive.some((c) => c.id === current)) return;
     setCurrentContactSynced(pickNextContactId(prevActiveIds, workedId, nextActive.map((c) => c.id)));
   };
@@ -523,6 +534,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
             pendingWrites: sessionWriterRef.current?.busy ? 1 : 0,
             localWriteFailed: localWriteFailedRef.current,
             worked: new Set(workedRef.current.keys()),
+            dialogOpen: dialogOpenRef.current,
           })) return;
           lastSyncedRef.current = next;
           if (focusContactId) return; // modo tarefa/retorno tem prioridade
@@ -565,6 +577,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
         pendingWrites: sessionWriterRef.current?.busy ? 1 : 0,
         localWriteFailed: localWriteFailedRef.current,
         worked: new Set(workedRef.current.keys()),
+        dialogOpen: dialogOpenRef.current,
       })) return;
       lastSyncedRef.current = remote;
       if (!remote) {
