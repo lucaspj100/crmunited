@@ -146,6 +146,11 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
 
   const saveInner = async (goNext: boolean) => {
     if (!result) { toast.error("Selecione o resultado"); return; }
+    // Valida a identidade fixada: o contato ainda precisa estar atribuído a este vendedor.
+    if (target.vendedor_responsavel_id && target.vendedor_responsavel_id !== vendedorId) {
+      toast.error("Este contato não está mais atribuído a você. Feche o formulário e atualize a fila.");
+      return;
+    }
     if (isCall && answered === null) { toast.error("Informe se a pessoa atendeu a ligação"); return; }
     if (answerConflict) {
       toast.error(`Conflito: "Atendeu = ${answered ? "Sim" : "Não"}" não combina com o resultado "${result}".`);
@@ -170,7 +175,7 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
     const { error: e1 } = await supabase.from("prospect_contacts").update(patch as never).eq("id", contactId);
     if (e1) { setSaving(false); toast.error(e1.message); return; }
 
-    await supabase.from("prospect_attempts").insert({
+    const { error: eAtt } = await supabase.from("prospect_attempts").insert({
       prospect_contact_id: contactId,
       vendedor_id: vendedorId,
       tipo_acao: initialAction ?? "edicao",
@@ -187,6 +192,11 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
           }
         : {}),
     });
+    if (eAtt) {
+      setSaving(false);
+      toast.error(`Falha ao registrar a tentativa: ${eAtt.message}`);
+      return;
+    }
 
     // Sincroniza observação mais recente em prospect_contacts.observacao (preserva histórico anterior)
     const obsTrim = obs.trim();
@@ -194,7 +204,13 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
       const stamp = format(new Date(), "dd/MM HH:mm");
       const tipoLabel = (initialAction ?? "edicao") === "whatsapp" ? "WhatsApp" : (initialAction === "ligacao" ? "Ligação" : "Registro");
       const newEntry = `[${stamp}] ${tipoLabel} - ${result}: ${obsTrim}`;
-      const prev = (contact.observacao ?? "").trim();
+      // Relê a observação atual do banco para não sobrescrever edições concorrentes.
+      const { data: freshObs } = await supabase
+        .from("prospect_contacts")
+        .select("observacao")
+        .eq("id", contactId)
+        .maybeSingle();
+      const prev = ((freshObs as { observacao?: string | null } | null)?.observacao ?? "").trim();
       const merged = prev ? `${newEntry}\n${prev}` : newEntry;
       // Limita tamanho para evitar crescimento infinito (mantém ~4000 chars)
       const capped = merged.length > 4000 ? merged.slice(0, 4000) : merged;
