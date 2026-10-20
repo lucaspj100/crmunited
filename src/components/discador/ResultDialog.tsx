@@ -241,10 +241,10 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
 
     // 1) Ligar depois → criar tarefa de retorno
     if (result === "Ligar depois" && due_date) {
-      const nome = contact.nome || "Contato sem nome";
-      const tel = contact.telefone_original || `+${telefone}`;
-      const empresa = contact.empresa?.trim() || "Empresa não informada";
-      const cargo = contact.cargo?.trim() || "Cargo não informado";
+      const nome = target.nome || "Contato sem nome";
+      const tel = target.telefone_original || `+${telefone}`;
+      const empresa = target.empresa?.trim() || "Empresa não informada";
+      const cargo = target.cargo?.trim() || "Cargo não informado";
       const sellerNote = obs.trim() || "(nenhuma)";
       const observation = [
         "Retorno solicitado pelo lead.",
@@ -257,7 +257,7 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
       const payload = {
         owner_id: vendedorId,
         prospect_contact_id: contactId,
-        lead_id: contact.lead_id ?? null,
+        lead_id: target.lead_id ?? null,
         type: "retorno_ligacao",
         status: "pendente",
         due_date,
@@ -284,7 +284,7 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
     // 2) Interessado / Pediu WhatsApp → auto-converter em lead
     if (result === "Interessado" || result === "Pediu WhatsApp") {
       const conv = await autoConvertProspectToLead({
-        contact,
+        contact: target,
         vendedorId,
         resultLabel: result,
         latestObservation: obs.trim() || undefined,
@@ -326,14 +326,19 @@ export function ResultDialog({ open, onOpenChange, contact, vendedorId, initialA
     queryClient.invalidateQueries({ queryKey: ["tasks"] });
     if (completedRetornoTask) toast.success("Resultado salvo e tarefa concluída");
     onOpenChange(false);
-    onSaved(goNext);
+    onSaved(goNext, contactId);
   };
 
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!saving) onOpenChange(v); }}>
       <DialogContent>
-        <DialogHeader><DialogTitle>Registrar resultado</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>Registrar resultado</DialogTitle>
+          <p className="text-sm text-muted-foreground">
+            {target.nome || "Contato sem nome"} · +{target.telefone_normalizado}
+          </p>
+        </DialogHeader>
         <div className="space-y-3">
           {isCall && (
             <div className="space-y-1.5">
