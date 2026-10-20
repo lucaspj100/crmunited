@@ -29,7 +29,7 @@ type ContactInfo = {
   linkedin_url: string | null;
 };
 
-const POLL_MS = 30_000;
+const POLL_MS = 90_000;
 
 export function ReturnNotificationWatcher() {
   const { user } = useAuth();

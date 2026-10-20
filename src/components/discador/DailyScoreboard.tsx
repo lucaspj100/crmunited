@@ -81,7 +81,7 @@ export function DailyScoreboard({
   const { data } = useQuery<DailyStats>({
     enabled: !!user,
     queryKey: ["daily_scoreboard", user?.id, todayISO],
-    refetchInterval: 30_000,
+    refetchInterval: 60_000,
     queryFn: async (): Promise<DailyStats> => {
       const [attemptsRes, interviewsRes, repliedRes] = await Promise.all([
         supabase

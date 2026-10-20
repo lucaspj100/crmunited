@@ -587,7 +587,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
       }
       await applyRemoteContact(remote);
     };
-    const id = setInterval(() => void tick(), 2000);
+    const id = setInterval(() => void tick(), 8000);
     return () => {
       stopped = true;
       clearInterval(id);

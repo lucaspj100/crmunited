@@ -97,7 +97,7 @@ function PlacarDiario() {
     enabled: !customInvalid,
     queryKey: ["placar_diario", range.start, range.end, effectiveTeam],
     queryFn: () => fetchProductivity({ start: range.start, end: range.end, vendedorId: null, teamId }),
-    refetchInterval: 30_000,
+    refetchInterval: 60_000,
   });
 
   const { data: rowsPrev = [] } = useQuery({

@@ -40,7 +40,7 @@ export function useRankedRows(tab: RankTab, teamKey: string, teamId: string | nu
     enabled,
     queryKey: ["telao_rank", tab, range.start, range.end, teamKey],
     queryFn: () => fetchProductivity({ start: range.start, end: range.end, vendedorId: null, teamId }),
-    refetchInterval: 30_000,
+    refetchInterval: 60_000,
   });
   const ranked = useMemo<RankedRow[]>(() => {
     const list = cleanRows((q.data ?? []) as ProductivityRow[])
