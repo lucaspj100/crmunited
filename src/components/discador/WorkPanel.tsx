@@ -626,6 +626,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
 
       if (autoOpenResult) {
         setLastAction(undefined);
+        setResultTarget(loaded); // fixa a identidade do contato da tarefa
         setResultOpen(true);
       }
       onFocusConsumed?.();
@@ -1026,13 +1027,13 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
               <Button
                 size="sm"
                 variant={contact.status_prospeccao === "Interessado" ? "default" : "outline"}
-                onClick={() => setConvertOpen(true)}
+                onClick={() => { setConvertTarget(contact); setConvertOpen(true); }}
                 disabled={contact.convertido_em_lead}
                 className={`h-10 min-w-0 px-2 text-xs ${contact.status_prospeccao === "Interessado" ? "bg-emerald-600 hover:bg-emerald-700 text-white" : ""}`}
               >
                 <UserPlus className="h-3.5 w-3.5 mr-1 shrink-0" /><span className="truncate">Converter</span>
               </Button>
-              <Button variant="outline" size="sm" onClick={() => setEditOpen(true)} className="h-10 min-w-0 px-2 text-xs">
+              <Button variant="outline" size="sm" onClick={() => { setEditTarget(contact); setEditOpen(true); }} className="h-10 min-w-0 px-2 text-xs">
                 <Pencil className="h-3.5 w-3.5 mr-1 shrink-0" /><span className="truncate">Editar</span>
               </Button>
             </div>
@@ -1060,7 +1061,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
               <Button onClick={ligar} className="h-12 min-w-0 px-1">
                 <Phone className="h-4 w-4 shrink-0" /><span className="truncate text-[10px] ml-1">Ligar</span>
               </Button>
-              <Button variant="outline" onClick={() => { setLastAction(undefined); setResultOpen(true); }} className="h-12 min-w-0 px-1">
+              <Button variant="outline" onClick={() => { setLastAction(undefined); setResultTarget(contact); setResultOpen(true); }} className="h-12 min-w-0 px-1">
                 <ListChecks className="h-4 w-4 shrink-0" /><span className="truncate text-[10px] ml-1">Reg.</span>
               </Button>
               <Button variant="ghost" onClick={goPrev} disabled={activeQueue.length < 2} className="h-12 min-w-0 px-1">
@@ -1156,12 +1157,12 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
                   <Button size="lg" variant="secondary" onClick={whats} className="h-14 text-base">
                     <MessageCircle className="h-5 w-5 mr-2" />WhatsApp
                   </Button>
-                  <Button size="lg" variant="outline" onClick={() => { setLastAction(undefined); setResultOpen(true); }} className="h-14">
+                  <Button size="lg" variant="outline" onClick={() => { setLastAction(undefined); setResultTarget(contact); setResultOpen(true); }} className="h-14">
                     <ListChecks className="h-5 w-5 mr-2" />Registrar
                   </Button>
                   <Button
                     size="lg"
-                    onClick={() => setConvertOpen(true)}
+                    onClick={() => { setConvertTarget(contact); setConvertOpen(true); }}
                     disabled={contact.convertido_em_lead}
                     className={`h-14 text-base ${contact.status_prospeccao === "Interessado" ? "bg-emerald-600 hover:bg-emerald-700 text-white" : ""}`}
                     variant={contact.status_prospeccao === "Interessado" ? "default" : "outline"}
@@ -1175,7 +1176,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
 
 
                 <div className="flex flex-wrap items-center gap-2">
-                  <Button variant="outline" onClick={() => setEditOpen(true)}>
+                  <Button variant="outline" onClick={() => { setEditTarget(contact); setEditOpen(true); }}>
                     <Pencil className="h-4 w-4 mr-2" />Editar contato
                   </Button>
                   <Button variant="outline" onClick={addToWhatsapp}>
