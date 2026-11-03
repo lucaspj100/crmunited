@@ -3910,6 +3910,7 @@ export type Database = {
         | "exempt"
         | "missing_information"
         | "duplicate_record"
+        | "physical_not_eligible"
       material_goal_type: "individual" | "team"
       material_payment_condition: "cash" | "installment"
       material_payment_method:
@@ -4140,6 +4141,7 @@ export const Constants = {
         "exempt",
         "missing_information",
         "duplicate_record",
+        "physical_not_eligible",
       ],
       material_goal_type: ["individual", "team"],
       material_payment_condition: ["cash", "installment"],

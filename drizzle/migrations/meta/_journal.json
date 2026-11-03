@@ -71,6 +71,13 @@
       "when": 1791313321531,
       "tag": "0009_leads_stage_entered_at",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1793718447674,
+      "tag": "0010_material_bonus_digital_only",
+      "breakpoints": true
     }
   ]
 }
