@@ -14,7 +14,16 @@ export type BonusReason =
   | "refunded"
   | "exempt"
   | "missing_information"
-  | "duplicate_record";
+  | "duplicate_record"
+  | "physical_not_eligible";
+
+/** A partir desta competência (enrollment_date), só material digital conta para premiação. */
+export const DIGITAL_ONLY_FROM = "2026-11-01";
+
+/** Material físico com matrícula a partir de nov/2026 nunca conta para premiação. */
+export function isPhysicalExcluded(type: MaterialType | null | undefined, enrollmentDate: string | null | undefined) {
+  return type === "physical" && !!enrollmentDate && enrollmentDate.slice(0, 10) >= DIGITAL_ONLY_FROM;
+}
 
 export const MATERIAL_TYPE_LABELS: Record<MaterialType, string> = {
   digital: "Material digital",
@@ -55,6 +64,7 @@ export const REASON_LABELS: Record<BonusReason, string> = {
   exempt: "Isento ou sem material",
   missing_information: "Informações incompletas",
   duplicate_record: "Registro duplicado",
+  physical_not_eligible: "Material físico não participa da premiação (desde nov/2026)",
 };
 
 export type BonusRule = {
@@ -122,6 +132,7 @@ export function computeEligibility(input: EligibilityInput): EligibilityResult {
   if (input.paymentStatus === "cancelled") reason = "cancelled";
   else if (input.paymentStatus === "refunded") reason = "refunded";
   else if (input.paymentStatus === "exempt") reason = "exempt";
+  else if (isPhysicalExcluded(input.materialType, input.enrollmentDate)) reason = "physical_not_eligible";
   else if (
     !input.materialType ||
     input.saleValue == null ||
@@ -343,7 +354,7 @@ export function aggregate(rows: MaterialSaleRow[]): MaterialTotals {
     }
     if (r.payment_status === "pending") t.pending += v;
     if (r.bonus_eligibility_reason === "below_minimum_price") t.belowMinimum += v;
-    if (r.eligible_for_bonus) { t.validTotal += v; t.countValid += 1; }
+    if (r.eligible_for_bonus && !isPhysicalExcluded(r.material_type, r.enrollment_date)) { t.validTotal += v; t.countValid += 1; }
   }
   return t;
 }
