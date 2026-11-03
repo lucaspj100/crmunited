@@ -101,3 +101,51 @@ describe("informações incompletas e condição inválida", () => {
     expect(computeEligibility(make({ duplicate: true })).reason).toBe("duplicate_record");
   });
 });
+
+import { aggregate, type MaterialSaleRow } from "@/lib/materials";
+
+describe("premiação só digital a partir de nov/2026", () => {
+  const phys = (over: Partial<EligibilityInput>) =>
+    computeEligibility(make({ materialType: "physical", saleValue: 1668, ...over }));
+  it("físico de outubro/2026 continua elegível pelas regras antigas", () => {
+    expect(phys({ enrollmentDate: "2026-10-15", paymentDate: "2026-10-20" }).reason).toBe("eligible");
+  });
+  it("físico de novembro/2026 é inelegível mesmo pago e acima do mínimo", () => {
+    const r = phys({ enrollmentDate: "2026-11-01", paymentDate: "2026-11-02", saleValue: 5000 });
+    expect(r.reason).toBe("physical_not_eligible");
+    expect(r.eligible).toBe(false);
+  });
+  it("digital de novembro/2026 continua elegível", () => {
+    expect(computeEligibility(make({ enrollmentDate: "2026-11-05", paymentDate: "2026-11-06" })).reason).toBe("eligible");
+  });
+  it("digital de novembro abaixo do mínimo segue as regras atuais", () => {
+    expect(computeEligibility(make({ enrollmentDate: "2026-11-05", paymentDate: "2026-11-06", saleValue: 1000 })).reason).toBe("below_minimum_price");
+  });
+  it("físico matriculado em outubro e pago em novembro respeita a competência de outubro", () => {
+    expect(phys({ enrollmentDate: "2026-10-30", paymentDate: "2026-11-03" }).reason).toBe("paid_outside_enrollment_month");
+  });
+  it("cancelado/estornado de novembro mantém o motivo original", () => {
+    expect(phys({ enrollmentDate: "2026-11-05", paymentStatus: "cancelled" }).reason).toBe("cancelled");
+    expect(phys({ enrollmentDate: "2026-11-05", paymentStatus: "refunded" }).reason).toBe("refunded");
+  });
+
+  const row = (over: Partial<MaterialSaleRow>): MaterialSaleRow => ({
+    id: "x", lead_id: "l", seller_id: "s", enrollment_date: "2026-11-05", material_type: "physical",
+    sale_value: 2000, payment_status: "paid", payment_date: "2026-11-06", payment_condition: "cash",
+    payment_method: "pix", installment_count: null, notes: null, minimum_allowed_value_snapshot: 1500,
+    price_rule_valid: true, eligible_for_bonus: true, bonus_eligibility_reason: "eligible",
+    payment_confirmed_at: null, payment_confirmed_by: null, retroactive_adjustment: false,
+    created_at: "", updated_at: "", lead_name: null, seller_name: null, ...over,
+  });
+  it("totais válidos (metas/premiação) excluem físico de novembro, faturamento e recebido incluem", () => {
+    const t = aggregate([
+      row({}),
+      row({ id: "d", material_type: "digital", sale_value: 1428 }),
+      row({ id: "o", enrollment_date: "2026-10-10", payment_date: "2026-10-11", sale_value: 1600 }),
+    ]);
+    expect(t.validTotal).toBe(1428 + 1600);
+    expect(t.countValid).toBe(2);
+    expect(t.totalSold).toBe(2000 + 1428 + 1600);
+    expect(t.totalReceived).toBe(2000 + 1428 + 1600);
+  });
+});
