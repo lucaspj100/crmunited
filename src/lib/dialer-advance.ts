@@ -18,11 +18,14 @@ export function pickNextContactId(
   const tail = idx >= 0 ? prevActiveIds.slice(idx + 1) : [];
   const fromTail = tail.find((id) => !blocked(id) && availableSet.has(id));
   if (fromTail) return fromTail;
-  const anchor = idx >= 0 ? idx : 0;
-  const clamped = Math.min(Math.max(anchor, 0), available.length - 1);
-  const candidate = available[clamped]!;
-  if (!blocked(candidate)) return candidate;
-  return available.find((id) => !blocked(id)) ?? (exclude.has(candidate) ? null : candidate);
+  // Fim da fila: recomeça do INÍCIO (contatos há mais tempo sem tentativa).
+  // Nunca pegar o vizinho do fim — ele é o recém-ligado e causava o
+  // "vai-e-volta" entre os últimos contatos trabalhados.
+  const fromHead = prevActiveIds.find((id) => !blocked(id) && availableSet.has(id));
+  if (fromHead) return fromHead;
+  const other = available.find((id) => !blocked(id));
+  if (other) return other;
+  return exclude.has(currentId) || !availableSet.has(currentId) ? null : currentId;
 }
 
 /**

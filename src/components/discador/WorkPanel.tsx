@@ -283,6 +283,10 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
   }, [user?.id]);
   // Contatos já trabalhados ainda não confirmados por uma recarga da fila (id → momento do salvamento).
   const workedRef = useRef<Map<string, number>>(new Map());
+  // Ordem da fila no momento do clique em Ligar/WhatsApp. A gravação "Ligando"
+  // reordena o contato para o fim; avançar com a ordem nova fazia voltar ao
+  // contato ligado logo antes (vai-e-volta entre os mesmos leads).
+  const callOrderRef = useRef<{ id: string; order: string[] } | null>(null);
   // Contato sincronizado que (ainda) não está na fila ativa local — usado apenas para exibição.
   const [syncedContact, setSyncedContact] = useState<ProspectContact | null>(null);
 
@@ -429,7 +433,12 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
    */
   const advanceFromCurrent = async (currentId: string) => {
     if (!user) return;
-    const prevActiveIds = activeQueue.map((c) => c.id);
+    const snap = callOrderRef.current;
+    callOrderRef.current = null;
+    const prevActiveIds =
+      snap && snap.id === currentId && snap.order.includes(currentId)
+        ? snap.order
+        : activeQueue.map((c) => c.id);
     workedRef.current.set(currentId, Date.now());
     const worked = new Set(workedRef.current.keys());
 
@@ -759,6 +768,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
     // troque o contato exibido durante o await ou com o formulário aberto.
     const target = contact;
     setLastAction("ligacao");
+    callOrderRef.current = { id: target.id, order: activeQueue.map((c) => c.id) };
     setResultTarget(target);
     await supabase
       .from("prospect_contacts")
@@ -776,6 +786,7 @@ export function WorkPanel({ focusContactId, autoOpenResult, focusTaskId, onFocus
   const whats = async () => {
     if (!contact || !user) return;
     const target = contact; // mesma fixação de identidade da ligação
+    callOrderRef.current = { id: target.id, order: activeQueue.map((c) => c.id) };
     setLastAction("whatsapp");
     setResultTarget(target);
     const template = getWhatsappTemplate();

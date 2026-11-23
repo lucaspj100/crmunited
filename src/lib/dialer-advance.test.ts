@@ -5,8 +5,14 @@ describe("pickLocalNext (avanço sem esperar o banco)", () => {
   it("avança para o contato seguinte ao trabalhado", () => {
     expect(pickLocalNext(["a", "b", "c"], "b")).toBe("c");
   });
-  it("no fim da fila, volta para a mesma posição sem repetir o trabalhado", () => {
-    expect(pickLocalNext(["a", "b", "c"], "c")).toBe("b");
+  it("no fim da fila, recomeça do início (nunca volta ao recém-ligado)", () => {
+    expect(pickLocalNext(["a", "b", "c"], "c")).toBe("a");
+  });
+  it("vai-e-volta do Enzo: contato atual reordenado para o fim não puxa o anterior", () => {
+    // fila por última tentativa: joao (ligado há pouco) e gustavo (ligado agora) no fim
+    const fila = ["x", "y", "joao", "gustavo"];
+    expect(pickLocalNext(fila, "gustavo", new Set(["joao"]))).toBe("x");
+    expect(pickNextContactId(fila, "gustavo", ["x", "y", "joao", "gustavo"])).toBe("x");
   });
   it("não reapresenta contatos já trabalhados nesta sessão", () => {
     expect(pickLocalNext(["a", "b", "c", "d"], "a", new Set(["b"]))).toBe("c");
