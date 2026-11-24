@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { LEAD_STATUSES, LOST_REASONS, RESCUE_OPTIONS } from "@/lib/constants";
-import { Kanban, MessageCircle, Linkedin, User, FileSpreadsheet, CalendarClock, CalendarPlus, AlertCircle, Clock, RotateCw } from "lucide-react";
+import { Kanban, MessageCircle, Linkedin, User, FileSpreadsheet, CalendarClock, CalendarPlus, AlertCircle, Clock, RotateCw, ArrowLeftRight } from "lucide-react";
 import { leadTemperature, TEMPERATURE_META, daysAgoLabel } from "@/lib/lead-temperature";
 import { exportRowsToXlsx } from "@/lib/xlsx-export";
 import { NewLeadDialog } from "@/components/NewLeadDialog";
@@ -273,7 +273,7 @@ function FunilPage() {
         </div>
       )}
 
-      <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-2 snap-x snap-mandatory sm:snap-none">
+      <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-2 snap-x snap-mandatory lg:overflow-x-visible lg:snap-none">
         {LEAD_STATUSES.map((col) => {
           const isLost = col.value === "perdido";
           const collapsed = isLost && !showLost;
@@ -283,7 +283,7 @@ function FunilPage() {
           return (
             <div
               key={col.value}
-              className={`flex h-[calc(100vh-14rem)] min-h-[420px] shrink-0 snap-start flex-col overflow-hidden rounded-lg border border-t-4 bg-muted/40 ${STAGE_BORDER[col.value] ?? ""} ${collapsed ? "w-44" : "w-[85vw] sm:w-[280px]"}`}
+              className={`flex h-[calc(100vh-14rem)] min-h-[420px] shrink-0 snap-start flex-col overflow-hidden rounded-lg border border-t-4 bg-muted/40 ${STAGE_BORDER[col.value] ?? ""} ${collapsed ? "w-36 lg:w-32" : "w-[85vw] sm:w-[260px] lg:w-auto lg:min-w-0 lg:flex-1"}`}
               onDragOver={(e) => e.preventDefault()}
               onDrop={() => {
                 if (!draggingId) return;
@@ -293,7 +293,7 @@ function FunilPage() {
               }}
             >
               <div className="flex items-center justify-between border-b bg-background/60 px-3 py-2">
-                <div className="font-semibold text-sm">{col.label}</div>
+                <div className="min-w-0 truncate font-semibold text-sm" title={col.label}>{col.label}</div>
                 <Badge variant="secondary">
                   {col.value === "perdido" && lostTotal > items.length ? lostTotal : items.length}
                 </Badge>
@@ -301,7 +301,7 @@ function FunilPage() {
               {collapsed ? (
                 <div className="flex flex-1 flex-col gap-2 p-3 text-xs text-muted-foreground">
                   <p>{lostTotal || items.length} leads perdidos.</p>
-                  <Button size="sm" variant="outline" onClick={() => setShowLost(true)}>Ver perdidos recentes</Button>
+                  <Button size="sm" variant="outline" className="h-auto w-full whitespace-normal py-1 text-xs" onClick={() => setShowLost(true)}>Ver recentes</Button>
                   <Link to="/perdidos" className="hover:underline">Abrir tela Perdidos →</Link>
                 </div>
               ) : null}
@@ -341,7 +341,7 @@ function FunilPage() {
                       onDragStart={() => setDraggingId(l.id)}
                       onDragEnd={() => setDraggingId(null)}
                       onClick={() => setDetailsId(l.id)}
-                      className={`cursor-pointer border-l-4 p-2.5 shadow-none active:cursor-grabbing hover:border-primary transition-colors ${isOverdue ? "border-l-destructive" : isUrgent ? "border-l-warning" : "border-l-transparent"}`}
+                      className={`cursor-pointer border-l-4 p-2 shadow-none active:cursor-grabbing hover:border-primary transition-colors ${isOverdue ? "border-l-destructive" : isUrgent ? "border-l-warning" : "border-l-transparent"}`}
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
@@ -358,7 +358,7 @@ function FunilPage() {
                                 />
                               </span>
                             )}
-                            <div className="font-medium text-sm truncate">{l.name}</div>
+                            <div className="font-medium text-[13px] truncate" title={l.name}>{l.name}</div>
                           </div>
                           <div className="truncate text-xs text-muted-foreground">
                             {[l.company, ownerName].filter(Boolean).join(" · ")}
@@ -413,14 +413,14 @@ function FunilPage() {
 
                       <div className="mt-1.5 flex items-center gap-0.5 border-t pt-1.5" onClick={(e) => e.stopPropagation()}>
                         {l.phone && (
-                          <WhatsappAction phone={l.phone} size="icon" variant="ghost" className="h-7 w-7" stopPropagation />
+                          <WhatsappAction phone={l.phone} size="icon" variant="ghost" className="h-6 w-6" stopPropagation />
                         )}
                         {l.linkedin_url && (
-                          <Button asChild size="icon" variant="ghost" className="h-7 w-7">
+                          <Button asChild size="icon" variant="ghost" className="h-6 w-6">
                             <a href={l.linkedin_url} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}><Linkedin className="h-3.5 w-3.5" /></a>
                           </Button>
                         )}
-                        <Button size="icon" variant="ghost" className="h-7 w-7" title="Agendar atividade" onClick={(e) => { e.stopPropagation(); setQuickTaskLead(l); }}>
+                        <Button size="icon" variant="ghost" className="h-6 w-6" title="Agendar atividade" onClick={(e) => { e.stopPropagation(); setQuickTaskLead(l); }}>
                           <CalendarPlus className="h-3.5 w-3.5" />
                         </Button>
                         {l.status === "entrevista_marcada" && (
@@ -429,7 +429,7 @@ function FunilPage() {
                           </Button>
                         )}
                         <Select onValueChange={(v) => moveLead(l, v)}>
-                          <SelectTrigger className="h-6 ml-auto w-[92px] text-xs" onClick={(e) => e.stopPropagation()}><SelectValue placeholder="Mover" /></SelectTrigger>
+                          <SelectTrigger title="Mover para outra etapa" aria-label="Mover" className="h-6 ml-auto w-auto gap-0.5 px-1.5 text-xs [&>svg:last-child]:hidden" onClick={(e) => e.stopPropagation()}><ArrowLeftRight className="h-3.5 w-3.5" /></SelectTrigger>
                           <SelectContent>
                             {LEAD_STATUSES.filter((s) => s.value !== l.status).map((s) => (
                               <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
