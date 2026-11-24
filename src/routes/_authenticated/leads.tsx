@@ -36,7 +36,9 @@ function LeadsPage() {
   const { data: leads = [], isLoading } = useQuery({
     queryKey: ["leads"],
     queryFn: async () => {
-      const { data, error } = await fetchAll(() => supabase.from("leads").select("*"));
+      const { data, error } = await fetchAll(() =>
+        supabase.from("leads").select("id,name,phone,company,linkedin_url,status,lost_reason,observation,created_at"),
+      );
       data.sort((a: any, b: any) => b.created_at.localeCompare(a.created_at));
       if (error) throw error;
       return data as Lead[];
