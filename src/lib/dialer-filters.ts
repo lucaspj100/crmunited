@@ -181,30 +181,18 @@ export async function fetchQueueHistory(userId: string): Promise<QueueHistory> {
     return h;
   };
 
-  for (let page = 0; page < 60; page++) {
-    const from = page * PAGE_SIZE;
-    const { data, error } = await supabase
-      .from("prospect_attempts")
-      .select("prospect_contact_id, tipo_acao, resultado, atendida, created_at")
-      .eq("vendedor_id", userId)
-      .order("created_at", { ascending: true })
-      .range(from, from + PAGE_SIZE - 1);
-    if (error) throw error;
-    const rows = data ?? [];
-    for (const r of rows) {
-      const id = r.prospect_contact_id;
-      if (!id) continue;
-      const h = get(id);
-      if (r.tipo_acao === "whatsapp") {
-        h.whatsappAttempts += 1;
-      } else if (r.tipo_acao === "ligacao") {
-        h.calls += 1;
-        h.lastCallAt = r.created_at ?? h.lastCallAt;
-        if (r.resultado) h.results.add(r.resultado);
-        if (r.atendida === true || r.resultado === "Atendeu") h.answered = true;
-      }
-    }
-    if (rows.length < PAGE_SIZE) break;
+  const { data: summary, error: sumErr } = await supabase.rpc("dialer_history_summary", {
+    _vendedor_id: userId,
+  });
+  if (sumErr) throw sumErr;
+  for (const r of summary ?? []) {
+    if (!r.prospect_contact_id) continue;
+    const h = get(r.prospect_contact_id);
+    h.whatsappAttempts += r.whatsapp_attempts ?? 0;
+    h.calls += r.calls ?? 0;
+    if (r.last_call_at) h.lastCallAt = r.last_call_at;
+    for (const res of r.results ?? []) h.results.add(res);
+    if (r.answered) h.answered = true;
   }
 
   for (let page = 0; page < 20; page++) {

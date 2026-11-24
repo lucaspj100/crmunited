@@ -78,6 +78,13 @@
       "when": 1793718447674,
       "tag": "0010_material_bonus_digital_only",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1795548305814,
+      "tag": "0011_dialer_history_summary",
+      "breakpoints": true
     }
   ]
 }

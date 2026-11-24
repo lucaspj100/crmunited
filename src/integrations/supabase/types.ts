@@ -3558,6 +3558,17 @@ export type Database = {
           status: string
         }[]
       }
+      dialer_history_summary: {
+        Args: { _vendedor_id: string }
+        Returns: {
+          answered: boolean
+          calls: number
+          last_call_at: string
+          prospect_contact_id: string
+          results: string[]
+          whatsapp_attempts: number
+        }[]
+      }
       ensure_leadership_commission: {
         Args: { _lead_id: string; _recalculate?: boolean }
         Returns: string
