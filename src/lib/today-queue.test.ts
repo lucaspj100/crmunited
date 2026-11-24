@@ -97,7 +97,7 @@ function fakeClient(opts: { failProspectCall?: (n: number) => boolean; nProspect
     let ranged = false;
     const self = b as never;
     Object.assign(b, {
-      select: () => self, eq: () => self, order: () => self, limit: () => self,
+      select: () => self, eq: () => self, neq: () => self, order: () => self, limit: () => self,
       range: (from: number) => { ranged = from === 0; return self; },
       in: (_c: string, v: string[]) => { ids = v; return self; },
       then: (res: (v: unknown) => void, rej: (e: unknown) => void) => {

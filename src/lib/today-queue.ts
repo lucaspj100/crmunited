@@ -79,9 +79,13 @@ export function neededProspectIds(
  * mantém os últimos dados carregados com sucesso.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+const HOJE_LEAD_COLS =
+  "id,name,phone,company,status,owner_id,observation,interview_date,interview_time,last_contact_at,next_followup_at,lost_reason,in_rescue,created_at";
+
 export async function loadHojeData(client: any = supabase, today: string = localToday()): Promise<HojeData> {
   const [leadsR, tasksR, profR] = await Promise.all([
-    fetchAll(() => client.from("leads").select("id,name,phone,company,status,owner_id,observation,interview_date,interview_time,last_contact_at,next_followup_at,lost_reason,in_rescue,created_at")),
+    // Perdidos ficam de fora (maioria da base); os referenciados por tarefas são buscados abaixo.
+    fetchAll(() => client.from("leads").select(HOJE_LEAD_COLS).neq("status", "perdido")),
     fetchAll(() => client.from("tasks").select("id,lead_id,type,due_date,due_time,observation,status,owner_id,is_rescue,prospect_contact_id").eq("status", "pendente")),
     client.from("profiles").select("id, full_name, email").limit(2000),
   ]);
@@ -89,6 +93,14 @@ export async function loadHojeData(client: any = supabase, today: string = local
   if (tasksR.error) throw new Error("hoje_tasks_failed");
   if (profR.error) throw new Error("hoje_profiles_failed");
   const tasks = (tasksR.data ?? []) as Task[];
+  const leads = (leadsR.data ?? []) as Lead[];
+  const have = new Set(leads.map((l) => l.id));
+  const missing = [...new Set(tasks.map((t) => t.lead_id).filter((id): id is string => !!id && !have.has(id)))];
+  for (let i = 0; i < missing.length; i += PROSPECT_CHUNK) {
+    const { data, error } = await client.from("leads").select(HOJE_LEAD_COLS).in("id", missing.slice(i, i + PROSPECT_CHUNK));
+    if (error) throw new Error("hoje_leads_failed");
+    leads.push(...((data ?? []) as Lead[]));
+  }
   // Só os contatos referenciados pelos retornos pendentes até hoje (únicos usados na fila).
   const ids = neededProspectIds(tasks, today);
   const prospects: ProspectMini[] = [];
@@ -101,7 +113,7 @@ export async function loadHojeData(client: any = supabase, today: string = local
     prospects.push(...((data ?? []) as ProspectMini[]));
   }
   return {
-    leads: (leadsR.data ?? []) as Lead[],
+    leads,
     tasks,
     profiles: (profR.data ?? []) as Profile[],
     prospects,

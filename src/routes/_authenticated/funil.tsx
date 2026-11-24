@@ -1,5 +1,5 @@
-import { fetchAll, fetchFunnelLeads, FUNNEL_LEADS_KEY } from "@/lib/fetch-all";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { fetchAll, fetchFunnelLeads, FUNNEL_LEADS_KEY, FUNNEL_LOST_LIMIT } from "@/lib/fetch-all";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { WhatsappAction } from "@/components/WhatsappAction";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
@@ -77,6 +77,17 @@ function FunilPage() {
   const { data: leads = [] } = useQuery({
     queryKey: FUNNEL_LEADS_KEY,
     queryFn: async () => (await fetchFunnelLeads()) as Lead[],
+  });
+
+  const { data: lostTotal = 0 } = useQuery({
+    queryKey: ["leads-funil-lost-count", vendorFilter],
+    queryFn: async () => {
+      let q = supabase.from("leads").select("id", { count: "exact", head: true }).eq("status", "perdido");
+      if (vendorFilter !== "all") q = q.eq("owner_id", vendorFilter);
+      const { count, error } = await q;
+      if (error) throw error;
+      return count ?? 0;
+    },
   });
 
   const { data: profiles = [] } = useQuery({
@@ -271,8 +282,15 @@ function FunilPage() {
             >
               <div className="flex items-center justify-between border-b px-3 py-2">
                 <div className="font-semibold text-sm">{col.label}</div>
-                <Badge variant="secondary">{items.length}</Badge>
+                <Badge variant="secondary">
+                  {col.value === "perdido" && lostTotal > items.length ? lostTotal : items.length}
+                </Badge>
               </div>
+              {col.value === "perdido" && lostTotal > items.length && (
+                <Link to="/perdidos" className="block border-b px-3 py-1.5 text-xs text-muted-foreground hover:underline">
+                  Mostrando os {items.length} mais recentes (até {FUNNEL_LOST_LIMIT}). Ver todos em Perdidos →
+                </Link>
+              )}
               <div className="flex-1 space-y-2 overflow-y-auto p-2 min-h-[300px] max-h-[70vh]">
                 {items.map((l) => {
                   const owner = profileById.get(l.owner_id);

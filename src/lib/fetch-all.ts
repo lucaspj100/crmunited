@@ -23,7 +23,21 @@ export const ACTIVE_STATUSES = ["novo", "interessado", "entrevista_marcada", "en
 export const FUNNEL_LEADS_KEY = ["leads-funil"] as const;
 export async function fetchFunnelLeads() {
   const { supabase } = await import("@/integrations/supabase/client");
-  const { data, error } = await fetchAll(() => supabase.from("leads").select("*"));
-  if (error) throw error;
-  return data;
+  // Leads em andamento + matrículas: completos. Perdidos: só os mais recentes
+  // (são a grande maioria da base e pesavam a tela inteira).
+  const [open, lost] = await Promise.all([
+    fetchAll(() => supabase.from("leads").select("*").neq("status", "perdido")),
+    supabase
+      .from("leads")
+      .select("*")
+      .eq("status", "perdido")
+      .order("stage_entered_at", { ascending: false, nullsFirst: false })
+      .limit(FUNNEL_LOST_LIMIT),
+  ]);
+  if (open.error) throw open.error;
+  if (lost.error) throw lost.error;
+  return [...open.data, ...(lost.data ?? [])];
 }
+
+/** Quantos perdidos recentes o Funil carrega (o restante fica na tela Perdidos). */
+export const FUNNEL_LOST_LIMIT = 200;
