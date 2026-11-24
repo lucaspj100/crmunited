@@ -33,6 +33,15 @@ import { bulkMoveToLostByForm } from "@/lib/scholarship-triage";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Brush } from "lucide-react";
 
+const STAGE_BORDER: Record<string, string> = {
+  novo: "border-t-stage-novo",
+  interessado: "border-t-stage-interessado",
+  entrevista_marcada: "border-t-stage-marcada",
+  entrevista_realizada: "border-t-stage-realizada",
+  matricula: "border-t-stage-matricula",
+  perdido: "border-t-stage-perdido",
+};
+
 export const Route = createFileRoute("/_authenticated/funil")({
   validateSearch: (search: Record<string, unknown>) => ({
     leadId: typeof search.leadId === "string" ? search.leadId : undefined,
@@ -72,6 +81,7 @@ function FunilPage() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [confirmBulk, setConfirmBulk] = useState(false);
   const [bulkSaving, setBulkSaving] = useState(false);
+  const [showLost, setShowLost] = useState(false);
 
 
   const { data: leads = [] } = useQuery({
@@ -263,15 +273,17 @@ function FunilPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-3 lg:grid-cols-5">
+      <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-2 snap-x snap-mandatory sm:snap-none">
         {LEAD_STATUSES.map((col) => {
+          const isLost = col.value === "perdido";
+          const collapsed = isLost && !showLost;
           const items = filteredLeads.filter((l) => l.status === col.value).sort((a, b) =>
             (b.stage_entered_at ?? b.updated_at ?? "").localeCompare(a.stage_entered_at ?? a.updated_at ?? "") ||
             (b.created_at ?? "").localeCompare(a.created_at ?? "") || b.id.localeCompare(a.id));
           return (
             <div
               key={col.value}
-              className="flex flex-col rounded-lg border bg-muted/40"
+              className={`flex h-[calc(100vh-14rem)] min-h-[420px] shrink-0 snap-start flex-col overflow-hidden rounded-lg border border-t-4 bg-muted/40 ${STAGE_BORDER[col.value] ?? ""} ${collapsed ? "w-44" : "w-[85vw] sm:w-[280px]"}`}
               onDragOver={(e) => e.preventDefault()}
               onDrop={() => {
                 if (!draggingId) return;
@@ -280,18 +292,30 @@ function FunilPage() {
                 setDraggingId(null);
               }}
             >
-              <div className="flex items-center justify-between border-b px-3 py-2">
+              <div className="flex items-center justify-between border-b bg-background/60 px-3 py-2">
                 <div className="font-semibold text-sm">{col.label}</div>
                 <Badge variant="secondary">
                   {col.value === "perdido" && lostTotal > items.length ? lostTotal : items.length}
                 </Badge>
               </div>
-              {col.value === "perdido" && lostTotal > items.length && (
+              {collapsed ? (
+                <div className="flex flex-1 flex-col gap-2 p-3 text-xs text-muted-foreground">
+                  <p>{lostTotal || items.length} leads perdidos.</p>
+                  <Button size="sm" variant="outline" onClick={() => setShowLost(true)}>Ver perdidos recentes</Button>
+                  <Link to="/perdidos" className="hover:underline">Abrir tela Perdidos →</Link>
+                </div>
+              ) : null}
+              {isLost && !collapsed && (
+                <button type="button" onClick={() => setShowLost(false)} className="border-b px-3 py-1 text-left text-xs text-muted-foreground hover:underline">
+                  Recolher
+                </button>
+              )}
+              {isLost && !collapsed && lostTotal > items.length && (
                 <Link to="/perdidos" className="block border-b px-3 py-1.5 text-xs text-muted-foreground hover:underline">
                   Mostrando os {items.length} mais recentes (até {FUNNEL_LOST_LIMIT}). Ver todos em Perdidos →
                 </Link>
               )}
-              <div className="flex-1 space-y-2 overflow-y-auto p-2 min-h-[300px] max-h-[70vh]">
+              {!collapsed && <div className="flex-1 space-y-2 overflow-y-auto p-2">
                 {items.map((l) => {
                   const owner = profileById.get(l.owner_id);
                   const ownerName = owner?.full_name || owner?.email || "—";
@@ -317,7 +341,7 @@ function FunilPage() {
                       onDragStart={() => setDraggingId(l.id)}
                       onDragEnd={() => setDraggingId(null)}
                       onClick={() => setDetailsId(l.id)}
-                      className={`cursor-pointer p-3 active:cursor-grabbing hover:border-primary transition-colors ${noActivity ? "border-amber-500/50" : isOverdue ? "border-rose-500/70 bg-rose-500/5" : isUrgent ? "border-amber-500/70 bg-amber-500/5" : ""}`}
+                      className={`cursor-pointer border-l-4 p-2.5 shadow-none active:cursor-grabbing hover:border-primary transition-colors ${isOverdue ? "border-l-destructive" : isUrgent ? "border-l-warning" : "border-l-transparent"}`}
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
@@ -336,28 +360,30 @@ function FunilPage() {
                             )}
                             <div className="font-medium text-sm truncate">{l.name}</div>
                           </div>
-                          {l.company && <div className="text-xs text-muted-foreground truncate">{l.company}</div>}
+                          <div className="truncate text-xs text-muted-foreground">
+                            {[l.company, ownerName].filter(Boolean).join(" · ")}
+                          </div>
+                          <div className="mt-1 flex flex-wrap items-center gap-1">
                           {l.source === "Discador" && (
-                            <span className="mt-1 inline-flex items-center rounded-full border border-purple-500/40 bg-purple-500/10 px-1.5 py-0 text-[9px] font-medium text-purple-700 dark:text-purple-300">
+                            <span className="inline-flex items-center rounded-full border border-purple-500/40 bg-purple-500/10 px-1.5 py-0 text-[9px] font-medium text-purple-700 dark:text-purple-300">
                               Discador
                             </span>
                           )}
                           <ScholarshipCardBadges lead={l as unknown as ScholarshipLead} />
+                          </div>
                         </div>
                         <span title={tempMeta.label} className={`shrink-0 inline-flex items-center justify-center h-5 px-1.5 rounded-full border text-[10px] ${tempMeta.color}`}>
                           {tempMeta.emoji}
                         </span>
                       </div>
-                      <div className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground">
-                        <User className="h-3 w-3" /><span className="truncate">{ownerName}</span>
-                      </div>
-                      <div className="mt-1 flex flex-wrap gap-x-2 gap-y-0.5 text-[10px] text-muted-foreground">
-                        {ageLabel && <span title="Criado">criado: {ageLabel}</span>}
-                        {stageLabel && <span title="Tempo na etapa atual">etapa: {stageLabel}</span>}
+                      <div className="mt-1 flex flex-wrap gap-x-1.5 text-[10px] text-muted-foreground">
+                        {ageLabel && <span title="Criado">criado {ageLabel}</span>}
+                        {ageLabel && stageLabel && <span>·</span>}
+                        {stageLabel && <span title="Tempo na etapa atual">etapa {stageLabel}</span>}
                         {lastLabel && <span title="Último contato"><Clock className="h-2.5 w-2.5 inline mr-0.5" />{lastLabel}</span>}
                       </div>
 
-                      <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+                      <div className="mt-1.5" onClick={(e) => e.stopPropagation()}>
                         {next ? (
                           <button
                             type="button"
@@ -376,7 +402,7 @@ function FunilPage() {
                           <button
                             type="button"
                             onClick={() => setQuickTaskLead(l)}
-                            className="w-full flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] border border-dashed border-amber-500/40 bg-amber-500/5 text-amber-700 dark:text-amber-300 hover:bg-amber-500/15"
+                            className="w-full flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[11px] text-muted-foreground hover:bg-muted"
                             title="Sem atividade — agendar"
                           >
                             <CalendarPlus className="h-3 w-3 shrink-0" />
@@ -385,7 +411,7 @@ function FunilPage() {
                         )}
                       </div>
 
-                      <div className="mt-2 flex gap-1" onClick={(e) => e.stopPropagation()}>
+                      <div className="mt-1.5 flex items-center gap-0.5 border-t pt-1.5" onClick={(e) => e.stopPropagation()}>
                         {l.phone && (
                           <WhatsappAction phone={l.phone} size="icon" variant="ghost" className="h-7 w-7" stopPropagation />
                         )}
@@ -403,7 +429,7 @@ function FunilPage() {
                           </Button>
                         )}
                         <Select onValueChange={(v) => moveLead(l, v)}>
-                          <SelectTrigger className="h-7 ml-auto w-[100px] text-xs" onClick={(e) => e.stopPropagation()}><SelectValue placeholder="Mover" /></SelectTrigger>
+                          <SelectTrigger className="h-6 ml-auto w-[92px] text-xs" onClick={(e) => e.stopPropagation()}><SelectValue placeholder="Mover" /></SelectTrigger>
                           <SelectContent>
                             {LEAD_STATUSES.filter((s) => s.value !== l.status).map((s) => (
                               <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
@@ -414,7 +440,7 @@ function FunilPage() {
                     </Card>
                   );
                 })}
-              </div>
+              </div>}
             </div>
           );
         })}
